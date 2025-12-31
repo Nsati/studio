@@ -4,7 +4,7 @@ import type { Booking } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, Users, Hash } from 'lucide-react';
+import { Calendar, Users, Hash, Edit, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface BookingCardProps {
@@ -62,9 +62,23 @@ export function BookingCard({ booking }: BookingCardProps) {
             </div>
             <div className="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <p className="text-xl font-bold">Total: ₹{booking.totalPrice.toLocaleString()}</p>
-                {booking.status === 'Confirmed' && (
-                    <Button variant="destructive" outline>Cancel Booking</Button>
-                )}
+                 <div className="flex items-center gap-2">
+                    {booking.status === 'Confirmed' && (
+                        <>
+                            <Button variant="outline" size="sm">
+                                <Edit className="mr-2 h-4 w-4" />
+                                Edit
+                            </Button>
+                            <Button variant="destructive" size="sm">
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Cancel
+                            </Button>
+                        </>
+                    )}
+                     {booking.status === 'Cancelled' && (
+                        <Button variant="secondary" size="sm" disabled>Cancelled</Button>
+                    )}
+                </div>
             </div>
           </div>
         </div>
