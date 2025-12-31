@@ -1,3 +1,6 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import {
   Tabs,
   TabsContent,
@@ -22,10 +25,16 @@ import { Edit, Trash } from 'lucide-react';
 
 interface AdminTabsProps {
   hotels: Hotel[];
-  bookings: Booking[];
+  initialBookings: Booking[];
 }
 
-export function AdminTabs({ hotels, bookings }: AdminTabsProps) {
+export function AdminTabs({ hotels, initialBookings }: AdminTabsProps) {
+    const [bookings, setBookings] = useState(initialBookings);
+
+    // This effect can be used to refresh data from the source if needed,
+    // but for now, we'll rely on initial props and local state updates.
+    // To see cancellations from users in "real-time", you'd need a re-fetch mechanism.
+    
   return (
     <Tabs defaultValue="hotels" className="w-full">
       <TabsList className="grid w-full grid-cols-3">

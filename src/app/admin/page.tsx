@@ -14,7 +14,7 @@ export default function AdminPage() {
         </p>
       </div>
 
-      <AdminTabs hotels={hotels} bookings={bookings} />
+      <AdminTabs hotels={hotels} initialBookings={bookings} />
     </div>
   );
 }

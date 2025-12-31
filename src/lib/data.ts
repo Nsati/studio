@@ -7,7 +7,7 @@ const roomsData: Room[] = [
   { id: 'r3', type: 'Suite', price: 8000, capacity: 4, totalRooms: 3 },
 ];
 
-const hotelsData: Hotel[] = [
+let hotelsData: Hotel[] = [
   // Nainital (4)
   {
     id: '1',
@@ -267,7 +267,7 @@ const citiesData: City[] = [
   { name: 'Jim Corbett', image: 'city-jim-corbett' },
 ];
 
-const bookingsData: Booking[] = [
+let bookingsData: Booking[] = [
     {
       id: 'b1',
       hotelName: 'The Naini Retreat',
@@ -329,4 +329,25 @@ export function getBookings(): Booking[] {
 
 export function getBookingById(id: string): Booking | undefined {
     return bookingsData.find((booking) => booking.id === id);
+}
+
+export function updateBookingStatus(id: string, status: 'Confirmed' | 'Cancelled' | 'Pending'): Booking | undefined {
+    const bookingIndex = bookingsData.findIndex((booking) => booking.id === id);
+    if (bookingIndex !== -1) {
+        bookingsData[bookingIndex].status = status;
+        return bookingsData[bookingIndex];
+    }
+    return undefined;
+}
+
+export function addHotel(hotel: Omit<Hotel, 'id' | 'slug' | 'rating' | 'rooms'>): Hotel {
+    const newHotel: Hotel = {
+        ...hotel,
+        id: (hotelsData.length + 1).toString(),
+        slug: hotel.name.toLowerCase().replace(/\s+/g, '-'),
+        rating: 4.0, // default rating
+        rooms: roomsData, // default rooms
+    };
+    hotelsData = [...hotelsData, newHotel];
+    return newHotel;
 }

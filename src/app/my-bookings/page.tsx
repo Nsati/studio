@@ -1,21 +1,28 @@
 'use client';
 
-import { useState } from 'react';
-import { getBookings } from '@/lib/data';
+import { useState, useEffect } from 'react';
+import { getBookings, updateBookingStatus } from '@/lib/data';
 import type { Booking } from '@/lib/types';
 import { BookingCard } from '@/components/booking/BookingCard';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
 export default function MyBookingsPage() {
-  const [bookings, setBookings] = useState<Booking[]>(getBookings());
+  const [bookings, setBookings] = useState<Booking[]>([]);
+
+  useEffect(() => {
+    setBookings(getBookings());
+  }, []);
 
   const handleCancelBooking = (bookingId: string) => {
-    setBookings((prevBookings) =>
-      prevBookings.map((booking) =>
-        booking.id === bookingId ? { ...booking, status: 'Cancelled' } : booking
-      )
-    );
+    const updatedBooking = updateBookingStatus(bookingId, 'Cancelled');
+    if (updatedBooking) {
+      setBookings((prevBookings) =>
+        prevBookings.map((booking) =>
+          booking.id === bookingId ? updatedBooking : booking
+        )
+      );
+    }
   };
 
   return (
