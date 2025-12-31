@@ -3,7 +3,6 @@ import {
   Car,
   UtensilsCrossed,
   Wine,
-  Sun,
   PersonStanding,
   Dumbbell,
   BedDouble,
