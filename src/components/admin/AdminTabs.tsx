@@ -28,12 +28,15 @@ interface AdminTabsProps {
   initialBookings: Booking[];
 }
 
-export function AdminTabs({ hotels, initialBookings }: AdminTabsProps) {
+export function AdminTabs({ hotels: initialHotels, initialBookings }: AdminTabsProps) {
     const [bookings, setBookings] = useState(initialBookings);
+    const [hotels, setHotels] = useState(initialHotels);
 
-    // This effect can be used to refresh data from the source if needed,
-    // but for now, we'll rely on initial props and local state updates.
-    // To see cancellations from users in "real-time", you'd need a re-fetch mechanism.
+    // This is a simple way to keep the hotels list updated if it changes.
+    // In a real app, this would likely be handled by a more robust state management library.
+    useEffect(() => {
+        setHotels(initialHotels);
+    }, [initialHotels]);
     
   return (
     <Tabs defaultValue="hotels" className="w-full">

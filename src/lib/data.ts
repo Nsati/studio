@@ -348,6 +348,6 @@ export function addHotel(hotel: Omit<Hotel, 'id' | 'slug' | 'rating' | 'rooms'>)
         rating: 4.0, // default rating
         rooms: roomsData, // default rooms
     };
-    hotelsData = [...hotelsData, newHotel];
+    hotelsData.unshift(newHotel);
     return newHotel;
 }

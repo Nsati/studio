@@ -4,6 +4,7 @@ import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -17,7 +18,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { getCities } from '@/lib/data';
+import { getCities, addHotel } from '@/lib/data';
 import {
   Select,
   SelectContent,
@@ -35,7 +36,7 @@ const formSchema = z.object({
   city: z.string().min(1, 'City is required.'),
   amenities: z.string().min(3, 'Enter at least one amenity.'),
   keywords: z.string().min(3, 'Enter at least one keyword.'),
-  description: z.string(),
+  description: z.string().min(10, 'Description is required.'),
   images: z.any().optional(),
 });
 
@@ -45,6 +46,7 @@ export function HotelForm() {
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
   const cities = getCities();
+  const router = useRouter();
 
   const form = useForm<HotelFormValues>({
     resolver: zodResolver(formSchema),
@@ -57,7 +59,6 @@ export function HotelForm() {
     },
   });
 
-  const watchedFields = useWatch({ control: form.control });
   const watchedImages = useWatch({ control: form.control, name: 'images' });
 
   const handleGenerateDescription = async () => {
@@ -101,12 +102,38 @@ export function HotelForm() {
   };
 
   function onSubmit(data: HotelFormValues) {
-    console.log(data);
-    toast({
-      title: 'Hotel Submitted!',
-      description: 'The new hotel has been added successfully.',
-    });
-    form.reset();
+    try {
+        const amenitiesArray = data.amenities.split(',').map(s => s.trim());
+        
+        // This is a mock implementation. In a real app, you would handle
+        // file uploads to a server and get back URLs. Here we'll just
+        // use a placeholder.
+        const imageIds = ['hotel-new-1', 'hotel-new-2'];
+
+        addHotel({
+            name: data.name,
+            city: data.city,
+            description: data.description,
+            images: imageIds, 
+            amenities: amenitiesArray,
+        });
+
+        toast({
+            title: 'Hotel Added!',
+            description: `${data.name} has been successfully added.`,
+        });
+        
+        form.reset();
+        // Refresh the page or navigate to show the new hotel
+        router.refresh();
+
+    } catch (error) {
+        toast({
+            title: 'Failed to Add Hotel',
+            description: 'Something went wrong. Please try again.',
+            variant: 'destructive',
+        });
+    }
   }
 
   return (
@@ -184,7 +211,7 @@ export function HotelForm() {
                 </div>
               )}
               <FormDescription>
-                Upload one or more images for the hotel.
+                Upload one or more images for the hotel. This is currently a mock and won't save images.
               </FormDescription>
               <FormMessage />
             </FormItem>
