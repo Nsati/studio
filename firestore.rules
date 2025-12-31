@@ -1,0 +1,162 @@
+/**
+ * This ruleset enforces a security model for the Uttarakhand Getaways application,
+ * balancing public data visibility with strict user-specific data protection.
+ *
+ * Core Philosophy:
+ * The rules establish a clear separation between publicly accessible data (hotels, rooms)
+ * and private user-specific data (profiles, bookings). A global admin role is defined
+ * to manage the public data, while standard users have full control over their own
+ * information but cannot access or modify the data of others.
+ *
+ * Data Structure:
+ * - /users/{userId}: Private user profiles, accessible only by the owner.
+ * - /users/{userId}/bookings/{bookingId}: Private user bookings, accessible only by the owner.
+ * - /hotels/{hotelId}: Public hotel listings, readable by anyone, writable only by admins.
+ * - /hotels/{hotelId}/rooms/{roomId}: Public room listings, nested under hotels, with the same access rules.
+ * - /roles_admin/{userId}: An internal lookup collection to grant admin privileges. It is not client-accessible.
+ *
+ * Key Security Decisions:
+ * - User Enumeration: Listing users from the top-level /users collection is explicitly disallowed to protect user privacy.
+ * - Admin Management: The /roles_admin collection is read-only for all clients to prevent privilege escalation. Admin roles must be assigned via the Firebase Console or a trusted server environment.
+ * - Default Posture: The default security posture is to deny access. Rules explicitly grant permissions on a per-collection basis.
+ * - Denormalization for Authorization: Bookings contain a `userId` field, which is validated against the document path to ensure data integrity and allow for simple, performant ownership checks without extra database reads.
+ * - Structural Segregation: Private user data (bookings) is nested within a user-specific path (/users/{userId}/...), which provides a strong, path-based security guarantee and simplifies rules for list operations. Public data (hotels) is in a separate top-level collection.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --------------------------------
+    // Helper Functions
+    // --------------------------------
+
+    /**
+     * Checks if a user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Checks if the requesting user is the owner of a document,
+     * identified by matching the request's auth UID with the provided userId.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * Checks if the requesting user is the owner of an EXISTING document.
+     * Crucial for update and delete operations to prevent acting on non-existent data.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    /**
+     * Checks if the requesting user has an admin role.
+     * This is determined by the existence of a document in the /roles_admin collection.
+     */
+    function isAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+    }
+
+    /**
+     * Checks if the requesting user is an admin acting on an EXISTING document.
+     * Used for admin-only update and delete operations.
+     */
+    function isExistingAdmin() {
+      return isAdmin() && resource != null;
+    }
+
+    // --------------------------------
+    // Collection Rules
+    // --------------------------------
+
+    /**
+     * @description Controls access to user profile documents. Only the user themselves can
+     *              create, read, update, or delete their own profile.
+     * @path /users/{userId}
+     * @allow (create) An authenticated user creating their own profile document.
+     *        auth: { uid: 'user_abc' }, path: /users/user_abc
+     * @deny  (get) A user trying to read another user's profile.
+     *        auth: { uid: 'user_xyz' }, path: /users/user_abc
+     * @principle Restricts access to a user's own data tree and enforces relational integrity.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId) && request.resource.data.uid == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.uid == resource.data.uid;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Controls access to user booking documents. Bookings are private and can
+     *              only be managed by the user who created them.
+     * @path /users/{userId}/bookings/{bookingId}
+     * @allow (get) An authenticated user reading their own booking.
+     *        auth: { uid: 'user_abc' }, path: /users/user_abc/bookings/booking123
+     * @deny  (list) A user trying to list bookings of another user.
+     *        auth: { uid: 'user_xyz' }, path: /users/user_abc/bookings
+     * @principle Enforces document ownership for all operations within a user-specific subcollection.
+     */
+    match /users/{userId}/bookings/{bookingId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Controls access to hotel documents. Hotel information is public for anyone
+     *              to read, but only administrators can create, update, or delete hotels.
+     * @path /hotels/{hotelId}
+     * @allow (list) Any user, authenticated or not, listing all hotels.
+     * @deny  (create) A non-admin user trying to create a new hotel.
+     *        auth: { uid: 'user_abc' }, path: /hotels/new_hotel
+     * @principle Implements a "Public Read with Admin-Only Writes" pattern for catalogue-style data.
+     */
+    match /hotels/{hotelId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isAdmin();
+      allow update: if isExistingAdmin();
+      allow delete: if isExistingAdmin();
+    }
+
+    /**
+     * @description Controls access to room documents nested under hotels. Room information
+     *              is public, but can only be managed by administrators.
+     * @path /hotels/{hotelId}/rooms/{roomId}
+     * @allow (get) Any user, authenticated or not, viewing a specific room.
+     * @deny  (update) A non-admin user trying to change a room's price.
+     *        auth: { uid: 'user_abc' }, path: /hotels/hotel123/rooms/room456
+     * @principle Extends the parent collection's security model ("Public Read, Admin Writes") to a subcollection.
+     */
+    match /hotels/{hotelId}/rooms/{roomId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isAdmin() && request.resource.data.hotelId == hotelId;
+      allow update: if isExistingAdmin() && request.resource.data.hotelId == resource.data.hotelId;
+      allow delete: if isExistingAdmin();
+    }
+
+    /**
+     * @description A private collection for defining admin roles. This collection is used as a
+     *              lookup table by other rules via the isAdmin() function.
+     * @path /roles_admin/{userId}
+     * @allow (none) No client is ever allowed to read or write to this collection directly.
+     * @deny  (get, list, create, update, delete) All operations from any client are denied.
+     * @principle Prevents privilege escalation by making the source of admin status immutable from the client-side.
+     */
+    match /roles_admin/{userId} {
+      allow get: if false;
+      allow list: if false;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+  }
+}
