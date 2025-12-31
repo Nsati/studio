@@ -1,10 +1,10 @@
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 import { getHotels, getCities } from '@/lib/data';
-import type { Hotel } from '@/lib/types';
+import type { Hotel, City } from '@/lib/types';
 import { HotelCard } from '@/components/hotel/HotelCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,11 +18,51 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { Search } from 'lucide-react';
+import { useFirestore } from '@/firebase';
 
 function SearchResults() {
+  const firestore = useFirestore();
   const searchParams = useSearchParams();
   const city = searchParams.get('city');
-  const hotels: Hotel[] = getHotels(city || undefined);
+  const [hotels, setHotels] = useState<Hotel[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchHotels() {
+      if(firestore) {
+        setLoading(true);
+        const fetchedHotels = await getHotels(firestore, city || undefined);
+        setHotels(fetchedHotels);
+        setLoading(false);
+      }
+    }
+    fetchHotels();
+  }, [city, firestore]);
+  
+  if (loading) {
+    return (
+        <div className="flex-1">
+          <div className="mb-6">
+            <div className="h-9 w-1/2 animate-pulse rounded-md bg-muted" />
+            <div className="mt-2 h-5 w-1/4 animate-pulse rounded-md bg-muted" />
+          </div>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Card key={i}>
+                <div className="p-0">
+                  <div className="h-48 w-full animate-pulse rounded-t-lg bg-muted" />
+                </div>
+                <div className="p-4 space-y-2">
+                  <div className="h-6 w-3/4 animate-pulse rounded-md bg-muted" />
+                  <div className="h-4 w-1/2 animate-pulse rounded-md bg-muted" />
+                  <div className="h-4 w-1/4 animate-pulse rounded-md bg-muted" />
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      );
+  }
 
   return (
     <div className="flex-1">
@@ -54,7 +94,11 @@ function SearchResults() {
 }
 
 export default function SearchPage() {
-  const cities = getCities();
+  const [cities, setCities] = useState<City[]>([]);
+
+  useEffect(() => {
+    setCities(getCities());
+  }, []);
 
   return (
     <div className="container mx-auto max-w-7xl py-8 px-4 md:px-6">

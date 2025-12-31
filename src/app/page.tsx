@@ -26,11 +26,16 @@ export default function HomePage() {
       if (firestore) {
         const allHotels = await getHotels(firestore);
         setFeaturedHotels(allHotels.slice(0, 4));
-        setCities(getCities());
       }
     }
     fetchData();
   }, [firestore]);
+
+  useEffect(() => {
+    // getCities is a client-side function that returns static data,
+    // so we can call it in a separate effect.
+    setCities(getCities());
+  }, []);
 
 
   return (
