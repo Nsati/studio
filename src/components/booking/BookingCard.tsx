@@ -4,14 +4,26 @@ import type { Booking } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, Users, Hash, Edit, Trash2 } from 'lucide-react';
+import { Calendar, Users, Hash, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 interface BookingCardProps {
   booking: Booking;
+  onCancel: (bookingId: string) => void;
 }
 
-export function BookingCard({ booking }: BookingCardProps) {
+export function BookingCard({ booking, onCancel }: BookingCardProps) {
   const hotelImage = PlaceHolderImages.find((img) => img.id === booking.hotelImage);
 
   return (
@@ -64,16 +76,28 @@ export function BookingCard({ booking }: BookingCardProps) {
                 <p className="text-xl font-bold">Total: ₹{booking.totalPrice.toLocaleString()}</p>
                  <div className="flex items-center gap-2">
                     {booking.status === 'Confirmed' && (
-                        <>
-                            <Button variant="outline" size="sm">
-                                <Edit className="mr-2 h-4 w-4" />
-                                Edit
-                            </Button>
-                            <Button variant="destructive" size="sm">
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Cancel
-                            </Button>
-                        </>
+                         <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button variant="destructive" size="sm">
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    Cancel
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    This action cannot be undone. This will permanently cancel your booking.
+                                </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                <AlertDialogCancel>Back</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => onCancel(booking.id)}>
+                                    Yes, Cancel Booking
+                                </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
                     )}
                      {booking.status === 'Cancelled' && (
                         <Button variant="secondary" size="sm" disabled>Cancelled</Button>

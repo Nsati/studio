@@ -1,10 +1,22 @@
+'use client';
+
+import { useState } from 'react';
 import { getBookings } from '@/lib/data';
+import type { Booking } from '@/lib/types';
 import { BookingCard } from '@/components/booking/BookingCard';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
 export default function MyBookingsPage() {
-  const bookings = getBookings();
+  const [bookings, setBookings] = useState<Booking[]>(getBookings());
+
+  const handleCancelBooking = (bookingId: string) => {
+    setBookings((prevBookings) =>
+      prevBookings.map((booking) =>
+        booking.id === bookingId ? { ...booking, status: 'Cancelled' } : booking
+      )
+    );
+  };
 
   return (
     <div className="container mx-auto max-w-5xl py-8 px-4 md:px-6">
@@ -18,7 +30,7 @@ export default function MyBookingsPage() {
       {bookings.length > 0 ? (
         <div className="space-y-6">
           {bookings.map((booking) => (
-            <BookingCard key={booking.id} booking={booking} />
+            <BookingCard key={booking.id} booking={booking} onCancel={handleCancelBooking} />
           ))}
         </div>
       ) : (
