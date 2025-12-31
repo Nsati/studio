@@ -5,7 +5,7 @@ import { getHotels, getBookings } from '@/lib/data';
 import { useFirestore, useUser } from '@/firebase';
 import { useEffect, useState } from 'react';
 import type { Booking, Hotel } from '@/lib/types';
-import { collection, getDocs, query } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 
 export default function AdminPage() {
   const firestore = useFirestore();
@@ -13,18 +13,27 @@ export default function AdminPage() {
   const [hotels, setHotels] = useState<Hotel[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    async function checkAdminStatus() {
+        if (user && firestore) {
+            const adminRoleDoc = await getDoc(doc(firestore, 'roles_admin', user.uid));
+            setIsAdmin(adminRoleDoc.exists());
+        }
+    }
+    checkAdminStatus();
+  }, [user, firestore]);
 
   useEffect(() => {
     async function fetchData() {
-      if (!firestore || !user) return;
+      if (!firestore || !user || !isAdmin) return;
 
       setIsLoading(true);
-
-      // Fetch all hotels
+      
       const fetchedHotels = await getHotels(firestore);
       setHotels(fetchedHotels);
 
-      // Fetch all bookings from all users
       const allBookings: Booking[] = [];
       const usersSnapshot = await getDocs(collection(firestore, 'users'));
       for (const userDoc of usersSnapshot.docs) {
@@ -35,8 +44,11 @@ export default function AdminPage() {
 
       setIsLoading(false);
     }
-    fetchData();
-  }, [firestore, user]);
+
+    if (isAdmin) {
+        fetchData();
+    }
+  }, [firestore, user, isAdmin]);
 
 
   if (isLoading) {
@@ -48,13 +60,11 @@ export default function AdminPage() {
                 Loading management tools...
                 </p>
             </div>
-            {/* You can add a skeleton loader here */}
         </div>
     )
   }
 
-  // TODO: Add proper admin role check
-  if (!user) {
+  if (!user || !isAdmin) {
      return (
         <div className="container mx-auto max-w-7xl py-8 px-4 md:px-6">
             <div className="mb-8">
