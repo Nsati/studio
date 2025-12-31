@@ -4,7 +4,7 @@ import {
   UtensilsCrossed,
   Wine,
   Sun,
-  Swimmer,
+  PersonStanding,
   Dumbbell,
   BedDouble,
   MountainSnow,
@@ -38,7 +38,7 @@ export function AmenityIcon({ amenity, className = 'h-5 w-5' }: AmenityIconProps
     case 'spa':
       return <Sparkles className={className} />;
     case 'pool':
-      return <Swimmer className={className} />;
+      return <PersonStanding className={className} />;
     case 'gym':
       return <Dumbbell className={className} />;
     case 'mountain-view':
