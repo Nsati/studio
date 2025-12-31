@@ -12,13 +12,10 @@ import {
   Firestore,
 } from 'firebase/firestore';
 import type { Hotel, Room, City, Booking } from './types';
-import { getFirestore } from 'firebase/firestore';
-import { initializeFirebase } from '@/firebase';
 import {
   addDocumentNonBlocking,
   updateDocumentNonBlocking,
 } from '@/firebase/non-blocking-updates';
-import { firestore } from 'firebase-admin';
 
 // This is a placeholder for a real city data source.
 // In a real app, this might come from a static file or a small collection.
@@ -47,18 +44,20 @@ export async function getHotels(db: Firestore, city?: string): Promise<Hotel[]> 
     return [];
   }
 
-  const hotels = snapshot.docs.map(doc => ({
-    ...doc.data(),
-    id: doc.id,
-    slug: doc.data().slug || doc.id,
-  })) as Hotel[];
+  const hotelsPromises = snapshot.docs.map(async (hotelDoc) => {
+    const hotelData = {
+      ...hotelDoc.data(),
+      id: hotelDoc.id,
+      slug: hotelDoc.data().slug || hotelDoc.id,
+    } as Hotel;
 
-  // Fetch rooms for each hotel
-  for (const hotel of hotels) {
-    const roomsSnapshot = await getDocs(collection(db, 'hotels', hotel.id, 'rooms'));
-    hotel.rooms = roomsSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })) as Room[];
-  }
+    // Fetch rooms for each hotel
+    const roomsSnapshot = await getDocs(collection(db, 'hotels', hotelDoc.id, 'rooms'));
+    hotelData.rooms = roomsSnapshot.docs.map(roomDoc => ({ ...roomDoc.data(), id: roomDoc.id })) as Room[];
+    return hotelData;
+  });
   
+  const hotels = await Promise.all(hotelsPromises);
   return hotels;
 }
 
@@ -67,7 +66,17 @@ export async function getHotelBySlug(db: Firestore, slug: string): Promise<Hotel
     const querySnapshot = await getDocs(q);
 
     if (querySnapshot.empty) {
-        return undefined;
+        // Fallback to checking by ID if slug is not found
+        const docRefById = doc(db, 'hotels', slug);
+        const docSnapById = await getDoc(docRefById);
+        if (!docSnapById.exists()) {
+          return undefined;
+        }
+        
+        const hotelDataById = { ...docSnapById.data(), id: docSnapById.id, slug: docSnapById.data().slug || docSnapById.id } as Hotel;
+        const roomsSnapshotById = await getDocs(collection(db, 'hotels', docSnapById.id, 'rooms'));
+        hotelDataById.rooms = roomsSnapshotById.docs.map(roomDoc => ({ ...roomDoc.data(), id: roomDoc.id } as Room));
+        return hotelDataById;
     }
 
     const hotelDoc = querySnapshot.docs[0];
@@ -75,7 +84,7 @@ export async function getHotelBySlug(db: Firestore, slug: string): Promise<Hotel
 
     // Fetch rooms
     const roomsSnapshot = await getDocs(collection(db, 'hotels', hotelDoc.id, 'rooms'));
-    hotelData.rooms = roomsSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Room));
+    hotelData.rooms = roomsSnapshot.docs.map(roomDoc => ({ ...roomDoc.data(), id: roomDoc.id } as Room));
     
     return hotelData;
 }
@@ -84,11 +93,13 @@ export function addHotel(db: Firestore, hotel: Omit<Hotel, 'id' | 'slug'>): Prom
     const newHotel = {
         ...hotel,
         slug: hotel.name.toLowerCase().replace(/\s+/g, '-'),
+        rooms: [], // Rooms will be added as a subcollection, not in the main doc
     };
     const hotelCollection = collection(db, 'hotels');
     const hotelPromise = addDocumentNonBlocking(hotelCollection, newHotel);
 
     hotelPromise.then(docRef => {
+        if(!docRef) return;
         const roomsCollection = collection(db, 'hotels', docRef.id, 'rooms');
         hotel.rooms.forEach(room => {
             addDocumentNonBlocking(roomsCollection, { ...room, hotelId: docRef.id });

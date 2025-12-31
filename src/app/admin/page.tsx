@@ -5,7 +5,7 @@ import { getHotels, getBookings } from '@/lib/data';
 import { useFirestore, useUser } from '@/firebase';
 import { useEffect, useState } from 'react';
 import type { Booking, Hotel } from '@/lib/types';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
 
 export default function AdminPage() {
   const firestore = useFirestore();
@@ -18,8 +18,15 @@ export default function AdminPage() {
   useEffect(() => {
     async function checkAdminStatus() {
         if (user && firestore) {
-            const adminRoleDoc = await getDoc(doc(firestore, 'roles_admin', user.uid));
-            setIsAdmin(adminRoleDoc.exists());
+            try {
+                const adminRoleDoc = await getDoc(doc(firestore, 'roles_admin', user.uid));
+                setIsAdmin(adminRoleDoc.exists());
+            } catch (error) {
+                console.error("Error checking admin status:", error);
+                setIsAdmin(false);
+            }
+        } else {
+            setIsAdmin(false);
         }
     }
     checkAdminStatus();
@@ -27,26 +34,35 @@ export default function AdminPage() {
 
   useEffect(() => {
     async function fetchData() {
-      if (!firestore || !user || !isAdmin) return;
+      if (!firestore || !user || !isAdmin) {
+          setIsLoading(false);
+          return;
+      }
 
       setIsLoading(true);
       
-      const fetchedHotels = await getHotels(firestore);
-      setHotels(fetchedHotels);
+      try {
+        const fetchedHotels = await getHotels(firestore);
+        setHotels(fetchedHotels);
 
-      const allBookings: Booking[] = [];
-      const usersSnapshot = await getDocs(collection(firestore, 'users'));
-      for (const userDoc of usersSnapshot.docs) {
-        const userBookings = await getBookings(firestore, userDoc.id);
-        allBookings.push(...userBookings);
+        const allBookings: Booking[] = [];
+        const usersSnapshot = await getDocs(collection(firestore, 'users'));
+        for (const userDoc of usersSnapshot.docs) {
+          const userBookings = await getBookings(firestore, userDoc.id);
+          allBookings.push(...userBookings);
+        }
+        setBookings(allBookings);
+      } catch (error) {
+          console.error("Error fetching admin data:", error);
+      } finally {
+        setIsLoading(false);
       }
-      setBookings(allBookings);
-
-      setIsLoading(false);
     }
 
     if (isAdmin) {
         fetchData();
+    } else {
+        setIsLoading(false);
     }
   }, [firestore, user, isAdmin]);
 
