@@ -3,11 +3,13 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, User, LogIn } from 'lucide-react';
+import { Menu, User, LogIn, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { Logo } from './Logo';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { useUser, useAuth } from '@/firebase';
+import { signOut } from 'firebase/auth';
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -18,9 +20,18 @@ const navLinks = [
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
+  const { user, isUserLoading } = useUser();
+  const auth = useAuth();
 
-  // Mock authentication state
-  const isAuthenticated = true;
+  const handleLogout = async () => {
+    if (!auth) return;
+    try {
+      await signOut(auth);
+      // You can add a toast notification here for successful logout
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -40,13 +51,26 @@ export function Header() {
               {link.label}
             </Link>
           ))}
+          {user && ( // Show Admin link only if user is logged in
+            <Link
+              href="/admin"
+              className={cn(
+                'text-sm font-medium transition-colors hover:text-primary',
+                pathname === '/admin' ? 'text-primary' : 'text-muted-foreground'
+              )}
+            >
+              Admin
+            </Link>
+          )}
         </nav>
 
         <div className="flex items-center gap-4">
           <div className="hidden md:flex items-center gap-2">
-            {isAuthenticated ? (
-               <Button variant="ghost" asChild>
-                <Link href="/admin">Admin</Link>
+            {isUserLoading ? (
+              <div className="h-10 w-24 animate-pulse rounded-md bg-muted" />
+            ) : user ? (
+              <Button variant="ghost" onClick={handleLogout}>
+                Logout
               </Button>
             ) : (
               <>
@@ -84,7 +108,8 @@ export function Header() {
                       {link.label}
                     </Link>
                   ))}
-                  <Link
+                  {user && (
+                    <Link
                       href="/admin"
                       onClick={() => setIsMenuOpen(false)}
                       className={cn(
@@ -93,23 +118,32 @@ export function Header() {
                       )}
                     >
                       Admin
-                  </Link>
+                    </Link>
+                  )}
                 </div>
                 <div className="mt-8 border-t pt-6">
-                  {isAuthenticated ? (
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-                        <User className="h-6 w-6 text-muted-foreground" />
-                      </div>
-                      <div>
-                        <p className="font-medium">Guest User</p>
-                        <p className="text-sm text-muted-foreground">user@example.com</p>
-                      </div>
+                  {isUserLoading ? (
+                     <div className="h-10 w-full animate-pulse rounded-md bg-muted" />
+                  ) : user ? (
+                    <div className="flex flex-col gap-4">
+                        <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+                            <User className="h-6 w-6 text-muted-foreground" />
+                        </div>
+                        <div>
+                            <p className="font-medium">{user.displayName || 'Guest User'}</p>
+                            <p className="text-sm text-muted-foreground">{user.email}</p>
+                        </div>
+                        </div>
+                        <Button className="w-full justify-center gap-2" onClick={() => {handleLogout(); setIsMenuOpen(false);}}>
+                            <LogOut className="h-5 w-5"/>
+                            Logout
+                        </Button>
                     </div>
                   ) : (
                     <Button className="w-full justify-center gap-2" asChild>
                       <Link href="/login" onClick={() => setIsMenuOpen(false)}>
-                        <LogIn className="h-5 w-5"/>
+                        <LogIn className="h-5 w-5" />
                         Login / Sign Up
                       </Link>
                     </Button>
