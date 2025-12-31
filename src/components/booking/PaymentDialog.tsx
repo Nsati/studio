@@ -21,7 +21,6 @@ import { z } from 'zod';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -51,19 +50,12 @@ const paymentFormSchema = z
   .refine(
     (data) => {
       if (data.paymentMethod === 'credit-card') {
-        return (
-          !!data.cardNumber &&
-          /^\d{16}$/.test(data.cardNumber) &&
-          !!data.expiryDate &&
-          /^(0[1-9]|1[0-2])\/\d{2}$/.test(data.expiryDate) &&
-          !!data.cvv &&
-          /^\d{3}$/.test(data.cvv)
-        );
+        return !!data.cardNumber && !!data.expiryDate && !!data.cvv;
       }
       return true;
     },
     {
-      message: 'Invalid card details. Please check card number (16 digits), expiry (MM/YY), and CVV (3 digits).',
+      message: 'Card Number, Expiry Date, and CVV are required for card payments.',
       path: ['cardNumber'], 
     }
   )
@@ -119,6 +111,11 @@ export function PaymentDialog({
       email: '',
       phone: '',
       paymentMethod: 'credit-card',
+      cardNumber: '',
+      expiryDate: '',
+      cvv: '',
+      upiId: '',
+      bank: '',
     },
   });
 
@@ -149,7 +146,7 @@ export function PaymentDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle className="font-headline text-2xl">
             Complete Your Booking
@@ -242,7 +239,7 @@ export function PaymentDialog({
                       <FormItem>
                         <Label
                           htmlFor="credit-card"
-                          className="flex items-center gap-4 rounded-md border p-4 cursor-pointer hover:bg-accent has-[[data-state=checked]]:border-primary"
+                          className="flex items-center gap-4 rounded-md border p-4 cursor-pointer hover:bg-accent/50 has-[[data-state=checked]]:border-primary"
                         >
                           <CreditCard className="h-6 w-6 text-primary" />
                           <div className="grid gap-1.5">
@@ -260,7 +257,7 @@ export function PaymentDialog({
                       <FormItem>
                         <Label
                           htmlFor="upi"
-                          className="flex items-center gap-4 rounded-md border p-4 cursor-pointer hover:bg-accent has-[[data-state=checked]]:border-primary"
+                          className="flex items-center gap-4 rounded-md border p-4 cursor-pointer hover:bg-accent/50 has-[[data-state=checked]]:border-primary"
                         >
                           <Wallet className="h-6 w-6 text-primary" />
                           <div className="grid gap-1.5">
@@ -276,7 +273,7 @@ export function PaymentDialog({
                       <FormItem>
                         <Label
                           htmlFor="net-banking"
-                          className="flex items-center gap-4 rounded-md border p-4 cursor-pointer hover:bg-accent has-[[data-state=checked]]:border-primary"
+                          className="flex items-center gap-4 rounded-md border p-4 cursor-pointer hover:bg-accent/50 has-[[data-state=checked]]:border-primary"
                         >
                           <Landmark className="h-6 w-6 text-primary" />
                           <div className="grid gap-1.5">
@@ -320,6 +317,7 @@ export function PaymentDialog({
                         <FormControl>
                           <Input placeholder="MM/YY" {...field} />
                         </FormControl>
+                         <FormMessage />
                       </FormItem>
                     )}
                   />
@@ -332,6 +330,7 @@ export function PaymentDialog({
                         <FormControl>
                           <Input placeholder="123" {...field} />
                         </FormControl>
+                        <FormMessage />
                       </FormItem>
                     )}
                   />
