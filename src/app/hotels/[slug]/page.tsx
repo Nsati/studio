@@ -1,7 +1,10 @@
 
+'use client';
+
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
-import { Star, MapPin } from 'lucide-react';
+import { Star, MapPin, BedDouble } from 'lucide-react';
+import React from 'react';
 
 import { getHotelBySlug } from '@/lib/data';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -16,6 +19,7 @@ import {
 } from '@/components/ui/carousel';
 import { Separator } from '@/components/ui/separator';
 import { RoomBookingCard } from '@/components/hotel/RoomBookingCard';
+import { Button } from '@/components/ui/button';
 
 type HotelPageProps = {
   params: {
@@ -25,6 +29,11 @@ type HotelPageProps = {
 
 export default function HotelPage({ params }: HotelPageProps) {
   const hotel = getHotelBySlug(params.slug);
+  const bookingSectionRef = React.useRef<HTMLDivElement>(null);
+
+  const handleScrollToBooking = () => {
+    bookingSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   if (!hotel) {
     notFound();
@@ -33,7 +42,13 @@ export default function HotelPage({ params }: HotelPageProps) {
   return (
     <div className="container mx-auto max-w-7xl py-8 px-4 md:px-6">
       <section className="mb-8">
-        <h1 className="font-headline text-4xl font-bold">{hotel.name}</h1>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+            <h1 className="font-headline text-4xl font-bold">{hotel.name}</h1>
+            <Button onClick={handleScrollToBooking} className="mt-4 md:mt-0">
+                <BedDouble className="mr-2 h-5 w-5" />
+                Book a Room
+            </Button>
+        </div>
         <div className="mt-2 flex items-center gap-4 text-muted-foreground">
           <div className="flex items-center gap-1">
             <MapPin className="h-5 w-5" />
@@ -96,7 +111,7 @@ export default function HotelPage({ params }: HotelPageProps) {
           </section>
         </div>
 
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1" ref={bookingSectionRef}>
            <RoomBookingCard hotel={hotel} />
         </div>
       </div>
