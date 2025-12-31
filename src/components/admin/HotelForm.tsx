@@ -26,8 +26,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Upload } from 'lucide-react';
 import { generateDescriptionAction } from '@/app/admin/actions';
+import { Badge } from '@/components/ui/badge';
 
 const formSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters.'),
@@ -35,6 +36,7 @@ const formSchema = z.object({
   amenities: z.string().min(3, 'Enter at least one amenity.'),
   keywords: z.string().min(3, 'Enter at least one keyword.'),
   description: z.string(),
+  images: z.any().optional(),
 });
 
 type HotelFormValues = z.infer<typeof formSchema>;
@@ -56,6 +58,7 @@ export function HotelForm() {
   });
 
   const watchedFields = useWatch({ control: form.control });
+  const watchedImages = useWatch({ control: form.control, name: 'images' });
 
   const handleGenerateDescription = async () => {
     const { name, city, amenities, keywords } = form.getValues();
@@ -151,6 +154,42 @@ export function HotelForm() {
             )}
           />
         </div>
+        
+        <FormField
+          control={form.control}
+          name="images"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Hotel Images</FormLabel>
+              <FormControl>
+                <div className="flex items-center gap-2">
+                    <Input
+                        id="images"
+                        type="file"
+                        multiple
+                        onChange={(e) => field.onChange(e.target.files)}
+                        className="hidden"
+                    />
+                    <label htmlFor="images" className="flex items-center gap-2 cursor-pointer bg-secondary text-secondary-foreground hover:bg-secondary/80 h-10 px-4 py-2 rounded-md text-sm">
+                        <Upload className="h-4 w-4" />
+                        Choose Files
+                    </label>
+                </div>
+              </FormControl>
+              {watchedImages && watchedImages.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-2">
+                    {Array.from(watchedImages).map((file: any, index: number) => (
+                        <Badge key={index} variant="secondary">{file.name}</Badge>
+                    ))}
+                </div>
+              )}
+              <FormDescription>
+                Upload one or more images for the hotel.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <FormField
           control={form.control}
