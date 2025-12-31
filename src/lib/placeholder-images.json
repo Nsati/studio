@@ -1,3 +1,232 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "hero",
+      "description": "Panoramic view of snow-capped Himalayan mountains in Uttarakhand.",
+      "imageUrl": "https://images.unsplash.com/photo-1604223190546-a43e4c7f29d7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxtb3VudGFpbiUyMGxhbmRzY2FwZXxlbnwwfHx8fDE3NjcxMTU5OTd8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "mountain landscape"
+    },
+    {
+      "id": "city-nainital",
+      "description": "A view of Naini Lake in Nainital with colorful boats.",
+      "imageUrl": "https://images.unsplash.com/photo-1678620071844-8377e26f1944?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxsYWtlJTIwdG93bnxlbnwwfHx8fDE3NjcwNjUyODN8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "lake town"
+    },
+    {
+      "id": "city-mussoorie",
+      "description": "Lush green hills of Mussoorie during sunset.",
+      "imageUrl": "https://images.unsplash.com/photo-1615966192539-f1731963b19a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxoaWxsJTIwc3RhdGlvbnxlbnwwfHx8fDE3NjcxODEyNTJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "hill station"
+    },
+    {
+      "id": "city-rishikesh",
+      "description": "The Ganga river and Lakshman Jhula bridge in Rishikesh.",
+      "imageUrl": "https://images.unsplash.com/photo-1714661116916-8e44405d0c83?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxyaXZlciUyMGJyaWRnZXxlbnwwfHx8fDE3NjcxODEyNTJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "river bridge"
+    },
+    {
+      "id": "city-haridwar",
+      "description": "Evening aarti ceremony at Har Ki Pauri in Haridwar.",
+      "imageUrl": "https://images.unsplash.com/photo-1763336318646-0dca39fd9857?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxyZWxpZ2lvdXMlMjBjZXJlbW9ueXxlbnwwfHx8fDE3NjcxODEyNTJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "religious ceremony"
+    },
+    {
+      "id": "city-auli",
+      "description": "Ski slopes in Auli covered in snow.",
+      "imageUrl": "https://images.unsplash.com/photo-1551524392-9a61031f0246?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxza2klMjByZXNvcnR8ZW58MHx8fHwxNzY3MTgxMjUyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "ski resort"
+    },
+    {
+      "id": "city-jim-corbett",
+      "description": "A tiger in the wilderness of Jim Corbett National Park.",
+      "imageUrl": "https://images.unsplash.com/photo-1708221386119-1480e8ef483a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHx3aWxkbGlmZSUyMHBhcmt8ZW58MHx8fHwxNzY3MTgxMjUyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "wildlife park"
+    },
+    {
+      "id": "hotel-1-1",
+      "description": "Exterior view of The Naini Retreat.",
+      "imageUrl": "https://images.unsplash.com/photo-1607320879139-1bb689f6a68f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxob3RlbCUyMGV4dGVyaW9yfGVufDB8fHx8MTc2NzEzMDc1OXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "hotel exterior"
+    },
+    {
+      "id": "hotel-1-2",
+      "description": "A luxurious room at The Naini Retreat.",
+      "imageUrl": "https://images.unsplash.com/photo-1629140727571-9b5c6f6267b4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxob3RlbCUyMHJvb218ZW58MHx8fHwxNzY3MTcxMzY1fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "hotel room"
+    },
+    {
+      "id": "hotel-1-3",
+      "description": "View from the balcony at The Naini Retreat.",
+      "imageUrl": "https://images.unsplash.com/photo-1702830499141-a0634d87d6af?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxiYWxjb255JTIwdmlld3xlbnwwfHx8fDE3NjcxMTAxNzJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "balcony view"
+    },
+    {
+      "id": "hotel-2-1",
+      "description": "Facade of Shervani Hilltop, Nainital.",
+      "imageUrl": "https://images.unsplash.com/photo-1596740519062-96e1626c83c3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxob3RlbCUyMGZhY2FkZXxlbnwwfHx8fDE3NjcxODEyNTJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "hotel facade"
+    },
+    {
+      "id": "hotel-2-2",
+      "description": "Swimming pool at Shervani Hilltop.",
+      "imageUrl": "https://images.unsplash.com/photo-1551491603-7d38b9e605f5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxzd2ltbWluZyUyMHBvb2x8ZW58MHx8fHwxNzY3MTI5MzM4fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "swimming pool"
+    },
+    {
+      "id": "hotel-3-1",
+      "description": "The Manu Maharani Hotel exterior.",
+      "imageUrl": "https://images.unsplash.com/photo-1606046604972-77cc76aee944?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxob3RlbCUyMGJ1aWxkaW5nfGVufDB8fHx8MTc2NzE4MTI1Mnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "hotel building"
+    },
+    {
+      "id": "hotel-4-1",
+      "description": "Vikram Vintage Inn, Nainital.",
+      "imageUrl": "https://images.unsplash.com/photo-1724230758718-406bab979e67?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHx2aW50YWdlJTIwaW5ufGVufDB8fHx8MTc2NzE4MTI1Mnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "vintage inn"
+    },
+    {
+      "id": "hotel-5-1",
+      "description": "JW Marriott Mussoorie Walnut Grove Resort & Spa exterior.",
+      "imageUrl": "https://images.unsplash.com/photo-1549294413-26f195200c16?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxsdXh1cnklMjByZXNvcnR8ZW58MHx8fHwxNzY3MTEyNzE3fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "luxury resort"
+    },
+    {
+      "id": "hotel-5-2",
+      "description": "Indoor heated pool at JW Marriott Mussoorie.",
+      "imageUrl": "https://images.unsplash.com/photo-1529290130-4ca3753253ae?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxpbmRvb3IlMjBwb29sfGVufDB8fHx8MTc2NzE4MTI1Mnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "indoor pool"
+    },
+    {
+      "id": "hotel-6-1",
+      "description": "Jaypee Residency Manor, Mussoorie.",
+      "imageUrl": "https://images.unsplash.com/photo-1608972196492-253feb837769?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxtYW5vciUyMGhvdGVsfGVufDB8fHx8MTc2NzE4MTI1Mnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "manor hotel"
+    },
+    {
+      "id": "hotel-7-1",
+      "description": "Welcomhotel by ITC Hotels, The Savoy, Mussoorie.",
+      "imageUrl": "https://images.unsplash.com/photo-1684498017911-ffc0e7039752?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxoZXJpdGFnZSUyMGhvdGVsfGVufDB8fHx8MTc2NzE4MTI1Mnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "heritage hotel"
+    },
+    {
+      "id": "hotel-8-1",
+      "description": "Rokeby Manor, Mussoorie.",
+      "imageUrl": "https://images.unsplash.com/photo-1761206669305-c49603698912?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxjbGFzc2ljJTIwbWFub3J8ZW58MHx8fHwxNzY3MTgxMjUyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "classic manor"
+    },
+    {
+      "id": "hotel-9-1",
+      "description": "Ananda in the Himalayas, Rishikesh.",
+      "imageUrl": "https://images.unsplash.com/photo-1676720922190-6d42908d6766?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxzcGElMjByZXNvcnR8ZW58MHx8fHwxNzY3MTgxMjUyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "spa resort"
+    },
+    {
+      "id": "hotel-9-2",
+      "description": "Yoga pavilion at Ananda in the Himalayas.",
+      "imageUrl": "https://images.unsplash.com/photo-1517363898874-737b62a7db91?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHx5b2dhJTIwcmV0cmVhdHxlbnwwfHx8fDE3NjcwNzI4NTB8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "yoga retreat"
+    },
+    {
+      "id": "hotel-10-1",
+      "description": "Aloha on the Ganges, Rishikesh.",
+      "imageUrl": "https://images.unsplash.com/photo-1761476328661-e9a05bb7fca4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxyaXZlcmZyb250JTIwaG90ZWx8ZW58MHx8fHwxNzY3MTgxMjUyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "riverfront hotel"
+    },
+    {
+      "id": "hotel-11-1",
+      "description": "Taj Rishikesh Resort & Spa, Uttarakhand.",
+      "imageUrl": "https://images.unsplash.com/photo-1550407665-942ceef4bf37?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxyZXNvcnQlMjBzcGF8ZW58MHx8fHwxNzY3MTgxMjUyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "resort spa"
+    },
+    {
+      "id": "hotel-12-1",
+      "description": "The Roseate Ganges, Rishikesh.",
+      "imageUrl": "https://images.unsplash.com/photo-1591474200742-8e512e6f98f8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxsdXh1cnklMjB2aWxsYXxlbnwwfHx8fDE3NjcxMjc0Mjd8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "luxury villa"
+    },
+    {
+      "id": "hotel-13-1",
+      "description": "Haveli Hari Ganga by Leisure Hotels, Haridwar.",
+      "imageUrl": "https://images.unsplash.com/photo-1682414180807-06299e2a66ca?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8aGVyaXRhZ2UlMjBoYXZlbGl8ZW58MHx8fHwxNzY3MTgxMjUyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "heritage haveli"
+    },
+    {
+      "id": "hotel-14-1",
+      "description": "Aalia on the Ganges, Haridwar.",
+      "imageUrl": "https://images.unsplash.com/photo-1744307679091-738e068f008d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxyaXZlcnNpZGUlMjByZXNvcnR8ZW58MHx8fHwxNzY3MTgxMjUzfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "riverside resort"
+    },
+    {
+      "id": "hotel-15-1",
+      "description": "The Grand Alova, Haridwar.",
+      "imageUrl": "https://images.unsplash.com/photo-1672152567751-71ea0298e821?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxtb2Rlcm4lMjBob3RlbHxlbnwwfHx8fDE3NjcxMjIzMDZ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "modern hotel"
+    },
+    {
+      "id": "hotel-16-1",
+      "description": "Ganga Lahari, Haridwar.",
+      "imageUrl": "https://images.unsplash.com/photo-1663917929306-95b280b2a72d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxnaGF0JTIwaG90ZWx8ZW58MHx8fHwxNzY3MTgxMjUyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "ghat hotel"
+    },
+    {
+      "id": "hotel-17-1",
+      "description": "Clifftop Club, Auli.",
+      "imageUrl": "https://images.unsplash.com/photo-1514977406940-016107995b73?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxtb3VudGFpbiUyMGhvdGVsfGVufDB8fHx8MTc2NzE4MTI1Mnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "mountain hotel"
+    },
+    {
+      "id": "hotel-17-2",
+      "description": "Snowy mountain view from Clifftop Club, Auli.",
+      "imageUrl": "https://images.unsplash.com/photo-1710333493101-1e4237982ba7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxzbm93eSUyMG1vdW50YWlufGVufDB8fHx8MTc2NzE1Mzc5OXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "snowy mountain"
+    },
+    {
+      "id": "hotel-18-1",
+      "description": "The Royal Village, Auli.",
+      "imageUrl": "https://images.unsplash.com/photo-1662958003722-84669abe1bfc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHx2aWxsYWdlJTIwcmVzb3J0fGVufDB8fHx8MTc2NzE4MTI1M3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "village resort"
+    },
+    {
+      "id": "hotel-19-1",
+      "description": "Blue Poppy Resorts, Auli.",
+      "imageUrl": "https://images.unsplash.com/photo-1709191917940-da0c860de162?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxmbG93ZXIlMjByZXNvcnR8ZW58MHx8fHwxNzY3MTgxMjUzfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "flower resort"
+    },
+    {
+      "id": "hotel-20-1",
+      "description": "Aahana The Corbett Wilderness, Jim Corbett.",
+      "imageUrl": "https://images.unsplash.com/photo-1729201955990-eb0dd97f50a9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHx3aWxkZXJuZXNzJTIwcmVzb3J0fGVufDB8fHx8MTc2NzE4MTI1Mnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "wilderness resort"
+    },
+    {
+      "id": "hotel-20-2",
+      "description": "Elephant safari near Aahana resort.",
+      "imageUrl": "https://images.unsplash.com/photo-1675259156756-69ee70a3c60e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxlbGVwaGFudCUyMHNhZmFyaXxlbnwwfHx8fDE3NjcxODEyNTJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "elephant safari"
+    },
+    {
+      "id": "hotel-21-1",
+      "description": "The Riverview Retreat, Corbett.",
+      "imageUrl": "https://images.unsplash.com/photo-1674342589284-727140a8af5f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxyaXZlciUyMHJldHJlYXR8ZW58MHx8fHwxNzY3MTgxMjUyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "river retreat"
+    },
+    {
+      "id": "hotel-22-1",
+      "description": "Namah Resort, Jim Corbett.",
+      "imageUrl": "https://images.unsplash.com/photo-1728436491560-b4bedb63b844?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxuYXR1cmUlMjByZXNvcnR8ZW58MHx8fHwxNzY3MTgxMjUyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "nature resort"
+    },
+    {
+      "id": "hotel-22-2",
+      "description": "Lobby of Namah Resort.",
+      "imageUrl": "https://images.unsplash.com/photo-1583953458882-302655b5c376?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxob3RlbCUyMGxvYmJ5fGVufDB8fHx8MTc2NzE2MDY2MXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "hotel lobby"
+    },
+    {
+      "id": "hotel-22-3",
+      "description": "Dining area at Namah Resort.",
+      "imageUrl": "https://images.unsplash.com/photo-1703565426315-4209c2e88eea?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxob3RlbCUyMHJlc3RhdXJhbnR8ZW58MHx8fHwxNzY3MTgxMjUyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "hotel restaurant"
+    }
+  ]
 }
