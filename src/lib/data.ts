@@ -340,13 +340,11 @@ export function updateBookingStatus(id: string, status: 'Confirmed' | 'Cancelled
     return undefined;
 }
 
-export function addHotel(hotel: Omit<Hotel, 'id' | 'slug' | 'rating' | 'rooms'>): Hotel {
+export function addHotel(hotel: Omit<Hotel, 'id' | 'slug'>): Hotel {
     const newHotel: Hotel = {
         ...hotel,
         id: (hotelsData.length + 1).toString(),
         slug: hotel.name.toLowerCase().replace(/\s+/g, '-'),
-        rating: 4.0, // default rating
-        rooms: roomsData, // default rooms
     };
     hotelsData.unshift(newHotel);
     return newHotel;

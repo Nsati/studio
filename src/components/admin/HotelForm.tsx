@@ -1,6 +1,6 @@
 'use client';
 
-import { useForm, useWatch } from 'react-hook-form';
+import { useForm, useWatch, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useState } from 'react';
@@ -27,17 +27,28 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Sparkles, Upload } from 'lucide-react';
+import { Sparkles, Upload, PlusCircle, Trash2 } from 'lucide-react';
 import { generateDescriptionAction } from '@/app/admin/actions';
 import { Badge } from '@/components/ui/badge';
+import type { Room } from '@/lib/types';
+
+const roomSchema = z.object({
+    id: z.string().optional(), // for existing rooms
+    type: z.enum(['Standard', 'Deluxe', 'Suite']),
+    price: z.coerce.number().min(1, 'Price must be greater than 0.'),
+    capacity: z.coerce.number().min(1, 'Capacity must be at least 1.'),
+    totalRooms: z.coerce.number().min(1, 'Enter number of rooms.'),
+  });
 
 const formSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters.'),
   city: z.string().min(1, 'City is required.'),
+  rating: z.coerce.number().min(1, 'Rating must be between 1 and 5.').max(5, 'Rating must be between 1 and 5.'),
   amenities: z.string().min(3, 'Enter at least one amenity.'),
   keywords: z.string().min(3, 'Enter at least one keyword.'),
   description: z.string().min(10, 'Description is required.'),
   images: z.any().optional(),
+  rooms: z.array(roomSchema).min(1, 'Please add at least one room type.'),
 });
 
 type HotelFormValues = z.infer<typeof formSchema>;
@@ -53,10 +64,19 @@ export function HotelForm() {
     defaultValues: {
       name: '',
       city: '',
+      rating: 4.0,
       amenities: '',
       keywords: '',
       description: '',
+      rooms: [
+        { type: 'Standard', price: 0, capacity: 2, totalRooms: 10 },
+      ]
     },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "rooms"
   });
 
   const watchedImages = useWatch({ control: form.control, name: 'images' });
@@ -110,12 +130,19 @@ export function HotelForm() {
         // use a placeholder.
         const imageIds = ['hotel-new-1', 'hotel-new-2'];
 
+        const newRooms: Room[] = data.rooms.map((room, index) => ({
+            ...room,
+            id: `r-new-${Date.now()}-${index}`,
+        }))
+
         addHotel({
             name: data.name,
             city: data.city,
             description: data.description,
             images: imageIds, 
             amenities: amenitiesArray,
+            rating: data.rating,
+            rooms: newRooms
         });
 
         toast({
@@ -139,7 +166,7 @@ export function HotelForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <FormField
             control={form.control}
             name="name"
@@ -176,6 +203,19 @@ export function HotelForm() {
                     ))}
                   </SelectContent>
                 </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="rating"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Rating</FormLabel>
+                <FormControl>
+                  <Input type="number" step="0.1" min="1" max="5" placeholder="e.g., 4.5" {...field} />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -217,6 +257,103 @@ export function HotelForm() {
             </FormItem>
           )}
         />
+
+        <div>
+            <FormLabel>Room Types</FormLabel>
+            <FormDescription className="mb-4">
+                Define the rooms available at this hotel.
+            </FormDescription>
+            <div className="space-y-4">
+            {fields.map((field, index) => (
+                <div key={field.id} className="grid grid-cols-1 md:grid-cols-9 gap-4 items-start border p-4 rounded-md relative">
+                    <FormField
+                        control={form.control}
+                        name={`rooms.${index}.type`}
+                        render={({ field }) => (
+                        <FormItem className="md:col-span-2">
+                            <FormLabel>Room Type</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select Type" />
+                                </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                <SelectItem value="Standard">Standard</SelectItem>
+                                <SelectItem value="Deluxe">Deluxe</SelectItem>
+                                <SelectItem value="Suite">Suite</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                     <FormField
+                        control={form.control}
+                        name={`rooms.${index}.price`}
+                        render={({ field }) => (
+                        <FormItem className="md:col-span-2">
+                            <FormLabel>Price/night (₹)</FormLabel>
+                            <FormControl>
+                            <Input type="number" placeholder="5000" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                     <FormField
+                        control={form.control}
+                        name={`rooms.${index}.capacity`}
+                        render={({ field }) => (
+                        <FormItem className="md:col-span-2">
+                            <FormLabel>Capacity</FormLabel>
+                            <FormControl>
+                            <Input type="number" placeholder="2" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name={`rooms.${index}.totalRooms`}
+                        render={({ field }) => (
+                        <FormItem className="md:col-span-2">
+                            <FormLabel>Total Rooms</FormLabel>
+                            <FormControl>
+                            <Input type="number" placeholder="10" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                    <div className="md:col-span-1 flex items-end h-full">
+                        <Button
+                            type="button"
+                            variant="destructive"
+                            size="icon"
+                            onClick={() => remove(index)}
+                            disabled={fields.length <= 1}
+                        >
+                            <Trash2 className="h-4 w-4" />
+                            <span className="sr-only">Remove Room</span>
+                        </Button>
+                    </div>
+                </div>
+            ))}
+             <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => append({ type: 'Standard', price: 0, capacity: 2, totalRooms: 5 })}
+                className="mt-2"
+                >
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add Room Type
+            </Button>
+            <FormMessage>{form.formState.errors.rooms?.message}</FormMessage>
+            </div>
+        </div>
 
         <FormField
           control={form.control}
