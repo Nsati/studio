@@ -1,4 +1,5 @@
 
+
 export interface Hotel {
   id: string;
   slug: string;
@@ -41,4 +42,7 @@ export interface Booking {
   checkOut: string;
   guests: number;
   totalPrice: number;
+  customerName: string;
+  customerEmail: string;
 }
+

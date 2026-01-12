@@ -1,4 +1,5 @@
 
+
 import type { Hotel, Room, City, Booking } from './types';
 
 // This is a placeholder for a real data source.
@@ -13,8 +14,8 @@ let hotelsData: Hotel[] = [
     amenities: ['wifi', 'parking', 'restaurant', 'bar', 'spa', 'mountain-view'],
     rating: 4.8,
     rooms: [
-      { id: 'r1', type: 'Deluxe', price: 8000, capacity: 2, totalRooms: 10 },
-      { id: 'r2', type: 'Suite', price: 15000, capacity: 4, totalRooms: 5 },
+      { id: 'r1', hotelId: 'h1', type: 'Deluxe', price: 8000, capacity: 2, totalRooms: 10 },
+      { id: 'r2', hotelId: 'h1', type: 'Suite', price: 15000, capacity: 4, totalRooms: 5 },
     ],
   },
   {
@@ -27,8 +28,8 @@ let hotelsData: Hotel[] = [
     amenities: ['wifi', 'parking', 'restaurant', 'pool', 'garden'],
     rating: 4.5,
     rooms: [
-      { id: 'r3', type: 'Standard', price: 6000, capacity: 2, totalRooms: 20 },
-      { id: 'r4', type: 'Deluxe', price: 9000, capacity: 3, totalRooms: 15 },
+      { id: 'r3', hotelId: 'h2', type: 'Standard', price: 6000, capacity: 2, totalRooms: 20 },
+      { id: 'r4', hotelId: 'h2', type: 'Deluxe', price: 9000, capacity: 3, totalRooms: 15 },
     ],
   },
   {
@@ -41,8 +42,8 @@ let hotelsData: Hotel[] = [
     amenities: ['wifi', 'restaurant', 'bar', 'gym', 'spa'],
     rating: 4.9,
     rooms: [
-      { id: 'r5', type: 'Deluxe', price: 12000, capacity: 2, totalRooms: 25 },
-      { id: 'r6', type: 'Suite', price: 20000, capacity: 4, totalRooms: 10 },
+      { id: 'r5', hotelId: 'h3', type: 'Deluxe', price: 12000, capacity: 2, totalRooms: 25 },
+      { id: 'r6', hotelId: 'h3', type: 'Suite', price: 20000, capacity: 4, totalRooms: 10 },
     ],
   },
   {
@@ -55,7 +56,7 @@ let hotelsData: Hotel[] = [
     amenities: ['parking', 'restaurant', 'garden', 'heritage'],
     rating: 4.3,
     rooms: [
-      { id: 'r7', type: 'Standard', price: 5000, capacity: 2, totalRooms: 18 },
+      { id: 'r7', hotelId: 'h4', type: 'Standard', price: 5000, capacity: 2, totalRooms: 18 },
     ],
   },
   {
@@ -68,8 +69,8 @@ let hotelsData: Hotel[] = [
     amenities: ['wifi', 'spa', 'pool', 'gym', 'restaurant', 'bar', 'mountain-view'],
     rating: 4.9,
     rooms: [
-        { id: 'r8', type: 'Deluxe', price: 25000, capacity: 2, totalRooms: 50 },
-        { id: 'r9', type: 'Suite', price: 45000, capacity: 4, totalRooms: 15 },
+        { id: 'r8', hotelId: 'h5', type: 'Deluxe', price: 25000, capacity: 2, totalRooms: 50 },
+        { id: 'r9', hotelId: 'h5', type: 'Suite', price: 45000, capacity: 4, totalRooms: 15 },
     ]
   },
   {
@@ -82,8 +83,8 @@ let hotelsData: Hotel[] = [
     amenities: ['wifi', 'parking', 'restaurant', 'spa', 'pool'],
     rating: 4.6,
     rooms: [
-        { id: 'r10', type: 'Standard', price: 18000, capacity: 2, totalRooms: 30 },
-        { id: 'r11', type: 'Deluxe', price: 22000, capacity: 3, totalRooms: 20 },
+        { id: 'r10', hotelId: 'h6', type: 'Standard', price: 18000, capacity: 2, totalRooms: 30 },
+        { id: 'r11', hotelId: 'h6', type: 'Deluxe', price: 22000, capacity: 3, totalRooms: 20 },
     ]
   },
   {
@@ -96,7 +97,7 @@ let hotelsData: Hotel[] = [
     amenities: ['wifi', 'heritage', 'restaurant', 'bar', 'spa'],
     rating: 4.7,
     rooms: [
-        { id: 'r12', type: 'Standard', price: 20000, capacity: 2, totalRooms: 40 },
+        { id: 'r12', hotelId: 'h7', type: 'Standard', price: 20000, capacity: 2, totalRooms: 40 },
     ]
   },
   {
@@ -109,7 +110,7 @@ let hotelsData: Hotel[] = [
     amenities: ['wifi', 'restaurant', 'library', 'garden'],
     rating: 4.8,
     rooms: [
-        { id: 'r13', type: 'Deluxe', price: 16000, capacity: 2, totalRooms: 12 },
+        { id: 'r13', hotelId: 'h8', type: 'Deluxe', price: 16000, capacity: 2, totalRooms: 12 },
     ]
   },
   {
@@ -122,7 +123,7 @@ let hotelsData: Hotel[] = [
     amenities: ['spa', 'yoga', 'pool', 'gym', 'restaurant'],
     rating: 5.0,
     rooms: [
-        { id: 'r14', type: 'Suite', price: 55000, capacity: 2, totalRooms: 20 },
+        { id: 'r14', hotelId: 'h9', type: 'Suite', price: 55000, capacity: 2, totalRooms: 20 },
     ]
   },
   {
@@ -135,8 +136,8 @@ let hotelsData: Hotel[] = [
     amenities: ['wifi', 'restaurant', 'pool', 'spa', 'river-view'],
     rating: 4.5,
     rooms: [
-        { id: 'r15', type: 'Standard', price: 7000, capacity: 2, totalRooms: 30 },
-        { id: 'r16', type: 'Deluxe', price: 10000, capacity: 3, totalRooms: 25 },
+        { id: 'r15', hotelId: 'h10', type: 'Standard', price: 7000, capacity: 2, totalRooms: 30 },
+        { id: 'r16', hotelId: 'h10', type: 'Deluxe', price: 10000, capacity: 3, totalRooms: 25 },
     ]
   },
   {
@@ -149,7 +150,7 @@ let hotelsData: Hotel[] = [
     amenities: ['wifi', 'spa', 'pool', 'restaurant', 'bar'],
     rating: 4.9,
     rooms: [
-        { id: 'r17', type: 'Deluxe', price: 35000, capacity: 2, totalRooms: 30 },
+        { id: 'r17', hotelId: 'h11', type: 'Deluxe', price: 35000, capacity: 2, totalRooms: 30 },
     ]
   },
   {
@@ -162,7 +163,7 @@ let hotelsData: Hotel[] = [
     amenities: ['wifi', 'spa', 'pool', 'restaurant'],
     rating: 4.8,
     rooms: [
-        { id: 'r18', type: 'Suite', price: 40000, capacity: 2, totalRooms: 16 },
+        { id: 'r18', hotelId: 'h12', type: 'Suite', price: 40000, capacity: 2, totalRooms: 16 },
     ]
   },
    {
@@ -175,7 +176,7 @@ let hotelsData: Hotel[] = [
     amenities: ['wifi', 'restaurant', 'heritage', 'ghat'],
     rating: 4.4,
     rooms: [
-        { id: 'r19', type: 'Standard', price: 5500, capacity: 2, totalRooms: 20 },
+        { id: 'r19', hotelId: 'h13', type: 'Standard', price: 5500, capacity: 2, totalRooms: 20 },
     ]
   },
   {
@@ -188,7 +189,7 @@ let hotelsData: Hotel[] = [
     amenities: ['wifi', 'pool', 'spa', 'restaurant', 'river-view'],
     rating: 4.7,
     rooms: [
-        { id: 'r20', type: 'Deluxe', price: 15000, capacity: 2, totalRooms: 12 },
+        { id: 'r20', hotelId: 'h14', type: 'Deluxe', price: 15000, capacity: 2, totalRooms: 12 },
     ]
   },
   {
@@ -201,7 +202,7 @@ let hotelsData: Hotel[] = [
     amenities: ['wifi', 'parking', 'restaurant'],
     rating: 4.2,
     rooms: [
-        { id: 'r21', type: 'Standard', price: 4000, capacity: 2, totalRooms: 25 },
+        { id: 'r21', hotelId: 'h15', type: 'Standard', price: 4000, capacity: 2, totalRooms: 25 },
     ]
   },
   {
@@ -214,7 +215,7 @@ let hotelsData: Hotel[] = [
     amenities: ['wifi', 'restaurant', 'ghat'],
     rating: 4.6,
     rooms: [
-        { id: 'r22', type: 'Deluxe', price: 8000, capacity: 2, totalRooms: 16 },
+        { id: 'r22', hotelId: 'h16', type: 'Deluxe', price: 8000, capacity: 2, totalRooms: 16 },
     ]
   },
   {
@@ -227,7 +228,7 @@ let hotelsData: Hotel[] = [
     amenities: ['restaurant', 'bar', 'skiing', 'mountain-view'],
     rating: 4.5,
     rooms: [
-        { id: 'r23', type: 'Standard', price: 12000, capacity: 2, totalRooms: 20 },
+        { id: 'r23', hotelId: 'h17', type: 'Standard', price: 12000, capacity: 2, totalRooms: 20 },
     ]
   },
   {
@@ -240,7 +241,7 @@ let hotelsData: Hotel[] = [
     amenities: ['restaurant', 'garden', 'trekking'],
     rating: 4.3,
     rooms: [
-        { id: 'r24', type: 'Standard', price: 9000, capacity: 2, totalRooms: 15 },
+        { id: 'r24', hotelId: 'h18', type: 'Standard', price: 9000, capacity: 2, totalRooms: 15 },
     ]
   },
   {
@@ -253,7 +254,7 @@ let hotelsData: Hotel[] = [
     amenities: ['restaurant', 'trekking', 'mountain-view'],
     rating: 4.2,
     rooms: [
-        { id: 'r25', type: 'Deluxe', price: 10000, capacity: 3, totalRooms: 10 },
+        { id: 'r25', hotelId: 'h19', type: 'Deluxe', price: 10000, capacity: 3, totalRooms: 10 },
     ]
   },
   {
@@ -266,8 +267,8 @@ let hotelsData: Hotel[] = [
     amenities: ['wifi', 'pool', 'spa', 'restaurant', 'safari'],
     rating: 4.9,
     rooms: [
-        { id: 'r26', type: 'Deluxe', price: 18000, capacity: 2, totalRooms: 24 },
-        { id: 'r27', type: 'Suite', price: 28000, capacity: 4, totalRooms: 8 },
+        { id: 'r26', hotelId: 'h20', type: 'Deluxe', price: 18000, capacity: 2, totalRooms: 24 },
+        { id: 'r27', hotelId: 'h20', type: 'Suite', price: 28000, capacity: 4, totalRooms: 8 },
     ]
   },
   {
@@ -280,7 +281,7 @@ let hotelsData: Hotel[] = [
     amenities: ['wifi', 'pool', 'restaurant', 'river-view', 'safari'],
     rating: 4.6,
     rooms: [
-        { id: 'r28', type: 'Standard', price: 9000, capacity: 2, totalRooms: 30 },
+        { id: 'r28', hotelId: 'h21', type: 'Standard', price: 9000, capacity: 2, totalRooms: 30 },
     ]
   },
   {
@@ -293,8 +294,8 @@ let hotelsData: Hotel[] = [
     amenities: ['wifi', 'pool', 'gym', 'restaurant', 'bar'],
     rating: 4.7,
     rooms: [
-        { id: 'r29', type: 'Deluxe', price: 14000, capacity: 2, totalRooms: 20 },
-        { id: 'r30', type: 'Suite', price: 22000, capacity: 3, totalRooms: 10 },
+        { id: 'r29', hotelId: 'h22', type: 'Deluxe', price: 14000, capacity: 2, totalRooms: 20 },
+        { id: 'r30', hotelId: 'h22', type: 'Suite', price: 22000, capacity: 3, totalRooms: 10 },
     ]
   }
 ];
@@ -310,6 +311,8 @@ let bookingsData: Booking[] = [
       checkOut: new Date('2024-08-12').toISOString(),
       guests: 2,
       totalPrice: 18880,
+      customerName: 'Ankit Sharma',
+      customerEmail: 'ankit.sharma@example.com',
     }
 ];
 
@@ -354,7 +357,21 @@ export function addHotel(hotel: Omit<Hotel, 'id' | 'slug'>): Hotel {
 }
 
 
+// --- ROOMS ---
+// Add a function to get room by ID, useful for payment dialog.
+export function getRoomById(roomId: string): Room | undefined {
+    for (const hotel of hotelsData) {
+        const room = hotel.rooms.find(r => r.id === roomId);
+        if (room) return room;
+    }
+    return undefined;
+}
+
 // --- BOOKINGS ---
+export function getBookings(): Booking[] {
+    return bookingsData.sort((a, b) => new Date(b.checkIn).getTime() - new Date(a.checkIn).getTime());
+}
+
 export function getBookingById(id: string): Booking | undefined {
     return bookingsData.find((b) => b.id === id);
 }
@@ -366,4 +383,21 @@ export function addBooking(bookingDetails: Omit<Booking, 'id'>): Booking {
     };
     bookingsData.push(newBooking);
     return newBooking;
+}
+
+// Add hotelId to Room type, which is needed when creating a booking
+// without having the full hotel object.
+// We'll update the data and types to reflect this.
+hotelsData.forEach(hotel => {
+    hotel.rooms.forEach(room => {
+        if (!('hotelId' in room)) {
+            (room as any).hotelId = hotel.id;
+        }
+    });
+});
+
+declare module './types' {
+    interface Room {
+        hotelId: string;
+    }
 }

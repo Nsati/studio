@@ -1,13 +1,15 @@
 
+
 'use client';
 import { AdminTabs } from '@/components/admin/AdminTabs';
-import { getHotels } from '@/lib/data';
+import { getHotels, getBookings } from '@/lib/data';
 import { useState, useEffect } from 'react';
-import type { Hotel } from '@/lib/types';
+import type { Hotel, Booking } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 
 export default function AdminPage() {
   const [hotels, setHotels] = useState<Hotel[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
@@ -17,6 +19,7 @@ export default function AdminPage() {
     if (authorized) {
       setIsAuthorized(true);
       setHotels(getHotels());
+      setBookings(getBookings());
     } else {
       router.replace('/admin/login');
     }
@@ -42,11 +45,11 @@ export default function AdminPage() {
       <div className="mb-8">
         <h1 className="font-headline text-4xl font-bold">Admin Dashboard</h1>
         <p className="text-muted-foreground mt-2">
-          Manage your hotels and content.
+          Manage your hotels, bookings, and content.
         </p>
       </div>
 
-      <AdminTabs hotels={hotels} />
+      <AdminTabs hotels={hotels} bookings={bookings} />
     </div>
   );
 }

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -38,16 +39,17 @@ import {
 
 
 import type { Hotel, Room } from '@/lib/types';
-import { addBooking } from '@/lib/data';
+import { addBooking, getRoomById } from '@/lib/data';
+import type { DateRange } from 'react-day-picker';
 
 interface PaymentDialogProps {
   isOpen: boolean;
   onClose: () => void;
   hotel: Hotel;
   room: Room;
-  checkInDate: Date;
-  checkOutDate: Date;
+  dates: DateRange;
   totalAmount: number;
+  guests: number;
 }
 
 const paymentSchema = z.object({
@@ -68,10 +70,10 @@ const paymentSchema = z.object({
 
 }).superRefine((data, ctx) => {
     if (data.paymentMethod === 'card') {
-        if (!data.cardNumber || !/^\d{16}$/.test(data.cardNumber)) {
+        if (!data.cardNumber || !/^\d{16}$/.test(data.cardNumber.replace(/\s/g, ''))) {
             ctx.addIssue({ code: 'custom', message: 'Card number must be 16 digits.', path: ['cardNumber'] });
         }
-        if (!data.expiry || !/^(0[1-9]|1[0-2])\/\d{2}$/.test(data.expiry)) {
+        if (!data.expiry || !/^(0[1-9]|1[0-2])\s*\/\s*\d{2}$/.test(data.expiry)) {
             ctx.addIssue({ code: 'custom', message: 'Expiry must be MM/YY.', path: ['expiry'] });
         }
         if (!data.cvv || !/^\d{3}$/.test(data.cvv)) {
@@ -106,14 +108,17 @@ export function PaymentDialog({
   onClose,
   hotel,
   room,
-  checkInDate,
-  checkOutDate,
+  dates,
   totalAmount,
+  guests,
 }: PaymentDialogProps) {
   const router = useRouter();
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('card');
+  
+  const checkInDate = dates.from;
+  const checkOutDate = dates.to;
 
   const form = useForm<PaymentFormValues>({
     resolver: zodResolver(paymentSchema),
@@ -127,18 +132,30 @@ export function PaymentDialog({
   const onSubmit = (data: PaymentFormValues) => {
     setIsProcessing(true);
 
+    if (!checkInDate || !checkOutDate) {
+      toast({
+        variant: 'destructive',
+        title: 'Booking Failed',
+        description: 'Check-in or check-out date is missing.',
+      });
+      setIsProcessing(false);
+      return;
+    }
+
     // Mock payment processing
     setTimeout(() => {
-        const newBooking = addBooking({
-            hotelId: hotel.id,
-            roomId: room.id,
-            roomType: room.type,
-            userId: 'u1', // mock user
-            checkIn: checkInDate.toISOString(),
-            checkOut: checkOutDate.toISOString(),
-            guests: room.capacity, // Using room capacity as guest count for now
-            totalPrice: totalAmount,
-        });
+      const newBooking = addBooking({
+        hotelId: hotel.id,
+        roomId: room.id,
+        roomType: room.type,
+        userId: 'u1', // mock user
+        checkIn: checkInDate.toISOString(),
+        checkOut: checkOutDate.toISOString(),
+        guests: guests,
+        totalPrice: totalAmount,
+        customerName: data.name,
+        customerEmail: data.email,
+      });
 
       toast({
         title: 'Payment Successful!',
@@ -155,6 +172,8 @@ export function PaymentDialog({
     setPaymentMethod(value);
     form.setValue('paymentMethod', value as 'card' | 'upi' | 'netbanking');
   }
+
+  if (!checkInDate || !checkOutDate) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
