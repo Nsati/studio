@@ -28,8 +28,8 @@ type HotelPageProps = {
   };
 };
 
-export default function HotelPage({ params }: HotelPageProps) {
-  const hotel = getHotelBySlug(params.slug);
+export default function HotelPage({ params: { slug } }: HotelPageProps) {
+  const hotel = getHotelBySlug(slug);
 
   const bookingSectionRef = React.useRef<HTMLDivElement>(null);
 
