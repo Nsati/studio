@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -19,8 +18,8 @@ const navLinks = [
 // Mock user state
 const useUser = () => {
     // To mock a logged-in user, change this to:
-    // return { user: { displayName: 'John Doe', email: 'john@example.com' }, isUserLoading: false };
-    return { user: null, isUserLoading: false };
+    return { user: { displayName: 'John Doe', email: 'john@example.com' }, isUserLoading: false };
+    // return { user: null, isUserLoading: false };
 };
 
 
