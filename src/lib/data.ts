@@ -362,7 +362,7 @@ export function getBookingById(id: string): Booking | undefined {
 export function addBooking(bookingDetails: Omit<Booking, 'id'>): Booking {
     const newBooking: Booking = {
         ...bookingDetails,
-        id: `b${bookingsData.length + 1}`,
+        id: `b${Date.now()}`,
     };
     bookingsData.push(newBooking);
     return newBooking;
