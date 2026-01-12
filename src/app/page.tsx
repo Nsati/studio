@@ -1,7 +1,4 @@
 
-'use client';
-
-import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -12,31 +9,11 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { HotelCard } from '@/components/hotel/HotelCard';
 import { HeroSearchForm } from '@/components/home/HeroSearchForm';
 import { ArrowRight } from 'lucide-react';
-import { useFirestore } from '@/firebase';
-import type { Hotel, City } from '@/lib/types';
 
 export default function HomePage() {
-  const firestore = useFirestore();
-  const [featuredHotels, setFeaturedHotels] = useState<Hotel[]>([]);
-  const [cities, setCities] = useState<City[]>([]);
+  const featuredHotels = getHotels().slice(0, 4);
+  const cities = getCities();
   const heroImage = PlaceHolderImages.find((img) => img.id === 'hero');
-
-  useEffect(() => {
-    async function fetchData() {
-      if (firestore) {
-        const allHotels = await getHotels(firestore);
-        setFeaturedHotels(allHotels.slice(0, 4));
-      }
-    }
-    fetchData();
-  }, [firestore]);
-
-  useEffect(() => {
-    // getCities is a client-side function that returns static data,
-    // so we can call it in a separate effect.
-    setCities(getCities());
-  }, []);
-
 
   return (
     <div className="space-y-16 pb-16">

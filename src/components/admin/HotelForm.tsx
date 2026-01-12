@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm, useWatch, useFieldArray } from 'react-hook-form';
@@ -31,7 +32,6 @@ import { Sparkles, Upload, PlusCircle, Trash2 } from 'lucide-react';
 import { generateDescriptionAction } from '@/app/admin/actions';
 import { Badge } from '@/components/ui/badge';
 import type { Room } from '@/lib/types';
-import { useFirestore } from '@/firebase';
 
 const roomSchema = z.object({
     id: z.string().optional(), // for existing rooms
@@ -59,7 +59,6 @@ export function HotelForm() {
   const { toast } = useToast();
   const cities = getCities();
   const router = useRouter();
-  const firestore = useFirestore();
 
   const form = useForm<HotelFormValues>({
     resolver: zodResolver(formSchema),
@@ -123,48 +122,37 @@ export function HotelForm() {
     }
   };
 
-  async function onSubmit(data: HotelFormValues) {
-    if(!firestore) return;
-    try {
-        const amenitiesArray = data.amenities.split(',').map(s => s.trim());
-        
-        // This is a mock implementation. In a real app, you would handle
-        // file uploads to a server and get back URLs. Here we'll just
-        // use a placeholder.
-        const imageIds = ['hotel-1-1', 'hotel-1-2'];
+  function onSubmit(data: HotelFormValues) {
+    const amenitiesArray = data.amenities.split(',').map(s => s.trim());
+    
+    // This is a mock implementation. In a real app, you would handle
+    // file uploads to a server and get back URLs. Here we'll just
+    // use a placeholder.
+    const imageIds = ['hotel-1-1', 'hotel-1-2'];
 
-        const newRooms: Room[] = data.rooms.map((room, index) => ({
-            ...room,
-            id: `r-new-${Date.now()}-${index}`,
-        }));
+    const newRooms: Room[] = data.rooms.map((room, index) => ({
+      ...room,
+      id: `r-new-${Date.now()}-${index}`,
+    }));
 
-        await addHotel(firestore, {
-            name: data.name,
-            city: data.city,
-            description: data.description,
-            images: imageIds, 
-            amenities: amenitiesArray,
-            rating: data.rating,
-            rooms: newRooms
-        });
+    addHotel({
+        name: data.name,
+        city: data.city,
+        description: data.description,
+        images: imageIds, 
+        amenities: amenitiesArray,
+        rating: data.rating,
+        rooms: newRooms
+    });
 
-        toast({
-            title: 'Hotel Added!',
-            description: `${data.name} has been successfully added.`,
-        });
-        
-        form.reset();
-        // Refresh the page or navigate to show the new hotel
-        router.refresh();
-
-    } catch (error) {
-        console.error("Failed to add hotel:", error);
-        toast({
-            title: 'Failed to Add Hotel',
-            description: 'Something went wrong. Please try again.',
-            variant: 'destructive',
-        });
-    }
+    toast({
+        title: 'Hotel Added!',
+        description: `${data.name} has been successfully added.`,
+    });
+    
+    form.reset();
+    // Refresh the page or navigate to show the new hotel
+    router.refresh();
   }
 
   return (

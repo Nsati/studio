@@ -1,10 +1,8 @@
 
-'use client';
-
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import { Star, MapPin, BedDouble } from 'lucide-react';
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 
 import { getHotelBySlug } from '@/lib/data';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -20,9 +18,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { RoomBookingCard } from '@/components/hotel/RoomBookingCard';
 import { Button } from '@/components/ui/button';
-import { useFirestore } from '@/firebase';
-import type { Hotel } from '@/lib/types';
-import Loading from './loading';
+
 
 type HotelPageProps = {
   params: {
@@ -31,33 +27,13 @@ type HotelPageProps = {
 };
 
 export default function HotelPage({ params }: HotelPageProps) {
-  const firestore = useFirestore();
-  const [hotel, setHotel] = useState<Hotel | null>(null);
-  const [loading, setLoading] = useState(true);
+  const hotel = getHotelBySlug(params.slug);
 
   const bookingSectionRef = React.useRef<HTMLDivElement>(null);
 
   const handleScrollToBooking = () => {
     bookingSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
-  
-  useEffect(() => {
-    async function fetchHotel() {
-      if(firestore) {
-        setLoading(true);
-        const fetchedHotel = await getHotelBySlug(firestore, params.slug);
-        if (fetchedHotel) {
-          setHotel(fetchedHotel);
-        }
-        setLoading(false);
-      }
-    }
-    fetchHotel();
-  }, [firestore, params.slug]);
-
-  if (loading) {
-    return <Loading />;
-  }
 
   if (!hotel) {
     notFound();

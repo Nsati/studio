@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -8,8 +9,6 @@ import Link from 'next/link';
 import { Logo } from './Logo';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { useUser, useAuth } from '@/firebase';
-import { signOut } from 'firebase/auth';
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -17,20 +16,23 @@ const navLinks = [
   { href: '/my-bookings', label: 'My Bookings' },
 ];
 
+// Mock user state
+const useUser = () => {
+    // To mock a logged-in user, change this to:
+    // return { user: { displayName: 'John Doe', email: 'john@example.com' }, isUserLoading: false };
+    return { user: null, isUserLoading: false };
+};
+
+
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
   const { user, isUserLoading } = useUser();
-  const auth = useAuth();
 
-  const handleLogout = async () => {
-    if (!auth) return;
-    try {
-      await signOut(auth);
-      // You can add a toast notification here for successful logout
-    } catch (error) {
-      console.error('Error signing out:', error);
-    }
+  const handleLogout = () => {
+    // In a real app, you'd call your auth service here.
+    console.log('User logged out.');
+    // For mock purposes, you might need to refresh or manage state to see the change.
   };
 
   return (

@@ -1,3 +1,4 @@
+
 'use client';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,13 +24,10 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { useAuth, useFirestore } from '@/firebase';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
-import { doc, setDoc } from 'firebase/firestore';
 
 const formSchema = z.object({
   fullName: z.string().min(2, 'Name must be at least 2 characters.'),
@@ -41,8 +39,6 @@ type SignupFormValues = z.infer<typeof formSchema>;
 
 export default function SignupPage() {
   const signupImage = PlaceHolderImages.find((img) => img.id === 'city-nainital');
-  const auth = useAuth();
-  const firestore = useFirestore();
   const { toast } = useToast();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -57,41 +53,17 @@ export default function SignupPage() {
   });
 
   const onSubmit = async (data: SignupFormValues) => {
-    if (!auth || !firestore) return;
     setIsLoading(true);
-
-    try {
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        data.email,
-        data.password
-      );
-      const user = userCredential.user;
-
-      await updateProfile(user, { displayName: data.fullName });
-
-      // Create a user document in Firestore
-      await setDoc(doc(firestore, 'users', user.uid), {
-        uid: user.uid,
-        name: data.fullName,
-        email: data.email,
-        role: 'user', // default role
-      });
-
-      toast({
-        title: 'Account Created!',
-        description: 'You have been successfully signed up.',
-      });
-      router.push('/');
-    } catch (error: any) {
-      toast({
-        title: 'Sign Up Failed',
-        description: error.message || 'An unexpected error occurred.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
+     // This is a mock signup. In a real app, you'd call your auth service.
+     setTimeout(() => {
+        console.log('Signup data:', data);
+        toast({
+            title: 'Account Created!',
+            description: 'You have been successfully signed up.',
+        });
+        router.push('/');
+        setIsLoading(false);
+    }, 1000);
   };
 
   return (

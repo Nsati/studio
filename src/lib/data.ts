@@ -1,24 +1,304 @@
-'use client';
-import {
-  collection,
-  doc,
-  getDocs,
-  getDoc,
-  addDoc,
-  updateDoc,
-  query,
-  where,
-  DocumentData,
-  Firestore,
-} from 'firebase/firestore';
-import type { Hotel, Room, City, Booking } from './types';
-import {
-  addDocumentNonBlocking,
-  updateDocumentNonBlocking,
-} from '@/firebase/non-blocking-updates';
 
-// This is a placeholder for a real city data source.
-// In a real app, this might come from a static file or a small collection.
+import type { Hotel, Room, City, Booking } from './types';
+
+// This is a placeholder for a real data source.
+let hotelsData: Hotel[] = [
+  {
+    id: 'h1',
+    slug: 'the-naini-retreat',
+    name: 'The Naini Retreat',
+    city: 'Nainital',
+    description: 'The Naini Retreat, one of the finest hotels in Nainital, is a charming heritage hotel that was once the residence of the Maharaja of Pilibhit. Nestled in the lap of the Himalayas, this palatial building offers a stunning view of the Naini Lake and the surrounding lush green landscape.',
+    images: ['hotel-1-1', 'hotel-1-2', 'hotel-1-3'],
+    amenities: ['wifi', 'parking', 'restaurant', 'bar', 'spa', 'mountain-view'],
+    rating: 4.8,
+    rooms: [
+      { id: 'r1', type: 'Deluxe', price: 8000, capacity: 2, totalRooms: 10 },
+      { id: 'r2', type: 'Suite', price: 15000, capacity: 4, totalRooms: 5 },
+    ],
+  },
+  {
+    id: 'h2',
+    slug: 'shervani-hilltop',
+    name: 'Shervani Hilltop',
+    city: 'Nainital',
+    description: 'Shervani Hilltop, Nainital is a 4-star resort located in the serene and beautiful environs of Nainital. Spread over the lush green mountainside, the resort is a perfect retreat for travelers looking for a peaceful and luxurious stay.',
+    images: ['hotel-2-1', 'hotel-2-2'],
+    amenities: ['wifi', 'parking', 'restaurant', 'pool', 'garden'],
+    rating: 4.5,
+    rooms: [
+      { id: 'r3', type: 'Standard', price: 6000, capacity: 2, totalRooms: 20 },
+      { id: 'r4', type: 'Deluxe', price: 9000, capacity: 3, totalRooms: 15 },
+    ],
+  },
+  {
+    id: 'h3',
+    slug: 'the-manu-maharani',
+    name: 'The Manu Maharani',
+    city: 'Nainital',
+    description: 'The Manu Maharani is a premium hotel in Nainital, offering breathtaking views of the Naini Lake and the valley. With its contemporary architecture and warm hospitality, it promises a memorable stay for both leisure and business travelers.',
+    images: ['hotel-3-1'],
+    amenities: ['wifi', 'restaurant', 'bar', 'gym', 'spa'],
+    rating: 4.9,
+    rooms: [
+      { id: 'r5', type: 'Deluxe', price: 12000, capacity: 2, totalRooms: 25 },
+      { id: 'r6', type: 'Suite', price: 20000, capacity: 4, totalRooms: 10 },
+    ],
+  },
+  {
+    id: 'h4',
+    slug: 'vikram-vintage-inn',
+    name: 'Vikram Vintage Inn',
+    city: 'Nainital',
+    description: 'Experience the charm of a bygone era at Vikram Vintage Inn, a colonial-style hotel that exudes old-world elegance. Surrounded by deodar forests, it provides a tranquil escape from the hustle and bustle of city life.',
+    images: ['hotel-4-1'],
+    amenities: ['parking', 'restaurant', 'garden', 'heritage'],
+    rating: 4.3,
+    rooms: [
+      { id: 'r7', type: 'Standard', price: 5000, capacity: 2, totalRooms: 18 },
+    ],
+  },
+  {
+    id: 'h5',
+    slug: 'jw-marriott-mussoorie',
+    name: 'JW Marriott Mussoorie Walnut Grove Resort & Spa',
+    city: 'Mussoorie',
+    description: 'Nestled amidst the serene Himalayan ranges, JW Marriott Mussoorie Walnut Grove Resort & Spa is a luxury 5-star hotel offering a perfect blend of modern comfort and natural beauty. Enjoy the stunning valley views and world-class amenities.',
+    images: ['hotel-5-1', 'hotel-5-2'],
+    amenities: ['wifi', 'spa', 'pool', 'gym', 'restaurant', 'bar', 'mountain-view'],
+    rating: 4.9,
+    rooms: [
+        { id: 'r8', type: 'Deluxe', price: 25000, capacity: 2, totalRooms: 50 },
+        { id: 'r9', type: 'Suite', price: 45000, capacity: 4, totalRooms: 15 },
+    ]
+  },
+  {
+    id: 'h6',
+    slug: 'jaypee-residency-manor',
+    name: 'Jaypee Residency Manor',
+    city: 'Mussoorie',
+    description: 'Perched on a hilltop, Jaypee Residency Manor offers a 360-degree panoramic view of the mighty Himalayas. This elegant hotel is an ideal destination for a relaxing and rejuvenating holiday.',
+    images: ['hotel-6-1'],
+    amenities: ['wifi', 'parking', 'restaurant', 'spa', 'pool'],
+    rating: 4.6,
+    rooms: [
+        { id: 'r10', type: 'Standard', price: 18000, capacity: 2, totalRooms: 30 },
+        { id: 'r11', type: 'Deluxe', price: 22000, capacity: 3, totalRooms: 20 },
+    ]
+  },
+  {
+    id: 'h7',
+    slug: 'welcomhotel-the-savoy',
+    name: 'Welcomhotel by ITC Hotels, The Savoy',
+    city: 'Mussoorie',
+    description: 'An elegant and historic hotel, The Savoy is a wonderful mix of old-world charm and new-age conveniences. Experience the grandeur of English Gothic architecture and enjoy a luxurious stay.',
+    images: ['hotel-7-1'],
+    amenities: ['wifi', 'heritage', 'restaurant', 'bar', 'spa'],
+    rating: 4.7,
+    rooms: [
+        { id: 'r12', type: 'Standard', price: 20000, capacity: 2, totalRooms: 40 },
+    ]
+  },
+  {
+    id: 'h8',
+    slug: 'rokeby-manor',
+    name: 'Rokeby Manor',
+    city: 'Mussoorie',
+    description: 'A colonial-era estate, Rokeby Manor is a boutique hotel that has been restored to its original 19th-century character. It offers a cozy and intimate atmosphere with personalized service.',
+    images: ['hotel-8-1'],
+    amenities: ['wifi', 'restaurant', 'library', 'garden'],
+    rating: 4.8,
+    rooms: [
+        { id: 'r13', type: 'Deluxe', price: 16000, capacity: 2, totalRooms: 12 },
+    ]
+  },
+  {
+    id: 'h9',
+    slug: 'ananda-in-the-himalayas',
+    name: 'Ananda in The Himalayas',
+    city: 'Rishikesh',
+    description: 'A luxury destination spa resort situated at the Himalayan foothills. Ananda is dedicated to restoring balance and harmonizing energy through a holistic approach, incorporating yoga, meditation, and Ayurveda.',
+    images: ['hotel-9-1', 'hotel-9-2'],
+    amenities: ['spa', 'yoga', 'pool', 'gym', 'restaurant'],
+    rating: 5.0,
+    rooms: [
+        { id: 'r14', type: 'Suite', price: 55000, capacity: 2, totalRooms: 20 },
+    ]
+  },
+  {
+    id: 'h10',
+    slug: 'aloha-on-the-ganges',
+    name: 'Aloha on the Ganges',
+    city: 'Rishikesh',
+    description: 'Located right on the banks of the river Ganges, Aloha on the Ganges is a resort that offers a tranquil and spiritual experience. It\'s the perfect place to relax, rejuvenate, and connect with nature.',
+    images: ['hotel-10-1'],
+    amenities: ['wifi', 'restaurant', 'pool', 'spa', 'river-view'],
+    rating: 4.5,
+    rooms: [
+        { id: 'r15', type: 'Standard', price: 7000, capacity: 2, totalRooms: 30 },
+        { id: 'r16', type: 'Deluxe', price: 10000, capacity: 3, totalRooms: 25 },
+    ]
+  },
+  {
+    id: 'h11',
+    slug: 'taj-rishikesh-resort-spa',
+    name: 'Taj Rishikesh Resort & Spa, Uttarakhand',
+    city: 'Rishikesh',
+    description: 'A serene hideaway on the banks of the majestic Ganga, Taj Rishikesh Resort & Spa is a luxury retreat that offers stunning views and a tranquil atmosphere. It is an architectural tribute to the Garhwal region.',
+    images: ['hotel-11-1'],
+    amenities: ['wifi', 'spa', 'pool', 'restaurant', 'bar'],
+    rating: 4.9,
+    rooms: [
+        { id: 'r17', type: 'Deluxe', price: 35000, capacity: 2, totalRooms: 30 },
+    ]
+  },
+  {
+    id: 'h12',
+    slug: 'the-roseate-ganges',
+    name: 'The Roseate Ganges',
+    city: 'Rishikesh',
+    description: 'An exquisite luxury retreat on the banks of the Ganges, The Roseate Ganges offers an unparalleled experience of nature, spirituality, and hospitality. The villas are designed to provide a private and serene stay.',
+    images: ['hotel-12-1'],
+    amenities: ['wifi', 'spa', 'pool', 'restaurant'],
+    rating: 4.8,
+    rooms: [
+        { id: 'r18', type: 'Suite', price: 40000, capacity: 2, totalRooms: 16 },
+    ]
+  },
+   {
+    id: 'h13',
+    slug: 'haveli-hari-ganga',
+    name: 'Haveli Hari Ganga by Leisure Hotels',
+    city: 'Haridwar',
+    description: 'A heritage haveli located on the banks of the holy Ganges, Haveli Hari Ganga offers a blend of traditional Indian hospitality and modern comforts. Experience the spiritual essence of Haridwar with a stay at this charming hotel.',
+    images: ['hotel-13-1'],
+    amenities: ['wifi', 'restaurant', 'heritage', 'ghat'],
+    rating: 4.4,
+    rooms: [
+        { id: 'r19', type: 'Standard', price: 5500, capacity: 2, totalRooms: 20 },
+    ]
+  },
+  {
+    id: 'h14',
+    slug: 'aalia-on-the-ganges',
+    name: 'Aalia on the Ganges',
+    city: 'Haridwar',
+    description: 'A luxury resort offering a serene and spiritual experience on the banks of the Ganges. Aalia combines the charm of a forest retreat with the comforts of a 5-star hotel.',
+    images: ['hotel-14-1'],
+    amenities: ['wifi', 'pool', 'spa', 'restaurant', 'river-view'],
+    rating: 4.7,
+    rooms: [
+        { id: 'r20', type: 'Deluxe', price: 15000, capacity: 2, totalRooms: 12 },
+    ]
+  },
+  {
+    id: 'h15',
+    slug: 'the-grand-alova',
+    name: 'The Grand Alova',
+    city: 'Haridwar',
+    description: 'The Grand Alova is a contemporary hotel that offers a comfortable and convenient stay in Haridwar. It is located close to the major attractions of the city, making it an ideal choice for pilgrims and tourists.',
+    images: ['hotel-15-1'],
+    amenities: ['wifi', 'parking', 'restaurant'],
+    rating: 4.2,
+    rooms: [
+        { id: 'r21', type: 'Standard', price: 4000, capacity: 2, totalRooms: 25 },
+    ]
+  },
+  {
+    id: 'h16',
+    slug: 'ganga-lahari',
+    name: 'Ganga Lahari',
+    city: 'Haridwar',
+    description: 'Situated on the banks of the Ganges at Har-ki-Pauri, Ganga Lahari offers a spectacular view of the river and the surrounding temples. The hotel has its own private bathing ghat for a holy dip.',
+    images: ['hotel-16-1'],
+    amenities: ['wifi', 'restaurant', 'ghat'],
+    rating: 4.6,
+    rooms: [
+        { id: 'r22', type: 'Deluxe', price: 8000, capacity: 2, totalRooms: 16 },
+    ]
+  },
+  {
+    id: 'h17',
+    slug: 'clifftop-club',
+    name: 'Clifftop Club',
+    city: 'Auli',
+    description: 'Located at an altitude of over 10,000 feet, Clifftop Club is a luxury ski resort that offers breathtaking views of the snow-clad Himalayas. It is a perfect destination for adventure enthusiasts and nature lovers.',
+    images: ['hotel-17-1', 'hotel-17-2'],
+    amenities: ['restaurant', 'bar', 'skiing', 'mountain-view'],
+    rating: 4.5,
+    rooms: [
+        { id: 'r23', type: 'Standard', price: 12000, capacity: 2, totalRooms: 20 },
+    ]
+  },
+  {
+    id: 'h18',
+    slug: 'the-royal-village',
+    name: 'The Royal Village',
+    city: 'Auli',
+    description: 'Experience the rustic charm of a Himalayan village with a stay at The Royal Village. The resort offers comfortable cottages with modern amenities and stunning views of the surrounding mountains.',
+    images: ['hotel-18-1'],
+    amenities: ['restaurant', 'garden', 'trekking'],
+    rating: 4.3,
+    rooms: [
+        { id: 'r24', type: 'Standard', price: 9000, capacity: 2, totalRooms: 15 },
+    ]
+  },
+  {
+    id: 'h19',
+    slug: 'blue-poppy-resorts',
+    name: 'Blue Poppy Resorts',
+    city: 'Auli',
+    description: 'Named after the rare Himalayan blue poppy, this resort is a paradise for nature lovers. Surrounded by lush greenery and offering panoramic views of the Nanda Devi range, it is an ideal place to unwind.',
+    images: ['hotel-19-1'],
+    amenities: ['restaurant', 'trekking', 'mountain-view'],
+    rating: 4.2,
+    rooms: [
+        { id: 'r25', type: 'Deluxe', price: 10000, capacity: 3, totalRooms: 10 },
+    ]
+  },
+  {
+    id: 'h20',
+    slug: 'aahana-the-corbett-wilderness',
+    name: 'Aahana The Corbett Wilderness',
+    city: 'Jim Corbett',
+    description: 'Aahana is a luxury eco-friendly resort located in the heart of Corbett. Spread over a sprawling 13.5 acres, it offers a perfect blend of nature, wildlife, and luxury. The resort is known for its organic farming and commitment to sustainability.',
+    images: ['hotel-20-1', 'hotel-20-2'],
+    amenities: ['wifi', 'pool', 'spa', 'restaurant', 'safari'],
+    rating: 4.9,
+    rooms: [
+        { id: 'r26', type: 'Deluxe', price: 18000, capacity: 2, totalRooms: 24 },
+        { id: 'r27', type: 'Suite', price: 28000, capacity: 4, totalRooms: 8 },
+    ]
+  },
+  {
+    id: 'h21',
+    slug: 'the-riverview-retreat',
+    name: 'The Riverview Retreat',
+    city: 'Jim Corbett',
+    description: 'A riverside retreat that offers a perfect blend of adventure and relaxation. The resort is spread over a large area on the banks of the Kosi river and offers a range of activities for its guests.',
+    images: ['hotel-21-1'],
+    amenities: ['wifi', 'pool', 'restaurant', 'river-view', 'safari'],
+    rating: 4.6,
+    rooms: [
+        { id: 'r28', type: 'Standard', price: 9000, capacity: 2, totalRooms: 30 },
+    ]
+  },
+  {
+    id: 'h22',
+    slug: 'namah-resort',
+    name: 'Namah Resort',
+    city: 'Jim Corbett',
+    description: 'A luxury resort located on the banks of the Kosi river, Namah offers a perfect blend of comfort and nature. The resort has a contemporary design and offers a range of modern amenities.',
+    images: ['hotel-22-1', 'hotel-22-2', 'hotel-22-3'],
+    amenities: ['wifi', 'pool', 'gym', 'restaurant', 'bar'],
+    rating: 4.7,
+    rooms: [
+        { id: 'r29', type: 'Deluxe', price: 14000, capacity: 2, totalRooms: 20 },
+        { id: 'r30', type: 'Suite', price: 22000, capacity: 3, totalRooms: 10 },
+    ]
+  }
+];
+
 const citiesData: City[] = [
   { name: 'Nainital', image: 'city-nainital' },
   { name: 'Mussoorie', image: 'city-mussoorie' },
@@ -28,115 +308,88 @@ const citiesData: City[] = [
   { name: 'Jim Corbett', image: 'city-jim-corbett' },
 ];
 
+let bookingsData: Booking[] = [
+  {
+    id: 'b1',
+    hotelName: 'The Naini Retreat',
+    hotelCity: 'Nainital',
+    hotelImage: 'hotel-1-1',
+    roomType: 'Deluxe Room',
+    checkIn: '2024-08-15',
+    checkOut: '2024-08-18',
+    guests: 2,
+    totalPrice: 28320,
+    status: 'Confirmed',
+  },
+  {
+    id: 'b2',
+    hotelName: 'JW Marriott Mussoorie',
+    hotelCity: 'Mussoorie',
+    hotelImage: 'hotel-5-1',
+    roomType: 'Valley View Suite',
+    checkIn: '2024-09-01',
+    checkOut: '2024-09-05',
+    guests: 2,
+    totalPrice: 177000,
+    status: 'Confirmed',
+  },
+  {
+    id: 'b3',
+    hotelName: 'Aahana The Corbett Wilderness',
+    hotelCity: 'Jim Corbett',
+    hotelImage: 'hotel-20-1',
+    roomType: 'Jungle Villa',
+    checkIn: '2024-07-20',
+    checkOut: '2024-07-22',
+    guests: 3,
+    totalPrice: 42480,
+    status: 'Cancelled',
+  },
+];
+
+
+// --- CITIES ---
 export function getCities(): City[] {
   return citiesData;
 }
 
 // --- HOTELS ---
-export async function getHotels(db: Firestore, city?: string): Promise<Hotel[]> {
-  let hotelsQuery = query(collection(db, 'hotels'));
+export function getHotels(city?: string): Hotel[] {
   if (city) {
-    hotelsQuery = query(collection(db, 'hotels'), where('city', '==', city));
+    return hotelsData.filter((hotel) => hotel.city === city);
   }
-
-  const snapshot = await getDocs(hotelsQuery);
-  if (snapshot.empty) {
-    return [];
-  }
-
-  const hotelsPromises = snapshot.docs.map(async (hotelDoc) => {
-    const hotelData = {
-      ...hotelDoc.data(),
-      id: hotelDoc.id,
-      slug: hotelDoc.data().slug || hotelDoc.id,
-    } as Hotel;
-
-    // Fetch rooms for each hotel
-    const roomsSnapshot = await getDocs(collection(db, 'hotels', hotelDoc.id, 'rooms'));
-    hotelData.rooms = roomsSnapshot.docs.map(roomDoc => ({ ...roomDoc.data(), id: roomDoc.id })) as Room[];
-    return hotelData;
-  });
-  
-  const hotels = await Promise.all(hotelsPromises);
-  return hotels;
+  return hotelsData;
 }
 
-export async function getHotelBySlug(db: Firestore, slug: string): Promise<Hotel | undefined> {
-    const q = query(collection(db, "hotels"), where("slug", "==", slug));
-    const querySnapshot = await getDocs(q);
-
-    if (querySnapshot.empty) {
-        // Fallback to checking by ID if slug is not found
-        const docRefById = doc(db, 'hotels', slug);
-        const docSnapById = await getDoc(docRefById);
-        if (!docSnapById.exists()) {
-          return undefined;
-        }
-        
-        const hotelDataById = { ...docSnapById.data(), id: docSnapById.id, slug: docSnapById.data().slug || docSnapById.id } as Hotel;
-        const roomsSnapshotById = await getDocs(collection(db, 'hotels', docSnapById.id, 'rooms'));
-        hotelDataById.rooms = roomsSnapshotById.docs.map(roomDoc => ({ ...roomDoc.data(), id: roomDoc.id } as Room));
-        return hotelDataById;
-    }
-
-    const hotelDoc = querySnapshot.docs[0];
-    const hotelData = { ...hotelDoc.data(), id: hotelDoc.id, slug: hotelDoc.data().slug || hotelDoc.id } as Hotel;
-
-    // Fetch rooms
-    const roomsSnapshot = await getDocs(collection(db, 'hotels', hotelDoc.id, 'rooms'));
-    hotelData.rooms = roomsSnapshot.docs.map(roomDoc => ({ ...roomDoc.data(), id: roomDoc.id } as Room));
-    
-    return hotelData;
+export function getHotelBySlug(slug: string): Hotel | undefined {
+  return hotelsData.find((hotel) => hotel.slug === slug);
 }
 
-export function addHotel(db: Firestore, hotel: Omit<Hotel, 'id' | 'slug'>): Promise<any> {
-    const newHotel = {
+export function addHotel(hotel: Omit<Hotel, 'id' | 'slug'>): Hotel {
+    const newHotel: Hotel = {
         ...hotel,
+        id: `h${hotelsData.length + 1}`,
         slug: hotel.name.toLowerCase().replace(/\s+/g, '-'),
-        rooms: [], // Rooms will be added as a subcollection, not in the main doc
     };
-    const hotelCollection = collection(db, 'hotels');
-    const hotelPromise = addDocumentNonBlocking(hotelCollection, newHotel);
-
-    hotelPromise.then(docRef => {
-        if(!docRef) return;
-        const roomsCollection = collection(db, 'hotels', docRef.id, 'rooms');
-        hotel.rooms.forEach(room => {
-            addDocumentNonBlocking(roomsCollection, { ...room, hotelId: docRef.id });
-        });
-    });
-
-    return hotelPromise;
+    hotelsData.unshift(newHotel);
+    return newHotel;
 }
 
 
 // --- BOOKINGS ---
-export async function getBookings(db: Firestore, userId: string): Promise<Booking[]> {
-    if (!userId) return [];
-    const bookingsQuery = query(collection(db, `users/${userId}/bookings`));
-    const snapshot = await getDocs(bookingsQuery);
-    return snapshot.docs.map(doc => ({...doc.data(), id: doc.id})) as Booking[];
+export function getBookings(): Booking[] {
+  return bookingsData;
 }
 
-export async function getBookingById(db: Firestore, userId: string, bookingId: string): Promise<Booking | undefined> {
-    if (!userId || !bookingId) return undefined;
-    const docRef = doc(db, `users/${userId}/bookings`, bookingId);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-        return { ...docSnap.data(), id: docSnap.id } as Booking;
+export function getBookingById(bookingId: string): Booking | undefined {
+    return bookingsData.find(b => b.id === bookingId);
+}
+
+export function updateBookingStatus(bookingId: string, status: 'Confirmed' | 'Cancelled' | 'Pending'): Booking | undefined {
+    const bookingIndex = bookingsData.findIndex(b => b.id === bookingId);
+    if (bookingIndex !== -1) {
+        bookingsData[bookingIndex].status = status;
+        return bookingsData[bookingIndex];
     }
     return undefined;
-}
-
-
-export function createBooking(db: Firestore, userId: string, bookingData: Omit<Booking, 'id'>) {
-    if (!userId) throw new Error("User not authenticated");
-    const bookingCollection = collection(db, `users/${userId}/bookings`);
-    return addDocumentNonBlocking(bookingCollection, bookingData);
-}
-
-export function updateBookingStatus(db: Firestore, userId: string, bookingId: string, status: 'Confirmed' | 'Cancelled' | 'Pending') {
-    if (!userId) throw new Error("User not authenticated");
-    const docRef = doc(db, `users/${userId}/bookings`, bookingId);
-    return updateDocumentNonBlocking(docRef, { status });
 }
