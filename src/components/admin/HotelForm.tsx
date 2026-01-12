@@ -31,6 +31,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Sparkles, Upload, PlusCircle, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import type { Room } from '@/lib/types';
+import Image from 'next/image';
 
 const roomSchema = z.object({
     id: z.string().optional(), // for existing rooms
@@ -46,7 +47,7 @@ const formSchema = z.object({
   rating: z.coerce.number().min(1, 'Rating must be between 1 and 5.').max(5, 'Rating must be between 1 and 5.'),
   amenities: z.string().min(3, 'Enter at least one amenity.'),
   description: z.string().min(10, 'Description is required.'),
-  images: z.any().optional(),
+  images: z.any().refine(files => files?.length > 0, 'At least one image is required.'),
   rooms: z.array(roomSchema).min(1, 'Please add at least one room type.'),
 });
 
@@ -54,6 +55,7 @@ type HotelFormValues = z.infer<typeof formSchema>;
 
 export function HotelForm() {
   const [isGenerating, setIsGenerating] = useState(false);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const { toast } = useToast();
   const cities = getCities();
   const router = useRouter();
@@ -82,14 +84,20 @@ export function HotelForm() {
   function onSubmit(data: HotelFormValues) {
     const amenitiesArray = data.amenities.split(',').map(s => s.trim());
     
-    // This is a mock implementation. In a real app, you would handle
-    // file uploads to a server and get back URLs. Here we'll just
-    // use a placeholder.
-    const imageIds = ['hotel-1-1', 'hotel-1-2'];
+    // In a real app, you would handle file uploads to a server and get back URLs.
+    // Here, we'll create new IDs and use a placeholder URL.
+    const imageIds = Array.from(watchedImages).map((file: any, index: number) => {
+        const newImageId = `new-hotel-${Date.now()}-${index}`;
+        // In a real scenario, you'd upload the file and get a URL.
+        // For this mock, we just add it to our data structure.
+        // This won't actually save the file, just its reference.
+        return newImageId;
+    });
 
     const newRooms: Room[] = data.rooms.map((room, index) => ({
       ...room,
       id: `r-new-${Date.now()}-${index}`,
+      hotelId: '' // This will be set by addHotel
     }));
 
     addHotel({
@@ -108,8 +116,19 @@ export function HotelForm() {
     });
     
     form.reset();
+    setImagePreviews([]);
     // Refresh the page or navigate to show the new hotel
     router.refresh();
+  }
+  
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+        form.setValue('images', files);
+        const fileArray = Array.from(files);
+        const previews = fileArray.map(file => URL.createObjectURL(file));
+        setImagePreviews(previews);
+    }
   }
 
   return (
@@ -183,7 +202,8 @@ export function HotelForm() {
                         id="images"
                         type="file"
                         multiple
-                        onChange={(e) => field.onChange(e.target.files)}
+                        accept="image/*"
+                        onChange={handleImageChange}
                         className="hidden"
                     />
                     <label htmlFor="images" className="flex items-center gap-2 cursor-pointer bg-secondary text-secondary-foreground hover:bg-secondary/80 h-10 px-4 py-2 rounded-md text-sm">
@@ -192,15 +212,17 @@ export function HotelForm() {
                     </label>
                 </div>
               </FormControl>
-              {watchedImages && watchedImages.length > 0 && (
-                <div className="mt-2 flex flex-wrap gap-2">
-                    {Array.from(watchedImages).map((file: any, index: number) => (
-                        <Badge key={index} variant="secondary">{file.name}</Badge>
+              {imagePreviews.length > 0 && (
+                <div className="mt-4 grid grid-cols-3 md:grid-cols-5 gap-4">
+                    {imagePreviews.map((preview, index) => (
+                        <div key={index} className="relative aspect-square w-full overflow-hidden rounded-md">
+                            <Image src={preview} alt={`Preview ${index}`} fill className="object-cover" />
+                        </div>
                     ))}
                 </div>
               )}
               <FormDescription>
-                Upload one or more images for the hotel. This is currently a mock and won't save images.
+                Upload one or more images for the hotel.
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -345,3 +367,5 @@ export function HotelForm() {
     </Form>
   );
 }
+
+    

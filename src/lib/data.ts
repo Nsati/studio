@@ -1,6 +1,8 @@
 
 
 import type { Hotel, Room, City, Booking } from './types';
+import placeholderImageData from './placeholder-images.json';
+import type { ImagePlaceholder } from './placeholder-images';
 
 // This is a placeholder for a real data source.
 let hotelsData: Hotel[] = [
@@ -325,6 +327,9 @@ const citiesData: City[] = [
   { name: 'Jim Corbett', image: 'city-jim-corbett' },
 ];
 
+let placeholderImages: ImagePlaceholder[] = placeholderImageData.placeholderImages;
+
+
 // --- CITIES ---
 export function getCities(): City[] {
   return citiesData;
@@ -347,11 +352,31 @@ export function getHotelById(id: string): Hotel | undefined {
 }
 
 export function addHotel(hotel: Omit<Hotel, 'id' | 'slug'>): Hotel {
+    const newHotelId = `h${hotelsData.length + 1}`;
     const newHotel: Hotel = {
         ...hotel,
-        id: `h${hotelsData.length + 1}`,
+        id: newHotelId,
         slug: hotel.name.toLowerCase().replace(/\s+/g, '-'),
     };
+    newHotel.rooms.forEach(room => room.hotelId = newHotelId);
+
+    // Add new image placeholders.
+    // This is a mock; in a real app, you'd get URLs from a CDN.
+    hotel.images.forEach((imgId, index) => {
+        const newImage: ImagePlaceholder = {
+            id: imgId,
+            description: `Image ${index + 1} for ${hotel.name}`,
+            // We use a generic placeholder image URL here
+            imageUrl: 'https://picsum.photos/seed/1/600/400',
+            imageHint: 'hotel photo'
+        };
+        // This is not ideal as it modifies the imported JSON data structure in memory.
+        // A proper backend would handle this.
+        if (!placeholderImages.find(p => p.id === newImage.id)) {
+            placeholderImages.push(newImage);
+        }
+    });
+
     hotelsData.unshift(newHotel);
     return newHotel;
 }
@@ -401,3 +426,5 @@ declare module './types' {
         hotelId: string;
     }
 }
+
+    
