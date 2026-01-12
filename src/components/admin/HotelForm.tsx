@@ -1,11 +1,9 @@
-
 'use client';
 
-import { useForm, useWatch, useFieldArray } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -19,7 +17,11 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { getCities, addHotel } from '@/lib/data';
+import {
+  getCities,
+  addHotel,
+  updateHotel,
+} from '@/lib/data';
 import {
   Select,
   SelectContent,
@@ -28,37 +30,48 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Sparkles, Upload, PlusCircle, Trash2 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import type { Room } from '@/lib/types';
+import { Upload, PlusCircle, Trash2 } from 'lucide-react';
+import type { Room, Hotel } from '@/lib/types';
 import Image from 'next/image';
 
 const roomSchema = z.object({
-    id: z.string().optional(), // for existing rooms
-    type: z.enum(['Standard', 'Deluxe', 'Suite']),
-    price: z.coerce.number().min(1, 'Price must be greater than 0.'),
-    capacity: z.coerce.number().min(1, 'Capacity must be at least 1.'),
-    totalRooms: z.coerce.number().min(1, 'Enter number of rooms.'),
-  });
+  id: z.string().optional(), // for existing rooms
+  type: z.enum(['Standard', 'Deluxe', 'Suite']),
+  price: z.coerce.number().min(1, 'Price must be greater than 0.'),
+  capacity: z.coerce.number().min(1, 'Capacity must be at least 1.'),
+  totalRooms: z.coerce.number().min(1, 'Enter number of rooms.'),
+});
 
 const formSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters.'),
   city: z.string().min(1, 'City is required.'),
-  rating: z.coerce.number().min(1, 'Rating must be between 1 and 5.').max(5, 'Rating must be between 1 and 5.'),
+  rating: z.coerce
+    .number()
+    .min(1, 'Rating must be between 1 and 5.')
+    .max(5, 'Rating must be between 1 and 5.'),
   amenities: z.string().min(3, 'Enter at least one amenity.'),
   description: z.string().min(10, 'Description is required.'),
-  images: z.any().refine(files => files?.length > 0, 'At least one image is required.'),
+  images: z
+    .any()
+    .refine(
+      files => files?.length > 0,
+      'At least one image is required.'
+    ),
   rooms: z.array(roomSchema).min(1, 'Please add at least one room type.'),
 });
 
 type HotelFormValues = z.infer<typeof formSchema>;
 
-export function HotelForm() {
-  const [isGenerating, setIsGenerating] = useState(false);
+interface HotelFormProps {
+  hotelToEdit?: Hotel;
+  onFormSubmit?: () => void;
+}
+
+export function HotelForm({ hotelToEdit, onFormSubmit }: HotelFormProps) {
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const { toast } = useToast();
   const cities = getCities();
-  const router = useRouter();
+  const isEditMode = !!hotelToEdit;
 
   const form = useForm<HotelFormValues>({
     resolver: zodResolver(formSchema),
@@ -68,73 +81,107 @@ export function HotelForm() {
       rating: 4.0,
       amenities: '',
       description: '',
-      rooms: [
-        { type: 'Standard', price: 0, capacity: 2, totalRooms: 10 },
-      ]
+      images: undefined,
+      rooms: [{ type: 'Standard', price: 0, capacity: 2, totalRooms: 10 }],
     },
   });
 
+  useEffect(() => {
+    if (isEditMode) {
+      form.reset({
+        name: hotelToEdit.name,
+        city: hotelToEdit.city,
+        rating: hotelToEdit.rating,
+        amenities: hotelToEdit.amenities.join(', '),
+        description: hotelToEdit.description,
+        rooms: hotelToEdit.rooms,
+        // For images, we can't pre-populate the file input.
+        // We'll just require them to be re-uploaded on edit.
+        images: undefined,
+      });
+    }
+  }, [isEditMode, hotelToEdit, form]);
+
   const { fields, append, remove } = useFieldArray({
     control: form.control,
-    name: "rooms"
+    name: 'rooms',
   });
-
-  const watchedImages = useWatch({ control: form.control, name: 'images' });
 
   function onSubmit(data: HotelFormValues) {
     const amenitiesArray = data.amenities.split(',').map(s => s.trim());
     
-    // In a real app, you would handle file uploads to a server and get back URLs.
-    // Here, we'll create new IDs and use a placeholder URL.
-    const imageIds = Array.from(watchedImages).map((file: any, index: number) => {
-        const newImageId = `new-hotel-${Date.now()}-${index}`;
-        // In a real scenario, you'd upload the file and get a URL.
-        // For this mock, we just add it to our data structure.
-        // This won't actually save the file, just its reference.
-        return newImageId;
-    });
+    // In a real app, image handling would be more robust.
+    // Here we create new IDs/placeholders for simplicity.
+    const imageIds = Array.from(data.images as FileList).map(
+      (file: any, index: number) => {
+        return `new-hotel-${Date.now()}-${index}`;
+      }
+    );
 
-    const newRooms: Room[] = data.rooms.map((room, index) => ({
-      ...room,
-      id: `r-new-${Date.now()}-${index}`,
-      hotelId: '' // This will be set by addHotel
-    }));
+    if (isEditMode) {
+        const updatedRooms: Room[] = data.rooms.map((room, index) => ({
+            ...room,
+            id: room.id || `r-updated-${Date.now()}-${index}`,
+            hotelId: hotelToEdit.id
+        }));
 
-    addHotel({
+      updateHotel(hotelToEdit.id, {
+        ...hotelToEdit,
         name: data.name,
         city: data.city,
         description: data.description,
+        // On edit, we replace images. A real app might allow managing existing images.
         images: imageIds, 
         amenities: amenitiesArray,
         rating: data.rating,
-        rooms: newRooms
-    });
-
-    toast({
+        rooms: updatedRooms,
+      });
+      toast({
+        title: 'Hotel Updated!',
+        description: `${data.name} has been successfully updated.`,
+      });
+    } else {
+        const newRooms: Room[] = data.rooms.map((room, index) => ({
+            ...room,
+            id: `r-new-${Date.now()}-${index}`,
+            hotelId: '', // This will be set by addHotel
+        }));
+      addHotel({
+        name: data.name,
+        city: data.city,
+        description: data.description,
+        images: imageIds,
+        amenities: amenitiesArray,
+        rating: data.rating,
+        rooms: newRooms,
+      });
+      toast({
         title: 'Hotel Added!',
         description: `${data.name} has been successfully added.`,
-    });
-    
+      });
+    }
+
     form.reset();
     setImagePreviews([]);
-    // Refresh the page or navigate to show the new hotel
-    router.refresh();
+    if (onFormSubmit) {
+      onFormSubmit();
+    }
   }
-  
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
-        form.setValue('images', files);
-        const fileArray = Array.from(files);
-        const previews = fileArray.map(file => URL.createObjectURL(file));
-        setImagePreviews(previews);
+      form.setValue('images', files);
+      const fileArray = Array.from(files);
+      const previews = fileArray.map(file => URL.createObjectURL(file));
+      setImagePreviews(previews);
     }
-  }
+  };
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
           <FormField
             control={form.control}
             name="name"
@@ -156,7 +203,7 @@ export function HotelForm() {
                 <FormLabel>City</FormLabel>
                 <Select
                   onValueChange={field.onChange}
-                  defaultValue={field.value}
+                  value={field.value}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -164,7 +211,7 @@ export function HotelForm() {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {cities.map((city) => (
+                    {cities.map(city => (
                       <SelectItem key={city.name} value={city.name}>
                         {city.name}
                       </SelectItem>
@@ -182,47 +229,67 @@ export function HotelForm() {
               <FormItem>
                 <FormLabel>Rating</FormLabel>
                 <FormControl>
-                  <Input type="number" step="0.1" min="1" max="5" placeholder="e.g., 4.5" {...field} />
+                  <Input
+                    type="number"
+                    step="0.1"
+                    min="1"
+                    max="5"
+                    placeholder="e.g., 4.5"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
-        
+
         <FormField
           control={form.control}
           name="images"
-          render={({ field }) => (
+          render={() => (
             <FormItem>
               <FormLabel>Hotel Images</FormLabel>
               <FormControl>
                 <div className="flex items-center gap-2">
-                    <Input
-                        id="images"
-                        type="file"
-                        multiple
-                        accept="image/*"
-                        onChange={handleImageChange}
-                        className="hidden"
-                    />
-                    <label htmlFor="images" className="flex items-center gap-2 cursor-pointer bg-secondary text-secondary-foreground hover:bg-secondary/80 h-10 px-4 py-2 rounded-md text-sm">
-                        <Upload className="h-4 w-4" />
-                        Choose Files
-                    </label>
+                  <Input
+                    id="images"
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="hidden"
+                  />
+                  <label
+                    htmlFor="images"
+                    className="flex h-10 cursor-pointer items-center gap-2 rounded-md bg-secondary px-4 py-2 text-sm text-secondary-foreground hover:bg-secondary/80"
+                  >
+                    <Upload className="h-4 w-4" />
+                    Choose Files
+                  </label>
                 </div>
               </FormControl>
               {imagePreviews.length > 0 && (
-                <div className="mt-4 grid grid-cols-3 md:grid-cols-5 gap-4">
-                    {imagePreviews.map((preview, index) => (
-                        <div key={index} className="relative aspect-square w-full overflow-hidden rounded-md">
-                            <Image src={preview} alt={`Preview ${index}`} fill className="object-cover" />
-                        </div>
-                    ))}
+                <div className="mt-4 grid grid-cols-3 gap-4 md:grid-cols-5">
+                  {imagePreviews.map((preview, index) => (
+                    <div
+                      key={index}
+                      className="relative aspect-square w-full overflow-hidden rounded-md"
+                    >
+                      <Image
+                        src={preview}
+                        alt={`Preview ${index}`}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  ))}
                 </div>
               )}
               <FormDescription>
-                Upload one or more images for the hotel.
+                {isEditMode
+                  ? 'Re-upload images to replace existing ones.'
+                  : 'Upload one or more images for the hotel.'}
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -230,100 +297,108 @@ export function HotelForm() {
         />
 
         <div>
-            <FormLabel>Room Types</FormLabel>
-            <FormDescription className="mb-4">
-                Define the rooms available at this hotel.
-            </FormDescription>
-            <div className="space-y-4">
+          <FormLabel>Room Types</FormLabel>
+          <FormDescription className="mb-4">
+            Define the rooms available at this hotel.
+          </FormDescription>
+          <div className="space-y-4">
             {fields.map((field, index) => (
-                <div key={field.id} className="grid grid-cols-1 md:grid-cols-9 gap-4 items-start border p-4 rounded-md relative">
-                    <FormField
-                        control={form.control}
-                        name={`rooms.${index}.type`}
-                        render={({ field }) => (
-                        <FormItem className="md:col-span-2">
-                            <FormLabel>Room Type</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select Type" />
-                                </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                <SelectItem value="Standard">Standard</SelectItem>
-                                <SelectItem value="Deluxe">Deluxe</SelectItem>
-                                <SelectItem value="Suite">Suite</SelectItem>
-                                </SelectContent>
-                            </Select>
-                            <FormMessage />
-                        </FormItem>
-                        )}
-                    />
-                     <FormField
-                        control={form.control}
-                        name={`rooms.${index}.price`}
-                        render={({ field }) => (
-                        <FormItem className="md:col-span-2">
-                            <FormLabel>Price/night (₹)</FormLabel>
-                            <FormControl>
-                            <Input type="number" placeholder="5000" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                        )}
-                    />
-                     <FormField
-                        control={form.control}
-                        name={`rooms.${index}.capacity`}
-                        render={({ field }) => (
-                        <FormItem className="md:col-span-2">
-                            <FormLabel>Capacity</FormLabel>
-                            <FormControl>
-                            <Input type="number" placeholder="2" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name={`rooms.${index}.totalRooms`}
-                        render={({ field }) => (
-                        <FormItem className="md:col-span-2">
-                            <FormLabel>Total Rooms</FormLabel>
-                            <FormControl>
-                            <Input type="number" placeholder="10" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                        )}
-                    />
-                    <div className="md:col-span-1 flex items-end h-full">
-                        <Button
-                            type="button"
-                            variant="destructive"
-                            size="icon"
-                            onClick={() => remove(index)}
-                            disabled={fields.length <= 1}
-                        >
-                            <Trash2 className="h-4 w-4" />
-                            <span className="sr-only">Remove Room</span>
-                        </Button>
-                    </div>
+              <div
+                key={field.id}
+                className="relative grid grid-cols-1 items-start gap-4 border p-4 rounded-md md:grid-cols-9"
+              >
+                <FormField
+                  control={form.control}
+                  name={`rooms.${index}.type`}
+                  render={({ field }) => (
+                    <FormItem className="md:col-span-2">
+                      <FormLabel>Room Type</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select Type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Standard">Standard</SelectItem>
+                          <SelectItem value="Deluxe">Deluxe</SelectItem>
+                          <SelectItem value="Suite">Suite</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name={`rooms.${index}.price`}
+                  render={({ field }) => (
+                    <FormItem className="md:col-span-2">
+                      <FormLabel>Price/night (₹)</FormLabel>
+                      <FormControl>
+                        <Input type="number" placeholder="5000" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name={`rooms.${index}.capacity`}
+                  render={({ field }) => (
+                    <FormItem className="md:col-span-2">
+                      <FormLabel>Capacity</FormLabel>
+                      <FormControl>
+                        <Input type="number" placeholder="2" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name={`rooms.${index}.totalRooms`}
+                  render={({ field }) => (
+                    <FormItem className="md:col-span-2">
+                      <FormLabel>Total Rooms</FormLabel>
+                      <FormControl>
+                        <Input type="number" placeholder="10" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="flex h-full items-end md:col-span-1">
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    onClick={() => remove(index)}
+                    disabled={fields.length <= 1}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    <span className="sr-only">Remove Room</span>
+                  </Button>
                 </div>
+              </div>
             ))}
-             <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => append({ type: 'Standard', price: 0, capacity: 2, totalRooms: 5 })}
-                className="mt-2"
-                >
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Add Room Type
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                append({ type: 'Standard', price: 0, capacity: 2, totalRooms: 5 })
+              }
+              className="mt-2"
+            >
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Add Room Type
             </Button>
             <FormMessage>{form.formState.errors.rooms?.message}</FormMessage>
-            </div>
+          </div>
         </div>
 
         <FormField
@@ -342,7 +417,7 @@ export function HotelForm() {
             </FormItem>
           )}
         />
-        
+
         <FormField
           control={form.control}
           name="description"
@@ -362,10 +437,10 @@ export function HotelForm() {
             </FormItem>
           )}
         />
-        <Button type="submit">Add Hotel</Button>
+        <Button type="submit">
+          {isEditMode ? 'Update Hotel' : 'Add Hotel'}
+        </Button>
       </form>
     </Form>
   );
 }
-
-    

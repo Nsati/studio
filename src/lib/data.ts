@@ -1,5 +1,3 @@
-
-
 import type { Hotel, Room, City, Booking } from './types';
 import placeholderImageData from './placeholder-images.json';
 import type { ImagePlaceholder } from './placeholder-images';
@@ -381,6 +379,27 @@ export function addHotel(hotel: Omit<Hotel, 'id' | 'slug'>): Hotel {
     return newHotel;
 }
 
+export function updateHotel(hotelId: string, updatedHotelData: Hotel): Hotel | undefined {
+    const hotelIndex = hotelsData.findIndex(h => h.id === hotelId);
+    if (hotelIndex === -1) {
+        return undefined;
+    }
+
+    const updatedHotel = {
+        ...updatedHotelData,
+        slug: updatedHotelData.name.toLowerCase().replace(/\s+/g, '-'),
+    };
+
+    hotelsData[hotelIndex] = updatedHotel;
+    return updatedHotel;
+}
+
+export function deleteHotel(hotelId: string): boolean {
+    const initialLength = hotelsData.length;
+    hotelsData = hotelsData.filter(h => h.id !== hotelId);
+    return hotelsData.length < initialLength;
+}
+
 
 // --- ROOMS ---
 // Add a function to get room by ID, useful for payment dialog.
@@ -426,5 +445,3 @@ declare module './types' {
         hotelId: string;
     }
 }
-
-    
