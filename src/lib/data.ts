@@ -1,6 +1,7 @@
 import type { Hotel, Room, City, Booking } from './types';
 import placeholderImageData from './placeholder-images.json';
 import type { ImagePlaceholder } from './placeholder-images';
+import { areIntervalsOverlapping } from 'date-fns';
 
 // This is a placeholder for a real data source.
 let hotelsData: Hotel[] = [
@@ -14,8 +15,8 @@ let hotelsData: Hotel[] = [
     amenities: ['wifi', 'parking', 'restaurant', 'bar', 'spa', 'mountain-view'],
     rating: 4.8,
     rooms: [
-      { id: 'r1', hotelId: 'h1', type: 'Deluxe', price: 8000, capacity: 2, totalRooms: 10 },
-      { id: 'r2', hotelId: 'h1', type: 'Suite', price: 15000, capacity: 4, totalRooms: 5 },
+      { id: 'r1', hotelId: 'h1', type: 'Deluxe', price: 8000, capacity: 2, totalRooms: 2 },
+      { id: 'r2', hotelId: 'h1', type: 'Suite', price: 15000, capacity: 4, totalRooms: 1 },
     ],
   },
   {
@@ -310,10 +311,23 @@ let bookingsData: Booking[] = [
       checkIn: new Date('2024-08-10').toISOString(),
       checkOut: new Date('2024-08-12').toISOString(),
       guests: 2,
-      totalPrice: 18880,
+      totalPrice: 16000,
       customerName: 'Ankit Sharma',
       customerEmail: 'ankit.sharma@example.com',
-    }
+    },
+    {
+        id: 'b2',
+        hotelId: 'h1',
+        userId: 'u2',
+        roomId: 'r1',
+        roomType: 'Deluxe',
+        checkIn: new Date('2024-08-11').toISOString(),
+        checkOut: new Date('2024-08-13').toISOString(),
+        guests: 2,
+        totalPrice: 16000,
+        customerName: 'Priya Singh',
+        customerEmail: 'priya.singh@example.com',
+      }
 ];
 
 const citiesData: City[] = [
@@ -419,6 +433,26 @@ export function getBookings(): Booking[] {
 export function getBookingById(id: string): Booking | undefined {
     return bookingsData.find((b) => b.id === id);
 }
+
+export function getBookingsForRoom(roomId: string, checkIn: Date, checkOut: Date): Booking[] {
+    return bookingsData.filter(booking => {
+        if (booking.roomId !== roomId) {
+            return false;
+        }
+        const bookingInterval = {
+            start: new Date(booking.checkIn),
+            end: new Date(booking.checkOut),
+        };
+        const selectedInterval = {
+            start: checkIn,
+            end: checkOut,
+        };
+        // The intervals overlap if the start of one is before the end of the other,
+        // and the end of one is after the start of the other.
+        return areIntervalsOverlapping(bookingInterval, selectedInterval);
+    });
+}
+
 
 export function addBooking(bookingDetails: Omit<Booking, 'id'>): Booking {
     const newBooking: Booking = {

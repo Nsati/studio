@@ -117,8 +117,7 @@ export function PaymentDialog({
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('card');
   
-  const checkInDate = dates.from;
-  const checkOutDate = dates.to;
+  const { from: checkInDate, to: checkOutDate } = dates;
 
   const form = useForm<PaymentFormValues>({
     resolver: zodResolver(paymentSchema),

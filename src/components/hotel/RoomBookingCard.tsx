@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { BedDouble, Calendar as CalendarIcon, AlertCircle } from 'lucide-react';
 import { addDays, format, differenceInDays } from 'date-fns';
 import type { DateRange } from 'react-day-picker';
 
 import type { Hotel, Room } from '@/lib/types';
+import { getBookingsForRoom } from '@/lib/data';
 import {
   Card,
   CardContent,
@@ -38,6 +39,19 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
   };
   
   const isDateRangeValid = dates?.from && dates?.to && nights > 0;
+
+  const availableRooms = useMemo(() => {
+    if (!isDateRangeValid || !dates?.from || !dates.to) {
+        return hotel.rooms.map(room => ({ ...room, isAvailable: false, bookingsCount: 0 }));
+    }
+
+    return hotel.rooms.map(room => {
+        const existingBookings = getBookingsForRoom(room.id, dates.from!, dates.to!);
+        const isAvailable = existingBookings.length < room.totalRooms;
+        return { ...room, isAvailable, bookingsCount: existingBookings.length };
+    });
+  }, [hotel.rooms, dates, isDateRangeValid]);
+
 
   return (
     <>
@@ -103,7 +117,7 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
           )}
 
           <div className="space-y-4">
-            {hotel.rooms.map((room) => (
+            {availableRooms.map((room) => (
               <Card key={room.id} className="p-4">
                 <div className="flex flex-col gap-4 md:flex-row md:justify-between">
                   <div>
@@ -111,9 +125,11 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
                     <p className="text-sm text-muted-foreground">
                       Fits up to {room.capacity} guests
                     </p>
-                     <p className="text-sm text-muted-foreground">
-                      {room.totalRooms} rooms available
-                    </p>
+                    {isDateRangeValid && (
+                         <p className="text-sm text-muted-foreground">
+                            {room.totalRooms - room.bookingsCount} of {room.totalRooms} rooms available
+                        </p>
+                    )}
                   </div>
                   <div className="flex flex-col items-start gap-2 md:items-end">
                     <p className="text-lg font-bold text-primary">
@@ -122,13 +138,22 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
                         /night
                       </span>
                     </p>
-                    <Button
-                      onClick={() => handleBookNowClick(room)}
-                      disabled={!isDateRangeValid}
-                      size="sm"
-                    >
-                      Book Now
-                    </Button>
+                    {isDateRangeValid && room.isAvailable ? (
+                        <Button
+                            onClick={() => handleBookNowClick(room)}
+                            size="sm"
+                        >
+                            Book Now
+                        </Button>
+                    ) : (
+                        <Button
+                            disabled
+                            size="sm"
+                            variant={isDateRangeValid ? "destructive" : "default"}
+                        >
+                           {isDateRangeValid ? 'Fully Booked' : 'Select Dates'}
+                        </Button>
+                    )}
                   </div>
                 </div>
               </Card>
@@ -143,10 +168,9 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
           onClose={() => setIsPaymentOpen(false)}
           hotel={hotel}
           room={selectedRoom}
-          checkInDate={dates.from}
-          checkOutDate={dates.to}
+          dates={dates}
           totalAmount={nights * selectedRoom.price}
-          onPaymentSuccess={() => console.log("Success")}
+          guests={selectedRoom.capacity} // default to room capacity, can be changed
         />
       )}
     </>
