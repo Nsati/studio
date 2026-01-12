@@ -35,3 +35,9 @@ export interface Booking {
   totalPrice: number;
   status: 'Confirmed' | 'Cancelled' | 'Pending';
 }
+
+export interface User {
+  displayName: string;
+  email: string;
+  role: 'admin' | 'user';
+}

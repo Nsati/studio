@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { Logo } from './Logo';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import type { User as AuthUser } from '@/lib/types';
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -16,9 +17,10 @@ const navLinks = [
 ];
 
 // Mock user state
-const useUser = () => {
+const useUser = (): { user: AuthUser | null; isUserLoading: boolean } => {
     // To mock a logged-in user, change this to:
-    return { user: { displayName: 'John Doe', email: 'john@example.com' }, isUserLoading: false };
+    return { user: { displayName: 'Admin User', email: 'admin@example.com', role: 'admin' }, isUserLoading: false };
+    // return { user: { displayName: 'John Doe', email: 'john@example.com', role: 'user' }, isUserLoading: false };
     // return { user: null, isUserLoading: false };
 };
 
@@ -52,7 +54,7 @@ export function Header() {
               {link.label}
             </Link>
           ))}
-          {user && ( // Show Admin link only if user is logged in
+          {user?.role === 'admin' && ( // Show Admin link only if user is admin
             <Link
               href="/admin"
               className={cn(
@@ -109,7 +111,7 @@ export function Header() {
                       {link.label}
                     </Link>
                   ))}
-                  {user && (
+                  {user?.role === 'admin' && (
                     <Link
                       href="/admin"
                       onClick={() => setIsMenuOpen(false)}
