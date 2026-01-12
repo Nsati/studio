@@ -1,5 +1,5 @@
 
-import type { Hotel, Room, City } from './types';
+import type { Hotel, Room, City, Booking } from './types';
 
 // This is a placeholder for a real data source.
 let hotelsData: Hotel[] = [
@@ -299,6 +299,20 @@ let hotelsData: Hotel[] = [
   }
 ];
 
+let bookingsData: Booking[] = [
+    {
+      id: 'b1',
+      hotelId: 'h1',
+      userId: 'u1',
+      roomId: 'r1',
+      roomType: 'Deluxe',
+      checkIn: new Date('2024-08-10').toISOString(),
+      checkOut: new Date('2024-08-12').toISOString(),
+      guests: 2,
+      totalPrice: 18880,
+    }
+];
+
 const citiesData: City[] = [
   { name: 'Nainital', image: 'city-nainital' },
   { name: 'Mussoorie', image: 'city-mussoorie' },
@@ -325,6 +339,10 @@ export function getHotelBySlug(slug: string): Hotel | undefined {
   return hotelsData.find((hotel) => hotel.slug === slug);
 }
 
+export function getHotelById(id: string): Hotel | undefined {
+    return hotelsData.find((hotel) => hotel.id === id);
+}
+
 export function addHotel(hotel: Omit<Hotel, 'id' | 'slug'>): Hotel {
     const newHotel: Hotel = {
         ...hotel,
@@ -333,4 +351,19 @@ export function addHotel(hotel: Omit<Hotel, 'id' | 'slug'>): Hotel {
     };
     hotelsData.unshift(newHotel);
     return newHotel;
+}
+
+
+// --- BOOKINGS ---
+export function getBookingById(id: string): Booking | undefined {
+    return bookingsData.find((b) => b.id === id);
+}
+
+export function addBooking(bookingDetails: Omit<Booking, 'id'>): Booking {
+    const newBooking: Booking = {
+        ...bookingDetails,
+        id: `b${bookingsData.length + 1}`,
+    };
+    bookingsData.push(newBooking);
+    return newBooking;
 }

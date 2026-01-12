@@ -29,3 +29,16 @@ export interface User {
   email: string;
   role: 'admin' | 'user';
 }
+
+
+export interface Booking {
+  id: string;
+  hotelId: string;
+  userId: string; // Assuming a user system
+  roomId: string;
+  roomType: string;
+  checkIn: string;
+  checkOut: string;
+  guests: number;
+  totalPrice: number;
+}

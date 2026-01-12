@@ -18,8 +18,8 @@ const navLinks = [
 // Mock user state
 const useUser = (): { user: AuthUser | null; isUserLoading: boolean } => {
     // To mock a logged-in user, change this to:
-    return { user: { displayName: 'Admin User', email: 'admin@example.com', role: 'admin' }, isUserLoading: false };
-    // return { user: null, isUserLoading: false };
+    // return { user: { displayName: 'Admin User', email: 'admin@example.com', role: 'admin' }, isUserLoading: false };
+    return { user: null, isUserLoading: false };
 };
 
 
