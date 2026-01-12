@@ -6,27 +6,28 @@ import { useState, useEffect } from 'react';
 import type { Booking, Hotel, User } from '@/lib/types';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
-
-// Mock user state
-const useUser = (): { user: User | null; isUserLoading: boolean } => {
-    return { user: { displayName: 'Admin User', email: 'admin@example.com', role: 'admin' }, isUserLoading: false };
-    // return { user: { displayName: 'John Doe', email: 'john@example.com', role: 'user' }, isUserLoading: false };
-};
-
+import { useRouter } from 'next/navigation';
 
 export default function AdminPage() {
   const [hotels, setHotels] = useState<Hotel[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
-  const { user, isUserLoading } = useUser();
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
-    if (user?.role === 'admin') {
+    const authorized = sessionStorage.getItem('isAdminAuthorized') === 'true';
+    if (authorized) {
+      setIsAuthorized(true);
       setHotels(getHotels());
       setBookings(getBookings());
+    } else {
+      router.replace('/admin/login');
     }
-  }, [user]);
-
-  if (isUserLoading) {
+    setIsLoading(false);
+  }, [router]);
+  
+  if (isLoading) {
       return (
           <div className="container mx-auto max-w-7xl py-8 px-4 md:px-6">
               <p>Loading...</p>
@@ -34,20 +35,20 @@ export default function AdminPage() {
       )
   }
 
-  if (user?.role !== 'admin') {
+  if (!isAuthorized) {
+      // This will be shown briefly before redirect
       return (
           <div className="container mx-auto max-w-2xl py-12 px-4 md:px-6">
               <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
                   <AlertTitle>Access Denied</AlertTitle>
                   <AlertDescription>
-                      You do not have permission to view this page.
+                      You do not have permission to view this page. Redirecting to login...
                   </AlertDescription>
               </Alert>
           </div>
       )
   }
-
 
   return (
     <div className="container mx-auto max-w-7xl py-8 px-4 md:px-6">
