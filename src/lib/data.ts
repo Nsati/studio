@@ -385,6 +385,23 @@ export function getBookingById(bookingId: string): Booking | undefined {
     return bookingsData.find(b => b.id === bookingId);
 }
 
+export function addBooking(hotel: Hotel, room: Room): Booking {
+  const newBooking: Booking = {
+    id: `b${bookingsData.length + 1}`,
+    hotelName: hotel.name,
+    hotelCity: hotel.city,
+    hotelImage: hotel.images[0],
+    roomType: room.type,
+    checkIn: '2024-10-01', // Placeholder
+    checkOut: '2024-10-05', // Placeholder
+    guests: room.capacity,
+    totalPrice: room.price * 1.18 * 4, // Placeholder for 4 nights
+    status: 'Confirmed',
+  };
+  bookingsData.unshift(newBooking);
+  return newBooking;
+}
+
 export function updateBookingStatus(bookingId: string, status: 'Confirmed' | 'Cancelled' | 'Pending'): Booking | undefined {
     const bookingIndex = bookingsData.findIndex(b => b.id === bookingId);
     if (bookingIndex !== -1) {

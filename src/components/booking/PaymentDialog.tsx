@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -35,6 +36,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { addBooking } from '@/lib/data';
 
 const paymentFormSchema = z
   .object({
@@ -126,7 +128,7 @@ export function PaymentDialog({
   });
 
   const handlePayment = (data: PaymentFormValues) => {
-    if (!room) return;
+    if (!room || !hotel) return;
 
     console.log('Payment Data:', data);
     setIsProcessing(true);
@@ -137,8 +139,8 @@ export function PaymentDialog({
 
     setTimeout(() => {
       setIsProcessing(false);
-      const successfulBookingId = 'b1';
-      onPaymentSuccess(successfulBookingId);
+      const newBooking = addBooking(hotel, room);
+      onPaymentSuccess(newBooking.id);
       form.reset();
     }, 2500);
   };
