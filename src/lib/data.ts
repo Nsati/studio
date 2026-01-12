@@ -1,5 +1,6 @@
 
-import type { Hotel, Room, City, Booking } from './types';
+import type { Hotel, Room, City, Booking, BookingDetails } from './types';
+import { format } from 'date-fns';
 
 // This is a placeholder for a real data source.
 let hotelsData: Hotel[] = [
@@ -385,19 +386,30 @@ export function getBookingById(bookingId: string): Booking | undefined {
     return bookingsData.find(b => b.id === bookingId);
 }
 
-export function addBooking(hotel: Hotel, room: Room): Booking {
+export function addBooking(hotel: Hotel, room: Room, details: BookingDetails): Booking {
+  // Calculate number of nights
+  const checkInDate = new Date(details.checkIn);
+  const checkOutDate = new Date(details.checkOut);
+  const nights = Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 3600 * 24));
+  const totalNights = nights > 0 ? nights : 1;
+
+  // Calculate total price with 18% tax
+  const basePrice = room.price * totalNights;
+  const totalPrice = basePrice * 1.18;
+
   const newBooking: Booking = {
-    id: `b${bookingsData.length + 1}`,
+    id: `b${Date.now()}`, // Use timestamp for a more unique ID
     hotelName: hotel.name,
     hotelCity: hotel.city,
     hotelImage: hotel.images[0],
     roomType: room.type,
-    checkIn: '2024-10-01', // Placeholder
-    checkOut: '2024-10-05', // Placeholder
-    guests: room.capacity,
-    totalPrice: room.price * 1.18 * 4, // Placeholder for 4 nights
+    checkIn: format(details.checkIn, 'yyyy-MM-dd'),
+    checkOut: format(details.checkOut, 'yyyy-MM-dd'),
+    guests: details.guests,
+    totalPrice: totalPrice,
     status: 'Confirmed',
   };
+
   bookingsData.unshift(newBooking);
   return newBooking;
 }

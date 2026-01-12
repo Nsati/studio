@@ -114,11 +114,6 @@ export function PaymentDialog({
       email: '',
       phone: '',
       paymentMethod: 'credit-card',
-      cardNumber: '',
-      expiryDate: '',
-      cvv: '',
-      upiId: '',
-      bank: '',
     },
   });
 
@@ -137,15 +132,36 @@ export function PaymentDialog({
       description: 'Please wait while we securely process your transaction.',
     });
 
+    // Simulate a network delay for payment processing
     setTimeout(() => {
       setIsProcessing(false);
-      const newBooking = addBooking(hotel, room);
+      
+      // In a real app, you would get dates and guests from a form.
+      // Here we'll use placeholders.
+      const bookingDetails = {
+          guests: 2,
+          checkIn: new Date(),
+          checkOut: new Date(new Date().setDate(new Date().getDate() + 2)), // 2 nights
+      };
+      
+      const newBooking = addBooking(hotel, room, bookingDetails);
+
+      toast({
+        title: 'Payment Successful!',
+        description: 'Your booking has been confirmed.',
+      });
+      
       onPaymentSuccess(newBooking.id);
       form.reset();
     }, 2500);
   };
 
   if (!room || !hotel) return null;
+
+  const totalNights = 2; // Placeholder
+  const basePrice = room.price * totalNights;
+  const taxes = basePrice * 0.18;
+  const totalPrice = basePrice + taxes;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -164,26 +180,26 @@ export function PaymentDialog({
                 <Form {...form}>
                 <form id="payment-form" onSubmit={form.handleSubmit(handlePayment)} className="space-y-4">
                     <div className="rounded-lg bg-muted/50 p-4">
-                    <h4 className="font-semibold mb-2">Booking Summary</h4>
-                    <div className="flex justify-between items-center text-sm">
-                        <span className="text-muted-foreground">
-                        {room.type} Room (1 night)
-                        </span>
-                        <span className="font-medium">
-                        ₹{room.price.toLocaleString()}
-                        </span>
-                    </div>
-                    <div className="flex justify-between items-center text-sm mt-1">
-                        <span className="text-muted-foreground">Taxes & Fees</span>
-                        <span className="font-medium">
-                        ₹{(room.price * 0.18).toLocaleString()}
-                        </span>
-                    </div>
-                    <div className="border-t my-2"></div>
-                    <div className="flex justify-between items-center font-bold text-lg">
-                        <span>Total Amount</span>
-                        <span>₹{(room.price * 1.18).toLocaleString()}</span>
-                    </div>
+                      <h4 className="font-semibold mb-2">Booking Summary</h4>
+                      <div className="flex justify-between items-center text-sm">
+                          <span className="text-muted-foreground">
+                          {room.type} Room ({totalNights} nights)
+                          </span>
+                          <span className="font-medium">
+                          ₹{basePrice.toLocaleString()}
+                          </span>
+                      </div>
+                      <div className="flex justify-between items-center text-sm mt-1">
+                          <span className="text-muted-foreground">Taxes & Fees (18%)</span>
+                          <span className="font-medium">
+                          ₹{taxes.toLocaleString()}
+                          </span>
+                      </div>
+                      <div className="border-t my-2"></div>
+                      <div className="flex justify-between items-center font-bold text-lg">
+                          <span>Total Amount</span>
+                          <span>₹{totalPrice.toLocaleString()}</span>
+                      </div>
                     </div>
 
                     <h4 className="font-semibold pt-2">Your Information</h4>
@@ -407,7 +423,7 @@ export function PaymentDialog({
                 Processing...
               </>
             ) : (
-              `Pay ₹${(room.price * 1.18).toLocaleString()}`
+              `Pay ₹${totalPrice.toLocaleString()}`
             )}
           </Button>
         </DialogFooter>

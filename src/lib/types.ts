@@ -1,3 +1,4 @@
+
 export interface Hotel {
   id: string;
   slug: string;
@@ -34,6 +35,12 @@ export interface Booking {
   guests: number;
   totalPrice: number;
   status: 'Confirmed' | 'Cancelled' | 'Pending';
+}
+
+export interface BookingDetails {
+  guests: number;
+  checkIn: Date;
+  checkOut: Date;
 }
 
 export interface User {
