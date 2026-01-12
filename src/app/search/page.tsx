@@ -1,11 +1,10 @@
 
 'use client';
 
-import { Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 
 import { getHotels, getCities } from '@/lib/data';
-import type { City } from '@/lib/types';
 import { HotelCard } from '@/components/hotel/HotelCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,6 +23,7 @@ function SearchResults() {
   const searchParams = useSearchParams();
   const city = searchParams.get('city');
 
+  // We could add more filters here later by getting them from searchParams
   const hotels = getHotels(city || undefined);
 
   return (
@@ -46,7 +46,14 @@ function SearchResults() {
           <p className="mt-2 text-muted-foreground">
             Try adjusting your search filters or explore all our hotels.
           </p>
-          <Button variant="outline" className="mt-4">
+          <Button
+            variant="outline"
+            className="mt-4"
+            onClick={() => {
+              // This is a simple way to clear filters. We'll improve this.
+              window.location.href = '/search';
+            }}
+          >
             Clear Filters
           </Button>
         </div>
@@ -55,60 +62,107 @@ function SearchResults() {
   );
 }
 
-export default function SearchPage() {
+function SearchFilters() {
   const cities = getCities();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
 
+  const [selectedCity, setSelectedCity] = useState(searchParams.get('city') || '');
+  const [checkin, setCheckin] = useState(searchParams.get('checkin') || '');
+  const [checkout, setCheckout] = useState(searchParams.get('checkout') || '');
+  const [guests, setGuests] = useState(searchParams.get('guests') || '1');
+  
+  useEffect(() => {
+    setSelectedCity(searchParams.get('city') || '');
+    setCheckin(searchParams.get('checkin') || '');
+    setCheckout(searchParams.get('checkout') || '');
+    setGuests(searchParams.get('guests') || '1');
+  }, [searchParams]);
+
+  const createQueryString = (params: Record<string, string | null>) => {
+    const newSearchParams = new URLSearchParams(searchParams.toString());
+    for (const [key, value] of Object.entries(params)) {
+        if (value) {
+            newSearchParams.set(key, value);
+        } else {
+            newSearchParams.delete(key);
+        }
+    }
+    return newSearchParams.toString();
+  };
+  
+  const handleCityChange = (city: string) => {
+    setSelectedCity(city);
+    router.push(`${pathname}?${createQueryString({ city: city === 'All' ? null : city })}`);
+  }
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    router.push(`${pathname}?${createQueryString({ city: selectedCity === 'All' ? null : selectedCity, checkin, checkout, guests })}`);
+  }
+
+  return (
+     <aside className="w-full lg:w-1/4 lg:pr-8">
+      <Card>
+        <CardContent className="p-4">
+          <form className="space-y-6" onSubmit={handleFormSubmit}>
+            <div className="space-y-2">
+              <Label htmlFor="location" className="text-lg font-semibold">
+                Location
+              </Label>
+              <Select value={selectedCity} onValueChange={handleCityChange}>
+                <SelectTrigger id="location">
+                  <SelectValue placeholder="Select a city" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="All">All Locations</SelectItem>
+                  {cities.map((city) => (
+                    <SelectItem key={city.name} value={city.name}>
+                      {city.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="checkin" className="text-lg font-semibold">
+                Check-in
+              </Label>
+              <Input id="checkin" type="date" value={checkin} onChange={e => setCheckin(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="checkout" className="text-lg font-semibold">
+                Check-out
+              </Label>
+              <Input id="checkout" type="date" value={checkout} onChange={e => setCheckout(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="guests" className="text-lg font-semibold">
+                Guests
+              </Label>
+              <Input id="guests" type="number" min="1" placeholder="2" value={guests} onChange={e => setGuests(e.target.value)} />
+            </div>
+            <Button type="submit" className="w-full">
+              <Search className="mr-2 h-4 w-4" />
+              Update Search
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </aside>
+  );
+}
+
+
+export default function SearchPage() {
   return (
     <div className="container mx-auto max-w-7xl py-8 px-4 md:px-6">
       <div className="flex flex-col gap-8 lg:flex-row">
-        <aside className="w-full lg:w-1/4 lg:pr-8">
-          <Card>
-            <CardContent className="p-4">
-              <form className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="location" className="text-lg font-semibold">
-                    Location
-                  </Label>
-                  <Select>
-                    <SelectTrigger id="location">
-                      <SelectValue placeholder="Select a city" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {cities.map((city) => (
-                        <SelectItem key={city.name} value={city.name}>
-                          {city.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="checkin" className="text-lg font-semibold">
-                    Check-in
-                  </Label>
-                  <Input id="checkin" type="date" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="checkout" className="text-lg font-semibold">
-                    Check-out
-                  </Label>
-                  <Input id="checkout" type="date" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="guests" className="text-lg font-semibold">
-                    Guests
-                  </Label>
-                  <Input id="guests" type="number" min="1" placeholder="2" />
-                </div>
-                <Button type="submit" className="w-full">
-                  <Search className="mr-2 h-4 w-4" />
-                  Update Search
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        </aside>
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={<div>Loading filters...</div>}>
+            <SearchFilters />
+        </Suspense>
+        <Suspense fallback={<div className="flex-1">Loading results...</div>}>
           <SearchResults />
         </Suspense>
       </div>
