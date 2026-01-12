@@ -29,7 +29,6 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Sparkles, Upload, PlusCircle, Trash2 } from 'lucide-react';
-import { generateDescriptionAction } from '@/app/admin/actions';
 import { Badge } from '@/components/ui/badge';
 import type { Room } from '@/lib/types';
 
@@ -46,7 +45,6 @@ const formSchema = z.object({
   city: z.string().min(1, 'City is required.'),
   rating: z.coerce.number().min(1, 'Rating must be between 1 and 5.').max(5, 'Rating must be between 1 and 5.'),
   amenities: z.string().min(3, 'Enter at least one amenity.'),
-  keywords: z.string().min(3, 'Enter at least one keyword.'),
   description: z.string().min(10, 'Description is required.'),
   images: z.any().optional(),
   rooms: z.array(roomSchema).min(1, 'Please add at least one room type.'),
@@ -67,7 +65,6 @@ export function HotelForm() {
       city: '',
       rating: 4.0,
       amenities: '',
-      keywords: '',
       description: '',
       rooms: [
         { type: 'Standard', price: 0, capacity: 2, totalRooms: 10 },
@@ -81,46 +78,6 @@ export function HotelForm() {
   });
 
   const watchedImages = useWatch({ control: form.control, name: 'images' });
-
-  const handleGenerateDescription = async () => {
-    const { name, city, amenities, keywords } = form.getValues();
-    if (!name || !city || !amenities || !keywords) {
-      toast({
-        title: 'Missing Information',
-        description:
-          'Please fill in Name, City, Amenities, and Keywords to generate a description.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setIsGenerating(true);
-    try {
-      const result = await generateDescriptionAction({
-        name,
-        city,
-        amenities,
-        keywords,
-      });
-      if (result.description) {
-        form.setValue('description', result.description, { shouldValidate: true });
-        toast({
-          title: 'Description Generated!',
-          description: 'The AI-powered description has been added.',
-        });
-      } else {
-        throw new Error('No description returned.');
-      }
-    } catch (error) {
-      toast({
-        title: 'Generation Failed',
-        description: 'Could not generate a description. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsGenerating(false);
-    }
-  };
 
   function onSubmit(data: HotelFormValues) {
     const amenitiesArray = data.amenities.split(',').map(s => s.trim());
@@ -363,22 +320,7 @@ export function HotelForm() {
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="keywords"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Keywords</FormLabel>
-              <FormControl>
-                <Input placeholder="luxury, family-friendly, mountain view" {...field} />
-              </FormControl>
-              <FormDescription>
-                Comma-separated list of keywords for AI generation.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        
         <FormField
           control={form.control}
           name="description"
@@ -386,16 +328,6 @@ export function HotelForm() {
             <FormItem>
               <div className="flex items-center justify-between">
                 <FormLabel>Description</FormLabel>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleGenerateDescription}
-                  disabled={isGenerating}
-                >
-                  <Sparkles className="mr-2 h-4 w-4" />
-                  {isGenerating ? 'Generating...' : 'Generate with AI'}
-                </Button>
               </div>
               <FormControl>
                 <Textarea
