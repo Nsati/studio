@@ -17,7 +17,6 @@ export function Footer() {
             <h3 className="font-headline text-lg font-semibold">Quick Links</h3>
             <div className="flex gap-6">
                 <Link href="/search" className="text-sm text-muted-foreground transition-colors hover:text-primary">Explore</Link>
-                <Link href="/my-bookings" className="text-sm text-muted-foreground transition-colors hover:text-primary">Bookings</Link>
                 <Link href="#" className="text-sm text-muted-foreground transition-colors hover:text-primary">Contact</Link>
             </div>
              <div className="flex items-center gap-4 mt-4">

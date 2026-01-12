@@ -24,25 +24,6 @@ export interface City {
   image: string;
 }
 
-export interface Booking {
-  id: string;
-  hotelName: string;
-  hotelCity: string;
-  hotelImage: string;
-  roomType: string;
-  checkIn: string;
-  checkOut: string;
-  guests: number;
-  totalPrice: number;
-  status: 'Confirmed' | 'Cancelled' | 'Pending';
-}
-
-export interface BookingDetails {
-  guests: number;
-  checkIn: Date;
-  checkOut: Date;
-}
-
 export interface User {
   displayName: string;
   email: string;

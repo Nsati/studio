@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, User, LogIn, LogOut } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import Link from 'next/link';
 import { Logo } from './Logo';
 import { usePathname } from 'next/navigation';
@@ -13,14 +13,12 @@ import type { User as AuthUser } from '@/lib/types';
 const navLinks = [
   { href: '/', label: 'Home' },
   { href: '/search', label: 'Explore Hotels' },
-  { href: '/my-bookings', label: 'My Bookings' },
 ];
 
 // Mock user state
 const useUser = (): { user: AuthUser | null; isUserLoading: boolean } => {
     // To mock a logged-in user, change this to:
     return { user: { displayName: 'Admin User', email: 'admin@example.com', role: 'admin' }, isUserLoading: false };
-    // return { user: { displayName: 'John Doe', email: 'john@example.com', role: 'user' }, isUserLoading: false };
     // return { user: null, isUserLoading: false };
 };
 
@@ -28,13 +26,7 @@ const useUser = (): { user: AuthUser | null; isUserLoading: boolean } => {
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
-  const { user, isUserLoading } = useUser();
-
-  const handleLogout = () => {
-    // In a real app, you'd call your auth service here.
-    console.log('User logged out.');
-    // For mock purposes, you might need to refresh or manage state to see the change.
-  };
+  const { user } = useUser();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -59,7 +51,7 @@ export function Header() {
               href="/admin"
               className={cn(
                 'text-sm font-medium transition-colors hover:text-primary',
-                pathname === '/admin' ? 'text-primary' : 'text-muted-foreground'
+                pathname.startsWith('/admin') ? 'text-primary' : 'text-muted-foreground'
               )}
             >
               Admin
@@ -68,25 +60,6 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-4">
-          <div className="hidden md:flex items-center gap-2">
-            {isUserLoading ? (
-              <div className="h-10 w-24 animate-pulse rounded-md bg-muted" />
-            ) : user ? (
-              <Button variant="ghost" onClick={handleLogout}>
-                Logout
-              </Button>
-            ) : (
-              <>
-                <Button variant="ghost" asChild>
-                  <Link href="/login">Login</Link>
-                </Button>
-                <Button asChild>
-                  <Link href="/signup">Sign Up</Link>
-                </Button>
-              </>
-            )}
-          </div>
-
           <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
             <SheetTrigger asChild className="md:hidden">
               <Button variant="outline" size="icon">
@@ -117,39 +90,11 @@ export function Header() {
                       onClick={() => setIsMenuOpen(false)}
                       className={cn(
                         'text-lg font-medium transition-colors hover:text-primary',
-                        pathname === '/admin' ? 'text-primary' : 'text-foreground'
+                        pathname.startsWith('/admin') ? 'text-primary' : 'text-foreground'
                       )}
                     >
                       Admin
                     </Link>
-                  )}
-                </div>
-                <div className="mt-8 border-t pt-6">
-                  {isUserLoading ? (
-                     <div className="h-10 w-full animate-pulse rounded-md bg-muted" />
-                  ) : user ? (
-                    <div className="flex flex-col gap-4">
-                        <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-                            <User className="h-6 w-6 text-muted-foreground" />
-                        </div>
-                        <div>
-                            <p className="font-medium">{user.displayName || 'Guest User'}</p>
-                            <p className="text-sm text-muted-foreground">{user.email}</p>
-                        </div>
-                        </div>
-                        <Button className="w-full justify-center gap-2" onClick={() => {handleLogout(); setIsMenuOpen(false);}}>
-                            <LogOut className="h-5 w-5"/>
-                            Logout
-                        </Button>
-                    </div>
-                  ) : (
-                    <Button className="w-full justify-center gap-2" asChild>
-                      <Link href="/login" onClick={() => setIsMenuOpen(false)}>
-                        <LogIn className="h-5 w-5" />
-                        Login / Sign Up
-                      </Link>
-                    </Button>
                   )}
                 </div>
               </div>

@@ -1,16 +1,13 @@
 
 'use client';
 import { AdminTabs } from '@/components/admin/AdminTabs';
-import { getHotels, getBookings } from '@/lib/data';
+import { getHotels } from '@/lib/data';
 import { useState, useEffect } from 'react';
-import type { Booking, Hotel, User } from '@/lib/types';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle } from 'lucide-react';
+import type { Hotel } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 
 export default function AdminPage() {
   const [hotels, setHotels] = useState<Hotel[]>([]);
-  const [bookings, setBookings] = useState<Booking[]>([]);
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
@@ -20,7 +17,6 @@ export default function AdminPage() {
     if (authorized) {
       setIsAuthorized(true);
       setHotels(getHotels());
-      setBookings(getBookings());
     } else {
       router.replace('/admin/login');
     }
@@ -35,19 +31,10 @@ export default function AdminPage() {
       )
   }
 
+  // This part is not needed as redirection will handle unauthorized access.
+  // We can leave it to avoid a flash of content.
   if (!isAuthorized) {
-      // This will be shown briefly before redirect
-      return (
-          <div className="container mx-auto max-w-2xl py-12 px-4 md:px-6">
-              <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertTitle>Access Denied</AlertTitle>
-                  <AlertDescription>
-                      You do not have permission to view this page. Redirecting to login...
-                  </AlertDescription>
-              </Alert>
-          </div>
-      )
+      return null;
   }
 
   return (
@@ -55,11 +42,11 @@ export default function AdminPage() {
       <div className="mb-8">
         <h1 className="font-headline text-4xl font-bold">Admin Dashboard</h1>
         <p className="text-muted-foreground mt-2">
-          Manage your hotels, bookings, and content.
+          Manage your hotels and content.
         </p>
       </div>
 
-      <AdminTabs hotels={hotels} initialBookings={bookings} />
+      <AdminTabs hotels={hotels} />
     </div>
   );
 }

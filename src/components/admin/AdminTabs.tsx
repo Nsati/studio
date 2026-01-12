@@ -18,32 +18,25 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import type { Hotel, Booking } from '@/lib/types';
+import type { Hotel } from '@/lib/types';
 import { HotelForm } from './HotelForm';
-import { cn } from '@/lib/utils';
 import { Edit, Trash } from 'lucide-react';
 
 interface AdminTabsProps {
   hotels: Hotel[];
-  initialBookings: Booking[];
 }
 
-export function AdminTabs({ hotels: initialHotels, initialBookings }: AdminTabsProps) {
-    const [bookings, setBookings] = useState(initialBookings);
+export function AdminTabs({ hotels: initialHotels }: AdminTabsProps) {
     const [hotels, setHotels] = useState(initialHotels);
 
-    // This is a simple way to keep the hotels list updated if it changes.
-    // In a real app, this would likely be handled by a more robust state management library.
     useEffect(() => {
         setHotels(initialHotels);
     }, [initialHotels]);
     
   return (
     <Tabs defaultValue="hotels" className="w-full">
-      <TabsList className="grid w-full grid-cols-3">
+      <TabsList className="grid w-full grid-cols-2">
         <TabsTrigger value="hotels">Hotels</TabsTrigger>
-        <TabsTrigger value="bookings">Bookings</TabsTrigger>
         <TabsTrigger value="add-hotel">Add New Hotel</TabsTrigger>
       </TabsList>
       <TabsContent value="hotels">
@@ -78,50 +71,6 @@ export function AdminTabs({ hotels: initialHotels, initialBookings }: AdminTabsP
                         <Trash className="h-4 w-4" />
                       </Button>
                     </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      </TabsContent>
-      <TabsContent value="bookings">
-        <Card>
-            <CardHeader>
-                <CardTitle>Manage Bookings</CardTitle>
-                <CardDescription>{bookings.length} bookings found.</CardDescription>
-            </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Booking ID</TableHead>
-                  <TableHead>Hotel</TableHead>
-                  <TableHead>Dates</TableHead>
-                  <TableHead>Status</TableHead>
-                   <TableHead className="text-right">Amount</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {bookings.map((booking) => (
-                  <TableRow key={booking.id}>
-                    <TableCell className="font-medium">{booking.id}</TableCell>
-                    <TableCell>{booking.hotelName}</TableCell>
-                    <TableCell>{booking.checkIn} - {booking.checkOut}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="outline"
-                        className={cn({
-                          'bg-green-100 text-green-800 border-green-200':
-                            booking.status === 'Confirmed',
-                          'bg-red-100 text-red-800 border-red-200':
-                            booking.status === 'Cancelled',
-                        })}
-                      >
-                        {booking.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">₹{booking.totalPrice.toLocaleString()}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

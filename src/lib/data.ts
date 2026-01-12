@@ -1,6 +1,5 @@
 
-import type { Hotel, Room, City, Booking, BookingDetails } from './types';
-import { format } from 'date-fns';
+import type { Hotel, Room, City } from './types';
 
 // This is a placeholder for a real data source.
 let hotelsData: Hotel[] = [
@@ -309,46 +308,6 @@ const citiesData: City[] = [
   { name: 'Jim Corbett', image: 'city-jim-corbett' },
 ];
 
-let bookingsData: Booking[] = [
-  {
-    id: 'b1',
-    hotelName: 'The Naini Retreat',
-    hotelCity: 'Nainital',
-    hotelImage: 'hotel-1-1',
-    roomType: 'Deluxe Room',
-    checkIn: '2024-08-15',
-    checkOut: '2024-08-18',
-    guests: 2,
-    totalPrice: 28320,
-    status: 'Confirmed',
-  },
-  {
-    id: 'b2',
-    hotelName: 'JW Marriott Mussoorie',
-    hotelCity: 'Mussoorie',
-    hotelImage: 'hotel-5-1',
-    roomType: 'Valley View Suite',
-    checkIn: '2024-09-01',
-    checkOut: '2024-09-05',
-    guests: 2,
-    totalPrice: 177000,
-    status: 'Confirmed',
-  },
-  {
-    id: 'b3',
-    hotelName: 'Aahana The Corbett Wilderness',
-    hotelCity: 'Jim Corbett',
-    hotelImage: 'hotel-20-1',
-    roomType: 'Jungle Villa',
-    checkIn: '2024-07-20',
-    checkOut: '2024-07-22',
-    guests: 3,
-    totalPrice: 42480,
-    status: 'Cancelled',
-  },
-];
-
-
 // --- CITIES ---
 export function getCities(): City[] {
   return citiesData;
@@ -374,51 +333,4 @@ export function addHotel(hotel: Omit<Hotel, 'id' | 'slug'>): Hotel {
     };
     hotelsData.unshift(newHotel);
     return newHotel;
-}
-
-
-// --- BOOKINGS ---
-export function getBookings(): Booking[] {
-  return bookingsData;
-}
-
-export function getBookingById(bookingId: string): Booking | undefined {
-    return bookingsData.find(b => b.id === bookingId);
-}
-
-export function addBooking(hotel: Hotel, room: Room, details: BookingDetails): Booking {
-  // Calculate number of nights
-  const checkInDate = new Date(details.checkIn);
-  const checkOutDate = new Date(details.checkOut);
-  const nights = Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 3600 * 24));
-  const totalNights = nights > 0 ? nights : 1;
-
-  // Calculate total price with 18% tax
-  const basePrice = room.price * totalNights;
-  const totalPrice = basePrice * 1.18;
-
-  const newBooking: Booking = {
-    id: `b${Date.now()}`, // Use timestamp for a more unique ID
-    hotelName: hotel.name,
-    hotelCity: hotel.city,
-    hotelImage: hotel.images[0],
-    roomType: room.type,
-    checkIn: format(details.checkIn, 'yyyy-MM-dd'),
-    checkOut: format(details.checkOut, 'yyyy-MM-dd'),
-    guests: details.guests,
-    totalPrice: totalPrice,
-    status: 'Confirmed',
-  };
-
-  bookingsData.unshift(newBooking);
-  return newBooking;
-}
-
-export function updateBookingStatus(bookingId: string, status: 'Confirmed' | 'Cancelled' | 'Pending'): Booking | undefined {
-    const bookingIndex = bookingsData.findIndex(b => b.id === bookingId);
-    if (bookingIndex !== -1) {
-        bookingsData[bookingIndex].status = status;
-        return bookingsData[bookingIndex];
-    }
-    return undefined;
 }
