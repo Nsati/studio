@@ -3,6 +3,8 @@
 import { notFound, useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useEffect, useState } from 'react';
+
 import { getBookingById, getHotelById } from '@/lib/data';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
@@ -13,12 +15,60 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { CheckCircle, Home, Calendar, Users, Hotel as HotelIcon } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+  CheckCircle,
+  Home,
+  Calendar,
+  Users,
+  Hotel as HotelIcon,
+  Mail,
+  FileText,
+} from 'lucide-react';
 import { format } from 'date-fns';
+import {
+  type GenerateBookingConfirmationEmailOutput,
+} from '@/ai/flows/generate-booking-confirmation-email';
+import { generateEmailAction } from '@/app/booking/actions';
+
+function EmailPreview({
+  email,
+}: {
+  email: GenerateBookingConfirmationEmailOutput;
+}) {
+  return (
+    <Card className="mt-8">
+      <CardHeader className="flex flex-row items-center gap-4">
+        <Mail className="h-6 w-6 text-muted-foreground" />
+        <div>
+          <CardTitle>Email Confirmation Preview</CardTitle>
+          <CardDescription>
+            This is a preview of the email sent to the customer.
+          </CardDescription>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="rounded-lg border bg-muted/30 p-4">
+          <div className="mb-4 flex items-center gap-2 border-b pb-2">
+            <FileText className="h-4 w-4" />
+            <h4 className="font-bold">{email.subject}</h4>
+          </div>
+          <div
+            className="prose prose-sm max-w-none"
+            dangerouslySetInnerHTML={{ __html: email.body }}
+          />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function BookingSuccessPage() {
   const params = useParams();
   const id = params.id as string;
+  const [email, setEmail] = useState<GenerateBookingConfirmationEmailOutput | null>(null);
+  const [isLoadingEmail, setIsLoadingEmail] = useState(true);
+
   const booking = getBookingById(id);
 
   if (!booking) {
@@ -26,6 +76,27 @@ export default function BookingSuccessPage() {
   }
 
   const hotel = getHotelById(booking.hotelId);
+
+  useEffect(() => {
+    if (booking && hotel) {
+      const generateEmail = async () => {
+        setIsLoadingEmail(true);
+        const emailContent = await generateEmailAction({
+          hotelName: hotel.name,
+          customerName: booking.customerName,
+          checkIn: format(new Date(booking.checkIn), 'PPP'),
+          checkOut: format(new Date(booking.checkOut), 'PPP'),
+          roomType: booking.roomType,
+          guests: booking.guests,
+          totalPrice: booking.totalPrice,
+          bookingId: booking.id,
+        });
+        setEmail(emailContent);
+        setIsLoadingEmail(false);
+      };
+      generateEmail();
+    }
+  }, [booking, hotel]);
 
   if (!hotel) {
     // This case should ideally not happen if data is consistent
@@ -53,7 +124,7 @@ export default function BookingSuccessPage() {
         <CardHeader>
           <CardTitle>Your Booking Details</CardTitle>
           <CardDescription>
-            A confirmation email has been sent to your address.
+            A confirmation email has been sent to {booking.customerEmail}.
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-6 md:grid-cols-2">
@@ -94,6 +165,15 @@ export default function BookingSuccessPage() {
           </div>
         </CardContent>
       </Card>
+      
+      {isLoadingEmail ? (
+        <div className="mt-8 space-y-4">
+            <Skeleton className="h-12 w-1/3" />
+            <Skeleton className="h-40 w-full" />
+        </div>
+      ) : email ? (
+        <EmailPreview email={email} />
+      ) : null}
 
       <div className="mt-8 flex justify-center">
         <Button asChild>
