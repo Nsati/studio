@@ -2,11 +2,15 @@
 
 import { useState, useMemo } from 'react';
 import { BedDouble, Calendar as CalendarIcon, AlertCircle } from 'lucide-react';
-import { addDays, format, differenceInDays } from 'date-fns';
+import { differenceInDays, format } from 'date-fns';
 import type { DateRange } from 'react-day-picker';
+import { useRouter } from 'next/navigation';
 
 import type { Hotel, Room } from '@/lib/types';
-import { getBookingsForRoom } from '@/lib/data';
+import { getBookingsForRoom, addBooking } from '@/lib/data';
+import { createRazorpayOrder } from '@/app/booking/actions';
+import { useToast } from '@/hooks/use-toast';
+
 import {
   Card,
   CardContent,
@@ -23,22 +27,116 @@ import {
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { PaymentDialog } from './PaymentDialog';
+
+// Extend the Window interface to include Razorpay
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
 
 export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
   const [dates, setDates] = useState<DateRange | undefined>();
-  const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
-  const [isPaymentOpen, setIsPaymentOpen] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const router = useRouter();
+  const { toast } = useToast();
 
   const nights =
     dates?.from && dates?.to ? differenceInDays(dates.to, dates.from) : 0;
-
-  const handleBookNowClick = (room: Room) => {
-    setSelectedRoom(room);
-    setIsPaymentOpen(true);
-  };
   
   const isDateRangeValid = dates?.from && dates?.to && nights > 0;
+
+  const handleBookNowClick = async (room: Room) => {
+    if (!isDateRangeValid || !dates.from || !dates.to) {
+        toast({
+            variant: 'destructive',
+            title: 'Invalid Dates',
+            description: 'Please select a valid check-in and check-out date.',
+        });
+        return;
+    }
+    setIsProcessing(true);
+
+    const totalAmount = nights * room.price;
+
+    // 1. Create Razorpay Order
+    const orderResponse = await createRazorpayOrder(totalAmount, `booking_${room.id}_${Date.now()}`);
+
+    if (!orderResponse.success || !orderResponse.order) {
+        toast({
+            variant: 'destructive',
+            title: 'Payment Error',
+            description: orderResponse.error || 'Could not initialize payment.',
+        });
+        setIsProcessing(false);
+        return;
+    }
+    
+    const { order } = orderResponse;
+
+    // 2. Configure and open Razorpay Checkout
+    const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: order.amount,
+        currency: order.currency,
+        name: 'Uttarakhand Getaways',
+        description: `Booking for ${room.type} at ${hotel.name}`,
+        image: '/logo-icon.png', // Add a logo to your /public folder
+        order_id: order.id,
+        handler: function (response: any) {
+            // 3. Handle successful payment
+            
+            // In a real-world app, you would verify the payment signature on the server here.
+            // For this demo, we'll assume the payment is successful.
+            
+            const newBooking = addBooking({
+                hotelId: hotel.id,
+                roomId: room.id,
+                roomType: room.type,
+                userId: 'u1', // mock user
+                checkIn: dates.from!.toISOString(),
+                checkOut: dates.to!.toISOString(),
+                guests: room.capacity, // Using room capacity as default
+                totalPrice: totalAmount,
+                customerName: 'Test User', // Can be fetched from Razorpay response
+                customerEmail: 'test.user@example.com', // Can be fetched from Razorpay response
+            });
+
+            toast({
+                title: 'Payment Successful!',
+                description: `Your booking at ${hotel.name} is confirmed.`,
+            });
+            
+            router.push(`/booking/success/${newBooking.id}`);
+        },
+        prefill: {
+            name: 'Test User',
+            email: 'test.user@example.com',
+            contact: '9999999999'
+        },
+        notes: {
+            address: 'Razorpay Corporate Office'
+        },
+        theme: {
+            color: '#388E3C'
+        },
+        modal: {
+            ondismiss: function() {
+                // This function is called when the user closes the modal
+                toast({
+                    variant: 'destructive',
+                    title: 'Payment Canceled',
+                    description: 'Your payment process was canceled.',
+                });
+                setIsProcessing(false);
+            }
+        }
+    };
+    
+    const rzp = new window.Razorpay(options);
+    rzp.open();
+    // No need to set isProcessing to false here, as modal ondismiss handles it
+  };
 
   const availableRooms = useMemo(() => {
     if (!isDateRangeValid || !dates?.from || !dates.to) {
@@ -54,7 +152,6 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
 
 
   return (
-    <>
       <Card className="sticky top-24">
         <CardHeader>
           <CardTitle className="font-headline text-2xl">
@@ -142,8 +239,9 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
                         <Button
                             onClick={() => handleBookNowClick(room)}
                             size="sm"
+                            disabled={isProcessing}
                         >
-                            Book Now
+                            {isProcessing ? 'Processing...' : 'Book Now'}
                         </Button>
                     ) : (
                         <Button
@@ -161,18 +259,5 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
           </div>
         </CardContent>
       </Card>
-
-      {selectedRoom && dates?.from && dates?.to && (
-        <PaymentDialog
-          isOpen={isPaymentOpen}
-          onClose={() => setIsPaymentOpen(false)}
-          hotel={hotel}
-          room={selectedRoom}
-          dates={dates}
-          totalAmount={nights * selectedRoom.price}
-          guests={selectedRoom.capacity} // default to room capacity, can be changed
-        />
-      )}
-    </>
   );
 }
