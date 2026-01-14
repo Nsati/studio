@@ -31,6 +31,7 @@ export async function signUpWithEmail(
       role: 'user', // Default role
     };
     const userDocRef = doc(firestore, 'users', user.uid);
+    // Use the non-blocking version and handle errors in the UI via the global listener
     await setDoc(userDocRef, userProfile);
 
     return { success: true };
@@ -51,3 +52,5 @@ export async function signInWithEmail(
     return { success: false, error: error.message };
   }
 }
+
+    

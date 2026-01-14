@@ -87,7 +87,11 @@ service cloud.firestore {
      * Ensures the document's internal 'id' field matches its path {userId}.
      */
     function isUserDataValidOnCreate(userId) {
-      return request.resource.data.id == userId;
+      let data = request.resource.data;
+      return data.id == userId &&
+             data.displayName is string &&
+             data.email is string &&
+             data.role == 'user';
     }
 
     /**
@@ -95,7 +99,8 @@ service cloud.firestore {
      * This prevents re-assigning ownership of a user profile.
      */
     function isUserDataValidOnUpdate() {
-      return request.resource.data.id == resource.data.id;
+      return request.resource.data.id == resource.data.id &&
+             request.resource.data.role == resource.data.role; // Role should not be changed by user
     }
 
     /**
@@ -127,11 +132,11 @@ service cloud.firestore {
      * @principle Restricts access to a user's own data tree.
      */
     match /users/{userId} {
-      allow get: if isOwner(userId);
-      allow list: if false;
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
       allow create: if isOwner(userId) && isUserDataValidOnCreate(userId);
-      allow update: if isExistingOwner(userId) && isUserDataValidOnUpdate();
-      allow delete: if isExistingOwner(userId);
+      allow update: if (isExistingOwner(userId) && isUserDataValidOnUpdate()) || isExistingAdmin();
+      allow delete: if isExistingOwner(userId) || isExistingAdmin();
 
       /**
        * @description Manages a user's private booking records.
@@ -142,8 +147,8 @@ service cloud.firestore {
        * @principle Enforces strict document ownership within a user-specific subcollection.
        */
       match /bookings/{bookingId} {
-        allow get: if isOwner(userId);
-        allow list: if isOwner(userId);
+        allow get: if isOwner(userId) || isAdmin();
+        allow list: if isOwner(userId) || isAdmin();
         allow create: if isOwner(userId) && isBookingDataValidOnCreate(userId);
         allow update: if isExistingOwner(userId) && isBookingDataValidOnUpdate();
         allow delete: if isExistingOwner(userId);
@@ -198,3 +203,5 @@ service cloud.firestore {
     }
   }
 }
+
+    
