@@ -1,5 +1,3 @@
-
-
 export interface Hotel {
   id: string;
   slug: string;
@@ -26,8 +24,8 @@ export interface City {
   image: string;
 }
 
-export interface User {
-  id: string;
+export interface UserProfile {
+  id: string; // Should match Firebase Auth UID
   displayName: string;
   email: string;
   role: 'admin' | 'user';
@@ -37,7 +35,7 @@ export interface User {
 export interface Booking {
   id: string;
   hotelId: string;
-  userId: string; // Assuming a user system
+  userId: string; // This will be the Firebase Auth UID
   roomId: string;
   roomType: string;
   checkIn: string;

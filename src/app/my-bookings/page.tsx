@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { useUser } from '@/context/UserContext';
+import { useUser } from '@/firebase';
 import { getBookingsForUser, getHotelById } from '@/lib/data';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
@@ -20,26 +20,33 @@ import {
   Users,
   Hotel as HotelIcon,
   Home,
+  Loader2,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 
 export default function MyBookingsPage() {
-  const { user, isLoading } = useUser();
+  const { user, isUserLoading } = useUser();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoading && !user) {
-      router.push('/'); // Redirect to home if not logged in
+    if (!isUserLoading && !user) {
+      router.push('/login'); // Redirect to login if not authenticated
     }
-  }, [user, isLoading, router]);
+  }, [user, isUserLoading, router]);
 
-  if (isLoading || !user) {
-    // You can show a loading spinner here
-    return <div className="container mx-auto max-w-4xl py-12 px-4 md:px-6"><p>Loading your bookings...</p></div>;
+  if (isUserLoading || !user) {
+    return (
+      <div className="container mx-auto flex min-h-[calc(100vh-10rem)] items-center justify-center max-w-4xl py-12 px-4 md:px-6">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+          <p className="text-muted-foreground">Loading your bookings...</p>
+        </div>
+      </div>
+    );
   }
 
-  const bookings = getBookingsForUser(user.id);
+  const bookings = getBookingsForUser(user.uid);
 
   return (
     <div className="container mx-auto max-w-4xl py-12 px-4 md:px-6">

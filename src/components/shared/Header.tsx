@@ -1,15 +1,14 @@
-
 'use client';
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, LogIn, LogOut } from 'lucide-react';
+import { Menu, LogIn, LogOut, UserPlus } from 'lucide-react';
 import Link from 'next/link';
 import { Logo } from './Logo';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { useUser } from '@/context/UserContext';
+import { useUser, useAuth } from '@/firebase';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import {
   DropdownMenu,
@@ -20,6 +19,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { toast } from '@/hooks/use-toast';
+import { signOut } from 'firebase/auth';
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -30,38 +30,25 @@ export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
-  const { user, login, logout, isLoading } = useUser();
+  const { user, isUserLoading } = useUser();
+  const auth = useAuth();
 
-  const handleLogin = () => {
-    // Mock login with a sample user
-    login({
-      id: 'u1', // This ID exists in bookingsData
-      displayName: 'Ankit Sharma',
-      email: 'ankit.sharma@example.com',
-      role: 'user',
-    });
-    toast({ title: 'Login Successful', description: 'Welcome back, Ankit!' });
-  };
-
-  const handleAdminLogin = () => {
-    // This function will now redirect to the admin login page
-    router.push('/admin/login');
-  };
-
-
-  const handleLogout = () => {
-    logout();
-    // Also clear admin authorization
-    sessionStorage.removeItem('isAdminAuthorized');
-    toast({ title: 'Logged Out', description: 'You have been successfully logged out.' });
-    if (pathname.startsWith('/admin') || pathname.startsWith('/my-bookings')) {
-        router.push('/');
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      toast({ title: 'Logged Out', description: 'You have been successfully logged out.' });
+      if (pathname.startsWith('/admin') || pathname.startsWith('/my-bookings')) {
+          router.push('/');
+      }
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Logout Failed', description: 'An error occurred while logging out.' });
     }
   };
 
 
-  const getInitials = (name: string) => {
-    return name.split(' ').map(n => n[0]).join('');
+  const getInitials = (name: string | null | undefined) => {
+    if (!name) return 'U';
+    return name.split(' ').map(n => n[0]).join('').toUpperCase();
   }
 
 
@@ -98,26 +85,27 @@ export function Header() {
 
         <div className="flex items-center gap-4">
           <div className="hidden md:flex items-center gap-2">
-            {!isLoading && user ? (
+            {!isUserLoading && user ? (
                <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                    <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                     <Avatar className="h-8 w-8">
-                        <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
+                       {user.photoURL && <AvatarImage src={user.photoURL} alt={user.displayName || ''} />}
+                       <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
                     </Avatar>
                    </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                     <DropdownMenuLabel className="font-normal">
                         <div className="flex flex-col space-y-1">
-                            <p className="text-sm font-medium leading-none">{user.displayName}</p>
+                            <p className="text-sm font-medium leading-none">{user.displayName || 'User'}</p>
                             <p className="text-xs leading-none text-muted-foreground">
                                 {user.email}
                             </p>
                         </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                     {user.role === 'admin' && (
+                     {user.email === 'admin@example.com' && (
                         <DropdownMenuItem onClick={() => router.push('/admin')}>
                             Admin Dashboard
                         </DropdownMenuItem>
@@ -129,24 +117,20 @@ export function Header() {
                 </DropdownMenuContent>
                </DropdownMenu>
             ) : (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="secondary">
-                      <LogIn className="mr-2 h-4 w-4" />
-                      Login
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" forceMount>
-                    <DropdownMenuLabel>Login as...</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogin}>
-                       User (Ankit)
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleAdminLogin}>
-                       Admin
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+             <div className="flex items-center gap-2">
+                <Button asChild variant="ghost">
+                  <Link href="/login">
+                    <LogIn className="mr-2 h-4 w-4" />
+                    Login
+                  </Link>
+                </Button>
+                <Button asChild>
+                   <Link href="/signup">
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Sign Up
+                  </Link>
+                </Button>
+             </div>
             )}
           </div>
           <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
@@ -185,7 +169,7 @@ export function Header() {
                         My Bookings
                     </Link>
                   )}
-                  {user?.role === 'admin' && (
+                  {user?.email === 'admin@example.com' && (
                     <Link
                       href="/admin"
                       onClick={() => setIsMenuOpen(false)}
@@ -198,18 +182,24 @@ export function Header() {
                     </Link>
                   )}
                   <div className="mt-6 pt-6 border-t">
-                     {!isLoading && user ? (
+                     {!isUserLoading && user ? (
                         <Button onClick={() => { handleLogout(); setIsMenuOpen(false);}} className="w-full justify-start">
                             <LogOut className="mr-2 h-4 w-4" />
                             Log out
                         </Button>
                      ) : (
                         <div className="space-y-2">
-                             <Button onClick={() => { handleLogin(); setIsMenuOpen(false); }} className="w-full justify-start">
-                                Login as User
+                             <Button asChild className="w-full justify-start">
+                                <Link href="/login" onClick={() => setIsMenuOpen(false)}>
+                                    <LogIn className="mr-2 h-4 w-4" />
+                                    Login
+                                </Link>
                             </Button>
-                             <Button onClick={() => { handleAdminLogin(); setIsMenuOpen(false); }} className="w-full justify-start" variant="secondary">
-                                Login as Admin
+                             <Button asChild variant="secondary" className="w-full justify-start">
+                                <Link href="/signup" onClick={() => setIsMenuOpen(false)}>
+                                    <UserPlus className="mr-2 h-4 w-4" />
+                                    Sign Up
+                                </Link>
                             </Button>
                         </div>
                      )}

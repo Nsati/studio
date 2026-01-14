@@ -1,12 +1,10 @@
-
-
 'use client';
 import { AdminTabs } from '@/components/admin/AdminTabs';
 import { getHotels, getBookings } from '@/lib/data';
 import { useState, useEffect } from 'react';
 import type { Hotel, Booking } from '@/lib/types';
 import { useRouter } from 'next/navigation';
-import { useUser } from '@/context/UserContext';
+import { useUser } from '@/firebase';
 import { Loader2 } from 'lucide-react';
 
 export default function AdminPage() {
@@ -14,7 +12,7 @@ export default function AdminPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
-  const { user, isLoading: isUserLoading } = useUser();
+  const { user, isUserLoading } = useUser();
 
   useEffect(() => {
     // Wait for user context to load
@@ -22,11 +20,9 @@ export default function AdminPage() {
         return;
     }
     
-    // Check for sessionStorage flag for direct navigation, and also user role from context
-    const isAuthorizedBySession = sessionStorage.getItem('isAdminAuthorized') === 'true';
-    const isAuthorizedByUserRole = user?.role === 'admin';
-
-    if (isAuthorizedBySession && isAuthorizedByUserRole) {
+    // In a real app, you'd check for a custom claim or a document in a specific collection.
+    // For this demo, we'll just check the email address.
+    if (user && user.email === 'admin@example.com') {
       setHotels(getHotels());
       setBookings(getBookings());
     } else {
@@ -46,9 +42,7 @@ export default function AdminPage() {
       )
   }
 
-  // This part is not needed as redirection will handle unauthorized access.
-  // We can leave it to avoid a flash of content while redirecting.
-  if (user?.role !== 'admin') {
+  if (!user || user.email !== 'admin@example.com') {
       return null;
   }
 

@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -15,52 +16,40 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { Logo } from '@/components/shared/Logo';
-import { useUser } from '@/firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { useAuth } from '@/firebase';
+import { signInWithEmail } from '@/app/auth/actions';
 
-export default function AdminLoginPage() {
-  const [email, setEmail] = useState('admin@example.com');
-  const [password, setPassword] = useState('admin123');
+export default function LoginPage() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
-  const auth = useAuth();
-
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
 
-    try {
-        // For admin, we use direct sign-in.
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+    const result = await signInWithEmail(email, password);
 
-        // In a real app, you'd check for an admin role from Firestore or custom claims.
-        // For this demo, we'll assume this email is the admin.
-      if (user.email === 'admin@example.com') {
-        toast({
-          title: 'Login Successful',
-          description: 'Welcome, Admin!',
-        });
-        router.push('/admin');
-      } else {
-        await auth.signOut();
-        throw new Error('You are not authorized as an admin.');
-      }
-    } catch (err: any) {
-       setError(err.message || 'An unknown error occurred.');
-       toast({
+    if (result.success) {
+      toast({
+        title: 'Login Successful',
+        description: 'Welcome back!',
+      });
+      const redirectTo = searchParams.get('redirect') || '/';
+      router.push(redirectTo);
+    } else {
+      setError(result.error || 'An unknown error occurred.');
+      toast({
         variant: 'destructive',
         title: 'Login Failed',
-        description: err.message || 'Please check your credentials.',
+        description: result.error || 'Please check your credentials.',
       });
-    } finally {
-        setIsLoading(false);
     }
+    setIsLoading(false);
   };
 
   return (
@@ -68,21 +57,24 @@ export default function AdminLoginPage() {
       <div className="mx-auto grid w-[380px] gap-6">
         <div className="grid gap-2 text-center">
             <Logo className="justify-center" />
-             <h1 className="text-3xl font-bold font-headline mt-4">Admin Access</h1>
+             <h1 className="text-3xl font-bold font-headline mt-4">Welcome Back</h1>
             <p className="text-balance text-muted-foreground">
-                Enter the administrator credentials to access the dashboard.
+                Enter your credentials to access your account.
             </p>
         </div>
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl">Admin Login</CardTitle>
+            <CardTitle className="text-2xl">Login</CardTitle>
             <CardDescription>
-              This area is restricted to authorized personnel only.
+              Don&apos;t have an account?{' '}
+              <Link href="/signup" className="underline">
+                Sign up
+              </Link>
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="grid gap-4">
-               <div className="grid gap-2">
+              <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
@@ -90,7 +82,7 @@ export default function AdminLoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  placeholder="admin@example.com"
+                  placeholder="name@example.com"
                 />
               </div>
               <div className="grid gap-2">

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -15,52 +16,43 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { Logo } from '@/components/shared/Logo';
-import { useUser } from '@/firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { useAuth } from '@/firebase';
+import { signUpWithEmail } from '@/app/auth/actions';
 
-export default function AdminLoginPage() {
-  const [email, setEmail] = useState('admin@example.com');
-  const [password, setPassword] = useState('admin123');
+export default function SignUpPage() {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
   const { toast } = useToast();
-  const auth = useAuth();
 
-
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (password.length < 6) {
+        setError('Password must be at least 6 characters long.');
+        return;
+    }
     setIsLoading(true);
     setError('');
 
-    try {
-        // For admin, we use direct sign-in.
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+    const result = await signUpWithEmail(name, email, password);
 
-        // In a real app, you'd check for an admin role from Firestore or custom claims.
-        // For this demo, we'll assume this email is the admin.
-      if (user.email === 'admin@example.com') {
-        toast({
-          title: 'Login Successful',
-          description: 'Welcome, Admin!',
-        });
-        router.push('/admin');
-      } else {
-        await auth.signOut();
-        throw new Error('You are not authorized as an admin.');
-      }
-    } catch (err: any) {
-       setError(err.message || 'An unknown error occurred.');
-       toast({
-        variant: 'destructive',
-        title: 'Login Failed',
-        description: err.message || 'Please check your credentials.',
+    if (result.success) {
+      toast({
+        title: 'Account Created',
+        description: 'Welcome! You have been successfully signed up.',
       });
-    } finally {
-        setIsLoading(false);
+      router.push('/'); // Redirect to home page after successful sign up
+    } else {
+      setError(result.error || 'An unknown error occurred.');
+      toast({
+        variant: 'destructive',
+        title: 'Sign Up Failed',
+        description: result.error || 'Could not create your account.',
+      });
     }
+    setIsLoading(false);
   };
 
   return (
@@ -68,21 +60,35 @@ export default function AdminLoginPage() {
       <div className="mx-auto grid w-[380px] gap-6">
         <div className="grid gap-2 text-center">
             <Logo className="justify-center" />
-             <h1 className="text-3xl font-bold font-headline mt-4">Admin Access</h1>
+             <h1 className="text-3xl font-bold font-headline mt-4">Create an Account</h1>
             <p className="text-balance text-muted-foreground">
-                Enter the administrator credentials to access the dashboard.
+                Enter your information to start your journey with us.
             </p>
         </div>
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl">Admin Login</CardTitle>
+            <CardTitle className="text-2xl">Sign Up</CardTitle>
             <CardDescription>
-              This area is restricted to authorized personnel only.
+              Already have an account?{' '}
+              <Link href="/login" className="underline">
+                Login
+              </Link>
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleLogin} className="grid gap-4">
-               <div className="grid gap-2">
+            <form onSubmit={handleSignUp} className="grid gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="name">Full Name</Label>
+                <Input
+                  id="name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  placeholder="John Doe"
+                />
+              </div>
+              <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
@@ -90,7 +96,7 @@ export default function AdminLoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  placeholder="admin@example.com"
+                  placeholder="name@example.com"
                 />
               </div>
               <div className="grid gap-2">
@@ -106,7 +112,7 @@ export default function AdminLoginPage() {
               {error && <p className="text-sm font-medium text-destructive">{error}</p>}
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Log In
+                Create Account
               </Button>
             </form>
           </CardContent>

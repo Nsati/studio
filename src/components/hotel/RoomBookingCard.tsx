@@ -10,7 +10,7 @@ import type { Hotel, Room } from '@/lib/types';
 import { getBookingsForRoom, addBooking } from '@/lib/data';
 import { createRazorpayOrder } from '@/app/booking/actions';
 import { useToast } from '@/hooks/use-toast';
-import { useUser } from '@/context/UserContext';
+import { useUser } from '@/firebase';
 
 
 import {
@@ -64,6 +64,7 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
             title: 'Not Logged In',
             description: 'Please log in to book a room.',
         });
+        router.push('/login');
         return;
     }
     setIsProcessing(true);
@@ -104,13 +105,13 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
                 hotelId: hotel.id,
                 roomId: room.id,
                 roomType: room.type,
-                userId: user.id, // Use logged-in user's ID
+                userId: user.uid, // Use logged-in user's ID
                 checkIn: dates.from!.toISOString(),
                 checkOut: dates.to!.toISOString(),
                 guests: room.capacity, // Using room capacity as default
                 totalPrice: totalAmount,
-                customerName: user.displayName, // Use logged-in user's name
-                customerEmail: user.email, // Use logged-in user's email
+                customerName: user.displayName || 'Guest',
+                customerEmail: user.email || 'no-email@example.com',
             });
 
             toast({
@@ -121,7 +122,7 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
             router.push(`/booking/success/${newBooking.id}`);
         },
         prefill: {
-            name: user.displayName,
+            name: user.displayName || 'Guest',
             email: user.email,
         },
         notes: {
@@ -218,7 +219,7 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
                 <User className="h-4 w-4 !text-blue-600" />
                 <AlertTitle className="text-blue-800">Log In to Book</AlertTitle>
                 <AlertDescription className="text-blue-700">
-                  Please log in to see room prices and make a reservation.
+                  Please log in or sign up to see room prices and make a reservation.
                 </AlertDescription>
             </Alert>
           )}
