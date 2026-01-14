@@ -3,6 +3,12 @@
 
 import Razorpay from 'razorpay';
 import shortid from 'shortid';
+import {
+  generateBookingConfirmationEmail,
+  type GenerateBookingConfirmationEmailInput,
+  type GenerateBookingConfirmationEmailOutput,
+} from '@/ai/flows/generate-booking-confirmation-email';
+
 
 // Initialize Razorpay instance
 const razorpay = new Razorpay({
@@ -27,5 +33,21 @@ export async function createRazorpayOrder(amount: number, receipt: string) {
     console.error('Razorpay order creation error:', error);
     // In a real app, log this error to a monitoring service
     return { success: false, error: 'Could not create payment order.' };
+  }
+}
+
+export async function generateConfirmationEmailAction(
+  input: GenerateBookingConfirmationEmailInput
+): Promise<GenerateBookingConfirmationEmailOutput> {
+  try {
+    const output = await generateBookingConfirmationEmail(input);
+    return output;
+  } catch (error) {
+    console.error('Error generating confirmation email:', error);
+    // Return a fallback email in case of an error
+    return {
+      subject: `Booking Confirmation: ${input.bookingId}`,
+      body: `<p>Thank you for your booking. Your booking ID is ${input.bookingId}.</p>`,
+    };
   }
 }

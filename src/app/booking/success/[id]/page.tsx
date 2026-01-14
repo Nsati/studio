@@ -3,6 +3,7 @@
 import { notFound, useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useEffect, useState } from 'react';
 
 import { getBookingById, getHotelById } from '@/lib/data';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -20,12 +21,23 @@ import {
   Calendar,
   Users,
   Hotel as HotelIcon,
+  Mail,
+  Loader2,
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { generateConfirmationEmailAction } from '@/app/booking/actions';
+import { Skeleton } from '@/components/ui/skeleton';
+
+interface EmailContent {
+  subject: string;
+  body: string;
+}
 
 export default function BookingSuccessPage() {
   const params = useParams();
   const id = params.id as string;
+  const [emailContent, setEmailContent] = useState<EmailContent | null>(null);
+  const [isLoadingEmail, setIsLoadingEmail] = useState(true);
 
   const booking = getBookingById(id);
 
@@ -39,6 +51,36 @@ export default function BookingSuccessPage() {
     // This case should ideally not happen if data is consistent
     notFound();
   }
+  
+  useEffect(() => {
+    async function getEmailContent() {
+      setIsLoadingEmail(true);
+      try {
+        const content = await generateConfirmationEmailAction({
+            hotelName: hotel.name,
+            customerName: booking.customerName,
+            checkIn: booking.checkIn,
+            checkOut: booking.checkOut,
+            roomType: booking.roomType,
+            totalPrice: booking.totalPrice,
+            bookingId: booking.id
+        });
+        setEmailContent(content);
+      } catch (error) {
+        console.error("Failed to generate email content", error);
+        // Set a fallback
+        setEmailContent({
+            subject: `Booking Confirmation: ${booking.id}`,
+            body: `<p>Thank you for your booking at ${hotel.name}. Details are available in your account.</p>`
+        });
+      } finally {
+        setIsLoadingEmail(false);
+      }
+    }
+
+    getEmailContent();
+  }, [booking, hotel]);
+
 
   const hotelImage = PlaceHolderImages.find((img) => img.id === hotel.images[0]);
 
@@ -100,6 +142,35 @@ export default function BookingSuccessPage() {
               </div>
             </div>
           </div>
+        </CardContent>
+      </Card>
+      
+      <Card className="mt-8">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Mail className="h-6 w-6" />
+            Email Confirmation Preview
+          </CardTitle>
+          <CardDescription>
+            This is a preview of the email sent to your inbox.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+            {isLoadingEmail ? (
+                <div className="space-y-4">
+                    <Skeleton className="h-6 w-3/4" />
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-5/6" />
+                </div>
+            ) : emailContent ? (
+                <div className="prose prose-sm max-w-none rounded-md border bg-muted/30 p-4">
+                    <h4 className="font-bold">Subject: {emailContent.subject}</h4>
+                    <div dangerouslySetInnerHTML={{ __html: emailContent.body }} />
+                </div>
+            ) : (
+                <p>Could not load email preview.</p>
+            )}
         </CardContent>
       </Card>
       
