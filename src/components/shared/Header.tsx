@@ -7,7 +7,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Menu, LogIn, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { Logo } from './Logo';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useUser } from '@/context/UserContext';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
@@ -29,6 +29,7 @@ const navLinks = [
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
   const { user, login, logout, isLoading } = useUser();
 
   const handleLogin = () => {
@@ -43,20 +44,19 @@ export function Header() {
   };
 
   const handleAdminLogin = () => {
-    // Mock admin login
-    login({
-      id: 'admin-007',
-      displayName: 'Admin User',
-      email: 'admin@example.com',
-      role: 'admin',
-    });
-    toast({ title: 'Admin Login Successful', description: 'Welcome, Admin!' });
+    // This function will now redirect to the admin login page
+    router.push('/admin/login');
   };
 
 
   const handleLogout = () => {
     logout();
+    // Also clear admin authorization
+    sessionStorage.removeItem('isAdminAuthorized');
     toast({ title: 'Logged Out', description: 'You have been successfully logged out.' });
+    if (pathname.startsWith('/admin') || pathname.startsWith('/my-bookings')) {
+        router.push('/');
+    }
   };
 
 
@@ -94,17 +94,6 @@ export function Header() {
               My Bookings
             </Link>
           )}
-          {user?.role === 'admin' && ( // Show Admin link only if user is admin
-            <Link
-              href="/admin"
-              className={cn(
-                'text-sm font-medium transition-colors hover:text-primary',
-                pathname.startsWith('/admin') ? 'text-primary' : 'text-muted-foreground'
-              )}
-            >
-              Admin
-            </Link>
-          )}
         </nav>
 
         <div className="flex items-center gap-4">
@@ -128,6 +117,11 @@ export function Header() {
                         </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
+                     {user.role === 'admin' && (
+                        <DropdownMenuItem onClick={() => router.push('/admin')}>
+                            Admin Dashboard
+                        </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem onClick={handleLogout}>
                         <LogOut className="mr-2 h-4 w-4" />
                         <span>Log out</span>

@@ -16,6 +16,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { Logo } from '@/components/shared/Logo';
+import { useUser } from '@/context/UserContext';
 
 export default function AdminLoginPage() {
   const [password, setPassword] = useState('');
@@ -23,6 +24,7 @@ export default function AdminLoginPage() {
   const [error, setError] = useState('');
   const router = useRouter();
   const { toast } = useToast();
+  const { login } = useUser();
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,7 +35,17 @@ export default function AdminLoginPage() {
     // For this mock implementation, we'll use a simple hardcoded password.
     setTimeout(() => {
       if (password === 'admin123') {
+        // Set a flag in sessionStorage to indicate admin authorization
         sessionStorage.setItem('isAdminAuthorized', 'true');
+        
+        // Also log in the user as an admin in the user context
+        login({
+            id: 'admin-007',
+            displayName: 'Admin User',
+            email: 'admin@example.com',
+            role: 'admin',
+        });
+
         toast({
           title: 'Login Successful',
           description: 'Welcome, Admin!',

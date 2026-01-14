@@ -21,7 +21,16 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     try {
       const storedUser = sessionStorage.getItem('currentUser');
       if (storedUser) {
-        setUser(JSON.parse(storedUser));
+        const parsedUser = JSON.parse(storedUser);
+        // Also check admin flag for consistency
+        const isAdminAuthorized = sessionStorage.getItem('isAdminAuthorized') === 'true';
+        if (parsedUser.role === 'admin' && !isAdminAuthorized) {
+            // If context says admin but session flag is gone, log them out
+            sessionStorage.removeItem('currentUser');
+            sessionStorage.removeItem('isAdminAuthorized');
+        } else {
+            setUser(parsedUser);
+        }
       }
     } catch (error) {
         console.error("Failed to parse user from sessionStorage", error);
@@ -38,6 +47,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const logout = () => {
     setUser(null);
     sessionStorage.removeItem('currentUser');
+    sessionStorage.removeItem('isAdminAuthorized'); // Ensure admin flag is cleared on any logout
   };
 
   return (
