@@ -1,3 +1,4 @@
+
 import type { Hotel, Room, City, Booking, User } from './types';
 import placeholderImageData from './placeholder-images.json';
 import type { ImagePlaceholder } from './placeholder-images';

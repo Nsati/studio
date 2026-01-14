@@ -14,6 +14,7 @@ export interface Hotel {
 
 export interface Room {
   id: string;
+  hotelId: string;
   type: 'Standard' | 'Deluxe' | 'Suite';
   price: number;
   capacity: number;
