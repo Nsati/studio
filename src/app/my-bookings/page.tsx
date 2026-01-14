@@ -1,10 +1,9 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import { useUser } from '@/firebase';
+import { useUser } from '@/hooks/useUser';
 import { getBookingsForUser, getHotelById } from '@/lib/data';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
@@ -24,18 +23,24 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
+import type { Booking } from '@/lib/types';
+
 
 export default function MyBookingsPage() {
-  const { user, isUserLoading } = useUser();
-  const router = useRouter();
+  const { user, isLoading } = useUser();
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [isDataLoading, setIsDataLoading] = useState(true);
 
   useEffect(() => {
-    if (!isUserLoading && !user) {
-      router.push('/login'); // Redirect to login if not authenticated
+    if (!isLoading) {
+      if (user) {
+        setBookings(getBookingsForUser(user.uid));
+      }
+      setIsDataLoading(false);
     }
-  }, [user, isUserLoading, router]);
+  }, [user, isLoading]);
 
-  if (isUserLoading || !user) {
+  if (isLoading || isDataLoading) {
     return (
       <div className="container mx-auto flex min-h-[calc(100vh-10rem)] items-center justify-center max-w-4xl py-12 px-4 md:px-6">
         <div className="flex flex-col items-center gap-4">
@@ -46,7 +51,18 @@ export default function MyBookingsPage() {
     );
   }
 
-  const bookings = getBookingsForUser(user.uid);
+  if (!user) {
+      return (
+          <div className="container mx-auto flex min-h-[calc(100vh-10rem)] items-center justify-center max-w-4xl py-12 px-4 md:px-6">
+            <div className="flex flex-col items-center gap-4 text-center">
+              <h2 className="font-headline text-3xl font-bold">Please Log In</h2>
+              <p className="text-muted-foreground">
+                You need to be logged in to view your bookings.
+              </p>
+            </div>
+          </div>
+      )
+  }
 
   return (
     <div className="container mx-auto max-w-4xl py-12 px-4 md:px-6">

@@ -10,7 +10,7 @@ import type { Hotel, Room } from '@/lib/types';
 import { getBookingsForRoom, addBooking } from '@/lib/data';
 import { createRazorpayOrder } from '@/app/booking/actions';
 import { useToast } from '@/hooks/use-toast';
-import { useUser } from '@/firebase';
+import { useUser } from '@/hooks/useUser';
 
 
 import {
@@ -42,7 +42,7 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
-  const { user } = useUser();
+  const { user, login } = useUser();
 
   const nights =
     dates?.from && dates?.to ? differenceInDays(dates.to, dates.from) : 0;
@@ -64,7 +64,12 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
             title: 'Not Logged In',
             description: 'Please log in to book a room.',
         });
-        router.push('/login');
+        login({ // mock login
+            uid: 'u1',
+            displayName: 'Ankit Sharma',
+            email: 'ankit.sharma@example.com',
+            role: 'user',
+        });
         return;
     }
     setIsProcessing(true);

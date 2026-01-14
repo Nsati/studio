@@ -6,9 +6,9 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Menu, LogIn, LogOut, UserPlus } from 'lucide-react';
 import Link from 'next/link';
 import { Logo } from './Logo';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { useUser, useAuth } from '@/firebase';
+import { useUser } from '@/hooks/useUser';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import {
   DropdownMenu,
@@ -18,8 +18,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { toast } from '@/hooks/use-toast';
-import { signOut } from 'firebase/auth';
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -29,22 +27,27 @@ const navLinks = [
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
-  const router = useRouter();
-  const { user, isUserLoading } = useUser();
-  const auth = useAuth();
+  const { user, login, logout } = useUser();
 
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      toast({ title: 'Logged Out', description: 'You have been successfully logged out.' });
-      if (pathname.startsWith('/admin') || pathname.startsWith('/my-bookings')) {
-          router.push('/');
-      }
-    } catch (error) {
-      toast({ variant: 'destructive', title: 'Logout Failed', description: 'An error occurred while logging out.' });
-    }
+  const handleLogin = () => {
+    login({
+        uid: 'u1',
+        displayName: 'Ankit Sharma',
+        email: 'ankit.sharma@example.com',
+        role: 'user',
+        photoURL: 'https://i.pravatar.cc/150?u=u1'
+    });
   };
 
+  const handleAdminLogin = () => {
+      login({
+          uid: 'admin1',
+          displayName: 'Admin User',
+          email: 'admin@example.com',
+          role: 'admin',
+          photoURL: 'https://i.pravatar.cc/150?u=admin1'
+      });
+  };
 
   const getInitials = (name: string | null | undefined) => {
     if (!name) return 'U';
@@ -81,11 +84,22 @@ export function Header() {
               My Bookings
             </Link>
           )}
+          {user?.role === 'admin' && (
+            <Link
+              href="/admin"
+              className={cn(
+                'text-sm font-medium transition-colors hover:text-primary',
+                pathname.startsWith('/admin') ? 'text-primary' : 'text-muted-foreground'
+              )}
+            >
+              Admin
+            </Link>
+          )}
         </nav>
 
         <div className="flex items-center gap-4">
           <div className="hidden md:flex items-center gap-2">
-            {!isUserLoading && user ? (
+            {user ? (
                <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                    <Button variant="ghost" className="relative h-8 w-8 rounded-full">
@@ -105,12 +119,7 @@ export function Header() {
                         </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                     {user.email === 'admin@example.com' && (
-                        <DropdownMenuItem onClick={() => router.push('/admin')}>
-                            Admin Dashboard
-                        </DropdownMenuItem>
-                    )}
-                    <DropdownMenuItem onClick={handleLogout}>
+                    <DropdownMenuItem onClick={logout}>
                         <LogOut className="mr-2 h-4 w-4" />
                         <span>Log out</span>
                     </DropdownMenuItem>
@@ -118,17 +127,13 @@ export function Header() {
                </DropdownMenu>
             ) : (
              <div className="flex items-center gap-2">
-                <Button asChild variant="ghost">
-                  <Link href="/login">
-                    <LogIn className="mr-2 h-4 w-4" />
-                    Login
-                  </Link>
+                <Button onClick={handleLogin} variant="ghost">
+                  <LogIn className="mr-2 h-4 w-4" />
+                  Login
                 </Button>
-                <Button asChild>
-                   <Link href="/signup">
-                    <UserPlus className="mr-2 h-4 w-4" />
-                    Sign Up
-                  </Link>
+                <Button onClick={handleAdminLogin}>
+                  <UserPlus className="mr-2 h-4 w-4" />
+                  Admin Login
                 </Button>
              </div>
             )}
@@ -169,7 +174,7 @@ export function Header() {
                         My Bookings
                     </Link>
                   )}
-                  {user?.email === 'admin@example.com' && (
+                  {user?.role === 'admin' && (
                     <Link
                       href="/admin"
                       onClick={() => setIsMenuOpen(false)}
@@ -182,23 +187,23 @@ export function Header() {
                     </Link>
                   )}
                   <div className="mt-6 pt-6 border-t">
-                     {!isUserLoading && user ? (
-                        <Button onClick={() => { handleLogout(); setIsMenuOpen(false);}} className="w-full justify-start">
+                     {user ? (
+                        <Button onClick={() => { logout(); setIsMenuOpen(false);}} className="w-full justify-start">
                             <LogOut className="mr-2 h-4 w-4" />
                             Log out
                         </Button>
                      ) : (
                         <div className="space-y-2">
                              <Button asChild className="w-full justify-start">
-                                <Link href="/login" onClick={() => setIsMenuOpen(false)}>
+                                <Link href="#" onClick={() => { handleLogin(); setIsMenuOpen(false);}}>
                                     <LogIn className="mr-2 h-4 w-4" />
                                     Login
                                 </Link>
                             </Button>
                              <Button asChild variant="secondary" className="w-full justify-start">
-                                <Link href="/signup" onClick={() => setIsMenuOpen(false)}>
+                                <Link href="#" onClick={() => { handleAdminLogin(); setIsMenuOpen(false);}}>
                                     <UserPlus className="mr-2 h-4 w-4" />
-                                    Sign Up
+                                    Admin Login
                                 </Link>
                             </Button>
                         </div>

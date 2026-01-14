@@ -35,7 +35,7 @@ export interface UserProfile {
 export interface Booking {
   id: string;
   hotelId: string;
-  userId: string; // This will be the Firebase Auth UID
+  userId: string;
   roomId: string;
   roomType: string;
   checkIn: string;
@@ -45,3 +45,12 @@ export interface Booking {
   customerName: string;
   customerEmail: string;
 }
+
+// Mock user type for frontend-only state
+export type MockUser = {
+    uid: string;
+    displayName: string | null;
+    email: string | null;
+    role: 'user' | 'admin';
+    photoURL?: string | null;
+};
