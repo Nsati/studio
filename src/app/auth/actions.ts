@@ -1,7 +1,6 @@
 'use server';
 
 import {
-  getAuth,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   updateProfile,
@@ -10,13 +9,13 @@ import { doc, setDoc } from 'firebase/firestore';
 import { initializeFirebase } from '@/firebase';
 import type { UserProfile } from '@/lib/types';
 
-const { auth, firestore } = initializeFirebase();
 
 export async function signUpWithEmail(
   name: string,
   email: string,
   password: string
 ): Promise<{ success: boolean; error?: string }> {
+  const { auth, firestore } = initializeFirebase();
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
@@ -44,6 +43,7 @@ export async function signInWithEmail(
   email: string,
   password: string
 ): Promise<{ success: boolean; error?: string }> {
+  const { auth } = initializeFirebase();
   try {
     await signInWithEmailAndPassword(auth, email, password);
     return { success: true };
