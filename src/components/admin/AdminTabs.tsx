@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -175,6 +176,7 @@ export function AdminTabs({
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>Booking ID</TableHead>
                     <TableHead>Hotel</TableHead>
                     <TableHead>Customer</TableHead>
                     <TableHead>Dates</TableHead>
@@ -187,6 +189,7 @@ export function AdminTabs({
                     const hotel = getHotelById(booking.hotelId);
                     return (
                       <TableRow key={booking.id}>
+                        <TableCell className="font-mono text-xs">{booking.id}</TableCell>
                         <TableCell>
                           <div className="font-medium">{hotel?.name}</div>
                           <div className="text-sm text-muted-foreground">
