@@ -5,7 +5,6 @@ import { Footer } from '@/components/shared/Footer';
 import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
 import Script from 'next/script';
-import { UserProvider } from '@/hooks/useUser';
 
 
 export const metadata: Metadata = {
@@ -29,14 +28,12 @@ export default function RootLayout({
         />
       </head>
       <body className={cn('font-body antialiased')}>
-        <UserProvider>
           <div className="flex min-h-screen flex-col">
             <Header />
             <main className="flex-grow">{children}</main>
             <Footer />
           </div>
           <Toaster />
-        </UserProvider>
         <Script src="https://checkout.razorpay.com/v1/checkout.js" />
       </body>
     </html>
