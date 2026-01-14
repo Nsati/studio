@@ -32,7 +32,10 @@ export async function signUpWithEmail(
     };
     const userDocRef = doc(firestore, 'users', user.uid);
     // Use the non-blocking version and handle errors in the UI via the global listener
-    await setDoc(userDocRef, userProfile);
+    setDoc(userDocRef, userProfile).catch((e) => {
+        // This will be caught by the global error handler, but we can log here for server visibility
+        console.error("Non-blocking setDoc failed in signUpWithEmail:", e);
+    });
 
     return { success: true };
   } catch (error: any) {
