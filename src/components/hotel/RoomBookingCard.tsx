@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { BedDouble, Calendar as CalendarIcon, AlertCircle } from 'lucide-react';
+import { BedDouble, Calendar as CalendarIcon, AlertCircle, User } from 'lucide-react';
 import { differenceInDays, format } from 'date-fns';
 import type { DateRange } from 'react-day-picker';
 import { useRouter } from 'next/navigation';
@@ -10,6 +10,8 @@ import type { Hotel, Room } from '@/lib/types';
 import { getBookingsForRoom, addBooking } from '@/lib/data';
 import { createRazorpayOrder } from '@/app/booking/actions';
 import { useToast } from '@/hooks/use-toast';
+import { useUser } from '@/context/UserContext';
+
 
 import {
   Card,
@@ -40,6 +42,7 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
+  const { user } = useUser();
 
   const nights =
     dates?.from && dates?.to ? differenceInDays(dates.to, dates.from) : 0;
@@ -52,6 +55,14 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
             variant: 'destructive',
             title: 'Invalid Dates',
             description: 'Please select a valid check-in and check-out date.',
+        });
+        return;
+    }
+     if (!user) {
+        toast({
+            variant: 'destructive',
+            title: 'Not Logged In',
+            description: 'Please log in to book a room.',
         });
         return;
     }
@@ -93,13 +104,13 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
                 hotelId: hotel.id,
                 roomId: room.id,
                 roomType: room.type,
-                userId: 'u1', // mock user
+                userId: user.id, // Use logged-in user's ID
                 checkIn: dates.from!.toISOString(),
                 checkOut: dates.to!.toISOString(),
                 guests: room.capacity, // Using room capacity as default
                 totalPrice: totalAmount,
-                customerName: 'Test User', // Can be fetched from Razorpay response
-                customerEmail: 'test.user@example.com', // Can be fetched from Razorpay response
+                customerName: user.displayName, // Use logged-in user's name
+                customerEmail: user.email, // Use logged-in user's email
             });
 
             toast({
@@ -110,9 +121,8 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
             router.push(`/booking/success/${newBooking.id}`);
         },
         prefill: {
-            name: 'Test User',
-            email: 'test.user@example.com',
-            contact: '9999999999'
+            name: user.displayName,
+            email: user.email,
         },
         notes: {
             address: 'Razorpay Corporate Office'
@@ -203,7 +213,17 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
             </Popover>
           </div>
 
-          {!isDateRangeValid && (
+          {!user && (
+             <Alert variant="default" className="bg-blue-50 border-blue-200">
+                <User className="h-4 w-4 !text-blue-600" />
+                <AlertTitle className="text-blue-800">Log In to Book</AlertTitle>
+                <AlertDescription className="text-blue-700">
+                  Please log in to see room prices and make a reservation.
+                </AlertDescription>
+            </Alert>
+          )}
+
+          {user && !isDateRangeValid && (
              <Alert variant="default" className="bg-amber-50 border-amber-200">
                 <AlertCircle className="h-4 w-4 !text-amber-600" />
                 <AlertTitle className="text-amber-800">Select Dates</AlertTitle>
@@ -222,7 +242,7 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
                     <p className="text-sm text-muted-foreground">
                       Fits up to {room.capacity} guests
                     </p>
-                    {isDateRangeValid && (
+                    {isDateRangeValid && user && (
                          <p className="text-sm text-muted-foreground">
                             {room.totalRooms - room.bookingsCount} of {room.totalRooms} rooms available
                         </p>
@@ -235,7 +255,7 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
                         /night
                       </span>
                     </p>
-                    {isDateRangeValid && room.isAvailable ? (
+                    {isDateRangeValid && user && room.isAvailable ? (
                         <Button
                             onClick={() => handleBookNowClick(room)}
                             size="sm"
@@ -247,9 +267,9 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
                         <Button
                             disabled
                             size="sm"
-                            variant={isDateRangeValid ? "destructive" : "default"}
+                            variant={isDateRangeValid && user ? "destructive" : "default"}
                         >
-                           {isDateRangeValid ? 'Fully Booked' : 'Select Dates'}
+                           { !user ? 'Login to Book' : isDateRangeValid ? 'Fully Booked' : 'Select Dates'}
                         </Button>
                     )}
                   </div>

@@ -1,4 +1,4 @@
-import type { Hotel, Room, City, Booking } from './types';
+import type { Hotel, Room, City, Booking, User } from './types';
 import placeholderImageData from './placeholder-images.json';
 import type { ImagePlaceholder } from './placeholder-images';
 import { areIntervalsOverlapping } from 'date-fns';
@@ -429,6 +429,13 @@ export function getRoomById(roomId: string): Room | undefined {
 export function getBookings(): Booking[] {
     return bookingsData.sort((a, b) => new Date(b.checkIn).getTime() - new Date(a.checkIn).getTime());
 }
+
+export function getBookingsForUser(userId: string): Booking[] {
+    return bookingsData
+        .filter(b => b.userId === userId)
+        .sort((a, b) => new Date(b.checkIn).getTime() - new Date(a.checkIn).getTime());
+}
+
 
 export function getBookingById(id: string): Booking | undefined {
     return bookingsData.find((b) => b.id === id);

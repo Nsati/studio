@@ -26,6 +26,7 @@ export interface City {
 }
 
 export interface User {
+  id: string;
   displayName: string;
   email: string;
   role: 'admin' | 'user';
@@ -45,4 +46,3 @@ export interface Booking {
   customerName: string;
   customerEmail: string;
 }
-
