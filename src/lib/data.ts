@@ -1,8 +1,35 @@
-
-import type { Hotel, Room, City, Booking, User } from './types';
+import type { Hotel, Room, City, Booking, User, MockUser } from './types';
 import placeholderImageData from './placeholder-images.json';
 import type { ImagePlaceholder } from './placeholder-images';
 import { areIntervalsOverlapping } from 'date-fns';
+
+// This is a placeholder for a real data source.
+// In a real app, this would come from a secure database.
+export const MOCK_ADMIN_PASSWORD = 'admin@123';
+
+export let MOCK_USERS: MockUser[] = [
+  {
+    uid: 'u1',
+    displayName: 'Ankit Sharma',
+    email: 'ankit.sharma@example.com',
+    password: 'password123',
+    role: 'user',
+  },
+  {
+    uid: 'u2',
+    displayName: 'Priya Singh',
+    email: 'priya.singh@example.com',
+    password: 'password123',
+    role: 'user',
+  },
+  {
+    uid: 'admin1',
+    displayName: 'Admin User',
+    email: 'admin@uttarakhandgetaways.com',
+    password: 'adminpassword',
+    role: 'admin',
+  },
+];
 
 // This is a placeholder for a real data source.
 let hotelsData: Hotel[] = [
@@ -471,6 +498,24 @@ export function addBooking(bookingDetails: Omit<Booking, 'id'>): Booking {
     return newBooking;
 }
 
+// --- USERS ---
+export function findUserByEmail(email: string): MockUser | undefined {
+  return MOCK_USERS.find(user => user.email === email);
+}
+
+export function addUser(name: string, email: string, pass: string): MockUser {
+    const newUser: MockUser = {
+        uid: `u${MOCK_USERS.length + 1}`,
+        displayName: name,
+        email: email,
+        password: pass,
+        role: 'user',
+    };
+    MOCK_USERS.push(newUser);
+    return newUser;
+}
+
+
 // Add hotelId to Room type, which is needed when creating a booking
 // without having the full hotel object.
 // We'll update the data and types to reflect this.
@@ -487,3 +532,5 @@ declare module './types' {
         hotelId: string;
     }
 }
+
+    

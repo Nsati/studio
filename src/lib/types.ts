@@ -49,8 +49,9 @@ export interface Booking {
 // Mock user type for frontend-only state
 export type MockUser = {
     uid: string;
-    displayName: string | null;
-    email: string | null;
+    displayName: string;
+    email: string;
+    password?: string; // This is for mock purposes only. NEVER store plain text passwords in a real app.
     role: 'user' | 'admin';
     photoURL?: string | null;
 };

@@ -2,19 +2,15 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import type { MockUser } from '@/lib/types';
-
-// Mock user data from a local source
-const MOCK_USERS: Record<string, MockUser> = {
-  u1: { uid: 'u1', displayName: 'Ankit Sharma', email: 'ankit.sharma@example.com', role: 'user' },
-  admin1: { uid: 'admin1', displayName: 'Admin', email: 'admin@example.com', role: 'admin' },
-};
-
+import { MOCK_USERS, MOCK_ADMIN_PASSWORD, findUserByEmail, addUser } from '@/lib/data';
+import { useRouter } from 'next/navigation';
 
 interface UserContextType {
   user: MockUser | null;
   isLoading: boolean;
-  login: (userId: string) => void;
-  adminLogin: (adminId: string) => void;
+  login: (email: string, pass: string) => MockUser | null;
+  signup: (name: string, email: string, pass: string) => MockUser | null;
+  adminLogin: (pass: string) => boolean;
   logout: () => void;
 }
 
@@ -23,9 +19,9 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 export function UserProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<MockUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
-    // Simulate checking for a logged-in user in localStorage
     try {
         const storedUser = localStorage.getItem('mockUser');
         if (storedUser) {
@@ -38,29 +34,49 @@ export function UserProvider({ children }: { children: ReactNode }) {
     setIsLoading(false);
   }, []);
 
-  const login = (userId: string) => {
-    const userToLogin = MOCK_USERS[userId];
-    if (userToLogin) {
-      setUser(userToLogin);
-      localStorage.setItem('mockUser', JSON.stringify(userToLogin));
+  const handleAuthSuccess = (userToLogin: MockUser) => {
+    setUser(userToLogin);
+    localStorage.setItem('mockUser', JSON.stringify(userToLogin));
+  }
+
+  const login = (email: string, pass: string): MockUser | null => {
+    const userToLogin = findUserByEmail(email);
+    if (userToLogin && userToLogin.password === pass) {
+      handleAuthSuccess(userToLogin);
+      return userToLogin;
     }
+    return null;
   };
-  
-  const adminLogin = (adminId: string) => {
-    const adminToLogin = MOCK_USERS[adminId];
-    if (adminToLogin && adminToLogin.role === 'admin') {
-      setUser(adminToLogin);
-      localStorage.setItem('mockUser', JSON.stringify(adminToLogin));
+
+  const signup = (name: string, email: string, pass: string): MockUser | null => {
+    const existingUser = findUserByEmail(email);
+    if (existingUser) {
+        return null; // User already exists
     }
+    const newUser = addUser(name, email, pass);
+    handleAuthSuccess(newUser);
+    return newUser;
+  }
+  
+  const adminLogin = (pass: string): boolean => {
+    if (pass === MOCK_ADMIN_PASSWORD) {
+        const adminUser = MOCK_USERS.find(u => u.role === 'admin');
+        if (adminUser) {
+            handleAuthSuccess(adminUser);
+            return true;
+        }
+    }
+    return false;
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem('mockUser');
+    router.push('/');
   };
 
   return (
-    <UserContext.Provider value={{ user, isLoading, login, adminLogin, logout }}>
+    <UserContext.Provider value={{ user, isLoading, login, signup, adminLogin, logout }}>
       {children}
     </UserContext.Provider>
   );

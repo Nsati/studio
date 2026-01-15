@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, UserCircle } from 'lucide-react';
+import { Menu, UserCircle, LogIn } from 'lucide-react';
 import Link from 'next/link';
 import { Logo } from './Logo';
 import { usePathname } from 'next/navigation';
@@ -26,7 +26,7 @@ const navLinks = [
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
-  const { user, login, adminLogin, logout } = useUser();
+  const { user, logout } = useUser();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -54,7 +54,7 @@ export function Header() {
                 pathname === '/admin' ? 'text-primary' : 'text-muted-foreground'
               )}
             >
-              Admin
+              Admin Panel
             </Link>
           )}
         </nav>
@@ -74,14 +74,23 @@ export function Header() {
                 <DropdownMenuItem asChild>
                   <Link href="/my-bookings">My Bookings</Link>
                 </DropdownMenuItem>
+                 {user.role === 'admin' && (
+                  <DropdownMenuItem asChild>
+                    <Link href="/admin">Admin Panel</Link>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={logout}>Logout</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
             <div className="hidden items-center gap-2 md:flex">
-              <Button onClick={() => login('u1')} variant="outline">User Login</Button>
-              <Button onClick={() => adminLogin('admin1')}>Admin Login</Button>
+              <Button asChild variant="ghost">
+                <Link href="/login">Log In</Link>
+              </Button>
+              <Button asChild>
+                 <Link href="/signup">Sign Up</Link>
+              </Button>
             </div>
           )}
 
@@ -109,29 +118,21 @@ export function Header() {
                       {link.label}
                     </Link>
                   ))}
-                   {user?.role === 'admin' && (
-                    <Link
-                      href="/admin"
-                      onClick={() => setIsMenuOpen(false)}
-                      className={cn(
-                        'text-lg font-medium transition-colors hover:text-primary',
-                        pathname === '/admin' ? 'text-primary' : 'text-foreground'
-                      )}
-                    >
-                      Admin
-                    </Link>
-                  )}
                 </div>
                  <div className="mt-8 border-t pt-6">
                     {user ? (
                        <div className="flex flex-col gap-4">
-                           <Link href="/my-bookings" onClick={() => setIsMenuOpen(false)} className="text-lg">My Bookings</Link>
+                           <p className="text-lg font-medium">{user.displayName}</p>
+                           <Link href="/my-bookings" onClick={() => setIsMenuOpen(false)} className="text-base text-muted-foreground">My Bookings</Link>
+                            {user.role === 'admin' && (
+                              <Link href="/admin" onClick={() => setIsMenuOpen(false)} className="text-base text-muted-foreground">Admin Panel</Link>
+                            )}
                            <Button onClick={() => { logout(); setIsMenuOpen(false); }} variant="outline">Logout</Button>
                        </div>
                     ) : (
                         <div className="flex flex-col gap-4">
-                             <Button onClick={() => { login('u1'); setIsMenuOpen(false); }} variant="outline">User Login</Button>
-                            <Button onClick={() => { adminLogin('admin1'); setIsMenuOpen(false); }}>Admin Login</Button>
+                            <Button onClick={() => { router.push('/login'); setIsMenuOpen(false); }} variant="outline">Log In</Button>
+                            <Button onClick={() => { router.push('/signup'); setIsMenuOpen(false); }}>Sign Up</Button>
                         </div>
                     )}
                 </div>
