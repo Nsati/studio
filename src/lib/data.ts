@@ -542,6 +542,22 @@ export function addUser(name: string, email: string, pass: string): MockUser {
     return newUser;
 }
 
+export function updateUser(userId: string, updatedUserData: Partial<MockUser>): MockUser | undefined {
+    const userIndex = MOCK_USERS.findIndex(u => u.uid === userId);
+    if (userIndex === -1) {
+        return undefined;
+    }
+    
+    MOCK_USERS[userIndex] = { ...MOCK_USERS[userIndex], ...updatedUserData };
+    return MOCK_USERS[userIndex];
+}
+
+export function deleteUser(userId: string): boolean {
+    const initialLength = MOCK_USERS.length;
+    MOCK_USERS = MOCK_USERS.filter(u => u.uid !== userId);
+    return MOCK_USERS.length < initialLength;
+}
+
 
 // Add hotelId to Room type, which is needed when creating a booking
 // without having the full hotel object.

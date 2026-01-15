@@ -1,8 +1,8 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { addHotel, updateHotel, deleteHotel as deleteHotelData } from '@/lib/data';
-import type { Hotel, Room } from '@/lib/types';
+import { addHotel, updateHotel, deleteHotel as deleteHotelData, updateUser, deleteUser as deleteUserData } from '@/lib/data';
+import type { Hotel, MockUser, Room } from '@/lib/types';
 import shortid from 'shortid';
 
 export async function addHotelAction(formData: FormData) {
@@ -56,4 +56,18 @@ export async function deleteHotelAction(hotelId: string) {
     revalidatePath('/admin');
     revalidatePath('/');
     revalidatePath('/search');
+}
+
+export async function updateUserAction(userId: string, formData: FormData) {
+  const updatedUserData: Partial<MockUser> = {
+    displayName: formData.get('displayName') as string,
+    role: formData.get('role') as 'user' | 'admin',
+  };
+  updateUser(userId, updatedUserData);
+  revalidatePath('/admin');
+}
+
+export async function deleteUserAction(userId: string) {
+  deleteUserData(userId);
+  revalidatePath('/admin');
 }
