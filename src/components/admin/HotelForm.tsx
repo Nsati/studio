@@ -4,6 +4,7 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useTransition } from 'react';
+import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -20,9 +21,10 @@ import { addHotelAction, updateHotelAction } from '@/app/admin/actions';
 import type { Hotel } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { getCities } from '@/lib/data';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { Trash2, PlusCircle, Loader2 } from 'lucide-react';
+import { Trash2, PlusCircle, Loader2, ImagePlus } from 'lucide-react';
 
 const roomSchema = z.object({
   id: z.string().optional(),
@@ -37,6 +39,7 @@ const hotelFormSchema = z.object({
   city: z.string().min(1, 'Please select a city.'),
   description: z.string().min(10, 'Description is too short.'),
   amenities: z.string().min(1, 'Please list at least one amenity.'),
+  images: z.array(z.string()).min(1, 'At least one image is required.'),
   rooms: z.array(roomSchema).min(1, 'At least one room type is required.'),
 });
 
@@ -57,18 +60,49 @@ export function HotelForm({ hotel, onFinished }: HotelFormProps) {
     city: hotel?.city ?? '',
     description: hotel?.description ?? '',
     amenities: hotel?.amenities?.join(', ') ?? '',
+    images: hotel?.images ?? [],
     rooms: hotel?.rooms ?? [{ type: 'Standard', price: 5000, capacity: 2, totalRooms: 10 }],
   };
 
   const form = useForm<HotelFormValues>({
     resolver: zodResolver(hotelFormSchema),
     defaultValues,
+    mode: 'onChange',
   });
   
-  const { fields, append, remove } = useFieldArray({
+  const { fields: roomFields, append: appendRoom, remove: removeRoom } = useFieldArray({
     control: form.control,
     name: "rooms"
   });
+
+  const { fields: imageFields, append: appendImage, remove: removeImage } = useFieldArray({
+    control: form.control,
+    name: "images"
+  });
+
+  const handleAddImage = () => {
+    // In a real app, this would open a file dialog and upload to a service.
+    // Here, we simulate it by picking a random image from our placeholders.
+    const currentImageIds = imageFields.map(field => field.id);
+    const availableImages = PlaceHolderImages.filter(img => 
+        !currentImageIds.includes(img.id) && 
+        !img.id.startsWith('city-') && 
+        img.id !== 'hero'
+    );
+    
+    let imageToAdd;
+    if (availableImages.length > 0) {
+        imageToAdd = availableImages[Math.floor(Math.random() * availableImages.length)];
+    } else {
+        // If all available images are used, pick any random hotel image as a fallback
+        const fallbackImages = PlaceHolderImages.filter(img => !img.id.startsWith('city-') && img.id !== 'hero');
+        imageToAdd = fallbackImages[Math.floor(Math.random() * fallbackImages.length)];
+    }
+    
+    if (imageToAdd) {
+        appendImage(imageToAdd.id);
+    }
+  };
 
 
   const onSubmit = (data: HotelFormValues) => {
@@ -77,10 +111,10 @@ export function HotelForm({ hotel, onFinished }: HotelFormProps) {
     formData.append('city', data.city);
     formData.append('description', data.description);
     formData.append('amenities', data.amenities);
+    formData.append('images', data.images.join(','));
     formData.append('rooms', JSON.stringify(data.rooms));
 
     if (hotel) {
-        formData.append('images', hotel.images.join(','));
         formData.append('rating', String(hotel.rating));
     }
 
@@ -163,13 +197,50 @@ export function HotelForm({ hotel, onFinished }: HotelFormProps) {
             </FormItem>
           )}
         />
+
+        <Card>
+            <CardHeader>
+                <CardTitle>Images</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {imageFields.map((field, index) => {
+                    const imgData = PlaceHolderImages.find((i) => i.id === (field as any).id);
+                    return (
+                        <div key={field.id} className="relative group">
+                            <div className="relative aspect-video w-full overflow-hidden rounded-md">
+                            {imgData ? (
+                                <Image src={imgData.imageUrl} alt={imgData.description} fill className="object-cover" />
+                            ) : (
+                                <div className="bg-muted h-full w-full flex items-center justify-center text-xs text-muted-foreground">Invalid ID</div>
+                            )}
+                            </div>
+                            <Button
+                                type="button"
+                                variant="destructive"
+                                size="icon"
+                                onClick={() => removeImage(index)}
+                                className="absolute -top-3 -right-3 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    );
+                })}
+                </div>
+                 <Button type="button" variant="outline" onClick={handleAddImage}>
+                    <ImagePlus className="mr-2 h-4 w-4" /> Add Image
+                </Button>
+                 {form.formState.errors.images && <p className="text-sm font-medium text-destructive">{form.formState.errors.images.message}</p>}
+            </CardContent>
+        </Card>
         
         <Card>
             <CardHeader>
                 <CardTitle>Room Types</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-                {fields.map((field, index) => (
+                {roomFields.map((field, index) => (
                     <div key={field.id} className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end border p-4 rounded-md relative">
                          <FormField
                             control={form.control}
@@ -224,12 +295,12 @@ export function HotelForm({ hotel, onFinished }: HotelFormProps) {
                                 </FormItem>
                             )}
                         />
-                        <Button type="button" variant="destructive" size="icon" onClick={() => remove(index)} className="absolute -top-3 -right-3 h-7 w-7">
+                        <Button type="button" variant="destructive" size="icon" onClick={() => removeRoom(index)} className="absolute -top-3 -right-3 h-7 w-7">
                             <Trash2 className="h-4 w-4" />
                         </Button>
                     </div>
                 ))}
-                 <Button type="button" variant="outline" onClick={() => append({ type: 'Standard', price: 0, capacity: 1, totalRooms: 1 })}>
+                 <Button type="button" variant="outline" onClick={() => appendRoom({ type: 'Standard', price: 0, capacity: 1, totalRooms: 1 })}>
                     <PlusCircle className="mr-2 h-4 w-4" /> Add Room Type
                 </Button>
                  {form.formState.errors.rooms && <p className="text-sm font-medium text-destructive">{form.formState.errors.rooms.message}</p>}
