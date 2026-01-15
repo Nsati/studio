@@ -10,6 +10,7 @@ import type { Hotel, Room } from '@/lib/types';
 import { getBookingsForRoom, addBooking } from '@/lib/data';
 import { createRazorpayOrder } from '@/app/booking/actions';
 import { useToast } from '@/hooks/use-toast';
+import { useUser } from '@/contexts/UserContext';
 
 
 import {
@@ -41,7 +42,8 @@ declare global {
 export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
   const [dates, setDates] = useState<DateRange | undefined>();
   const [isProcessing, setIsProcessing] = useState(false);
-  const [customerDetails, setCustomerDetails] = useState({ name: '', email: '' });
+  const { user } = useUser();
+  const [customerDetails, setCustomerDetails] = useState({ name: user?.displayName || '', email: user?.email || '' });
 
   const router = useRouter();
   const { toast } = useToast();
@@ -60,7 +62,7 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
         });
         return;
     }
-     if (!customerDetails.name || !customerDetails.email) {
+     if (!user && (!customerDetails.name || !customerDetails.email)) {
         toast({
             variant: 'destructive',
             title: 'Customer Details Required',
@@ -85,6 +87,8 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
     }
     
     const { order } = orderResponse;
+    const finalCustomerName = user?.displayName || customerDetails.name;
+    const finalCustomerEmail = user?.email || customerDetails.email;
 
     const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
@@ -99,13 +103,13 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
                 hotelId: hotel.id,
                 roomId: room.id,
                 roomType: room.type,
-                userId: 'guest', // User is a guest
+                userId: user ? user.uid : 'guest',
                 checkIn: dates.from!.toISOString(),
                 checkOut: dates.to!.toISOString(),
                 guests: room.capacity,
                 totalPrice: totalAmount,
-                customerName: customerDetails.name,
-                customerEmail: customerDetails.email,
+                customerName: finalCustomerName,
+                customerEmail: finalCustomerEmail,
             });
 
             toast({
@@ -116,8 +120,8 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
             router.push(`/booking/success/${newBooking.id}`);
         },
         prefill: {
-            name: customerDetails.name,
-            email: customerDetails.email,
+            name: finalCustomerName,
+            email: finalCustomerEmail,
         },
         notes: {
             address: 'Razorpay Corporate Office'
@@ -206,27 +210,29 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
             </Popover>
           </div>
 
-          <div className="space-y-4">
-              <div>
-                  <Label htmlFor='customerName'>Full Name</Label>
-                  <Input 
-                      id="customerName" 
-                      placeholder="Your Name" 
-                      value={customerDetails.name}
-                      onChange={(e) => setCustomerDetails({...customerDetails, name: e.target.value})}
-                  />
-              </div>
-              <div>
-                  <Label htmlFor='customerEmail'>Email Address</Label>
-                  <Input 
-                      id="customerEmail" 
-                      type="email"
-                      placeholder="your.email@example.com"
-                      value={customerDetails.email}
-                      onChange={(e) => setCustomerDetails({...customerDetails, email: e.target.value})}
-                  />
-              </div>
-          </div>
+          {!user && (
+            <div className="space-y-4">
+                <div>
+                    <Label htmlFor='customerName'>Full Name</Label>
+                    <Input 
+                        id="customerName" 
+                        placeholder="Your Name" 
+                        value={customerDetails.name}
+                        onChange={(e) => setCustomerDetails({...customerDetails, name: e.target.value})}
+                    />
+                </div>
+                <div>
+                    <Label htmlFor='customerEmail'>Email Address</Label>
+                    <Input 
+                        id="customerEmail" 
+                        type="email"
+                        placeholder="your.email@example.com"
+                        value={customerDetails.email}
+                        onChange={(e) => setCustomerDetails({...customerDetails, email: e.target.value})}
+                    />
+                </div>
+            </div>
+          )}
 
 
           {!isDateRangeValid && (

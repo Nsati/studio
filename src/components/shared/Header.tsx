@@ -3,12 +3,20 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu } from 'lucide-react';
+import { Menu, UserCircle } from 'lucide-react';
 import Link from 'next/link';
 import { Logo } from './Logo';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-
+import { useUser } from '@/contexts/UserContext';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -18,6 +26,7 @@ const navLinks = [
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
+  const { user, login, adminLogin, logout } = useUser();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -37,9 +46,45 @@ export function Header() {
               {link.label}
             </Link>
           ))}
+          {user?.role === 'admin' && (
+             <Link
+              href="/admin"
+              className={cn(
+                'text-sm font-medium transition-colors hover:text-primary',
+                pathname === '/admin' ? 'text-primary' : 'text-muted-foreground'
+              )}
+            >
+              Admin
+            </Link>
+          )}
         </nav>
 
         <div className="flex items-center gap-4">
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="flex items-center gap-2">
+                  <UserCircle className="h-5 w-5" />
+                  {user.displayName}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/my-bookings">My Bookings</Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={logout}>Logout</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <div className="hidden items-center gap-2 md:flex">
+              <Button onClick={() => login('u1')} variant="outline">User Login</Button>
+              <Button onClick={() => adminLogin('admin1')}>Admin Login</Button>
+            </div>
+          )}
+
           <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
             <SheetTrigger asChild className="md:hidden">
               <Button variant="outline" size="icon">
@@ -64,6 +109,31 @@ export function Header() {
                       {link.label}
                     </Link>
                   ))}
+                   {user?.role === 'admin' && (
+                    <Link
+                      href="/admin"
+                      onClick={() => setIsMenuOpen(false)}
+                      className={cn(
+                        'text-lg font-medium transition-colors hover:text-primary',
+                        pathname === '/admin' ? 'text-primary' : 'text-foreground'
+                      )}
+                    >
+                      Admin
+                    </Link>
+                  )}
+                </div>
+                 <div className="mt-8 border-t pt-6">
+                    {user ? (
+                       <div className="flex flex-col gap-4">
+                           <Link href="/my-bookings" onClick={() => setIsMenuOpen(false)} className="text-lg">My Bookings</Link>
+                           <Button onClick={() => { logout(); setIsMenuOpen(false); }} variant="outline">Logout</Button>
+                       </div>
+                    ) : (
+                        <div className="flex flex-col gap-4">
+                             <Button onClick={() => { login('u1'); setIsMenuOpen(false); }} variant="outline">User Login</Button>
+                            <Button onClick={() => { adminLogin('admin1'); setIsMenuOpen(false); }}>Admin Login</Button>
+                        </div>
+                    )}
                 </div>
               </div>
             </SheetContent>
