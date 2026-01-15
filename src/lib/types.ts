@@ -44,6 +44,8 @@ export interface Booking {
   totalPrice: number;
   customerName: string;
   customerEmail: string;
+  status: 'LOCKED' | 'CONFIRMED' | 'CANCELLED';
+  expiresAt?: string; // For locked bookings
 }
 
 // Mock user type for frontend-only state

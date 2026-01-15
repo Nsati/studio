@@ -11,10 +11,24 @@ import {
   TableCell,
 } from '@/components/ui/table';
 import { Card } from '../ui/card';
+import { Badge } from '../ui/badge';
 import { format } from 'date-fns';
 
 export function BookingList() {
     const bookings = getBookings();
+
+    const getStatusVariant = (status: 'CONFIRMED' | 'LOCKED' | 'CANCELLED') => {
+        switch (status) {
+            case 'CONFIRMED':
+                return 'default';
+            case 'LOCKED':
+                return 'secondary';
+            case 'CANCELLED':
+                return 'destructive';
+            default:
+                return 'outline';
+        }
+    }
 
     return (
         <Card>
@@ -29,6 +43,7 @@ export function BookingList() {
                             <TableHead>Hotel</TableHead>
                             <TableHead>Customer</TableHead>
                             <TableHead>Dates</TableHead>
+                            <TableHead>Status</TableHead>
                             <TableHead>Total Paid</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -44,6 +59,11 @@ export function BookingList() {
                                     </TableCell>
                                     <TableCell>
                                         {format(new Date(booking.checkIn), 'LLL dd, y')} - {format(new Date(booking.checkOut), 'LLL dd, y')}
+                                    </TableCell>
+                                     <TableCell>
+                                        <Badge variant={getStatusVariant(booking.status)}>
+                                            {booking.status}
+                                        </Badge>
                                     </TableCell>
                                     <TableCell>
                                         ₹{booking.totalPrice.toLocaleString()}

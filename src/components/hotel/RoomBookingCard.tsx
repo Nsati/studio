@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { BedDouble, Calendar as CalendarIcon, AlertCircle, User, Info } from 'lucide-react';
-import { differenceInDays, format } from 'date-fns';
+import { BedDouble, Calendar as CalendarIcon, AlertCircle, User, Info, Loader2 } from 'lucide-react';
+import { differenceInDays, format, addMinutes } from 'date-fns';
 import type { DateRange } from 'react-day-picker';
 import { useRouter } from 'next/navigation';
 
-import type { Hotel, Room } from '@/lib/types';
-import { getBookingsForRoom, addBooking } from '@/lib/data';
+import type { Hotel, Room, Booking } from '@/lib/types';
+import { getBookingsForRoom, addBooking, updateBookingStatus, removeBooking } from '@/lib/data';
 import { createRazorpayOrder } from '@/app/booking/actions';
 import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/contexts/UserContext';
@@ -74,6 +74,23 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
 
     const totalAmount = nights * room.price;
 
+    // Create a temporary locked booking
+    const lockExpiry = addMinutes(new Date(), 5);
+    const lockedBooking = addBooking({
+        hotelId: hotel.id,
+        roomId: room.id,
+        roomType: room.type,
+        userId: user ? user.uid : 'guest',
+        checkIn: dates.from.toISOString(),
+        checkOut: dates.to.toISOString(),
+        guests: room.capacity,
+        totalPrice: totalAmount,
+        customerName: user?.displayName || customerDetails.name,
+        customerEmail: user?.email || customerDetails.email,
+        status: 'LOCKED',
+        expiresAt: lockExpiry.toISOString(),
+    });
+
     const orderResponse = await createRazorpayOrder(totalAmount, `booking_${room.id}_${Date.now()}`);
 
     if (!orderResponse.success || !orderResponse.order) {
@@ -82,6 +99,7 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
             title: 'Payment Error',
             description: orderResponse.error || 'Could not initialize payment.',
         });
+        removeBooking(lockedBooking.id); // Remove lock on failure
         setIsProcessing(false);
         return;
     }
@@ -99,25 +117,14 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
         image: '/logo-icon.png',
         order_id: order.id,
         handler: function (response: any) {
-            const newBooking = addBooking({
-                hotelId: hotel.id,
-                roomId: room.id,
-                roomType: room.type,
-                userId: user ? user.uid : 'guest',
-                checkIn: dates.from!.toISOString(),
-                checkOut: dates.to!.toISOString(),
-                guests: room.capacity,
-                totalPrice: totalAmount,
-                customerName: finalCustomerName,
-                customerEmail: finalCustomerEmail,
-            });
+            updateBookingStatus(lockedBooking.id, 'CONFIRMED');
 
             toast({
                 title: 'Payment Successful!',
                 description: `Your booking at ${hotel.name} is confirmed.`,
             });
             
-            router.push(`/booking/success/${newBooking.id}`);
+            router.push(`/booking/success/${lockedBooking.id}`);
         },
         prefill: {
             name: finalCustomerName,
@@ -131,10 +138,11 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
         },
         modal: {
             ondismiss: function() {
+                removeBooking(lockedBooking.id); // Remove lock on cancellation
                 toast({
                     variant: 'destructive',
                     title: 'Payment Canceled',
-                    description: 'Your payment process was canceled.',
+                    description: 'Your payment process was canceled. The room lock has been released.',
                 });
                 setIsProcessing(false);
             }
@@ -283,7 +291,7 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
                             size="sm"
                             disabled={isProcessing}
                         >
-                            {isProcessing ? 'Processing...' : 'Book Now'}
+                            {isProcessing ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Processing...</> : 'Book Now'}
                         </Button>
                     ) : (
                         <Button

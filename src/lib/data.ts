@@ -1,7 +1,7 @@
 import type { Hotel, Room, City, Booking, User, MockUser } from './types';
 import placeholderImageData from './placeholder-images.json';
 import type { ImagePlaceholder } from './placeholder-images';
-import { areIntervalsOverlapping } from 'date-fns';
+import { areIntervalsOverlapping, isBefore } from 'date-fns';
 
 // This is a placeholder for a real data source.
 // In a real app, this would come from a secure database.
@@ -342,6 +342,7 @@ let bookingsData: Booking[] = [
       totalPrice: 16000,
       customerName: 'Ankit Sharma',
       customerEmail: 'ankit.sharma@example.com',
+      status: 'CONFIRMED',
     },
     {
         id: 'b2',
@@ -355,6 +356,7 @@ let bookingsData: Booking[] = [
         totalPrice: 16000,
         customerName: 'Priya Singh',
         customerEmail: 'priya.singh@example.com',
+        status: 'CONFIRMED',
       }
 ];
 
@@ -460,7 +462,7 @@ export function getBookings(): Booking[] {
 
 export function getBookingsForUser(userId: string): Booking[] {
     return bookingsData
-        .filter(b => b.userId === userId)
+        .filter(b => b.userId === userId && b.status === 'CONFIRMED')
         .sort((a, b) => new Date(b.checkIn).getTime() - new Date(a.checkIn).getTime());
 }
 
@@ -470,10 +472,19 @@ export function getBookingById(id: string): Booking | undefined {
 }
 
 export function getBookingsForRoom(roomId: string, checkIn: Date, checkOut: Date): Booking[] {
+    // Clean up expired locked bookings first
+    bookingsData = bookingsData.filter(booking => {
+        if (booking.status === 'LOCKED' && booking.expiresAt) {
+            return isBefore(new Date(), new Date(booking.expiresAt));
+        }
+        return true;
+    });
+
     return bookingsData.filter(booking => {
-        if (booking.roomId !== roomId) {
+        if (booking.roomId !== roomId || booking.status === 'CANCELLED') {
             return false;
         }
+
         const bookingInterval = {
             start: new Date(booking.checkIn),
             end: new Date(booking.checkOut),
@@ -482,8 +493,7 @@ export function getBookingsForRoom(roomId: string, checkIn: Date, checkOut: Date
             start: checkIn,
             end: checkOut,
         };
-        // The intervals overlap if the start of one is before the end of the other,
-        // and the end of one is after the start of the other.
+        
         return areIntervalsOverlapping(bookingInterval, selectedInterval);
     });
 }
@@ -497,6 +507,23 @@ export function addBooking(bookingDetails: Omit<Booking, 'id'>): Booking {
     bookingsData.push(newBooking);
     return newBooking;
 }
+
+export function updateBookingStatus(bookingId: string, status: 'CONFIRMED' | 'CANCELLED'): Booking | undefined {
+    const bookingIndex = bookingsData.findIndex(b => b.id === bookingId);
+    if (bookingIndex !== -1) {
+        bookingsData[bookingIndex].status = status;
+        if (status === 'CONFIRMED') {
+            delete bookingsData[bookingIndex].expiresAt;
+        }
+        return bookingsData[bookingIndex];
+    }
+    return undefined;
+}
+
+export function removeBooking(bookingId: string): void {
+    bookingsData = bookingsData.filter(b => b.id !== bookingId);
+}
+
 
 // --- USERS ---
 export function findUserByEmail(email: string): MockUser | undefined {
@@ -532,5 +559,3 @@ declare module './types' {
         hotelId: string;
     }
 }
-
-    
