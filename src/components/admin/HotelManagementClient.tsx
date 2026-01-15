@@ -15,7 +15,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { HotelForm } from './HotelForm';
 import { getHotels } from '@/lib/data';
@@ -34,6 +33,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { Card } from '../ui/card';
 
 export function HotelManagementClient() {
   const hotels = getHotels();
@@ -63,10 +63,10 @@ export function HotelManagementClient() {
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="flex items-center justify-between mb-8">
+    <Card>
+      <div className="flex items-center justify-between p-6">
         <div>
-            <h1 className="font-headline text-3xl font-bold">Hotel Management</h1>
+            <h2 className="text-2xl font-bold tracking-tight">Hotel Management</h2>
             <p className="text-muted-foreground">Add, edit, or remove hotels from your listing.</p>
         </div>
         <Button onClick={handleAddNew}>
@@ -75,13 +75,13 @@ export function HotelManagementClient() {
         </Button>
       </div>
 
-      <div className="rounded-lg border">
+      <div className="border-t">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
               <TableHead>City</TableHead>
-              <TableHead>Rooms</TableHead>
+              <TableHead>Rooms Types</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -145,6 +145,6 @@ export function HotelManagementClient() {
           />
         </DialogContent>
       </Dialog>
-    </div>
+    </Card>
   );
 }
