@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -42,6 +43,7 @@ declare global {
 export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
   const [dates, setDates] = useState<DateRange | undefined>();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const { user } = useUser();
   const [customerDetails, setCustomerDetails] = useState({ name: user?.displayName || '', email: user?.email || '' });
 
@@ -53,7 +55,15 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
   
   const isDateRangeValid = dates?.from && dates?.to && nights > 0;
 
-  const handleBookNowClick = async (room: Room) => {
+  const handleProceedToBook = async () => {
+    if (!selectedRoom) {
+        toast({
+            variant: 'destructive',
+            title: 'No Room Selected',
+            description: 'Please select a room type to continue.',
+        });
+        return;
+    }
     if (!isDateRangeValid || !dates.from || !dates.to) {
         toast({
             variant: 'destructive',
@@ -72,18 +82,18 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
     }
     setIsProcessing(true);
 
-    const totalAmount = nights * room.price;
+    const totalAmount = nights * selectedRoom.price;
 
     // Create a temporary locked booking
     const lockExpiry = addMinutes(new Date(), 5);
     const lockedBooking = addBooking({
         hotelId: hotel.id,
-        roomId: room.id,
-        roomType: room.type,
+        roomId: selectedRoom.id,
+        roomType: selectedRoom.type,
         userId: user ? user.uid : 'guest',
         checkIn: dates.from.toISOString(),
         checkOut: dates.to.toISOString(),
-        guests: room.capacity,
+        guests: selectedRoom.capacity,
         totalPrice: totalAmount,
         customerName: user?.displayName || customerDetails.name,
         customerEmail: user?.email || customerDetails.email,
@@ -91,7 +101,7 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
         expiresAt: lockExpiry.toISOString(),
     });
 
-    const orderResponse = await createRazorpayOrder(totalAmount, `booking_${room.id}_${Date.now()}`);
+    const orderResponse = await createRazorpayOrder(totalAmount, `booking_${selectedRoom.id}_${Date.now()}`);
 
     if (!orderResponse.success || !orderResponse.order) {
         toast({
@@ -113,7 +123,7 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
         amount: order.amount,
         currency: order.currency,
         name: 'Uttarakhand Getaways',
-        description: `Booking for ${room.type} at ${hotel.name}`,
+        description: `Booking for ${selectedRoom.type} at ${hotel.name}`,
         image: '/logo-icon.png',
         order_id: order.id,
         handler: function (response: any) {
@@ -155,15 +165,27 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
 
   const availableRooms = useMemo(() => {
     if (!isDateRangeValid || !dates?.from || !dates.to) {
+        setSelectedRoom(null);
         return hotel.rooms.map(room => ({ ...room, isAvailable: false, bookingsCount: 0 }));
     }
 
     return hotel.rooms.map(room => {
         const existingBookings = getBookingsForRoom(room.id, dates.from!, dates.to!);
         const isAvailable = existingBookings.length < room.totalRooms;
+        if (selectedRoom?.id === room.id && !isAvailable) {
+            setSelectedRoom(null);
+        }
         return { ...room, isAvailable, bookingsCount: existingBookings.length };
     });
-  }, [hotel.rooms, dates, isDateRangeValid]);
+  }, [hotel.rooms, dates, isDateRangeValid, selectedRoom?.id]);
+  
+  const handleRoomSelect = (room: Room) => {
+    if (isDateRangeValid && room.isAvailable) {
+        setSelectedRoom(room);
+    } else {
+        toast({ variant: 'destructive', title: 'Room Unavailable', description: 'This room is not available for the selected dates.'})
+    }
+  }
 
 
   return (
@@ -179,7 +201,7 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
         </CardHeader>
         <CardContent className="space-y-6">
           <div>
-            <h4 className="font-semibold mb-2">Select Dates</h4>
+            <h4 className="font-semibold mb-2">1. Select Dates</h4>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -220,6 +242,7 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
 
           {!user && (
             <div className="space-y-4">
+                <h4 className="font-semibold mb-2">2. Your Details</h4>
                 <div>
                     <Label htmlFor='customerName'>Full Name</Label>
                     <Input 
@@ -256,16 +279,25 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
           {isDateRangeValid && (
              <Alert variant="default" className="bg-blue-50 border-blue-200">
                 <Info className="h-4 w-4 !text-blue-600" />
-                <AlertTitle className="text-blue-800">Rooms & Availability</AlertTitle>
+                <AlertTitle className="text-blue-800">2. Select a Room</AlertTitle>
                 <AlertDescription className="text-blue-700">
-                  Showing available rooms for your selected dates.
+                  Click on a room to select it for booking.
                 </AlertDescription>
             </Alert>
           )}
 
           <div className="space-y-4">
             {availableRooms.map((room) => (
-              <Card key={room.id} className="p-4">
+              <Card 
+                key={room.id}
+                onClick={() => handleRoomSelect(room)}
+                className={cn(
+                    'p-4 cursor-pointer transition-all',
+                    isDateRangeValid && room.isAvailable && 'hover:bg-muted/50',
+                    selectedRoom?.id === room.id && 'ring-2 ring-primary bg-primary/5',
+                    !room.isAvailable && 'bg-muted/30 opacity-60 cursor-not-allowed'
+                )}
+              >
                 <div className="flex flex-col gap-4 md:flex-row md:justify-between">
                   <div>
                     <h4 className="font-semibold">{room.type} Room</h4>
@@ -273,8 +305,13 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
                       Fits up to {room.capacity} guests
                     </p>
                     {isDateRangeValid && (
-                         <p className="text-sm text-muted-foreground">
-                            {room.totalRooms - room.bookingsCount} of {room.totalRooms} rooms available
+                         <p className={cn(
+                            'text-sm',
+                            room.isAvailable ? 'text-green-600' : 'text-destructive'
+                         )}>
+                            {room.isAvailable 
+                                ? `${room.totalRooms - room.bookingsCount} of ${room.totalRooms} available`
+                                : 'Fully Booked'}
                         </p>
                     )}
                   </div>
@@ -285,29 +322,30 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
                         /night
                       </span>
                     </p>
-                    {isDateRangeValid && room.isAvailable ? (
-                        <Button
-                            onClick={() => handleBookNowClick(room)}
-                            size="sm"
-                            disabled={isProcessing}
-                        >
-                            {isProcessing ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Processing...</> : 'Book Now'}
-                        </Button>
-                    ) : (
-                        <Button
-                            disabled
-                            size="sm"
-                            variant={isDateRangeValid ? "destructive" : "default"}
-                        >
-                           { isDateRangeValid ? 'Fully Booked' : 'Select Dates'}
-                        </Button>
-                    )}
                   </div>
                 </div>
               </Card>
             ))}
           </div>
+
+          {selectedRoom && isDateRangeValid && (
+            <div className='border-t pt-6 space-y-4'>
+                <div className="flex justify-between items-center font-bold">
+                    <span>{selectedRoom.type} Room x {nights} nights</span>
+                    <span>₹{(selectedRoom.price * nights).toLocaleString()}</span>
+                </div>
+                 <Button
+                    onClick={handleProceedToBook}
+                    size="lg"
+                    className="w-full"
+                    disabled={isProcessing}
+                >
+                    {isProcessing ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Processing...</> : `Proceed to Book for ₹${(selectedRoom.price * nights).toLocaleString()}`}
+                </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
   );
 }
+
