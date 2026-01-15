@@ -8,6 +8,7 @@ import {
   type GenerateBookingConfirmationEmailInput,
   type GenerateBookingConfirmationEmailOutput,
 } from '@/ai/flows/generate-booking-confirmation-email';
+import { revalidatePath } from 'next/cache';
 
 
 // Initialize Razorpay instance
@@ -15,6 +16,10 @@ const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID!,
   key_secret: process.env.RAZORPAY_KEY_SECRET!,
 });
+
+export async function revalidateAdminOnBooking() {
+    revalidatePath('/admin');
+}
 
 export async function createRazorpayOrder(amount: number, receipt: string) {
   const options = {

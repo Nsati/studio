@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import { revalidateAdminPanel } from '../admin/actions';
 
 export default function SignupPage() {
   const { signup } = useUser();
@@ -33,6 +34,8 @@ export default function SignupPage() {
     const newUser = signup(name, email, password);
 
     if (newUser) {
+      // Call the server action to revalidate the path
+      await revalidateAdminPanel();
       toast({ title: 'Account created!', description: "You've been successfully signed up." });
       router.push('/my-bookings');
     } else {

@@ -54,6 +54,12 @@ export function UserProvider({ children }: { children: ReactNode }) {
         return null; // User already exists
     }
     const newUser = addUser(name, email, pass);
+    
+    // We can't call revalidatePath here directly.
+    // The logic that adds a user and needs revalidation should be in a server action.
+    // For this mock setup, we'll rely on the revalidation happening elsewhere or manual refresh for now.
+    // A more robust solution would involve calling a server action from the signup form.
+    
     handleAuthSuccess(newUser);
     return newUser;
   }

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -9,7 +8,7 @@ import { useRouter } from 'next/navigation';
 
 import type { Hotel, Room, Booking } from '@/lib/types';
 import { getBookingsForRoom, addBooking, updateBookingStatus, removeBooking } from '@/lib/data';
-import { createRazorpayOrder } from '@/app/booking/actions';
+import { createRazorpayOrder, revalidateAdminOnBooking } from '@/app/booking/actions';
 import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/contexts/UserContext';
 
@@ -126,8 +125,9 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
         description: `Booking for ${selectedRoom.type} at ${hotel.name}`,
         image: '/logo-icon.png',
         order_id: order.id,
-        handler: function (response: any) {
+        handler: async function (response: any) {
             updateBookingStatus(lockedBooking.id, 'CONFIRMED');
+            await revalidateAdminOnBooking();
 
             toast({
                 title: 'Payment Successful!',
@@ -348,4 +348,3 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
       </Card>
   );
 }
-

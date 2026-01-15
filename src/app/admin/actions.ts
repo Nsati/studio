@@ -5,6 +5,10 @@ import { addHotel, updateHotel, deleteHotel as deleteHotelData, updateUser, dele
 import type { Hotel, MockUser, Room } from '@/lib/types';
 import shortid from 'shortid';
 
+export async function revalidateAdminPanel() {
+    revalidatePath('/admin');
+}
+
 export async function addHotelAction(formData: FormData) {
     const hotelName = formData.get('name') as string;
     
