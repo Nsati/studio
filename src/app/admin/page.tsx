@@ -2,7 +2,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useUser } from '@/contexts/UserContext';
+import { useUser } from '@/firebase';
 import { useEffect } from 'react';
 import { HotelManagementClient } from '@/components/admin/HotelManagementClient';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -12,16 +12,16 @@ import { UserList } from '@/components/admin/UserList';
 import { BookingList } from '@/components/admin/BookingList';
 
 export default function AdminPage() {
-  const { user, isLoading } = useUser();
+  const { user, userProfile, isLoading } = useUser();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoading && user?.role !== 'admin') {
-      router.push('/admin-login');
+    if (!isLoading && userProfile?.role !== 'admin') {
+      router.push('/');
     }
-  }, [user, isLoading, router]);
+  }, [user, userProfile, isLoading, router]);
 
-  if (isLoading || user?.role !== 'admin') {
+  if (isLoading || userProfile?.role !== 'admin') {
     return (
       <div className="container mx-auto p-4 space-y-8">
         <div className="flex items-center justify-between">

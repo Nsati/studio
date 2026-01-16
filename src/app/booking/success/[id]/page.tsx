@@ -3,9 +3,11 @@
 import { notFound, useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
+import { doc } from 'firebase/firestore';
 
-import { getBookingById, getHotelById } from '@/lib/data';
+import { useDoc, useFirestore } from '@/firebase';
+import type { Booking, Hotel } from '@/lib/types';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,7 +24,6 @@ import {
   Users,
   Hotel as HotelIcon,
   Mail,
-  Loader2,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { generateConfirmationEmailAction } from '@/app/booking/actions';
@@ -38,37 +39,42 @@ export default function BookingSuccessPage() {
   const id = params.id as string;
   const [emailContent, setEmailContent] = useState<EmailContent | null>(null);
   const [isLoadingEmail, setIsLoadingEmail] = useState(true);
-
-  const booking = getBookingById(id);
-
-  if (!booking) {
-    notFound();
-  }
-
-  const hotel = getHotelById(booking.hotelId);
-
-  if (!hotel) {
-    // This case should ideally not happen if data is consistent
-    notFound();
-  }
   
+  const firestore = useFirestore();
+
+  const bookingRef = useMemo(() => {
+      if (!firestore || !id) return null;
+      return doc(firestore, 'bookings', id);
+  }, [firestore, id]);
+
+  const { data: booking, isLoading: isLoadingBooking } = useDoc<Booking>(bookingRef);
+
+  const hotelRef = useMemo(() => {
+    if (!firestore || !booking?.hotelId) return null;
+    return doc(firestore, 'hotels', booking.hotelId);
+  }, [firestore, booking?.hotelId]);
+
+  const { data: hotel, isLoading: isLoadingHotel } = useDoc<Hotel>(hotelRef);
+
+
   useEffect(() => {
     async function getEmailContent() {
+      if (!booking || !hotel) return;
+
       setIsLoadingEmail(true);
       try {
         const content = await generateConfirmationEmailAction({
             hotelName: hotel.name,
             customerName: booking.customerName,
-            checkIn: booking.checkIn,
-            checkOut: booking.checkOut,
+            checkIn: (booking.checkIn as any).toDate().toISOString(),
+            checkOut: (booking.checkOut as any).toDate().toISOString(),
             roomType: booking.roomType,
             totalPrice: booking.totalPrice,
-            bookingId: booking.id
+            bookingId: booking.id!,
         });
         setEmailContent(content);
       } catch (error) {
         console.error("Failed to generate email content", error);
-        // Set a fallback
         setEmailContent({
             subject: `Booking Confirmation: ${booking.id}`,
             body: `<p>Thank you for your booking at ${hotel.name}. Details are available in your account.</p>`
@@ -81,6 +87,19 @@ export default function BookingSuccessPage() {
     getEmailContent();
   }, [booking, hotel]);
 
+  if (isLoadingBooking || isLoadingHotel) {
+      return (
+          <div className="container mx-auto max-w-4xl py-12 px-4 md:px-6 space-y-8">
+              <Skeleton className="h-24 w-full" />
+              <Skeleton className="h-64 w-full" />
+              <Skeleton className="h-64 w-full" />
+          </div>
+      )
+  }
+
+  if (!booking || !hotel) {
+    notFound();
+  }
 
   const hotelImage = PlaceHolderImages.find((img) => img.id === hotel.images[0]);
 
@@ -127,8 +146,8 @@ export default function BookingSuccessPage() {
             <div className="flex items-center gap-2 text-muted-foreground">
               <Calendar className="h-5 w-5" />
               <span>
-                {format(new Date(booking.checkIn), 'EEE, LLL dd')} -{' '}
-                {format(new Date(booking.checkOut), 'EEE, LLL dd')}
+                {format((booking.checkIn as any).toDate(), 'EEE, LLL dd')} -{' '}
+                {format((booking.checkOut as any).toDate(), 'EEE, LLL dd')}
               </span>
             </div>
             <div className="flex items-center gap-2 text-muted-foreground">

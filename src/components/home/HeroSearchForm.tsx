@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
+import { collection } from 'firebase/firestore';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -26,13 +27,21 @@ import {
   Users,
   Search,
 } from 'lucide-react';
-import { getCities } from '@/lib/data';
+import { useFirestore, useCollection } from '@/firebase';
+import type { City } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import type { DateRange } from 'react-day-picker';
 
 export function HeroSearchForm() {
   const router = useRouter();
-  const cities = getCities();
+  
+  const firestore = useFirestore();
+  const citiesQuery = useMemo(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'cities');
+  }, [firestore]);
+  const { data: cities } = useCollection<City>(citiesQuery);
+
 
   const [city, setCity] = useState<string>('');
   const [dates, setDates] = useState<DateRange | undefined>();
@@ -64,8 +73,8 @@ export function HeroSearchForm() {
                   <SelectValue placeholder="Where to?" />
                 </SelectTrigger>
                 <SelectContent>
-                  {cities.map((c) => (
-                    <SelectItem key={c.name} value={c.name}>
+                  {cities?.map((c) => (
+                    <SelectItem key={c.id} value={c.name}>
                       {c.name}
                     </SelectItem>
                   ))}

@@ -1,6 +1,9 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useMemo } from 'react';
+import { collection, doc, deleteDoc } from 'firebase/firestore';
+import { useCollection, useFirestore } from '@/firebase';
+
 import {
   Table,
   TableHeader,
@@ -17,9 +20,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { HotelForm } from './HotelForm';
-import { getHotels } from '@/lib/data';
 import type { Hotel } from '@/lib/types';
-import { deleteHotelAction } from '@/app/admin/actions';
+import { revalidateAdminPanel } from '@/app/admin/actions';
 import { useToast } from '@/hooks/use-toast';
 import { PlusCircle, Trash2, Edit, Loader2 } from 'lucide-react';
 import {
@@ -34,13 +36,21 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Card } from '../ui/card';
+import { Skeleton } from '../ui/skeleton';
 
 export function HotelManagementClient() {
-  const hotels = getHotels();
+  const firestore = useFirestore();
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingHotel, setEditingHotel] = useState<Hotel | null>(null);
+
+  const hotelsQuery = useMemo(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'hotels');
+  }, [firestore]);
+
+  const { data: hotels, isLoading } = useCollection<Hotel>(hotelsQuery);
 
   const handleEdit = (hotel: Hotel) => {
     setEditingHotel(hotel);
@@ -52,13 +62,24 @@ export function HotelManagementClient() {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (hotelId: string) => {
+  const handleDelete = (hotel: Hotel) => {
+    if (!firestore) return;
     startTransition(async () => {
-      await deleteHotelAction(hotelId);
-      toast({
-        title: 'Hotel Deleted',
-        description: 'The hotel has been successfully removed.',
-      });
+      try {
+        const hotelRef = doc(firestore, 'hotels', hotel.id);
+        await deleteDoc(hotelRef);
+        await revalidateAdminPanel();
+        toast({
+          title: 'Hotel Deleted',
+          description: `The hotel "${hotel.name}" has been successfully removed.`,
+        });
+      } catch (e: any) {
+         toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: `Could not delete hotel: ${e.message}`,
+        });
+      }
     });
   };
 
@@ -86,11 +107,19 @@ export function HotelManagementClient() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {hotels.map((hotel) => (
+            {isLoading && Array.from({length: 5}).map((_, i) => (
+                <TableRow key={i}>
+                    <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-10" /></TableCell>
+                    <TableCell className="text-right"><Skeleton className="h-8 w-20" /></TableCell>
+                </TableRow>
+            ))}
+            {hotels?.map((hotel) => (
               <TableRow key={hotel.id}>
                 <TableCell className="font-medium">{hotel.name}</TableCell>
                 <TableCell>{hotel.city}</TableCell>
-                <TableCell>{hotel.rooms.length}</TableCell>
+                <TableCell>{hotel.rooms?.length || 0}</TableCell>
                 <TableCell className="text-right">
                   <Button
                     variant="ghost"
@@ -117,7 +146,7 @@ export function HotelManagementClient() {
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction
-                          onClick={() => handleDelete(hotel.id)}
+                          onClick={() => handleDelete(hotel)}
                           className="bg-destructive hover:bg-destructive/90"
                         >
                           Delete

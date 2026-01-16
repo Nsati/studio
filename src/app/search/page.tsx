@@ -1,10 +1,12 @@
 
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useState, useMemo } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { collection, query, where } from 'firebase/firestore';
 
-import { getHotels, getCities } from '@/lib/data';
+import { useCollection, useFirestore } from '@/firebase';
+import type { Hotel, City } from '@/lib/types';
 import { HotelCard } from '@/components/hotel/HotelCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,14 +19,37 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
-import { Search } from 'lucide-react';
+import { Search, Loader2 } from 'lucide-react';
+import Loading from './loading';
 
 function SearchResults() {
   const searchParams = useSearchParams();
   const city = searchParams.get('city');
 
-  // We could add more filters here later by getting them from searchParams
-  const hotels = getHotels(city || undefined);
+  const firestore = useFirestore();
+
+  const hotelsQuery = useMemo(() => {
+    if (!firestore) return null;
+    const baseQuery = collection(firestore, 'hotels');
+    if (city) {
+      return query(baseQuery, where('city', '==', city));
+    }
+    return baseQuery;
+  }, [firestore, city]);
+
+  const { data: hotels, isLoading } = useCollection<Hotel>(hotelsQuery);
+
+  if (isLoading) {
+      return (
+         <div className="flex-1">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+               <Card key={i}><CardContent className="p-0"><Skeleton className="h-48 w-full" /></CardContent><div className="p-4 space-y-2"><Skeleton className="h-6 w-3/4" /><Skeleton className="h-4 w-1/2" /><Skeleton className="h-4 w-1/4" /></div></Card>
+            ))}
+          </div>
+        </div>
+      )
+  }
 
   return (
     <div className="flex-1">
@@ -32,9 +57,9 @@ function SearchResults() {
         <h2 className="font-headline text-3xl font-bold">
           {city ? `Stays in ${city}` : 'All Our Stays'}
         </h2>
-        <p className="text-muted-foreground">{hotels.length} properties found.</p>
+        <p className="text-muted-foreground">{hotels?.length || 0} properties found.</p>
       </div>
-      {hotels.length > 0 ? (
+      {hotels && hotels.length > 0 ? (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {hotels.map((hotel) => (
             <HotelCard hotel={hotel} key={hotel.id} />
@@ -50,7 +75,6 @@ function SearchResults() {
             variant="outline"
             className="mt-4"
             onClick={() => {
-              // This is a simple way to clear filters. We'll improve this.
               window.location.href = '/search';
             }}
           >
@@ -63,7 +87,13 @@ function SearchResults() {
 }
 
 function SearchFilters() {
-  const cities = getCities();
+  const firestore = useFirestore();
+  const citiesQuery = useMemo(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'cities');
+  }, [firestore]);
+  const { data: cities, isLoading } = useCollection<City>(citiesQuery);
+  
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -93,8 +123,9 @@ function SearchFilters() {
   };
   
   const handleCityChange = (city: string) => {
-    setSelectedCity(city);
-    router.push(`${pathname}?${createQueryString({ city: city === 'All' ? null : city })}`);
+    const newCity = city === 'All' ? '' : city;
+    setSelectedCity(newCity);
+    router.push(`${pathname}?${createQueryString({ city: newCity || null })}`);
   }
 
   const handleFormSubmit = (e: React.FormEvent) => {
@@ -111,13 +142,13 @@ function SearchFilters() {
               <Label htmlFor="location" className="text-lg font-semibold">
                 Location
               </Label>
-              <Select value={selectedCity} onValueChange={handleCityChange}>
+              <Select value={selectedCity} onValueChange={handleCityChange} disabled={isLoading}>
                 <SelectTrigger id="location">
                   <SelectValue placeholder="Select a city" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="All">All Locations</SelectItem>
-                  {cities.map((city) => (
+                  {cities?.map((city) => (
                     <SelectItem key={city.name} value={city.name}>
                       {city.name}
                     </SelectItem>
@@ -159,11 +190,9 @@ export default function SearchPage() {
   return (
     <div className="container mx-auto max-w-7xl py-8 px-4 md:px-6">
       <div className="flex flex-col gap-8 lg:flex-row">
-        <Suspense fallback={<div>Loading filters...</div>}>
+        <Suspense fallback={<Loading />}>
             <SearchFilters />
-        </Suspense>
-        <Suspense fallback={<div className="flex-1">Loading results...</div>}>
-          <SearchResults />
+            <SearchResults />
         </Suspense>
       </div>
     </div>

@@ -1,8 +1,10 @@
 
 'use client';
 
-import { useState, useTransition } from 'react';
-import { MOCK_USERS } from '@/lib/data';
+import { useState, useTransition, useMemo } from 'react';
+import { useCollection, useFirestore } from '@/firebase';
+import { collection, doc, deleteDoc } from 'firebase/firestore';
+
 import {
   Table,
   TableHeader,
@@ -16,7 +18,7 @@ import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { UserForm } from './UserForm';
-import { deleteUserAction } from '@/app/admin/actions';
+import { revalidateAdminPanel } from '@/app/admin/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Edit, Loader2, Trash2 } from 'lucide-react';
 import {
@@ -30,28 +32,46 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import type { MockUser } from '@/lib/types';
+import type { UserProfile } from '@/lib/types';
+import { Skeleton } from '../ui/skeleton';
 
 
 export function UserList() {
-    const users = MOCK_USERS;
+    const firestore = useFirestore();
     const [isPending, startTransition] = useTransition();
     const { toast } = useToast();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [editingUser, setEditingUser] = useState<MockUser | null>(null);
+    const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
 
-    const handleEdit = (user: MockUser) => {
+    const usersQuery = useMemo(() => {
+        if (!firestore) return null;
+        return collection(firestore, 'users');
+    }, [firestore]);
+
+    const { data: users, isLoading } = useCollection<UserProfile>(usersQuery);
+
+    const handleEdit = (user: UserProfile) => {
         setEditingUser(user);
         setIsDialogOpen(true);
     };
 
-    const handleDelete = (userId: string) => {
+    const handleDelete = (user: UserProfile) => {
+        if (!firestore) return;
         startTransition(async () => {
-            await deleteUserAction(userId);
-            toast({
-                title: 'User Deleted',
-                description: 'The user has been successfully removed.',
-            });
+            try {
+                await deleteDoc(doc(firestore, 'users', user.uid));
+                await revalidateAdminPanel();
+                toast({
+                    title: 'User Deleted',
+                    description: `User "${user.displayName}" has been successfully removed.`,
+                });
+            } catch (e: any) {
+                 toast({
+                    variant: 'destructive',
+                    title: 'Error',
+                    description: `Could not delete user: ${e.message}`,
+                });
+            }
         });
     };
 
@@ -72,7 +92,15 @@ export function UserList() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {users.map((user) => (
+                        {isLoading && Array.from({length: 5}).map((_, i) => (
+                             <TableRow key={i}>
+                                <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+                                <TableCell><Skeleton className="h-5 w-48" /></TableCell>
+                                <TableCell><Skeleton className="h-5 w-16" /></TableCell>
+                                <TableCell className="text-right"><Skeleton className="h-8 w-20" /></TableCell>
+                            </TableRow>
+                        ))}
+                        {users?.map((user) => (
                         <TableRow key={user.uid}>
                             <TableCell className="font-medium">{user.displayName}</TableCell>
                             <TableCell>{user.email}</TableCell>
@@ -107,7 +135,7 @@ export function UserList() {
                                     <AlertDialogFooter>
                                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                                         <AlertDialogAction
-                                        onClick={() => handleDelete(user.uid)}
+                                        onClick={() => handleDelete(user)}
                                         className="bg-destructive hover:bg-destructive/90"
                                         >
                                         Delete

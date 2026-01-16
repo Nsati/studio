@@ -3,8 +3,10 @@
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useTransition } from 'react';
+import { useTransition, useMemo } from 'react';
 import Image from 'next/image';
+import { collection, addDoc, doc, setDoc } from 'firebase/firestore';
+import { useFirestore, useCollection } from '@/firebase';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -17,14 +19,14 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { addHotelAction, updateHotelAction } from '@/app/admin/actions';
-import type { Hotel } from '@/lib/types';
+import { revalidateAdminPanel } from '@/app/admin/actions';
+import type { Hotel, City } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { getCities } from '@/lib/data';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Trash2, PlusCircle, Loader2, ImagePlus } from 'lucide-react';
+import slugify from 'slugify';
 
 const roomSchema = z.object({
   id: z.string().optional(),
@@ -53,7 +55,14 @@ interface HotelFormProps {
 export function HotelForm({ hotel, onFinished }: HotelFormProps) {
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
-  const cities = getCities();
+  const firestore = useFirestore();
+
+  const citiesQuery = useMemo(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'cities');
+  }, [firestore]);
+  const { data: cities, isLoading: isLoadingCities } = useCollection<City>(citiesQuery);
+
 
   const defaultValues: Partial<HotelFormValues> = {
     name: hotel?.name ?? '',
@@ -81,8 +90,6 @@ export function HotelForm({ hotel, onFinished }: HotelFormProps) {
   });
 
   const handleAddImage = () => {
-    // In a real app, this would open a file dialog and upload to a service.
-    // Here, we simulate it by picking a random image from our placeholders.
     const currentImageIds = imageFields.map(field => field.id);
     const availableImages = PlaceHolderImages.filter(img => 
         !currentImageIds.includes(img.id) && 
@@ -94,7 +101,6 @@ export function HotelForm({ hotel, onFinished }: HotelFormProps) {
     if (availableImages.length > 0) {
         imageToAdd = availableImages[Math.floor(Math.random() * availableImages.length)];
     } else {
-        // If all available images are used, pick any random hotel image as a fallback
         const fallbackImages = PlaceHolderImages.filter(img => !img.id.startsWith('city-') && img.id !== 'hero');
         imageToAdd = fallbackImages[Math.floor(Math.random() * fallbackImages.length)];
     }
@@ -106,28 +112,56 @@ export function HotelForm({ hotel, onFinished }: HotelFormProps) {
 
 
   const onSubmit = (data: HotelFormValues) => {
-    const formData = new FormData();
-    formData.append('name', data.name);
-    formData.append('city', data.city);
-    formData.append('description', data.description);
-    formData.append('amenities', data.amenities);
-    formData.append('images', data.images.join(','));
-    formData.append('rooms', JSON.stringify(data.rooms));
-
-    if (hotel) {
-        formData.append('rating', String(hotel.rating));
-    }
-
+    if (!firestore) return;
 
     startTransition(async () => {
-      if (hotel) {
-        await updateHotelAction(hotel.id, formData);
-        toast({ title: 'Hotel Updated!', description: `${data.name} has been successfully updated.` });
-      } else {
-        await addHotelAction(formData);
-        toast({ title: 'Hotel Added!', description: `${data.name} has been successfully created.` });
+      try {
+        if (hotel) {
+          // Update existing hotel
+          const hotelRef = doc(firestore, 'hotels', hotel.id);
+          const { rooms, ...hotelData } = data;
+          const hotelPayload = {
+            ...hotelData,
+            slug: slugify(data.name, { lower: true, strict: true }),
+            amenities: data.amenities.split(',').map(s => s.trim()),
+            rating: hotel.rating, // Keep existing rating
+          }
+          await setDoc(hotelRef, hotelPayload);
+
+          // Update rooms subcollection
+          const roomsRef = collection(firestore, 'hotels', hotel.id, 'rooms');
+          // This is a simplified update. A real app might need to handle deletions.
+          for (const room of rooms) {
+            const roomRef = room.id ? doc(roomsRef, room.id) : doc(roomsRef);
+            await setDoc(roomRef, { ...room, hotelId: hotel.id }, { merge: true });
+          }
+          toast({ title: 'Hotel Updated!', description: `${data.name} has been successfully updated.` });
+
+        } else {
+          // Add new hotel
+          const { rooms, ...hotelData } = data;
+          const hotelsRef = collection(firestore, 'hotels');
+          const hotelPayload = {
+            ...hotelData,
+            slug: slugify(data.name, { lower: true, strict: true }),
+            amenities: data.amenities.split(',').map(s => s.trim()),
+            rating: (Math.random() * (5 - 4) + 4).toFixed(1), // Random rating 4-5
+          }
+          const newHotelRef = await addDoc(hotelsRef, hotelPayload);
+          
+          // Add rooms to subcollection
+          const roomsRef = collection(firestore, 'hotels', newHotelRef.id, 'rooms');
+          for (const room of rooms) {
+            await addDoc(roomsRef, { ...room, hotelId: newHotelRef.id });
+          }
+
+          toast({ title: 'Hotel Added!', description: `${data.name} has been successfully created.` });
+        }
+        await revalidateAdminPanel();
+        onFinished();
+      } catch (e: any) {
+        toast({ variant: 'destructive', title: 'Error', description: e.message });
       }
-      onFinished();
     });
   };
 
@@ -154,14 +188,14 @@ export function HotelForm({ hotel, onFinished }: HotelFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>City</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isLoadingCities}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a city" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {cities.map(city => (
+                    {cities?.map(city => (
                       <SelectItem key={city.name} value={city.name}>{city.name}</SelectItem>
                     ))}
                   </SelectContent>
@@ -308,7 +342,7 @@ export function HotelForm({ hotel, onFinished }: HotelFormProps) {
         </Card>
 
         <div className="flex justify-end">
-          <Button type="submit" disabled={isPending}>
+          <Button type="submit" disabled={isPending || !firestore}>
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {hotel ? 'Update Hotel' : 'Add Hotel'}
           </Button>

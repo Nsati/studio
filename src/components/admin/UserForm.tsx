@@ -4,6 +4,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useTransition } from 'react';
+import { doc, updateDoc } from 'firebase/firestore';
+import { useFirestore } from '@/firebase';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -15,8 +17,8 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { updateUserAction } from '@/app/admin/actions';
-import type { MockUser } from '@/lib/types';
+import { revalidateAdminPanel } from '@/app/admin/actions';
+import type { UserProfile } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Loader2 } from 'lucide-react';
@@ -29,13 +31,14 @@ const userFormSchema = z.object({
 type UserFormValues = z.infer<typeof userFormSchema>;
 
 interface UserFormProps {
-  user: MockUser;
+  user: UserProfile;
   onFinished: () => void;
 }
 
 export function UserForm({ user, onFinished }: UserFormProps) {
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
+  const firestore = useFirestore();
 
   const form = useForm<UserFormValues>({
     resolver: zodResolver(userFormSchema),
@@ -46,14 +49,20 @@ export function UserForm({ user, onFinished }: UserFormProps) {
   });
 
   const onSubmit = (data: UserFormValues) => {
-    const formData = new FormData();
-    formData.append('displayName', data.displayName);
-    formData.append('role', data.role);
-
+    if (!firestore) return;
     startTransition(async () => {
-      await updateUserAction(user.uid, formData);
-      toast({ title: 'User Updated!', description: `${data.displayName} has been successfully updated.` });
-      onFinished();
+      try {
+        const userRef = doc(firestore, 'users', user.uid);
+        await updateDoc(userRef, {
+          displayName: data.displayName,
+          role: data.role,
+        });
+        await revalidateAdminPanel();
+        toast({ title: 'User Updated!', description: `${data.displayName} has been successfully updated.` });
+        onFinished();
+      } catch (e: any) {
+        toast({ variant: 'destructive', title: 'Error', description: e.message });
+      }
     });
   };
 
@@ -97,7 +106,7 @@ export function UserForm({ user, onFinished }: UserFormProps) {
         
         <div className="flex justify-end gap-2">
             <Button type="button" variant="ghost" onClick={onFinished}>Cancel</Button>
-            <Button type="submit" disabled={isPending}>
+            <Button type="submit" disabled={isPending || !firestore}>
                 {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Update User
             </Button>

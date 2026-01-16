@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { BedDouble, Calendar as CalendarIcon, AlertCircle, User, Info, Loader2 } from 'lucide-react';
 import { differenceInDays, format, addMinutes, isBefore } from 'date-fns';
 import type { DateRange } from 'react-day-picker';
@@ -98,14 +98,12 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
             const roomRef = doc(firestore, 'hotels', hotel.id, 'rooms', selectedRoom.id);
             const bookingsRef = collection(firestore, 'bookings');
             
-            // 1. Get room details
             const roomDoc = await transaction.get(roomRef);
             if (!roomDoc.exists()) {
                 throw new Error("Room does not exist!");
             }
             const roomData = roomDoc.data() as Room;
 
-            // 2. Find overlapping bookings
             const q = query(bookingsRef, 
                 where('roomId', '==', selectedRoom.id),
                 where('status', 'in', ['CONFIRMED', 'LOCKED']),
@@ -119,12 +117,10 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
                  return isBefore(checkIn, dates.to!);
             }).length;
 
-            // 3. Check availability
             if (overlappingBookings >= roomData.totalRooms) {
                 throw new Error("This room is no longer available for the selected dates.");
             }
 
-            // 4. Create locked booking
             const newBookingRef = doc(collection(firestore, 'bookings'));
             const lockExpiry = addMinutes(new Date(), 5);
             const newBooking: Booking = {
@@ -162,7 +158,6 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
     }
     const finalLockedBookingId = lockedBookingId;
 
-    // 5. Proceed to Payment
     const orderResponse = await createRazorpayOrder(totalAmount, `booking_${finalLockedBookingId}`);
 
     const cleanupLock = async () => {
@@ -194,6 +189,7 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
         image: '/logo-icon.png',
         order_id: order.id,
         handler: async (response: any) => {
+            if (!firestore) return;
             const bookingRef = doc(firestore, 'bookings', finalLockedBookingId);
             const batch = writeBatch(firestore);
             batch.update(bookingRef, { status: 'CONFIRMED', expiresAt: null });
@@ -337,7 +333,7 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
             {rooms?.map((room) => (
               <Card 
                 key={room.id}
-                onClick={() => handleRoomSelect(room)}
+                onClick={() => isDateRangeValid && handleRoomSelect(room)}
                 className={cn(
                     'p-4 cursor-pointer transition-all',
                     isDateRangeValid && 'hover:bg-muted/50',
