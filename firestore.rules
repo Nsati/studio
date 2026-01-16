@@ -9,12 +9,13 @@
  * - /users/{userId}/bookings/{bookingId}: Private booking data, nested under the owning user for strict access control.
  * - /hotels/{hotelId}: Publicly readable hotel information. Writable only by admins.
  * - /hotels/{hotelId}/rooms/{roomId}: Publicly readable room information. Writable only by admins.
+ * - /cities/{cityId}: Publicly readable city information. Writable only by admins.
  * - /roles_admin/{userId}: A lookup collection. The existence of a document here grants a user admin privileges across the application.
  *
  * Key Security Decisions:
  * - User Privacy: Listing users from the top-level `/users` collection is explicitly forbidden to prevent user enumeration and protect privacy.
- * - Public Browsing: Hotel and room data is publicly readable to allow unauthenticated users to browse listings.
- * - Admin-Only Writes: All modifications to public data (hotels, rooms) and role assignments are restricted to users with the admin role.
+ * - Public Browsing: Hotel, room, and city data is publicly readable to allow unauthenticated users to browse listings.
+ * - Admin-Only Writes: All modifications to public data (hotels, rooms, cities) and role assignments are restricted to users with the admin role.
  * - Default Secure: Any path or operation not explicitly defined is denied by default.
  *
  * Denormalization for Authorization:
@@ -153,6 +154,21 @@ service cloud.firestore {
         allow update: if isExistingOwner(userId) && isBookingDataValidOnUpdate();
         allow delete: if isExistingOwner(userId);
       }
+    }
+    
+    /**
+     * @description Manages public city listings.
+     * @path /cities/{cityId}
+     * @allow (get, list) Any user, including unauthenticated ones, can view city data.
+     * @deny (create, update, delete) Only admins can modify city data.
+     * @principle Allows public browsing of cities while restricting modifications to admins.
+     */
+    match /cities/{cityId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isAdmin();
+      allow update: if isExistingAdmin();
+      allow delete: if isExistingAdmin();
     }
 
     /**
