@@ -5,8 +5,10 @@ import { Footer } from '@/components/shared/Footer';
 import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
 import Script from 'next/script';
-import { UserProvider } from '@/contexts/UserContext';
-
+import { FirebaseProvider } from '@/firebase/provider';
+import { FirebaseClientProvider } from '@/firebase/client-provider';
+import { initializeFirebase } from '@/firebase';
+import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
 export const metadata: Metadata = {
   title: 'Uttarakhand Getaways',
@@ -18,6 +20,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const { firebaseApp, firestore, auth } = initializeFirebase();
   return (
     <html lang="en" className="scroll-smooth">
       <head>
@@ -29,14 +32,21 @@ export default function RootLayout({
         />
       </head>
       <body className={cn('font-body antialiased')}>
-        <UserProvider>
-          <div className="flex min-h-screen flex-col">
-            <Header />
-            <main className="flex-grow">{children}</main>
-            <Footer />
-          </div>
-          <Toaster />
-        </UserProvider>
+        <FirebaseProvider
+          firebaseApp={firebaseApp}
+          firestore={firestore}
+          auth={auth}
+        >
+          <FirebaseClientProvider>
+             <FirebaseErrorListener />
+            <div className="flex min-h-screen flex-col">
+              <Header />
+              <main className="flex-grow">{children}</main>
+              <Footer />
+            </div>
+            <Toaster />
+          </FirebaseClientProvider>
+        </FirebaseProvider>
         <Script src="https://checkout.razorpay.com/v1/checkout.js" />
       </body>
     </html>

@@ -1,5 +1,7 @@
+import type { Timestamp } from 'firebase/firestore';
+
 export interface Hotel {
-  id: string;
+  id: string; // Firestore document ID
   slug: string;
   name: string;
   city: string;
@@ -7,11 +9,11 @@ export interface Hotel {
   images: string[];
   amenities: string[];
   rating: number;
-  rooms: Room[];
+  rooms?: Room[]; // This will be a subcollection
 }
 
 export interface Room {
-  id: string;
+  id: string; // Firestore document ID
   hotelId: string;
   type: 'Standard' | 'Deluxe' | 'Suite';
   price: number;
@@ -20,40 +22,42 @@ export interface Room {
 }
 
 export interface City {
+  id: string; // Firestore document ID
   name: string;
   image: string;
 }
 
 export interface UserProfile {
-  id: string; // Should match Firebase Auth UID
+  uid: string; // Matches Auth UID
   displayName: string;
   email: string;
-  role: 'admin' | 'user';
+  role: 'user' | 'admin';
 }
 
 
 export interface Booking {
-  id: string;
+  id?: string; // Firestore document ID
   hotelId: string;
   userId: string;
   roomId: string;
   roomType: string;
-  checkIn: string;
-  checkOut: string;
+  checkIn: Timestamp | string;
+  checkOut: Timestamp | string;
   guests: number;
   totalPrice: number;
   customerName: string;
   customerEmail: string;
   status: 'LOCKED' | 'CONFIRMED' | 'CANCELLED';
-  expiresAt?: string; // For locked bookings
+  expiresAt?: Timestamp; // For locked bookings
+  createdAt: Timestamp;
 }
 
-// Mock user type for frontend-only state
+// This mock type is no longer used for primary auth state.
 export type MockUser = {
     uid: string;
     displayName: string;
     email: string;
-    password?: string; // This is for mock purposes only. NEVER store plain text passwords in a real app.
+    password?: string;
     role: 'user' | 'admin';
     photoURL?: string | null;
 };

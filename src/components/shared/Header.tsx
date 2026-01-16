@@ -6,9 +6,11 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Menu, UserCircle, LogIn } from 'lucide-react';
 import Link from 'next/link';
 import { Logo } from './Logo';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { useUser } from '@/contexts/UserContext';
+import { useUser, useAuth } from '@/firebase';
+import { signOut } from 'firebase/auth';
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,6 +19,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Skeleton } from '../ui/skeleton';
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -26,7 +29,15 @@ const navLinks = [
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
-  const { user, logout } = useUser();
+  const router = useRouter();
+  const { user, userProfile, isLoading } = useUser();
+  const auth = useAuth();
+
+  const handleLogout = async () => {
+    if (!auth) return;
+    await signOut(auth);
+    router.push('/');
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -46,7 +57,7 @@ export function Header() {
               {link.label}
             </Link>
           ))}
-          {user?.role === 'admin' && (
+          {userProfile?.role === 'admin' && (
              <Link
               href="/admin"
               className={cn(
@@ -60,12 +71,14 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-4">
-          {user ? (
+          {isLoading ? (
+            <Skeleton className="h-8 w-24" />
+          ) : user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="flex items-center gap-2">
                   <UserCircle className="h-5 w-5" />
-                  {user.displayName}
+                  {userProfile?.displayName || user.email}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -74,13 +87,13 @@ export function Header() {
                 <DropdownMenuItem asChild>
                   <Link href="/my-bookings">My Bookings</Link>
                 </DropdownMenuItem>
-                 {user.role === 'admin' && (
+                 {userProfile?.role === 'admin' && (
                   <DropdownMenuItem asChild>
                     <Link href="/admin">Admin Panel</Link>
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={logout}>Logout</DropdownMenuItem>
+                <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
@@ -120,14 +133,14 @@ export function Header() {
                   ))}
                 </div>
                  <div className="mt-8 border-t pt-6">
-                    {user ? (
+                    {isLoading ? <Skeleton className="h-10 w-full" /> : user ? (
                        <div className="flex flex-col gap-4">
-                           <p className="text-lg font-medium">{user.displayName}</p>
+                           <p className="text-lg font-medium">{userProfile?.displayName || user.email}</p>
                            <Link href="/my-bookings" onClick={() => setIsMenuOpen(false)} className="text-base text-muted-foreground">My Bookings</Link>
-                            {user.role === 'admin' && (
+                            {userProfile?.role === 'admin' && (
                               <Link href="/admin" onClick={() => setIsMenuOpen(false)} className="text-base text-muted-foreground">Admin Panel</Link>
                             )}
-                           <Button onClick={() => { logout(); setIsMenuOpen(false); }} variant="outline">Logout</Button>
+                           <Button onClick={() => { handleLogout(); setIsMenuOpen(false); }} variant="outline">Logout</Button>
                        </div>
                     ) : (
                         <div className="flex flex-col gap-4">

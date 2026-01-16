@@ -1,18 +1,108 @@
-
+'use client';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useMemo } from 'react';
+import { collection } from 'firebase/firestore';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { getCities, getHotels } from '@/lib/data';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { HotelCard } from '@/components/hotel/HotelCard';
 import { HeroSearchForm } from '@/components/home/HeroSearchForm';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Loader2 } from 'lucide-react';
+import { useCollection, useFirestore } from '@/firebase';
+import type { City, Hotel } from '@/lib/types';
+import { Skeleton } from '@/components/ui/skeleton';
+
+function FeaturedHotels() {
+  const firestore = useFirestore();
+  const hotelsQuery = useMemo(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'hotels');
+  }, [firestore]);
+
+  const { data: hotels, isLoading } = useCollection<Hotel>(hotelsQuery);
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="space-y-2">
+            <Skeleton className="h-48 w-full" />
+            <Skeleton className="h-6 w-3/4" />
+            <Skeleton className="h-4 w-1/2" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  const featuredHotels = hotels?.slice(0, 4) || [];
+
+  return (
+    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+      {featuredHotels.map((hotel) => (
+        <HotelCard key={hotel.id} hotel={hotel} />
+      ))}
+    </div>
+  );
+}
+
+function CitiesList() {
+    const firestore = useFirestore();
+    const citiesQuery = useMemo(() => {
+        if (!firestore) return null;
+        return collection(firestore, 'cities');
+    }, [firestore]);
+
+    const { data: cities, isLoading } = useCollection<City>(citiesQuery);
+
+    if (isLoading) {
+        return (
+             <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {Array.from({ length: 3 }).map((_, i) => (
+                    <Skeleton key={i} className="h-64 w-full" />
+                ))}
+             </div>
+        );
+    }
+    
+    return (
+        <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {cities?.map((city) => {
+            const cityImage = PlaceHolderImages.find(
+              (img) => img.id === city.image
+            );
+            return (
+              <Link href={`/search?city=${city.name}`} key={city.name}>
+                <Card className="group overflow-hidden">
+                  <CardContent className="p-0">
+                    <div className="relative h-64 w-full">
+                      {cityImage && (
+                        <Image
+                          src={cityImage.imageUrl}
+                          alt={city.name}
+                          data-ai-hint={cityImage.imageHint}
+                          fill
+                          className="object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                      <h3 className="absolute bottom-4 left-4 font-headline text-2xl font-bold text-white">
+                        {city.name}
+                      </h3>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            );
+          })}
+        </div>
+    )
+
+}
 
 export default function HomePage() {
-  const featuredHotels = getHotels().slice(0, 4);
-  const cities = getCities();
   const heroImage = PlaceHolderImages.find((img) => img.id === 'hero');
 
   return (
@@ -51,36 +141,7 @@ export default function HomePage() {
             a unique blend of nature, adventure, and culture.
           </p>
         </div>
-        <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {cities.map((city) => {
-            const cityImage = PlaceHolderImages.find(
-              (img) => img.id === city.image
-            );
-            return (
-              <Link href={`/search?city=${city.name}`} key={city.name}>
-                <Card className="group overflow-hidden">
-                  <CardContent className="p-0">
-                    <div className="relative h-64 w-full">
-                      {cityImage && (
-                        <Image
-                          src={cityImage.imageUrl}
-                          alt={city.name}
-                          data-ai-hint={cityImage.imageHint}
-                          fill
-                          className="object-cover transition-transform duration-300 group-hover:scale-105"
-                        />
-                      )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                      <h3 className="absolute bottom-4 left-4 font-headline text-2xl font-bold text-white">
-                        {city.name}
-                      </h3>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            );
-          })}
-        </div>
+        <CitiesList />
       </section>
 
       <section className="container mx-auto px-4 md:px-6">
@@ -91,10 +152,8 @@ export default function HomePage() {
             with top-notch amenities and breathtaking views.
           </p>
         </div>
-        <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {featuredHotels.map((hotel) => (
-            <HotelCard key={hotel.id} hotel={hotel} />
-          ))}
+        <div className="mt-8">
+            <FeaturedHotels />
         </div>
         <div className="mt-8 flex justify-center">
           <Button asChild size="lg">

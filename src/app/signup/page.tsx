@@ -3,7 +3,10 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useUser } from '@/contexts/UserContext';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
+import { useAuth, useFirestore } from '@/firebase';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -13,7 +16,8 @@ import { Loader2 } from 'lucide-react';
 import { revalidateAdminPanel } from '../admin/actions';
 
 export default function SignupPage() {
-  const { signup } = useUser();
+  const auth = useAuth();
+  const firestore = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
   const [name, setName] = useState('');
@@ -24,6 +28,7 @@ export default function SignupPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!auth || !firestore) return;
     if (password.length < 6) {
         setError('Password must be at least 6 characters long.');
         return;
@@ -31,16 +36,30 @@ export default function SignupPage() {
     setIsLoading(true);
     setError('');
 
-    const newUser = signup(name, email, password);
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
 
-    if (newUser) {
-      // Call the server action to revalidate the path
+      // Create user profile in Firestore
+      await setDoc(doc(firestore, 'users', user.uid), {
+        uid: user.uid,
+        displayName: name,
+        email: user.email,
+        role: 'user'
+      });
+
       await revalidateAdminPanel();
       toast({ title: 'Account created!', description: "You've been successfully signed up." });
       router.push('/my-bookings');
-    } else {
-      setError('A user with this email already exists.');
-      setIsLoading(false);
+    } catch (error: any) {
+        if (error.code === 'auth/email-already-in-use') {
+            setError('A user with this email already exists.');
+        } else {
+            setError('An error occurred during signup.');
+            console.error(error);
+        }
+    } finally {
+        setIsLoading(false);
     }
   };
 
@@ -86,7 +105,7 @@ export default function SignupPage() {
               />
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button type="submit" className="w-full" disabled={isLoading || !auth || !firestore}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Sign Up
             </Button>

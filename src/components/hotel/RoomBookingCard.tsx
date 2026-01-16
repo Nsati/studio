@@ -2,15 +2,15 @@
 
 import { useState, useMemo } from 'react';
 import { BedDouble, Calendar as CalendarIcon, AlertCircle, User, Info, Loader2 } from 'lucide-react';
-import { differenceInDays, format, addMinutes } from 'date-fns';
+import { differenceInDays, format, addMinutes, isBefore } from 'date-fns';
 import type { DateRange } from 'react-day-picker';
 import { useRouter } from 'next/navigation';
 
 import type { Hotel, Room, Booking } from '@/lib/types';
-import { getBookingsForRoom, addBooking, updateBookingStatus, removeBooking } from '@/lib/data';
 import { createRazorpayOrder, revalidateAdminOnBooking } from '@/app/booking/actions';
 import { useToast } from '@/hooks/use-toast';
-import { useUser } from '@/contexts/UserContext';
+import { useUser, useFirestore, useCollection } from '@/firebase';
+import { runTransaction, collection, doc, serverTimestamp, getDocs, query, where, Timestamp, writeBatch } from 'firebase/firestore';
 
 
 import {
@@ -32,7 +32,6 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 
-// Extend the Window interface to include Razorpay
 declare global {
   interface Window {
     Razorpay: any;
@@ -43,35 +42,42 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
   const [dates, setDates] = useState<DateRange | undefined>();
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
-  const { user } = useUser();
-  const [customerDetails, setCustomerDetails] = useState({ name: user?.displayName || '', email: user?.email || '' });
+  const { user, userProfile } = useUser();
+  const firestore = useFirestore();
+  const [customerDetails, setCustomerDetails] = useState({ name: '', email: '' });
 
   const router = useRouter();
   const { toast } = useToast();
+  
+  useEffect(() => {
+    if(userProfile) {
+        setCustomerDetails({ name: userProfile.displayName, email: userProfile.email });
+    }
+  }, [userProfile]);
 
   const nights =
     dates?.from && dates?.to ? differenceInDays(dates.to, dates.from) : 0;
   
   const isDateRangeValid = dates?.from && dates?.to && nights > 0;
 
+  const roomsCollection = useMemo(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'hotels', hotel.id, 'rooms');
+  }, [firestore, hotel.id]);
+
+  const { data: rooms, isLoading: isLoadingRooms } = useCollection<Room>(roomsCollection);
+
   const handleProceedToBook = async () => {
-    if (!selectedRoom) {
+    if (!firestore || !selectedRoom || !isDateRangeValid || !dates?.from || !dates.to) {
         toast({
             variant: 'destructive',
-            title: 'No Room Selected',
-            description: 'Please select a room type to continue.',
+            title: 'Invalid Details',
+            description: 'Please select a room and valid dates.',
         });
         return;
     }
-    if (!isDateRangeValid || !dates.from || !dates.to) {
-        toast({
-            variant: 'destructive',
-            title: 'Invalid Dates',
-            description: 'Please select a valid check-in and check-out date.',
-        });
-        return;
-    }
-     if (!user && (!customerDetails.name || !customerDetails.email)) {
+    
+    if (!user && (!customerDetails.name || !customerDetails.email)) {
         toast({
             variant: 'destructive',
             title: 'Customer Details Required',
@@ -79,28 +85,92 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
         });
         return;
     }
+
     setIsProcessing(true);
-
     const totalAmount = nights * selectedRoom.price;
+    const finalCustomerName = userProfile?.displayName || customerDetails.name;
+    const finalCustomerEmail = userProfile?.email || customerDetails.email;
 
-    // Create a temporary locked booking
-    const lockExpiry = addMinutes(new Date(), 5);
-    const lockedBooking = addBooking({
-        hotelId: hotel.id,
-        roomId: selectedRoom.id,
-        roomType: selectedRoom.type,
-        userId: user ? user.uid : 'guest',
-        checkIn: dates.from.toISOString(),
-        checkOut: dates.to.toISOString(),
-        guests: selectedRoom.capacity,
-        totalPrice: totalAmount,
-        customerName: user?.displayName || customerDetails.name,
-        customerEmail: user?.email || customerDetails.email,
-        status: 'LOCKED',
-        expiresAt: lockExpiry.toISOString(),
-    });
+    let lockedBookingId: string | null = null;
 
-    const orderResponse = await createRazorpayOrder(totalAmount, `booking_${selectedRoom.id}_${Date.now()}`);
+    try {
+        lockedBookingId = await runTransaction(firestore, async (transaction) => {
+            const roomRef = doc(firestore, 'hotels', hotel.id, 'rooms', selectedRoom.id);
+            const bookingsRef = collection(firestore, 'bookings');
+            
+            // 1. Get room details
+            const roomDoc = await transaction.get(roomRef);
+            if (!roomDoc.exists()) {
+                throw new Error("Room does not exist!");
+            }
+            const roomData = roomDoc.data() as Room;
+
+            // 2. Find overlapping bookings
+            const q = query(bookingsRef, 
+                where('roomId', '==', selectedRoom.id),
+                where('status', 'in', ['CONFIRMED', 'LOCKED']),
+                where('checkOut', '>', Timestamp.fromDate(dates.from!))
+            );
+
+            const querySnapshot = await getDocs(q);
+            const overlappingBookings = querySnapshot.docs.filter(doc => {
+                 const booking = doc.data() as Booking;
+                 const checkIn = (booking.checkIn as Timestamp).toDate();
+                 return isBefore(checkIn, dates.to!);
+            }).length;
+
+            // 3. Check availability
+            if (overlappingBookings >= roomData.totalRooms) {
+                throw new Error("This room is no longer available for the selected dates.");
+            }
+
+            // 4. Create locked booking
+            const newBookingRef = doc(collection(firestore, 'bookings'));
+            const lockExpiry = addMinutes(new Date(), 5);
+            const newBooking: Booking = {
+                hotelId: hotel.id,
+                roomId: selectedRoom.id,
+                roomType: selectedRoom.type,
+                userId: user ? user.uid : 'guest',
+                checkIn: Timestamp.fromDate(dates.from!),
+                checkOut: Timestamp.fromDate(dates.to!),
+                guests: selectedRoom.capacity,
+                totalPrice: totalAmount,
+                customerName: finalCustomerName,
+                customerEmail: finalCustomerEmail,
+                status: 'LOCKED',
+                expiresAt: Timestamp.fromDate(lockExpiry),
+                createdAt: serverTimestamp() as Timestamp,
+            };
+            transaction.set(newBookingRef, newBooking);
+            return newBookingRef.id;
+        });
+
+    } catch (error: any) {
+        toast({
+            variant: 'destructive',
+            title: 'Booking Failed',
+            description: error.message || 'Could not lock the room for booking.',
+        });
+        setIsProcessing(false);
+        return;
+    }
+
+    if (!lockedBookingId) {
+        setIsProcessing(false);
+        return;
+    }
+    const finalLockedBookingId = lockedBookingId;
+
+    // 5. Proceed to Payment
+    const orderResponse = await createRazorpayOrder(totalAmount, `booking_${finalLockedBookingId}`);
+
+    const cleanupLock = async () => {
+        const bookingRef = doc(firestore, 'bookings', finalLockedBookingId);
+        const batch = writeBatch(firestore);
+        batch.delete(bookingRef);
+        await batch.commit();
+    };
 
     if (!orderResponse.success || !orderResponse.order) {
         toast({
@@ -108,15 +178,13 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
             title: 'Payment Error',
             description: orderResponse.error || 'Could not initialize payment.',
         });
-        removeBooking(lockedBooking.id); // Remove lock on failure
+        await cleanupLock();
         setIsProcessing(false);
         return;
     }
     
     const { order } = orderResponse;
-    const finalCustomerName = user?.displayName || customerDetails.name;
-    const finalCustomerEmail = user?.email || customerDetails.email;
-
+    
     const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: order.amount,
@@ -125,8 +193,12 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
         description: `Booking for ${selectedRoom.type} at ${hotel.name}`,
         image: '/logo-icon.png',
         order_id: order.id,
-        handler: async function (response: any) {
-            updateBookingStatus(lockedBooking.id, 'CONFIRMED');
+        handler: async (response: any) => {
+            const bookingRef = doc(firestore, 'bookings', finalLockedBookingId);
+            const batch = writeBatch(firestore);
+            batch.update(bookingRef, { status: 'CONFIRMED', expiresAt: null });
+            await batch.commit();
+
             await revalidateAdminOnBooking();
 
             toast({
@@ -134,25 +206,19 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
                 description: `Your booking at ${hotel.name} is confirmed.`,
             });
             
-            router.push(`/booking/success/${lockedBooking.id}`);
+            router.push(`/booking/success/${finalLockedBookingId}`);
         },
         prefill: {
             name: finalCustomerName,
             email: finalCustomerEmail,
         },
-        notes: {
-            address: 'Razorpay Corporate Office'
-        },
-        theme: {
-            color: '#388E3C'
-        },
         modal: {
-            ondismiss: function() {
-                removeBooking(lockedBooking.id); // Remove lock on cancellation
+            ondismiss: async () => {
+                await cleanupLock();
                 toast({
                     variant: 'destructive',
                     title: 'Payment Canceled',
-                    description: 'Your payment process was canceled. The room lock has been released.',
+                    description: 'Your payment was canceled. The room lock has been released.',
                 });
                 setIsProcessing(false);
             }
@@ -163,28 +229,8 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
     rzp.open();
   };
 
-  const availableRooms = useMemo(() => {
-    if (!isDateRangeValid || !dates?.from || !dates.to) {
-        setSelectedRoom(null);
-        return hotel.rooms.map(room => ({ ...room, isAvailable: false, bookingsCount: 0 }));
-    }
-
-    return hotel.rooms.map(room => {
-        const existingBookings = getBookingsForRoom(room.id, dates.from!, dates.to!);
-        const isAvailable = existingBookings.length < room.totalRooms;
-        if (selectedRoom?.id === room.id && !isAvailable) {
-            setSelectedRoom(null);
-        }
-        return { ...room, isAvailable, bookingsCount: existingBookings.length };
-    });
-  }, [hotel.rooms, dates, isDateRangeValid, selectedRoom?.id]);
-  
   const handleRoomSelect = (room: Room) => {
-    if (isDateRangeValid && room.isAvailable) {
-        setSelectedRoom(room);
-    } else {
-        toast({ variant: 'destructive', title: 'Room Unavailable', description: 'This room is not available for the selected dates.'})
-    }
+    setSelectedRoom(room);
   }
 
 
@@ -287,15 +333,16 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
           )}
 
           <div className="space-y-4">
-            {availableRooms.map((room) => (
+            {isLoadingRooms && <Loader2 className="animate-spin" />}
+            {rooms?.map((room) => (
               <Card 
                 key={room.id}
                 onClick={() => handleRoomSelect(room)}
                 className={cn(
                     'p-4 cursor-pointer transition-all',
-                    isDateRangeValid && room.isAvailable && 'hover:bg-muted/50',
+                    isDateRangeValid && 'hover:bg-muted/50',
                     selectedRoom?.id === room.id && 'ring-2 ring-primary bg-primary/5',
-                    !room.isAvailable && 'bg-muted/30 opacity-60 cursor-not-allowed'
+                    !isDateRangeValid && 'bg-muted/30 opacity-60 cursor-not-allowed'
                 )}
               >
                 <div className="flex flex-col gap-4 md:flex-row md:justify-between">
@@ -304,16 +351,6 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
                     <p className="text-sm text-muted-foreground">
                       Fits up to {room.capacity} guests
                     </p>
-                    {isDateRangeValid && (
-                         <p className={cn(
-                            'text-sm',
-                            room.isAvailable ? 'text-green-600' : 'text-destructive'
-                         )}>
-                            {room.isAvailable 
-                                ? `${room.totalRooms - room.bookingsCount} of ${room.totalRooms} available`
-                                : 'Fully Booked'}
-                        </p>
-                    )}
                   </div>
                   <div className="flex flex-col items-start gap-2 md:items-end">
                     <p className="text-lg font-bold text-primary">

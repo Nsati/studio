@@ -1,12 +1,14 @@
-
 'use client';
 
-import { notFound } from 'next/navigation';
+import { notFound, useParams } from 'next/navigation';
 import Image from 'next/image';
 import { Star, MapPin, BedDouble } from 'lucide-react';
 import React from 'react';
 
-import { getHotelBySlug } from '@/lib/data';
+import { useDoc } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import { useFirestore } from '@/firebase';
+import type { Hotel } from '@/lib/types';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { AmenityIcon } from '@/components/hotel/AmenityIcon';
 
@@ -20,22 +22,29 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { RoomBookingCard } from '@/components/hotel/RoomBookingCard';
 import { Button } from '@/components/ui/button';
+import Loading from './loading';
 
 
-type HotelPageProps = {
-  params: {
-    slug: string;
-  };
-};
+export default function HotelPage() {
+  const { id } = useParams();
+  const firestore = useFirestore();
 
-export default function HotelPage({ params: { slug } }: HotelPageProps) {
-  const hotel = getHotelBySlug(slug);
+  const hotelRef = React.useMemo(() => {
+    if (!firestore || !id) return null;
+    return doc(firestore, 'hotels', id as string);
+  }, [firestore, id]);
+
+  const { data: hotel, isLoading } = useDoc<Hotel>(hotelRef);
 
   const bookingSectionRef = React.useRef<HTMLDivElement>(null);
 
   const handleScrollToBooking = () => {
     bookingSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  if (isLoading) {
+    return <Loading />;
+  }
 
   if (!hotel) {
     notFound();

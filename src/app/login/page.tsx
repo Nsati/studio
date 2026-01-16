@@ -3,7 +3,9 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useUser } from '@/contexts/UserContext';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { useAuth } from '@/firebase';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -12,7 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 
 export default function LoginPage() {
-  const { login } = useUser();
+  const auth = useAuth();
   const router = useRouter();
   const { toast } = useToast();
   const [email, setEmail] = useState('');
@@ -22,16 +24,19 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!auth) return;
+
     setIsLoading(true);
     setError('');
 
-    const user = login(email, password);
-
-    if (user) {
-      toast({ title: 'Login successful!', description: `Welcome back, ${user.displayName}!` });
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      toast({ title: 'Login successful!', description: `Welcome back!` });
       router.push('/my-bookings');
-    } else {
+    } catch (error: any) {
       setError('Invalid email or password.');
+      console.error(error);
+    } finally {
       setIsLoading(false);
     }
   };
@@ -67,7 +72,7 @@ export default function LoginPage() {
               />
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button type="submit" className="w-full" disabled={isLoading || !auth}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Log In
             </Button>
