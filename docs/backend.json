@@ -1,16 +1,16 @@
 {
   "entities": {
-    "User": {
+    "UserProfile": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "User",
       "type": "object",
       "description": "Represents a user of the Uttarakhand Getaways application.",
       "properties": {
-        "id": {
+        "uid": {
           "type": "string",
-          "description": "Unique identifier for the user entity."
+          "description": "Unique identifier for the user, matching Firebase Auth UID."
         },
-        "name": {
+        "displayName": {
           "type": "string",
           "description": "The user's full name."
         },
@@ -25,8 +25,8 @@
         }
       },
       "required": [
-        "id",
-        "name",
+        "uid",
+        "displayName",
         "email",
         "role"
       ]
@@ -165,9 +165,17 @@
           "type": "string",
           "description": "Reference to User. (Relationship: User 1:N Booking)"
         },
+        "hotelId": {
+            "type": "string",
+            "description": "Reference to Hotel."
+        },
         "roomId": {
           "type": "string",
           "description": "Reference to Room. (Relationship: Room 1:N Booking)"
+        },
+        "roomType": {
+            "type": "string",
+            "description": "The type of room booked (e.g., 'Standard', 'Deluxe')."
         },
         "checkIn": {
           "type": "string",
@@ -179,24 +187,51 @@
           "description": "The check-out date for the booking.",
           "format": "date-time"
         },
+        "guests": {
+            "type": "number",
+            "description": "Number of guests for the booking."
+        },
+        "totalPrice": {
+            "type": "number",
+            "description": "The total price paid for the booking."
+        },
+        "customerName": {
+            "type": "string",
+            "description": "Name of the customer who made the booking."
+        },
+        "customerEmail": {
+            "type": "string",
+            "description": "Email of the customer who made the booking.",
+            "format": "email"
+        },
         "status": {
           "type": "string",
-          "description": "The status of the booking (e.g., 'locked', 'confirmed', 'cancelled')."
+          "description": "The status of the booking (e.g., 'CONFIRMED', 'CANCELLED')."
         },
-        "expiresAt": {
-          "type": "string",
-          "description": "The expiration date and time for the booking (used for locking).",
-          "format": "date-time"
+        "createdAt": {
+            "type": "string",
+            "description": "The date the booking was created.",
+            "format": "date-time"
+        },
+        "razorpayPaymentId": {
+            "type": "string",
+            "description": "The payment ID from Razorpay."
         }
       },
       "required": [
         "id",
         "userId",
+        "hotelId",
         "roomId",
+        "roomType",
         "checkIn",
         "checkOut",
+        "guests",
+        "totalPrice",
+        "customerName",
+        "customerEmail",
         "status",
-        "expiresAt"
+        "createdAt"
       ]
     }
   },
@@ -211,9 +246,9 @@
       {
         "path": "/users/{userId}",
         "definition": {
-          "entityName": "User",
+          "entityName": "UserProfile",
           "schema": {
-            "$ref": "#/backend/entities/User"
+            "$ref": "#/backend/entities/UserProfile"
           },
           "description": "Stores user profiles. Uses path-based ownership for private user data. Each user has a single document in this collection.",
           "params": [
