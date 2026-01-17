@@ -83,6 +83,8 @@ export function HotelForm({ hotel }: HotelFormProps) {
           images: data.images,
         };
 
+        let redirectPath = '/admin';
+
         if (hotel && hotel.id) {
             // Update existing hotel
             const hotelRef = doc(firestore, 'hotels', hotel.id);
@@ -98,12 +100,14 @@ export function HotelForm({ hotel }: HotelFormProps) {
               .replace(/-+/g, '-');
             const hotelRef = doc(firestore, 'hotels', id);
             await setDoc(hotelRef, { ...hotelData, id });
-            toast({ title: 'Hotel Added!', description: `${data.name} has been successfully added.` });
+            toast({ title: 'Hotel Details Saved!', description: `Now you can add rooms for ${data.name}.` });
+            redirectPath = `/admin/hotels/${id}/edit`;
         }
         
         await revalidateAdminPanel();
         await revalidatePublicContent();
-        router.push('/admin');
+        router.push(redirectPath);
+
       } catch (e: any) {
         toast({ variant: 'destructive', title: 'Error', description: e.message });
       }
@@ -247,7 +251,7 @@ export function HotelForm({ hotel }: HotelFormProps) {
             <Button type="button" variant="ghost" onClick={() => router.push('/admin')}>Cancel</Button>
             <Button type="submit" disabled={isPending || !firestore}>
                 {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {hotel?.id ? 'Update Hotel' : 'Create Hotel'}
+                {hotel?.id ? 'Update Hotel' : 'Save and Continue'}
             </Button>
         </div>
       </form>
