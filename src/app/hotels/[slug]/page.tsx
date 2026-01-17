@@ -3,9 +3,11 @@
 import { notFound, useParams } from 'next/navigation';
 import Image from 'next/image';
 import { Star, MapPin, BedDouble } from 'lucide-react';
-import React from 'react';
+import React, { useMemo } from 'react';
+import { doc } from 'firebase/firestore';
 
 import type { Hotel } from '@/lib/types';
+import { useDoc, useFirestore } from '@/firebase';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { AmenityIcon } from '@/components/hotel/AmenityIcon';
 
@@ -20,17 +22,18 @@ import { Separator } from '@/components/ui/separator';
 import { RoomBookingCard } from '@/components/hotel/RoomBookingCard';
 import { Button } from '@/components/ui/button';
 import Loading from './loading';
-import { dummyHotels } from '@/lib/dummy-data';
 
 
 export default function HotelPage() {
   const { slug } = useParams();
-  const isLoading = false; // Dummy data is loaded instantly
+  const firestore = useFirestore();
+  
+  const hotelRef = useMemo(() => {
+    if (!firestore || !slug) return null;
+    return doc(firestore, 'hotels', slug as string);
+  }, [firestore, slug]);
 
-  const hotel = React.useMemo(() => {
-    return dummyHotels.find(h => h.id === slug);
-  }, [slug]);
-
+  const { data: hotel, isLoading } = useDoc<Hotel>(hotelRef);
   const bookingSectionRef = React.useRef<HTMLDivElement>(null);
 
   const handleScrollToBooking = () => {

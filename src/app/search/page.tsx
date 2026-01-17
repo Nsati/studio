@@ -2,8 +2,10 @@
 
 import { Suspense, useEffect, useState, useMemo } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { collection, query, where } from 'firebase/firestore';
 
 import type { Hotel, City } from '@/lib/types';
+import { useCollection, useFirestore } from '@/firebase';
 import { HotelCard } from '@/components/hotel/HotelCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,24 +21,31 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Search } from 'lucide-react';
 import Loading from './loading';
 import { Skeleton } from '@/components/ui/skeleton';
-import { dummyCities, dummyHotels } from '@/lib/dummy-data';
+import { dummyCities } from '@/lib/dummy-data';
 
 function SearchResults() {
   const searchParams = useSearchParams();
   const city = searchParams.get('city');
+  const firestore = useFirestore();
 
-  const isLoading = false; // Dummy data is loaded instantly
-  const hotels = useMemo(() => {
+  const hotelsQuery = useMemo(() => {
+    if (!firestore) return null;
+    const hotelsRef = collection(firestore, 'hotels');
     if (!city || city === 'All') {
-      return dummyHotels;
+      return hotelsRef;
     }
-    return dummyHotels.filter(hotel => hotel.city === city);
-  }, [city]);
+    return query(hotelsRef, where('city', '==', city));
+  }, [firestore, city]);
 
+  const { data: hotels, isLoading } = useCollection<Hotel>(hotelsQuery);
 
   if (isLoading) {
       return (
          <div className="flex-1">
+          <div className="mb-6">
+            <Skeleton className="h-9 w-1/2" />
+            <Skeleton className="mt-2 h-5 w-1/4" />
+          </div>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, i) => (
                <Card key={i}><CardContent className="p-0"><Skeleton className="h-48 w-full" /></CardContent><div className="p-4 space-y-2"><Skeleton className="h-6 w-3/4" /><Skeleton className="h-4 w-1/2" /><Skeleton className="h-4 w-1/4" /></div></Card>
@@ -82,7 +91,6 @@ function SearchResults() {
 }
 
 function SearchFilters() {
-  const isLoading = false;
   const cities = dummyCities;
   
   const searchParams = useSearchParams();
@@ -133,7 +141,7 @@ function SearchFilters() {
               <Label htmlFor="location" className="text-lg font-semibold">
                 Location
               </Label>
-              <Select value={selectedCity} onValueChange={handleCityChange} disabled={isLoading}>
+              <Select value={selectedCity} onValueChange={handleCityChange}>
                 <SelectTrigger id="location">
                   <SelectValue placeholder="Select a city" />
                 </SelectTrigger>

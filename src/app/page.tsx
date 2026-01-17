@@ -1,6 +1,8 @@
 'use client';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useMemo } from 'react';
+import { collection, query, limit } from 'firebase/firestore';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -8,13 +10,19 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { HotelCard } from '@/components/hotel/HotelCard';
 import { HeroSearchForm } from '@/components/home/HeroSearchForm';
 import { ArrowRight } from 'lucide-react';
+import { useCollection, useFirestore } from '@/firebase';
 import type { City, Hotel } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
-import { dummyCities, dummyHotels } from '@/lib/dummy-data';
+import { dummyCities } from '@/lib/dummy-data';
 
 function FeaturedHotels() {
-  const isLoading = false; // Dummy data is loaded instantly
-  const hotels = dummyHotels;
+  const firestore = useFirestore();
+  const hotelsQuery = useMemo(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, 'hotels'), limit(4));
+  }, [firestore]);
+
+  const { data: hotels, isLoading } = useCollection<Hotel>(hotelsQuery);
 
   if (isLoading) {
     return (
@@ -30,11 +38,9 @@ function FeaturedHotels() {
     );
   }
 
-  const featuredHotels = hotels?.slice(0, 4) || [];
-
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-      {featuredHotels.map((hotel) => (
+      {hotels?.map((hotel) => (
         <HotelCard key={hotel.id} hotel={hotel} />
       ))}
     </div>
@@ -42,19 +48,10 @@ function FeaturedHotels() {
 }
 
 function CitiesList() {
-    const isLoading = false; // Dummy data is loaded instantly
+    // Cities can remain as dummy data or be moved to Firestore if needed.
+    // For now, keeping it simple with dummy data.
     const cities = dummyCities;
 
-    if (isLoading) {
-        return (
-             <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {Array.from({ length: 3 }).map((_, i) => (
-                    <Skeleton key={i} className="h-64 w-full" />
-                ))}
-             </div>
-        );
-    }
-    
     return (
         <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {cities?.map((city) => {
@@ -87,7 +84,6 @@ function CitiesList() {
           })}
         </div>
     )
-
 }
 
 export default function HomePage() {

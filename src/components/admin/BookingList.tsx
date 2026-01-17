@@ -2,6 +2,8 @@
 'use client';
 
 import React, { useMemo } from 'react';
+import { useCollection, useFirestore } from '@/firebase';
+import { collection } from 'firebase/firestore';
 import type { Booking, Hotel } from '@/lib/types';
 import {
   Table,
@@ -15,13 +17,9 @@ import { Card } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { format } from 'date-fns';
 import { Skeleton } from '../ui/skeleton';
-import { dummyBookings, dummyHotels } from '@/lib/dummy-data';
+import { dummyBookings } from '@/lib/dummy-data';
 
-function BookingRow({ booking }: { booking: Booking }) {
-    const hotel = useMemo(() => {
-        return dummyHotels.find(h => h.id === booking.hotelId);
-    }, [booking.hotelId]);
-
+function BookingRow({ booking, hotel }: { booking: Booking, hotel: Hotel | undefined }) {
     const getStatusVariant = (status: 'CONFIRMED' | 'CANCELLED') => {
         switch (status) {
             case 'CONFIRMED': return 'default';
@@ -33,7 +31,7 @@ function BookingRow({ booking }: { booking: Booking }) {
     return (
         <TableRow>
             <TableCell className="font-medium">
-                {hotel?.name || 'Unknown Hotel'}
+                {hotel?.name || booking.hotelId}
             </TableCell>
             <TableCell>
                 <div className="font-medium">{booking.customerName}</div>
@@ -56,8 +54,15 @@ function BookingRow({ booking }: { booking: Booking }) {
 
 
 export function BookingList() {
-    const isLoading = false;
-    const bookings = dummyBookings;
+    const firestore = useFirestore();
+    const bookings = dummyBookings; // Still using dummy bookings
+
+    const hotelsQuery = useMemo(() => {
+        if (!firestore) return null;
+        return collection(firestore, 'hotels');
+    }, [firestore]);
+    const { data: hotels, isLoading: isLoadingHotels } = useCollection<Hotel>(hotelsQuery);
+    const isLoading = isLoadingHotels; // Only depends on hotels loading now
 
     return (
         <Card>
@@ -86,9 +91,10 @@ export function BookingList() {
                                 <TableCell><Skeleton className="h-5 w-16" /></TableCell>
                             </TableRow>
                         ))}
-                        {bookings?.map((booking) => (
-                           <BookingRow key={booking.id} booking={booking} />
-                        ))}
+                        {!isLoading && bookings?.map((booking) => {
+                           const hotel = hotels?.find(h => h.id === booking.hotelId);
+                           return <BookingRow key={booking.id} booking={booking} hotel={hotel} />
+                        })}
                     </TableBody>
                 </Table>
             </div>
