@@ -14,7 +14,7 @@ export default function NewHotelPage() {
             </Link>
             <div>
                 <h1 className="font-headline text-4xl font-bold">Add New Hotel</h1>
-                <p className="text-muted-foreground">Step 1: Fill in the details for the new hotel. You'll add rooms in the next step.</p>
+                <p className="text-muted-foreground">Fill in the hotel details and add its rooms all in one go.</p>
             </div>
         </div>
       <Card>

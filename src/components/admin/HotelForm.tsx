@@ -1,6 +1,6 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useTransition } from 'react';
@@ -23,7 +23,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { revalidateAdminPanel, revalidatePublicContent } from '@/app/admin/actions';
 import type { Hotel } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, PlusCircle, Trash2 } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -35,6 +35,14 @@ import { dummyCities } from '@/lib/dummy-data';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Checkbox } from '../ui/checkbox';
 import { ScrollArea } from '../ui/scroll-area';
+import { Separator } from '../ui/separator';
+
+const roomSchema = z.object({
+    type: z.enum(['Standard', 'Deluxe', 'Suite']),
+    price: z.coerce.number().min(1, "Price must be greater than 0."),
+    capacity: z.coerce.number().min(1, "Capacity must be at least 1."),
+    totalRooms: z.coerce.number().min(1, "Total rooms must be at least 1."),
+});
 
 const hotelFormSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters.'),
@@ -43,6 +51,7 @@ const hotelFormSchema = z.object({
   rating: z.coerce.number().min(1).max(5),
   amenities: z.string().min(3, 'Please provide at least one amenity.'),
   images: z.array(z.string()).min(1, { message: 'Please select at least one image.' }),
+  rooms: z.array(roomSchema).optional(),
 });
 
 type HotelFormValues = z.infer<typeof hotelFormSchema>;
@@ -57,13 +66,16 @@ export function HotelForm({ hotel }: HotelFormProps) {
   const firestore = useFirestore();
   const router = useRouter();
 
-  const defaultValues = {
+  const isEditMode = !!hotel?.id;
+
+  const defaultValues: HotelFormValues = {
       name: hotel?.name || '',
       city: hotel?.city || '',
       description: hotel?.description || '',
       rating: hotel?.rating || 4,
       amenities: hotel?.amenities?.join(', ') || 'wifi, restaurant, parking',
       images: hotel?.images || [],
+      rooms: [],
   };
 
   const form = useForm<HotelFormValues>({
@@ -72,24 +84,32 @@ export function HotelForm({ hotel }: HotelFormProps) {
     // Reset form if hotel changes (e.g., from add to edit)
     key: hotel?.id || 'new',
   });
+  
+   const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "rooms",
+  });
+
 
   const onSubmit = (data: HotelFormValues) => {
     if (!firestore) return;
     startTransition(async () => {
       try {
         const hotelData = {
-          ...data,
+          name: data.name,
+          city: data.city,
+          description: data.description,
+          rating: data.rating,
           amenities: data.amenities.split(',').map(s => s.trim()).filter(Boolean),
           images: data.images,
         };
 
-        let redirectPath = '/admin';
-
-        if (hotel && hotel.id) {
+        if (isEditMode) {
             // Update existing hotel
-            const hotelRef = doc(firestore, 'hotels', hotel.id);
+            const hotelRef = doc(firestore, 'hotels', hotel.id!);
             await updateDoc(hotelRef, hotelData);
             toast({ title: 'Hotel Updated!', description: `${data.name} has been successfully updated.` });
+            router.push('/admin');
         } else {
             // Create new hotel
             const id = data.name
@@ -100,13 +120,26 @@ export function HotelForm({ hotel }: HotelFormProps) {
               .replace(/-+/g, '-');
             const hotelRef = doc(firestore, 'hotels', id);
             await setDoc(hotelRef, { ...hotelData, id });
-            toast({ title: 'Hotel Details Saved!', description: `Now you can add rooms for ${data.name}.` });
-            redirectPath = `/admin/hotels/${id}/edit`;
+
+            // Create rooms in subcollection
+            if (data.rooms && data.rooms.length > 0) {
+              for (const roomItem of data.rooms) {
+                const roomId = `${id}-${roomItem.type.toLowerCase().replace(' ', '-')}`;
+                const roomRef = doc(firestore, 'hotels', id, 'rooms', roomId);
+                await setDoc(roomRef, {
+                  ...roomItem,
+                  id: roomId,
+                  hotelId: id,
+                });
+              }
+            }
+
+            toast({ title: 'Hotel Created!', description: `Hotel ${data.name} and its rooms have been successfully created.` });
+            router.push('/admin');
         }
         
         await revalidateAdminPanel();
         await revalidatePublicContent();
-        router.push(redirectPath);
 
       } catch (e: any) {
         toast({ variant: 'destructive', title: 'Error', description: e.message });
@@ -117,6 +150,7 @@ export function HotelForm({ hotel }: HotelFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 max-h-[80vh] overflow-y-auto p-1">
+        {/* HOTEL DETAILS FIELDS */}
         <FormField
           control={form.control}
           name="name"
@@ -223,7 +257,7 @@ export function HotelForm({ hotel }: HotelFormProps) {
                                 checked={field.value?.includes(item.id)}
                                 onCheckedChange={(checked) => {
                                   return checked
-                                    ? field.onChange([...field.value, item.id])
+                                    ? field.onChange([...(field.value || []), item.id])
                                     : field.onChange(
                                         field.value?.filter(
                                           (value) => value !== item.id
@@ -246,12 +280,110 @@ export function HotelForm({ hotel }: HotelFormProps) {
             </FormItem>
           )}
         />
+
+        {/* ROOMS SECTION - ONLY FOR NEW HOTELS */}
+        {!isEditMode && (
+          <>
+            <Separator className="my-8" />
+            <div className="space-y-4">
+                <div className="mb-4">
+                    <h3 className="text-lg font-medium leading-none">Add Rooms</h3>
+                    <p className="text-sm text-muted-foreground">Add the different types of rooms available.</p>
+                </div>
+
+                {fields.map((field, index) => (
+                    <div key={field.id} className="rounded-lg border p-4 space-y-4 relative">
+                        <div className="flex justify-between items-center">
+                            <h4 className="font-semibold">Room {index + 1}</h4>
+                            <Button variant="ghost" size="sm" onClick={() => remove(index)}>
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Remove
+                            </Button>
+                        </div>
+                        <FormField
+                            control={form.control}
+                            name={`rooms.${index}.type`}
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Room Type</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                    <SelectTrigger>
+                                    <SelectValue placeholder="Select a room type" />
+                                    </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    <SelectItem value="Standard">Standard</SelectItem>
+                                    <SelectItem value="Deluxe">Deluxe</SelectItem>
+                                    <SelectItem value="Suite">Suite</SelectItem>
+                                </SelectContent>
+                                </Select>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                        <div className="grid grid-cols-3 gap-4">
+                             <FormField
+                                control={form.control}
+                                name={`rooms.${index}.price`}
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Price (₹)</FormLabel>
+                                    <FormControl>
+                                    <Input type="number" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name={`rooms.${index}.capacity`}
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Capacity</FormLabel>
+                                    <FormControl>
+                                    <Input type="number" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name={`rooms.${index}.totalRooms`}
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Total Count</FormLabel>
+                                    <FormControl>
+                                    <Input type="number" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                        </div>
+                    </div>
+                ))}
+                 <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="mt-4"
+                    onClick={() => append({ type: 'Standard', price: 5000, capacity: 2, totalRooms: 10 })}
+                    >
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Add Another Room
+                </Button>
+            </div>
+          </>
+        )}
         
-        <div className="flex justify-end gap-2 pt-4">
+        <div className="flex justify-end gap-2 pt-8">
             <Button type="button" variant="ghost" onClick={() => router.push('/admin')}>Cancel</Button>
             <Button type="submit" disabled={isPending || !firestore}>
                 {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {hotel?.id ? 'Update Hotel' : 'Save and Continue'}
+                {isEditMode ? 'Update Hotel' : 'Create Hotel'}
             </Button>
         </div>
       </form>
