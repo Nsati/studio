@@ -13,7 +13,7 @@ import { HeroSearchForm } from '@/components/home/HeroSearchForm';
 import { ArrowRight } from 'lucide-react';
 import type { City, Hotel } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
-import { dummyCities } from '@/lib/dummy-data';
+import { dummyCities, dummyHotels } from '@/lib/dummy-data';
 
 function FeaturedHotels() {
   const firestore = useFirestore();
@@ -23,7 +23,18 @@ function FeaturedHotels() {
     return query(collection(firestore, 'hotels'), limit(4));
   }, [firestore]);
 
-  const { data: hotels, isLoading } = useCollection<Hotel>(hotelsQuery);
+  const { data: liveHotels, isLoading } = useCollection<Hotel>(hotelsQuery);
+
+  const featuredHotels = useMemo(() => {
+      if (isLoading) return [];
+      
+      const live = liveHotels || [];
+      // Get dummy hotels that are not in the live list
+      const dummies = dummyHotels.filter(dh => !live.some(lh => lh.id === dh.id));
+      
+      // Prioritize live hotels, then fill up to 4 with unique dummies
+      return [...live, ...dummies].slice(0, 4);
+  }, [liveHotels, isLoading]);
 
   if (isLoading) {
     return (
@@ -44,14 +55,14 @@ function FeaturedHotels() {
     )
   }
 
-  if (!hotels || hotels.length === 0) {
+  if (!featuredHotels || featuredHotels.length === 0) {
       return <p className="text-center text-muted-foreground">No featured hotels available yet. Add some from the admin panel!</p>
   }
 
 
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-      {hotels.map((hotel) => (
+      {featuredHotels.map((hotel) => (
         <HotelCard key={hotel.id} hotel={hotel} />
       ))}
     </div>

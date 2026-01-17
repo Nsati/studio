@@ -65,6 +65,28 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
     return dummyRooms.filter(room => room.hotelId === hotel.id);
   }, [hotel.id]);
 
+  if (rooms.length === 0) {
+    return (
+        <Card className="sticky top-24">
+            <CardHeader>
+                <CardTitle className="font-headline text-2xl">
+                  <BedDouble className="mr-2 inline-block h-6 w-6" />
+                  Book Your Stay
+                </CardTitle>
+            </CardHeader>
+            <CardContent>
+                <Alert variant="default" className="bg-amber-50 border-amber-200">
+                    <AlertCircle className="h-4 w-4 !text-amber-600" />
+                    <AlertTitle className="text-amber-800">Booking Not Available</AlertTitle>
+                    <AlertDescription className="text-amber-700">
+                        Rooms for this hotel are not yet configured for online booking. Please check back later.
+                    </AlertDescription>
+                </Alert>
+            </CardContent>
+        </Card>
+    );
+  }
+
 
   const handleRoomSelect = (room: Room) => {
     // In dummy data mode, we assume rooms are always available.

@@ -34,7 +34,7 @@ import { revalidateAdminPanel, revalidatePublicContent } from '@/app/admin/actio
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
-import { dummyUsers, dummyBookings } from '@/lib/dummy-data';
+import { dummyUsers, dummyBookings, dummyHotels } from '@/lib/dummy-data';
 
 
 // --- Hotel Management Component ---
@@ -44,10 +44,36 @@ function HotelManagement() {
 
     const firestore = useFirestore();
     const hotelsQuery = useMemo(() => firestore ? collection(firestore, 'hotels') : null, [firestore]);
-    const { data: hotels, isLoading } = useCollection<Hotel>(hotelsQuery);
+    const { data: liveHotels, isLoading } = useCollection<Hotel>(hotelsQuery);
     
-    const handleDelete = (hotel: Hotel) => {
+    const allHotels = useMemo(() => {
+        const hotelMap = new Map<string, Hotel & { isDummy?: boolean }>();
+
+        // Add dummy hotels first
+        dummyHotels.forEach(hotel => {
+            hotelMap.set(hotel.id, { ...hotel, isDummy: true });
+        });
+
+        // Overwrite with live hotels, marking them as not dummy
+        liveHotels?.forEach(hotel => {
+            hotelMap.set(hotel.id, { ...hotel, isDummy: false });
+        });
+
+        return Array.from(hotelMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+    }, [liveHotels]);
+    
+    const handleDelete = (hotel: Hotel & { isDummy?: boolean }) => {
         if (!firestore) return;
+
+        if (hotel.isDummy) {
+            toast({
+                variant: 'destructive',
+                title: 'Action Not Allowed',
+                description: 'Dummy hotels can only be removed from the code, not deleted from the admin panel.',
+            });
+            return;
+        }
+
         startTransition(async () => {
              try {
                 await deleteDoc(doc(firestore, "hotels", hotel.id));
@@ -66,7 +92,7 @@ function HotelManagement() {
             <CardHeader className="flex flex-row items-center justify-between">
                 <div>
                     <CardTitle>Hotel Management</CardTitle>
-                    <CardDescription>Add, edit, or delete hotels from the live database.</CardDescription>
+                    <CardDescription>Add, edit, or delete hotels. Dummy hotels are read-only.</CardDescription>
                 </div>
                  <Button asChild size="sm">
                     <Link href="/admin/hotels/new">
@@ -81,30 +107,37 @@ function HotelManagement() {
                         <TableRow>
                             <TableHead>Name</TableHead>
                             <TableHead>City</TableHead>
+                            <TableHead>Source</TableHead>
                             <TableHead>Rating</TableHead>
                             <TableHead className="text-right w-[100px]">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {isLoading && Array.from({length: 3}).map((_, i) => (
+                        {isLoading && Array.from({length: 5}).map((_, i) => (
                              <TableRow key={i}>
                                 <TableCell><Skeleton className="h-5 w-32" /></TableCell>
                                 <TableCell><Skeleton className="h-5 w-24" /></TableCell>
                                 <TableCell><Skeleton className="h-5 w-16" /></TableCell>
+                                <TableCell><Skeleton className="h-5 w-16" /></TableCell>
                                 <TableCell className="text-right"><Skeleton className="h-8 w-20" /></TableCell>
                             </TableRow>
                         ))}
-                        {!isLoading && hotels?.length === 0 && (
+                        {!isLoading && allHotels.length === 0 && (
                             <TableRow>
-                                <TableCell colSpan={4} className="h-24 text-center">
-                                    No hotels found in the database. Add one to get started.
+                                <TableCell colSpan={5} className="h-24 text-center">
+                                    No hotels found. Add one to get started.
                                 </TableCell>
                             </TableRow>
                         )}
-                        {hotels?.map((hotel) => (
-                           <TableRow key={hotel.id}>
+                        {allHotels.map((hotel) => (
+                           <TableRow key={hotel.id} className={hotel.isDummy ? 'bg-muted/30' : ''}>
                                 <TableCell className="font-medium">{hotel.name}</TableCell>
                                 <TableCell>{hotel.city}</TableCell>
+                                <TableCell>
+                                    <Badge variant={hotel.isDummy ? 'secondary' : 'default'}>
+                                        {hotel.isDummy ? 'Dummy' : 'Live'}
+                                    </Badge>
+                                </TableCell>
                                 <TableCell>
                                     <div className="flex items-center gap-1">
                                         <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
@@ -127,7 +160,7 @@ function HotelManagement() {
                                             <AlertDialogHeader>
                                                 <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                                                 <AlertDialogDescription>
-                                                    This action cannot be undone. This will permanently delete the hotel "{hotel.name}".
+                                                    This will permanently delete the hotel "{hotel.name}". This action cannot be undone.
                                                 </AlertDialogDescription>
                                             </AlertDialogHeader>
                                             <AlertDialogFooter>

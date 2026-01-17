@@ -18,28 +18,50 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { Search } from 'lucide-react';
 import Loading from './loading';
-import { dummyCities } from '@/lib/dummy-data';
+import { dummyCities, dummyHotels } from '@/lib/dummy-data';
 import { useCollection, useFirestore } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 
 function SearchResults() {
   const searchParams = useSearchParams();
-  const city = searchParams.get('city');
   const firestore = useFirestore();
 
   const hotelsQuery = useMemo(() => {
     if (!firestore) return null;
+    const city = searchParams.get('city');
     let q = query(collection(firestore, 'hotels'));
     if (city && city !== 'All') {
       q = query(q, where('city', '==', city));
     }
     return q;
-  }, [firestore, city]);
+  }, [firestore, searchParams]);
 
-  const { data: hotels, isLoading } = useCollection<Hotel>(hotelsQuery);
+  const { data: liveHotels, isLoading } = useCollection<Hotel>(hotelsQuery);
 
-  if (isLoading) {
+  const hotels = useMemo(() => {
+    if (isLoading) return null; // Return null to continue showing skeletons
+
+    const city = searchParams.get('city');
+    const liveHotelsList = liveHotels || [];
+    
+    const filteredDummies = dummyHotels.filter(hotel => {
+        // Exclude dummies that are already present in the live list
+        if (liveHotelsList.some(live => live.id === hotel.id)) {
+            return false;
+        }
+        // Filter by city
+        if (city && city !== 'All') {
+            return hotel.city === city;
+        }
+        return true;
+    });
+
+    return [...liveHotelsList, ...filteredDummies];
+  }, [liveHotels, isLoading, searchParams]);
+
+
+  if (isLoading || hotels === null) {
     return (
       <div className="flex-1">
         <div className="mb-6">
@@ -68,7 +90,7 @@ function SearchResults() {
     <div className="flex-1">
       <div className="mb-6">
         <h2 className="font-headline text-3xl font-bold">
-          {city && city !== 'All' ? `Stays in ${city}` : 'All Our Stays'}
+          {searchParams.get('city') && searchParams.get('city') !== 'All' ? `Stays in ${searchParams.get('city')}` : 'All Our Stays'}
         </h2>
         <p className="text-muted-foreground">{hotels?.length || 0} properties found.</p>
       </div>
