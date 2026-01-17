@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -22,6 +23,17 @@ import { revalidateAdminPanel, revalidatePublicContent } from '@/app/admin/actio
 import type { Hotel } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { dummyCities } from '@/lib/dummy-data';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { Checkbox } from '../ui/checkbox';
+import { ScrollArea } from '../ui/scroll-area';
 
 const hotelFormSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters.'),
@@ -29,7 +41,7 @@ const hotelFormSchema = z.object({
   description: z.string().min(10, 'Description must be at least 10 characters.'),
   rating: z.coerce.number().min(1).max(5),
   amenities: z.string().min(3, 'Please provide at least one amenity.'),
-  images: z.string().min(3, 'Please provide at least one image ID.'),
+  images: z.array(z.string()).min(1, { message: 'Please select at least one image.' }),
 });
 
 type HotelFormValues = z.infer<typeof hotelFormSchema>;
@@ -50,7 +62,7 @@ export function HotelForm({ hotel, onFinished }: HotelFormProps) {
       description: hotel?.description || '',
       rating: hotel?.rating || 4,
       amenities: hotel?.amenities?.join(', ') || 'wifi, restaurant, parking',
-      images: hotel?.images?.join(', ') || 'hotel-1-1, hotel-1-2',
+      images: hotel?.images || [],
   };
 
   const form = useForm<HotelFormValues>({
@@ -67,7 +79,7 @@ export function HotelForm({ hotel, onFinished }: HotelFormProps) {
         const hotelData = {
           ...data,
           amenities: data.amenities.split(',').map(s => s.trim()).filter(Boolean),
-          images: data.images.split(',').map(s => s.trim()).filter(Boolean),
+          images: data.images,
         };
 
         if (hotel && hotel.id) {
@@ -119,9 +131,20 @@ export function HotelForm({ hotel, onFinished }: HotelFormProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>City</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g. Nainital" {...field} />
-              </FormControl>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a city" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {dummyCities.map(city => (
+                    <SelectItem key={city.id} value={city.name}>
+                      {city.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
@@ -169,13 +192,51 @@ export function HotelForm({ hotel, onFinished }: HotelFormProps) {
         <FormField
           control={form.control}
           name="images"
-          render={({ field }) => (
+          render={() => (
             <FormItem>
-              <FormLabel>Image IDs</FormLabel>
-              <FormControl>
-                <Input placeholder="hero, hotel-1-1" {...field} />
-              </FormControl>
-              <p className="text-xs text-muted-foreground">Comma-separated IDs from placeholder-images.json.</p>
+              <div className="mb-4">
+                <FormLabel>Image Gallery</FormLabel>
+                <FormDescription>
+                  Select the images for the hotel gallery from the available list.
+                </FormDescription>
+              </div>
+              <ScrollArea className="h-60 w-full rounded-md border">
+                <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {PlaceHolderImages.map((item) => (
+                    <FormField
+                      key={item.id}
+                      control={form.control}
+                      name="images"
+                      render={({ field }) => {
+                        return (
+                          <FormItem
+                            key={item.id}
+                            className="flex flex-row items-center space-x-3 space-y-0"
+                          >
+                            <FormControl>
+                              <Checkbox
+                                checked={field.value?.includes(item.id)}
+                                onCheckedChange={(checked) => {
+                                  return checked
+                                    ? field.onChange([...field.value, item.id])
+                                    : field.onChange(
+                                        field.value?.filter(
+                                          (value) => value !== item.id
+                                        )
+                                      )
+                                }}
+                              />
+                            </FormControl>
+                            <FormLabel className="font-normal text-sm flex items-center gap-2">
+                               {item.id} <span className="text-xs text-muted-foreground">({item.imageHint})</span>
+                            </FormLabel>
+                          </FormItem>
+                        )
+                      }}
+                    />
+                  ))}
+                </div>
+              </ScrollArea>
               <FormMessage />
             </FormItem>
           )}
