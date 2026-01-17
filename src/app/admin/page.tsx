@@ -15,12 +15,14 @@ export default function AdminPage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoading && userProfile?.role !== 'admin') {
-      router.push('/');
+    // If loading is done and there's no user or the user is not an admin, redirect.
+    if (!isLoading && (!user || userProfile?.role !== 'admin')) {
+      router.push('/admin-login');
     }
   }, [user, userProfile, isLoading, router]);
 
-  if (isLoading || userProfile?.role !== 'admin') {
+  // Show skeleton while loading or if we are about to redirect.
+  if (isLoading || !user || userProfile?.role !== 'admin') {
     return (
       <div className="container mx-auto p-4 space-y-8">
         <div className="flex items-center justify-between">
