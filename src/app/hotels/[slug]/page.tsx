@@ -26,13 +26,13 @@ import Loading from './loading';
 
 
 export default function HotelPage() {
-  const { id } = useParams();
+  const { slug } = useParams();
   const firestore = useFirestore();
 
   const hotelRef = React.useMemo(() => {
-    if (!firestore || !id) return null;
-    return doc(firestore, 'hotels', id as string);
-  }, [firestore, id]);
+    if (!firestore || !slug) return null;
+    return doc(firestore, 'hotels', slug as string);
+  }, [firestore, slug]);
 
   const { data: hotel, isLoading } = useDoc<Hotel>(hotelRef);
 

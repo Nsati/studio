@@ -1,13 +1,11 @@
-
 'use client';
 
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/firebase';
 import { useEffect } from 'react';
-import { HotelManagementClient } from '@/components/admin/HotelManagementClient';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { User, Hotel, Briefcase } from 'lucide-react';
+import { User, Briefcase } from 'lucide-react';
 import { UserList } from '@/components/admin/UserList';
 import { BookingList } from '@/components/admin/BookingList';
 
@@ -42,15 +40,11 @@ export default function AdminPage() {
           <h1 className="font-headline text-4xl font-bold">Admin Dashboard</h1>
           <p className="text-muted-foreground">Manage your entire operation from one place.</p>
       </div>
-      <Tabs defaultValue="hotels" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="hotels"><Hotel className="mr-2 h-4 w-4" />Hotels</TabsTrigger>
+      <Tabs defaultValue="bookings" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="bookings"><Briefcase className="mr-2 h-4 w-4" />Bookings</TabsTrigger>
           <TabsTrigger value="users"><User className="mr-2 h-4 w-4" />Users</TabsTrigger>
         </TabsList>
-        <TabsContent value="hotels" className="mt-6">
-          <HotelManagementClient />
-        </TabsContent>
         <TabsContent value="bookings" className="mt-6">
           <BookingList />
         </TabsContent>

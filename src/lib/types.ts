@@ -2,14 +2,12 @@ import type { Timestamp } from 'firebase/firestore';
 
 export interface Hotel {
   id: string; // Firestore document ID
-  slug: string;
   name: string;
   city: string;
   description: string;
   images: string[];
   amenities: string[];
   rating: number;
-  rooms?: Room[]; // This will be a subcollection
 }
 
 export interface Room {
