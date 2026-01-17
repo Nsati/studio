@@ -3,11 +3,12 @@
 import { notFound, useParams } from 'next/navigation';
 import Image from 'next/image';
 import { Star, MapPin, BedDouble } from 'lucide-react';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { AmenityIcon } from '@/components/hotel/AmenityIcon';
 import { dummyHotels } from '@/lib/dummy-data';
+import type { Hotel } from '@/lib/types';
 
 import {
   Carousel,
@@ -23,18 +24,32 @@ import Loading from './loading';
 
 
 export default function HotelPage() {
-  const { slug } = useParams();
+  const params = useParams();
+  const slug = params.slug as string;
+  const [hotel, setHotel] = useState<Hotel | null | undefined>(undefined);
   
-  const hotel = dummyHotels.find(h => h.id === slug);
+  useEffect(() => {
+      // The slug from useParams might not be available during the initial client render.
+      // We use useEffect to safely access it and find the hotel.
+      if (slug) {
+        const foundHotel = dummyHotels.find(h => h.id === slug);
+        setHotel(foundHotel || null);
+      }
+  }, [slug]);
+
   const bookingSectionRef = React.useRef<HTMLDivElement>(null);
 
   const handleScrollToBooking = () => {
     bookingSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  if (!hotel) {
-    // In a real app, you might want a brief loading state here,
-    // but for dummy data, we can assume it's instantaneous.
+  // While waiting for useEffect to run and find the hotel
+  if (hotel === undefined) {
+    return <Loading />;
+  }
+
+  // After useEffect runs, if hotel is still not found
+  if (hotel === null) {
     notFound();
   }
 
@@ -66,7 +81,7 @@ export default function HotelPage() {
             {hotel.images.map((imgId, index) => {
               const imgData = PlaceHolderImages.find((i) => i.id === imgId);
               return (
-                <CarouselItem key={index}>
+                <CarouselItem key={imgId}>
                   <div className="relative h-[500px] w-full overflow-hidden rounded-lg">
                     {imgData && (
                       <Image
