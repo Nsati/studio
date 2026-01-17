@@ -28,6 +28,7 @@ import { format } from 'date-fns';
 import { generateConfirmationEmailAction } from '@/app/booking/actions';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDoc, useFirestore, useUser } from '@/firebase';
+import { dummyHotels } from '@/lib/dummy-data';
 
 interface EmailContent {
   subject: string;
@@ -44,18 +45,15 @@ export default function BookingSuccessPage() {
   
   const bookingRef = useMemo(() => {
       if (!firestore || !user || !id) return null;
-      // In a real multi-user app, you'd want to ensure the booking belongs to this user.
-      // The current path is simple for demo purposes.
       return doc(firestore, 'users', user.uid, 'bookings', id);
   }, [firestore, user, id]);
 
   const { data: booking, isLoading: isLoadingBooking } = useDoc<Booking>(bookingRef);
 
-  const hotelRef = useMemo(() => {
-    if (!firestore || !booking) return null;
-    return doc(firestore, 'hotels', booking.hotelId);
-  }, [firestore, booking]);
-  const { data: hotel, isLoading: isLoadingHotel } = useDoc<Hotel>(hotelRef);
+  const hotel = useMemo(() => {
+    if (!booking) return null;
+    return dummyHotels.find(h => h.id === booking.hotelId) || null;
+  }, [booking]);
 
 
   useEffect(() => {
@@ -64,8 +62,8 @@ export default function BookingSuccessPage() {
 
       setIsLoadingEmail(true);
       try {
-        const checkInDate = (booking.checkIn as any).toDate ? (booking.checkIn as any).toDate() : booking.checkIn;
-        const checkOutDate = (booking.checkOut as any).toDate ? (booking.checkOut as any).toDate() : booking.checkOut;
+        const checkInDate = (booking.checkIn as any).toDate ? (booking.checkIn as any).toDate() : new Date(booking.checkIn);
+        const checkOutDate = (booking.checkOut as any).toDate ? (booking.checkOut as any).toDate() : new Date(booking.checkOut);
 
         const content = await generateConfirmationEmailAction({
             hotelName: hotel.name,
@@ -91,7 +89,7 @@ export default function BookingSuccessPage() {
     getEmailContent();
   }, [booking, hotel]);
 
-  if (isLoadingBooking || isLoadingHotel) {
+  if (isLoadingBooking) {
       return (
           <div className="container mx-auto max-w-4xl py-12 px-4 md:px-6 space-y-8">
               <Skeleton className="h-24 w-full" />
@@ -106,8 +104,8 @@ export default function BookingSuccessPage() {
   }
 
   const hotelImage = PlaceHolderImages.find((img) => img.id === hotel.images[0]);
-  const checkInDate = (booking.checkIn as any).toDate ? (booking.checkIn as any).toDate() : booking.checkIn;
-  const checkOutDate = (booking.checkOut as any).toDate ? (booking.checkOut as any).toDate() : booking.checkOut;
+  const checkInDate = (booking.checkIn as any).toDate ? (booking.checkIn as any).toDate() : new Date(booking.checkIn);
+  const checkOutDate = (booking.checkOut as any).toDate ? (booking.checkOut as any).toDate() : new Date(booking.checkOut);
 
 
   return (

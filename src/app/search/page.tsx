@@ -2,10 +2,8 @@
 
 import { Suspense, useEffect, useState, useMemo } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
-import { collection, query, where } from 'firebase/firestore';
 
 import type { Hotel, City } from '@/lib/types';
-import { useCollection, useFirestore } from '@/firebase';
 import { HotelCard } from '@/components/hotel/HotelCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,39 +18,18 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { Search } from 'lucide-react';
 import Loading from './loading';
-import { Skeleton } from '@/components/ui/skeleton';
+import { dummyCities, dummyHotels } from '@/lib/dummy-data';
 
 function SearchResults() {
   const searchParams = useSearchParams();
   const city = searchParams.get('city');
-  const firestore = useFirestore();
 
-  const hotelsQuery = useMemo(() => {
-    if (!firestore) return null;
-    const hotelsRef = collection(firestore, 'hotels');
+  const hotels = useMemo(() => {
     if (!city || city === 'All') {
-      return hotelsRef;
+      return dummyHotels;
     }
-    return query(hotelsRef, where('city', '==', city));
-  }, [firestore, city]);
-
-  const { data: hotels, isLoading } = useCollection<Hotel>(hotelsQuery);
-
-  if (isLoading) {
-      return (
-         <div className="flex-1">
-          <div className="mb-6">
-            <Skeleton className="h-9 w-1/2" />
-            <Skeleton className="mt-2 h-5 w-1/4" />
-          </div>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, i) => (
-               <Card key={i}><CardContent className="p-0"><Skeleton className="h-48 w-full" /></CardContent><div className="p-4 space-y-2"><Skeleton className="h-6 w-3/4" /><Skeleton className="h-4 w-1/2" /><Skeleton className="h-4 w-1/4" /></div></Card>
-            ))}
-          </div>
-        </div>
-      )
-  }
+    return dummyHotels.filter(hotel => hotel.city === city);
+  }, [city]);
 
   return (
     <div className="flex-1">
@@ -90,12 +67,7 @@ function SearchResults() {
 }
 
 function SearchFilters() {
-  const firestore = useFirestore();
-  const citiesQuery = useMemo(() => {
-    if (!firestore) return null;
-    return collection(firestore, 'cities');
-  }, [firestore]);
-  const { data: cities } = useCollection<City>(citiesQuery);
+  const cities = dummyCities;
   
   const searchParams = useSearchParams();
   const router = useRouter();

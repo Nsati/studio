@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { useUser, useFirestore, useDoc, useCollection } from '@/firebase';
+import { useUser, useFirestore, useCollection } from '@/firebase';
 import type { Booking, Hotel } from '@/lib/types';
 import {
   Card,
@@ -19,47 +19,34 @@ import { Calendar, Hotel as HotelIcon, Home, Users, Loader2 } from 'lucide-react
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { collection, doc } from 'firebase/firestore';
+import { collection } from 'firebase/firestore';
+import { dummyHotels } from '@/lib/dummy-data';
 
 function BookingItem({ booking }: { booking: Booking }) {
-    const firestore = useFirestore();
+    const hotel = useMemo(() => {
+        return dummyHotels.find(h => h.id === booking.hotelId);
+    }, [booking.hotelId]);
 
-    const hotelRef = useMemo(() => {
-        if (!firestore) return null;
-        return doc(firestore, 'hotels', booking.hotelId);
-    }, [firestore, booking.hotelId]);
-
-    const { data: hotel, isLoading } = useDoc<Hotel>(hotelRef);
-
-    if (isLoading) {
+    if (!hotel) {
+        // This can happen if a hotel from a booking is no longer in dummy data
         return (
             <Card className="overflow-hidden">
-                <div className="grid grid-cols-1 md:grid-cols-3">
-                    <Skeleton className="h-48 w-full md:h-full" />
-                    <div className="col-span-2 p-6 space-y-4">
-                        <Skeleton className="h-8 w-3/4" />
-                        <Skeleton className="h-4 w-1/2" />
-                        <div className="grid gap-4 p-0 md:grid-cols-2">
-                           <Skeleton className="h-5 w-full" />
-                           <Skeleton className="h-5 w-full" />
-                           <Skeleton className="h-5 w-full" />
-                           <Skeleton className="h-5 w-full" />
-                        </div>
-                        <Skeleton className="h-8 w-1/3" />
-                    </div>
-                </div>
+                <CardHeader>
+                    <CardTitle>Booking for an unknown hotel</CardTitle>
+                    <CardDescription>
+                        Booking ID: <span className="font-mono">{booking.id}</span>
+                    </CardDescription>
+                </CardHeader>
             </Card>
         )
     }
-
-    if (!hotel) return null;
     
     const hotelImage = PlaceHolderImages.find(
         (img) => img.id === hotel.images[0]
     );
 
-    const checkInDate = (booking.checkIn as any).toDate ? (booking.checkIn as any).toDate() : booking.checkIn;
-    const checkOutDate = (booking.checkOut as any).toDate ? (booking.checkOut as any).toDate() : booking.checkOut;
+    const checkInDate = (booking.checkIn as any).toDate ? (booking.checkIn as any).toDate() : new Date(booking.checkIn);
+    const checkOutDate = (booking.checkOut as any).toDate ? (booking.checkOut as any).toDate() : new Date(booking.checkOut);
 
     return (
         <Card key={booking.id} className="overflow-hidden">

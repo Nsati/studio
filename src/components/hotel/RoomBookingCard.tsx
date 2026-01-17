@@ -7,10 +7,10 @@ import type { DateRange } from 'react-day-picker';
 import { useRouter } from 'next/navigation';
 
 import type { Hotel, Room } from '@/lib/types';
-import { useCollection, useFirestore, useUser } from '@/firebase';
+import { useFirestore, useUser } from '@/firebase';
 import { createRazorpayOrder, revalidateAdminOnBooking } from '@/app/booking/actions';
 import { useToast } from '@/hooks/use-toast';
-import { collection, doc, runTransaction } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 
 import {
   Card,
@@ -31,6 +31,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { revalidatePublicContent } from '@/app/admin/actions';
+import { dummyRooms } from '@/lib/dummy-data';
 
 // Add this interface to handle the Razorpay window object
 declare global {
@@ -60,16 +61,14 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
 
   const isDateRangeValid = dates?.from && dates?.to && nights > 0;
 
-  const roomsQuery = useMemo(() => {
-    if (!firestore) return null;
-    return collection(firestore, 'hotels', hotel.id, 'rooms');
-  }, [firestore, hotel.id]);
+  const rooms = useMemo(() => {
+    return dummyRooms.filter(room => room.hotelId === hotel.id);
+  }, [hotel.id]);
 
-  const { data: rooms, isLoading: isLoadingRooms } = useCollection<Room>(roomsQuery);
 
   const handleRoomSelect = (room: Room) => {
-    const isAvailable = (room.availableRooms === undefined || room.availableRooms > 0);
-    if (isDateRangeValid && isAvailable) {
+    // In dummy data mode, we assume rooms are always available.
+    if (isDateRangeValid) {
         setSelectedRoom(room);
     }
   };
@@ -141,50 +140,31 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
       handler: async function (response: any) {
         if (!firestore || !user || !selectedRoom || !dates?.from || !dates?.to) return;
         
-        const roomRef = doc(firestore, 'hotels', hotel.id, 'rooms', selectedRoom.id);
         const bookingRef = doc(firestore, 'users', user.uid, 'bookings', newBookingId);
 
         try {
-            await runTransaction(firestore, async (transaction) => {
-                const roomDoc = await transaction.get(roomRef);
-                if (!roomDoc.exists()) {
-                  throw new Error("This room does not exist anymore.");
-                }
-                
-                const roomData = roomDoc.data();
-                const availableCount = roomData.availableRooms ?? roomData.totalRooms;
-    
-                if (availableCount < 1) {
-                  throw new Error("Sorry, this room just got booked by someone else!");
-                }
-    
-                const newAvailableCount = availableCount - 1;
-                transaction.update(roomRef, { availableRooms: newAvailableCount });
+            const bookingData = {
+                id: newBookingId,
+                hotelId: hotel.id,
+                userId: user.uid,
+                roomId: selectedRoom.id,
+                roomType: selectedRoom.type,
+                checkIn: dates.from!,
+                checkOut: dates.to!,
+                guests: 2, // Example, you might want a guest selector
+                totalPrice: amount,
+                customerName: customerDetails.name,
+                customerEmail: customerDetails.email,
+                status: 'CONFIRMED' as const,
+                createdAt: new Date(),
+                razorpayPaymentId: response.razorpay_payment_id,
+            };
 
-                const bookingData = {
-                    id: newBookingId,
-                    hotelId: hotel.id,
-                    userId: user.uid,
-                    roomId: selectedRoom.id,
-                    roomType: selectedRoom.type,
-                    checkIn: dates.from!,
-                    checkOut: dates.to!,
-                    guests: 2, // Example, you might want a guest selector
-                    totalPrice: amount,
-                    customerName: customerDetails.name,
-                    customerEmail: customerDetails.email,
-                    status: 'CONFIRMED' as const,
-                    createdAt: new Date(),
-                    razorpayPaymentId: response.razorpay_payment_id,
-                };
+            await setDoc(bookingRef, bookingData);
 
-                transaction.set(bookingRef, bookingData);
-            });
-
-            // If transaction is successful
+            // Revalidation can still be useful if admin panel checks bookings.
             await revalidateAdminOnBooking();
-            await revalidatePublicContent();
-
+            
             toast({
               title: 'Payment Successful!',
               description: 'Redirecting to your confirmation...',
@@ -192,13 +172,12 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
             router.push(`/booking/success/${newBookingId}`);
 
         } catch (error: any) {
-            console.error("Booking transaction failed:", error);
+            console.error("Booking failed to save:", error);
             toast({
                 variant: 'destructive',
                 title: 'Booking Failed',
-                description: error.message || 'We could not save your booking after payment. Please contact support.',
+                description: 'We could not save your booking after payment. Please contact support.',
             });
-            // In a real application, a refund should be programmatically initiated here.
             setIsBooking(false);
         }
       },
@@ -329,10 +308,8 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
         )}
 
         <div className="space-y-4">
-          {isLoadingRooms && <Loader2 className="animate-spin" />}
           {rooms?.map((room) => {
-             const availableCount = room.availableRooms ?? room.totalRooms;
-             const isAvailable = availableCount > 0;
+             const isAvailable = true; // Always available with dummy data
             return (
                 <Card
                 key={room.id}
@@ -349,11 +326,6 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
                     <p className="text-sm text-muted-foreground">
                         Fits up to {room.capacity} guests
                     </p>
-                     {!isAvailable ? (
-                        <p className="text-sm font-bold text-destructive">Sold Out!</p>
-                     ) : availableCount <= 5 ? (
-                        <p className="text-sm font-semibold text-amber-600">Only {availableCount} left!</p>
-                     ) : null}
                     </div>
                     <div className="flex flex-col items-start gap-2 md:items-end">
                     <p className="text-lg font-bold text-primary">

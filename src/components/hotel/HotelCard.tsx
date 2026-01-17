@@ -14,31 +14,22 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useMemo } from 'react';
-import { useCollection, useFirestore } from '@/firebase';
-import { collection } from 'firebase/firestore';
 import { Skeleton } from '../ui/skeleton';
+import { dummyRooms } from '@/lib/dummy-data';
 
 interface HotelCardProps {
   hotel: Hotel;
 }
 
 function HotelMinPrice({ hotelId }: { hotelId: string}) {
-  const firestore = useFirestore();
-  const roomsQuery = useMemo(() => {
-    if (!firestore) return null;
-    return collection(firestore, 'hotels', hotelId, 'rooms');
-  }, [firestore, hotelId]);
-  const { data: rooms, isLoading } = useCollection<Room>(roomsQuery);
-
+  const roomsForHotel = useMemo(() => {
+    return dummyRooms.filter(room => room.hotelId === hotelId);
+  }, [hotelId]);
 
   const minPrice = useMemo(() => {
-    if (!rooms || rooms.length === 0) return 0;
-    return Math.min(...rooms.map((r) => r.price))
-  }, [rooms]);
-
-  if (isLoading) {
-    return <Skeleton className="h-6 w-24" />;
-  }
+    if (!roomsForHotel || roomsForHotel.length === 0) return 0;
+    return Math.min(...roomsForHotel.map((r) => r.price))
+  }, [roomsForHotel]);
 
   if (minPrice === 0) return null;
 

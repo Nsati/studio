@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
-import { collection } from 'firebase/firestore';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -27,21 +26,15 @@ import {
   Users,
   Search,
 } from 'lucide-react';
-import { useFirestore, useCollection } from '@/firebase';
 import type { City } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import type { DateRange } from 'react-day-picker';
+import { dummyCities } from '@/lib/dummy-data';
 
 export function HeroSearchForm() {
   const router = useRouter();
   
-  const firestore = useFirestore();
-  const citiesQuery = useMemo(() => {
-    if (!firestore) return null;
-    return collection(firestore, 'cities');
-  }, [firestore]);
-  const { data: cities } = useCollection<City>(citiesQuery);
-
+  const cities = dummyCities;
 
   const [city, setCity] = useState<string>('');
   const [dates, setDates] = useState<DateRange | undefined>();
@@ -50,7 +43,7 @@ export function HeroSearchForm() {
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const params = new URLSearchParams();
-    if (city) params.set('city', city);
+    if (city && city !== 'All') params.set('city', city);
     if (dates?.from) params.set('checkin', format(dates.from, 'yyyy-MM-dd'));
     if (dates?.to) params.set('checkout', format(dates.to, 'yyyy-MM-dd'));
     if (guests) params.set('guests', guests);
@@ -73,6 +66,7 @@ export function HeroSearchForm() {
                   <SelectValue placeholder="Where to?" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="All">All Locations</SelectItem>
                   {cities?.map((c) => (
                     <SelectItem key={c.id} value={c.name}>
                       {c.name}
