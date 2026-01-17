@@ -4,7 +4,7 @@ import React, { useState, useTransition, useMemo } from 'react';
 import type { Hotel, UserProfile, Booking } from '@/lib/types';
 import { dummyUsers, dummyBookings } from '@/lib/dummy-data';
 import { useCollection, useFirestore } from '@/firebase';
-import { collection, doc, deleteDoc } from 'firebase/firestore';
+import { collection, doc, deleteDoc, updateDoc, setDoc } from 'firebase/firestore';
 
 import {
   Table,
@@ -85,7 +85,7 @@ function HotelManagement() {
             <CardHeader className="flex flex-row items-center justify-between">
                 <div>
                     <CardTitle>Hotel Management</CardTitle>
-                    <CardDescription>Add, edit, or delete hotels.</CardDescription>
+                    <CardDescription>Add, edit, or delete hotels from the live database.</CardDescription>
                 </div>
                 <Button onClick={handleAddNew} size="sm">
                     <PlusCircle className="mr-2 h-4 w-4" />
@@ -114,7 +114,7 @@ function HotelManagement() {
                         {!isLoading && hotels?.length === 0 && (
                             <TableRow>
                                 <TableCell colSpan={4} className="h-24 text-center">
-                                    No hotels found. Add one to get started.
+                                    No hotels found in the database. Add one to get started.
                                 </TableCell>
                             </TableRow>
                         )}
@@ -186,6 +186,7 @@ function HotelManagement() {
     );
 }
 
+
 // --- User List Component ---
 function UserList() {
     const users = dummyUsers;
@@ -195,7 +196,7 @@ function UserList() {
         <Card>
             <CardHeader>
                 <CardTitle>User Management</CardTitle>
-                <CardDescription>View and manage all registered users.</CardDescription>
+                <CardDescription>View and manage all registered users (showing dummy data).</CardDescription>
             </CardHeader>
             <CardContent>
                 <Table>
@@ -246,7 +247,7 @@ function BookingList() {
         <Card>
             <CardHeader>
                 <CardTitle>All Bookings</CardTitle>
-                <CardDescription>View all bookings made across the platform.</CardDescription>
+                <CardDescription>View all bookings made across the platform (showing dummy data).</CardDescription>
             </CardHeader>
             <CardContent>
                  <Table>
@@ -256,6 +257,7 @@ function BookingList() {
                             <TableHead>Customer</TableHead>
                             <TableHead>Hotel ID</TableHead>
                             <TableHead>Check-in</TableHead>
+                            <TableHead>Check-out</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead>Total Paid</TableHead>
                         </TableRow>
@@ -266,6 +268,7 @@ function BookingList() {
                                 <TableCell><Skeleton className="h-5 w-24" /></TableCell>
                                 <TableCell><Skeleton className="h-5 w-40" /></TableCell>
                                 <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+                                <TableCell><Skeleton className="h-5 w-24" /></TableCell>
                                 <TableCell><Skeleton className="h-5 w-24" /></TableCell>
                                 <TableCell><Skeleton className="h-5 w-20" /></TableCell>
                                 <TableCell><Skeleton className="h-5 w-20" /></TableCell>
@@ -280,13 +283,14 @@ function BookingList() {
                                 </TableCell>
                                 <TableCell className="font-mono text-xs">{booking.hotelId}</TableCell>
                                 <TableCell>{format(booking.checkIn, 'PPP')}</TableCell>
+                                <TableCell>{format(booking.checkOut, 'PPP')}</TableCell>
                                 <TableCell>{booking.status}</TableCell>
                                 <TableCell>₹{booking.totalPrice.toLocaleString()}</TableCell>
                             </TableRow>
                         ))}
                          {!isLoading && bookings?.length === 0 && (
                             <TableRow>
-                                <TableCell colSpan={6} className="h-24 text-center">
+                                <TableCell colSpan={7} className="h-24 text-center">
                                     No bookings have been made yet.
                                 </TableCell>
                             </TableRow>
