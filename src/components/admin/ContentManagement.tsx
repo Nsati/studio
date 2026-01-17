@@ -51,24 +51,30 @@ function HotelManagement() {
 
     const hotels = dummyHotels;
     const isLoading = false;
+    
+    const showDummyDataToast = () => {
+        toast({
+            variant: 'destructive',
+            title: 'Action Disabled',
+            description: 'This functionality is disabled when using dummy data.',
+        });
+    };
 
     const handleEdit = (hotel: Hotel) => {
-        setEditingHotel(hotel);
-        setIsDialogOpen(true);
+        showDummyDataToast();
+        // setEditingHotel(hotel);
+        // setIsDialogOpen(true);
     };
 
     const handleAddNew = () => {
-        setEditingHotel(undefined);
-        setIsDialogOpen(true);
+        showDummyDataToast();
+        // setEditingHotel(undefined);
+        // setIsDialogOpen(true);
     }
 
     const handleDelete = (hotel: Hotel) => {
         startTransition(async () => {
-             toast({
-                variant: 'destructive',
-                title: 'Action Disabled',
-                description: 'This functionality is disabled when using dummy data.',
-            });
+             showDummyDataToast();
         });
     };
 
@@ -80,7 +86,7 @@ function HotelManagement() {
                     <CardTitle>Hotel Management</CardTitle>
                     <CardDescription>Add, edit, or delete hotels.</CardDescription>
                 </div>
-                <Button onClick={handleAddNew} size="sm" disabled>
+                <Button onClick={handleAddNew} size="sm">
                     <PlusCircle className="mr-2 h-4 w-4" />
                     New Hotel
                 </Button>
@@ -126,13 +132,12 @@ function HotelManagement() {
                                         variant="ghost"
                                         size="icon"
                                         onClick={() => handleEdit(hotel)}
-                                        disabled
                                     >
                                         <Edit className="h-4 w-4" />
                                     </Button>
                                     <AlertDialog>
                                         <AlertDialogTrigger asChild>
-                                            <Button variant="ghost" size="icon" disabled>
+                                            <Button variant="ghost" size="icon">
                                                 {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4 text-destructive" />}
                                             </Button>
                                         </AlertDialogTrigger>
