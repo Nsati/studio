@@ -79,7 +79,7 @@ export default function AdminPage() {
     <div className="container mx-auto py-8">
       <div className="mb-8">
           <h1 className="font-headline text-4xl font-bold">Admin Dashboard</h1>
-          <p className="text-muted-foreground">Manage your cities and hotels from this dashboard.</p>
+          <p className="text-muted-foreground">Manage your users, hotels, and bookings from this dashboard.</p>
       </div>
       <ContentManagement />
     </div>

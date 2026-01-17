@@ -120,7 +120,7 @@ export function HotelForm({ hotel, onFinished }: HotelFormProps) {
             <FormItem>
               <FormLabel>City</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. Nainital" {...field} readOnly={!!(hotel?.city && !hotel.id)} />
+                <Input placeholder="e.g. Nainital" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
