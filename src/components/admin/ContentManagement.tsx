@@ -2,8 +2,8 @@
 
 import React, { useState, useTransition, useMemo } from 'react';
 import type { Hotel, UserProfile, Booking } from '@/lib/types';
-import { useCollection, useFirestore } from '@/firebase';
-import { collection, doc, deleteDoc, collectionGroup, query, orderBy } from 'firebase/firestore';
+import { dummyHotels, dummyUsers, dummyBookings } from '@/lib/dummy-data';
+
 import {
   Table,
   TableHeader,
@@ -44,18 +44,13 @@ import { format } from 'date-fns';
 
 // --- Hotel Management Component ---
 function HotelManagement() {
-    const firestore = useFirestore();
     const [isPending, startTransition] = useTransition();
     const { toast } = useToast();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingHotel, setEditingHotel] = useState<Partial<Hotel> | undefined>(undefined);
 
-    const hotelsQuery = useMemo(() => {
-        if (!firestore) return null;
-        return collection(firestore, 'hotels');
-    }, [firestore]);
-
-    const { data: hotels, isLoading } = useCollection<Hotel>(hotelsQuery);
+    const hotels = dummyHotels;
+    const isLoading = false;
 
     const handleEdit = (hotel: Hotel) => {
         setEditingHotel(hotel);
@@ -68,23 +63,12 @@ function HotelManagement() {
     }
 
     const handleDelete = (hotel: Hotel) => {
-        if (!firestore) return;
         startTransition(async () => {
-            try {
-                await deleteDoc(doc(firestore, 'hotels', hotel.id));
-                await revalidateAdminPanel();
-                await revalidatePublicContent();
-                toast({
-                    title: 'Hotel Deleted',
-                    description: `Hotel "${hotel.name}" has been successfully removed.`,
-                });
-            } catch (e: any) {
-                 toast({
-                    variant: 'destructive',
-                    title: 'Error',
-                    description: `Could not delete hotel: ${e.message}`,
-                });
-            }
+             toast({
+                variant: 'destructive',
+                title: 'Action Disabled',
+                description: 'This functionality is disabled when using dummy data.',
+            });
         });
     };
 
@@ -96,7 +80,7 @@ function HotelManagement() {
                     <CardTitle>Hotel Management</CardTitle>
                     <CardDescription>Add, edit, or delete hotels.</CardDescription>
                 </div>
-                <Button onClick={handleAddNew} size="sm">
+                <Button onClick={handleAddNew} size="sm" disabled>
                     <PlusCircle className="mr-2 h-4 w-4" />
                     New Hotel
                 </Button>
@@ -142,12 +126,13 @@ function HotelManagement() {
                                         variant="ghost"
                                         size="icon"
                                         onClick={() => handleEdit(hotel)}
+                                        disabled
                                     >
                                         <Edit className="h-4 w-4" />
                                     </Button>
                                     <AlertDialog>
                                         <AlertDialogTrigger asChild>
-                                            <Button variant="ghost" size="icon" disabled={isPending}>
+                                            <Button variant="ghost" size="icon" disabled>
                                                 {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4 text-destructive" />}
                                             </Button>
                                         </AlertDialogTrigger>
@@ -197,13 +182,8 @@ function HotelManagement() {
 
 // --- User List Component ---
 function UserList() {
-    const firestore = useFirestore();
-    const usersQuery = useMemo(() => {
-        if (!firestore) return null;
-        return collection(firestore, 'users');
-    }, [firestore]);
-
-    const { data: users, isLoading } = useCollection<UserProfile>(usersQuery);
+    const users = dummyUsers;
+    const isLoading = false;
 
     return (
         <Card>
@@ -251,13 +231,10 @@ function UserList() {
 
 // --- Booking List Component ---
 function BookingList() {
-    const firestore = useFirestore();
-    const bookingsQuery = useMemo(() => {
-        if (!firestore) return null;
-        return query(collectionGroup(firestore, 'bookings'), orderBy('createdAt', 'desc'));
-    }, [firestore]);
-
-    const { data: bookings, isLoading } = useCollection<Booking>(bookingsQuery);
+    const bookings = useMemo(() => {
+        return [...dummyBookings].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    }, []);
+    const isLoading = false;
 
     return (
         <Card>
@@ -296,7 +273,7 @@ function BookingList() {
                                     <div className="text-xs text-muted-foreground">{booking.customerEmail}</div>
                                 </TableCell>
                                 <TableCell className="font-mono text-xs">{booking.hotelId}</TableCell>
-                                <TableCell>{format((booking.checkIn as any).toDate(), 'PPP')}</TableCell>
+                                <TableCell>{format(booking.checkIn, 'PPP')}</TableCell>
                                 <TableCell>{booking.status}</TableCell>
                                 <TableCell>₹{booking.totalPrice.toLocaleString()}</TableCell>
                             </TableRow>
