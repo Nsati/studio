@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useTransition, useMemo } from 'react';
+import React, { useTransition, useMemo } from 'react';
 import type { Hotel, UserProfile, Booking } from '@/lib/types';
-import { dummyUsers, dummyBookings } from '@/lib/dummy-data';
 import { useCollection, useFirestore } from '@/firebase';
-import { collection, doc, deleteDoc, updateDoc, setDoc } from 'firebase/firestore';
+import { collection, doc, deleteDoc } from 'firebase/firestore';
+import Link from 'next/link';
 
 import {
   Table,
@@ -14,13 +14,6 @@ import {
   TableBody,
   TableCell,
 } from '@/components/ui/table';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,33 +31,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Skeleton } from '../ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { revalidateAdminPanel, revalidatePublicContent } from '@/app/admin/actions';
-import { HotelForm } from './HotelForm';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
+import { dummyUsers, dummyBookings } from '@/lib/dummy-data';
 
 
 // --- Hotel Management Component ---
 function HotelManagement() {
     const [isPending, startTransition] = useTransition();
     const { toast } = useToast();
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [editingHotel, setEditingHotel] = useState<Partial<Hotel> | undefined>(undefined);
 
     const firestore = useFirestore();
     const hotelsQuery = useMemo(() => firestore ? collection(firestore, 'hotels') : null, [firestore]);
     const { data: hotels, isLoading } = useCollection<Hotel>(hotelsQuery);
     
-    const handleEdit = (hotel: Hotel) => {
-        setEditingHotel(hotel);
-        setIsDialogOpen(true);
-    };
-
-    const handleAddNew = () => {
-        setEditingHotel(undefined);
-        setIsDialogOpen(true);
-    }
-
     const handleDelete = (hotel: Hotel) => {
         if (!firestore) return;
         startTransition(async () => {
@@ -87,9 +68,11 @@ function HotelManagement() {
                     <CardTitle>Hotel Management</CardTitle>
                     <CardDescription>Add, edit, or delete hotels from the live database.</CardDescription>
                 </div>
-                <Button onClick={handleAddNew} size="sm">
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    New Hotel
+                 <Button asChild size="sm">
+                    <Link href="/admin/hotels/new">
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        New Hotel
+                    </Link>
                 </Button>
             </CardHeader>
             <CardContent>
@@ -129,12 +112,10 @@ function HotelManagement() {
                                     </div>
                                 </TableCell>
                                 <TableCell className="text-right space-x-2">
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => handleEdit(hotel)}
-                                    >
+                                     <Button asChild variant="ghost" size="icon">
+                                      <Link href={`/admin/hotels/${hotel.id}/edit`}>
                                         <Edit className="h-4 w-4" />
+                                      </Link>
                                     </Button>
                                     <AlertDialog>
                                         <AlertDialogTrigger asChild>
@@ -167,21 +148,6 @@ function HotelManagement() {
                 </Table>
             </CardContent>
         </Card>
-
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogContent className="sm:max-w-xl">
-                <DialogHeader>
-                    <DialogTitle>{editingHotel?.id ? 'Edit Hotel' : 'Add New Hotel'}</DialogTitle>
-                    <DialogDescription>
-                        {editingHotel?.id ? `Update the details for ${editingHotel.name}.` : 'Fill in the details for the new hotel.'}
-                    </DialogDescription>
-                </DialogHeader>
-                <HotelForm
-                    hotel={editingHotel}
-                    onFinished={() => setIsDialogOpen(false)}
-                />
-            </DialogContent>
-        </Dialog>
         </>
     );
 }
@@ -239,7 +205,7 @@ function UserList() {
 // --- Booking List Component ---
 function BookingList() {
     const bookings = useMemo(() => {
-        return [...dummyBookings].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+        return [...dummyBookings].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     }, []);
     const isLoading = false;
 
@@ -282,8 +248,8 @@ function BookingList() {
                                     <div className="text-xs text-muted-foreground">{booking.customerEmail}</div>
                                 </TableCell>
                                 <TableCell className="font-mono text-xs">{booking.hotelId}</TableCell>
-                                <TableCell>{format(booking.checkIn, 'PPP')}</TableCell>
-                                <TableCell>{format(booking.checkOut, 'PPP')}</TableCell>
+                                <TableCell>{format(new Date(booking.checkIn), 'PPP')}</TableCell>
+                                <TableCell>{format(new Date(booking.checkOut), 'PPP')}</TableCell>
                                 <TableCell>{booking.status}</TableCell>
                                 <TableCell>₹{booking.totalPrice.toLocaleString()}</TableCell>
                             </TableRow>

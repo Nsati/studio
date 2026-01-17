@@ -6,6 +6,7 @@ import * as z from 'zod';
 import { useTransition } from 'react';
 import { doc, updateDoc, setDoc } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
+import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -48,13 +49,13 @@ type HotelFormValues = z.infer<typeof hotelFormSchema>;
 
 interface HotelFormProps {
   hotel?: Partial<Hotel>;
-  onFinished: () => void;
 }
 
-export function HotelForm({ hotel, onFinished }: HotelFormProps) {
+export function HotelForm({ hotel }: HotelFormProps) {
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
   const firestore = useFirestore();
+  const router = useRouter();
 
   const defaultValues = {
       name: hotel?.name || '',
@@ -102,7 +103,7 @@ export function HotelForm({ hotel, onFinished }: HotelFormProps) {
         
         await revalidateAdminPanel();
         await revalidatePublicContent();
-        onFinished();
+        router.push('/admin');
       } catch (e: any) {
         toast({ variant: 'destructive', title: 'Error', description: e.message });
       }
@@ -111,7 +112,7 @@ export function HotelForm({ hotel, onFinished }: HotelFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 max-h-[70vh] overflow-y-auto p-1">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 max-h-[80vh] overflow-y-auto p-1">
         <FormField
           control={form.control}
           name="name"
@@ -243,7 +244,7 @@ export function HotelForm({ hotel, onFinished }: HotelFormProps) {
         />
         
         <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="ghost" onClick={onFinished}>Cancel</Button>
+            <Button type="button" variant="ghost" onClick={() => router.push('/admin')}>Cancel</Button>
             <Button type="submit" disabled={isPending || !firestore}>
                 {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {hotel?.id ? 'Update Hotel' : 'Create Hotel'}
