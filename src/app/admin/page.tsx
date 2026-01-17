@@ -5,10 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, User, Briefcase, Hotel } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { UserList } from '@/components/admin/UserList';
-import { BookingList } from '@/components/admin/BookingList';
+import { Loader2 } from 'lucide-react';
 import { HotelList } from '@/components/admin/HotelList';
 import { verifyAdminPassword } from './actions';
 
@@ -82,24 +79,9 @@ export default function AdminPage() {
     <div className="container mx-auto py-8">
       <div className="mb-8">
           <h1 className="font-headline text-4xl font-bold">Admin Dashboard</h1>
-          <p className="text-muted-foreground">Manage your entire operation from one place.</p>
+          <p className="text-muted-foreground">Manage your hotels from this dashboard.</p>
       </div>
-      <Tabs defaultValue="bookings" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="bookings"><Briefcase className="mr-2 h-4 w-4" />Bookings</TabsTrigger>
-          <TabsTrigger value="users"><User className="mr-2 h-4 w-4" />Users</TabsTrigger>
-          <TabsTrigger value="hotels"><Hotel className="mr-2 h-4 w-4" />Hotels</TabsTrigger>
-        </TabsList>
-        <TabsContent value="bookings" className="mt-6">
-          <BookingList />
-        </TabsContent>
-        <TabsContent value="users" className="mt-6">
-          <UserList />
-        </TabsContent>
-        <TabsContent value="hotels" className="mt-6">
-          <HotelList />
-        </TabsContent>
-      </Tabs>
+      <HotelList />
     </div>
   );
 }
