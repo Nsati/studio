@@ -14,21 +14,16 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useMemo } from 'react';
-import { useCollection, useFirestore } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { dummyRooms } from '@/lib/dummy-data';
 
 interface HotelCardProps {
   hotel: Hotel;
 }
 
 function HotelMinPrice({ hotelId }: { hotelId: string}) {
-  const firestore = useFirestore();
-  const roomsQuery = useMemo(() => {
-    if (!firestore) return null;
-    return collection(firestore, 'hotels', hotelId, 'rooms');
-  }, [firestore, hotelId]);
-
-  const { data: rooms } = useCollection<Room>(roomsQuery);
+  const rooms = useMemo(() => {
+    return dummyRooms.filter(r => r.hotelId === hotelId);
+  }, [hotelId]);
 
   const minPrice = useMemo(() => {
     if (!rooms || rooms.length === 0) return 0;

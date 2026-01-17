@@ -1,20 +1,27 @@
 'use client';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useMemo } from 'react';
+import { collection } from 'firebase/firestore';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { HotelCard } from '@/components/hotel/HotelCard';
 import { HeroSearchForm } from '@/components/home/HeroSearchForm';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Loader2 } from 'lucide-react';
+import { useCollection, useFirestore } from '@/firebase';
 import type { City, Hotel } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
-import { dummyCities, dummyHotels } from '@/lib/dummy-data';
 
 function FeaturedHotels() {
-  const isLoading = false; // Dummy data is loaded instantly
-  const hotels = dummyHotels;
+  const firestore = useFirestore();
+  const hotelsQuery = useMemo(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'hotels');
+  }, [firestore]);
+
+  const { data: hotels, isLoading } = useCollection<Hotel>(hotelsQuery);
 
   if (isLoading) {
     return (
@@ -42,8 +49,13 @@ function FeaturedHotels() {
 }
 
 function CitiesList() {
-    const isLoading = false; // Dummy data is loaded instantly
-    const cities = dummyCities;
+    const firestore = useFirestore();
+    const citiesQuery = useMemo(() => {
+        if (!firestore) return null;
+        return collection(firestore, 'cities');
+    }, [firestore]);
+
+    const { data: cities, isLoading } = useCollection<City>(citiesQuery);
 
     if (isLoading) {
         return (

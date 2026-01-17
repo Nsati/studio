@@ -1,7 +1,6 @@
-import type { Timestamp } from 'firebase/firestore';
 
 export interface Hotel {
-  id: string; // Firestore document ID
+  id: string; 
   name: string;
   city: string;
   description: string;
@@ -11,7 +10,7 @@ export interface Hotel {
 }
 
 export interface Room {
-  id: string; // Firestore document ID
+  id: string; 
   hotelId: string;
   type: 'Standard' | 'Deluxe' | 'Suite';
   price: number;
@@ -20,7 +19,7 @@ export interface Room {
 }
 
 export interface City {
-  id: string; // Firestore document ID
+  id: string; 
   name: string;
   image: string;
 }
@@ -34,20 +33,19 @@ export interface UserProfile {
 
 
 export interface Booking {
-  id?: string; // Firestore document ID
+  id?: string; 
   hotelId: string;
   userId: string;
   roomId: string;
   roomType: string;
-  checkIn: Timestamp | string;
-  checkOut: Timestamp | string;
+  checkIn: Date;
+  checkOut: Date;
   guests: number;
   totalPrice: number;
   customerName: string;
   customerEmail: string;
-  status: 'LOCKED' | 'CONFIRMED' | 'CANCELLED';
-  expiresAt?: Timestamp; // For locked bookings
-  createdAt: Timestamp;
+  status: 'CONFIRMED' | 'CANCELLED';
+  createdAt: Date;
 }
 
 // This mock type is no longer used for primary auth state.

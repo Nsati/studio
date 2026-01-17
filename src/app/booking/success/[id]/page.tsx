@@ -4,9 +4,7 @@ import { notFound, useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import React, { useEffect, useState, useMemo } from 'react';
-import { doc } from 'firebase/firestore';
 
-import { useDoc, useFirestore } from '@/firebase';
 import type { Booking, Hotel } from '@/lib/types';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
@@ -28,6 +26,7 @@ import {
 import { format } from 'date-fns';
 import { generateConfirmationEmailAction } from '@/app/booking/actions';
 import { Skeleton } from '@/components/ui/skeleton';
+import { dummyBookings, dummyHotels } from '@/lib/dummy-data';
 
 interface EmailContent {
   subject: string;
@@ -40,21 +39,16 @@ export default function BookingSuccessPage() {
   const [emailContent, setEmailContent] = useState<EmailContent | null>(null);
   const [isLoadingEmail, setIsLoadingEmail] = useState(true);
   
-  const firestore = useFirestore();
+  const { data: booking, isLoading: isLoadingBooking } = useMemo(() => {
+      const bookingData = dummyBookings.find(b => b.id === id);
+      return { data: bookingData, isLoading: false };
+  }, [id]);
 
-  const bookingRef = useMemo(() => {
-      if (!firestore || !id) return null;
-      return doc(firestore, 'bookings', id);
-  }, [firestore, id]);
-
-  const { data: booking, isLoading: isLoadingBooking } = useDoc<Booking>(bookingRef);
-
-  const hotelRef = useMemo(() => {
-    if (!firestore || !booking?.hotelId) return null;
-    return doc(firestore, 'hotels', booking.hotelId);
-  }, [firestore, booking?.hotelId]);
-
-  const { data: hotel, isLoading: isLoadingHotel } = useDoc<Hotel>(hotelRef);
+  const { data: hotel, isLoading: isLoadingHotel } = useMemo(() => {
+    if (!booking) return { data: null, isLoading: false };
+    const hotelData = dummyHotels.find(h => h.id === booking.hotelId);
+    return { data: hotelData, isLoading: false };
+  }, [booking]);
 
 
   useEffect(() => {
@@ -66,8 +60,8 @@ export default function BookingSuccessPage() {
         const content = await generateConfirmationEmailAction({
             hotelName: hotel.name,
             customerName: booking.customerName,
-            checkIn: (booking.checkIn as any).toDate().toISOString(),
-            checkOut: (booking.checkOut as any).toDate().toISOString(),
+            checkIn: booking.checkIn.toISOString(),
+            checkOut: booking.checkOut.toISOString(),
             roomType: booking.roomType,
             totalPrice: booking.totalPrice,
             bookingId: booking.id!,
@@ -146,8 +140,8 @@ export default function BookingSuccessPage() {
             <div className="flex items-center gap-2 text-muted-foreground">
               <Calendar className="h-5 w-5" />
               <span>
-                {format((booking.checkIn as any).toDate(), 'EEE, LLL dd')} -{' '}
-                {format((booking.checkOut as any).toDate(), 'EEE, LLL dd')}
+                {format(booking.checkIn, 'EEE, LLL dd')} -{' '}
+                {format(booking.checkOut, 'EEE, LLL dd')}
               </span>
             </div>
             <div className="flex items-center gap-2 text-muted-foreground">

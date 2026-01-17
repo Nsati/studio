@@ -2,16 +2,13 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { BedDouble, Calendar as CalendarIcon, AlertCircle, User, Info, Loader2 } from 'lucide-react';
-import { differenceInDays, format, addMinutes, isBefore } from 'date-fns';
+import { differenceInDays, format } from 'date-fns';
 import type { DateRange } from 'react-day-picker';
 import { useRouter } from 'next/navigation';
 
-import type { Hotel, Room, Booking } from '@/lib/types';
-import { createRazorpayOrder, revalidateAdminOnBooking } from '@/app/booking/actions';
-import { useToast } from '@/hooks/use-toast';
-import { useUser, useFirestore, useCollection } from '@/firebase';
-import { runTransaction, collection, doc, serverTimestamp, getDocs, query, where, Timestamp, writeBatch } from 'firebase/firestore';
-
+import type { Hotel, Room } from '@/lib/types';
+import { useUser } from '@/firebase';
+import { dummyRooms } from '@/lib/dummy-data';
 
 import {
   Card,
@@ -32,23 +29,12 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 
-declare global {
-  interface Window {
-    Razorpay: any;
-  }
-}
-
 export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
   const [dates, setDates] = useState<DateRange | undefined>();
-  const [isProcessing, setIsProcessing] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const { user, userProfile } = useUser();
-  const firestore = useFirestore();
   const [customerDetails, setCustomerDetails] = useState({ name: '', email: '' });
 
-  const router = useRouter();
-  const { toast } = useToast();
-  
   useEffect(() => {
     if(userProfile) {
         setCustomerDetails({ name: userProfile.displayName, email: userProfile.email });
@@ -60,175 +46,14 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
   
   const isDateRangeValid = dates?.from && dates?.to && nights > 0;
 
-  const roomsCollection = useMemo(() => {
-    if (!firestore) return null;
-    return collection(firestore, 'hotels', hotel.id, 'rooms');
-  }, [firestore, hotel.id]);
-
-  const { data: rooms, isLoading: isLoadingRooms } = useCollection<Room>(roomsCollection);
-
-  const handleProceedToBook = async () => {
-    if (!firestore || !selectedRoom || !isDateRangeValid || !dates?.from || !dates.to) {
-        toast({
-            variant: 'destructive',
-            title: 'Invalid Details',
-            description: 'Please select a room and valid dates.',
-        });
-        return;
-    }
-    
-    if (!user && (!customerDetails.name || !customerDetails.email)) {
-        toast({
-            variant: 'destructive',
-            title: 'Customer Details Required',
-            description: 'Please enter your name and email address to proceed.',
-        });
-        return;
-    }
-
-    setIsProcessing(true);
-    const totalAmount = nights * selectedRoom.price;
-    const finalCustomerName = userProfile?.displayName || customerDetails.name;
-    const finalCustomerEmail = userProfile?.email || customerDetails.email;
-
-    let lockedBookingId: string | null = null;
-
-    try {
-        lockedBookingId = await runTransaction(firestore, async (transaction) => {
-            const roomRef = doc(firestore, 'hotels', hotel.id, 'rooms', selectedRoom.id);
-            const bookingsRef = collection(firestore, 'bookings');
-            
-            const roomDoc = await transaction.get(roomRef);
-            if (!roomDoc.exists()) {
-                throw new Error("Room does not exist!");
-            }
-            const roomData = roomDoc.data() as Room;
-
-            const q = query(bookingsRef, 
-                where('roomId', '==', selectedRoom.id),
-                where('status', 'in', ['CONFIRMED', 'LOCKED']),
-                where('checkOut', '>', Timestamp.fromDate(dates.from!))
-            );
-
-            const querySnapshot = await getDocs(q);
-            const overlappingBookings = querySnapshot.docs.filter(doc => {
-                 const booking = doc.data() as Booking;
-                 const checkIn = (booking.checkIn as Timestamp).toDate();
-                 return isBefore(checkIn, dates.to!);
-            }).length;
-
-            if (overlappingBookings >= roomData.totalRooms) {
-                throw new Error("This room is no longer available for the selected dates.");
-            }
-
-            const newBookingRef = doc(collection(firestore, 'bookings'));
-            const lockExpiry = addMinutes(new Date(), 5);
-            const newBooking: Booking = {
-                hotelId: hotel.id,
-                roomId: selectedRoom.id,
-                roomType: selectedRoom.type,
-                userId: user ? user.uid : 'guest',
-                checkIn: Timestamp.fromDate(dates.from!),
-                checkOut: Timestamp.fromDate(dates.to!),
-                guests: selectedRoom.capacity,
-                totalPrice: totalAmount,
-                customerName: finalCustomerName,
-                customerEmail: finalCustomerEmail,
-                status: 'LOCKED',
-                expiresAt: Timestamp.fromDate(lockExpiry),
-                createdAt: serverTimestamp() as Timestamp,
-            };
-            transaction.set(newBookingRef, newBooking);
-            return newBookingRef.id;
-        });
-
-    } catch (error: any) {
-        toast({
-            variant: 'destructive',
-            title: 'Booking Failed',
-            description: error.message || 'Could not lock the room for booking.',
-        });
-        setIsProcessing(false);
-        return;
-    }
-
-    if (!lockedBookingId) {
-        setIsProcessing(false);
-        return;
-    }
-    const finalLockedBookingId = lockedBookingId;
-
-    const orderResponse = await createRazorpayOrder(totalAmount, `booking_${finalLockedBookingId}`);
-
-    const cleanupLock = async () => {
-        const bookingRef = doc(firestore, 'bookings', finalLockedBookingId);
-        const batch = writeBatch(firestore);
-        batch.delete(bookingRef);
-        await batch.commit();
-    };
-
-    if (!orderResponse.success || !orderResponse.order) {
-        toast({
-            variant: 'destructive',
-            title: 'Payment Error',
-            description: orderResponse.error || 'Could not initialize payment.',
-        });
-        await cleanupLock();
-        setIsProcessing(false);
-        return;
-    }
-    
-    const { order } = orderResponse;
-    
-    const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-        amount: order.amount,
-        currency: order.currency,
-        name: 'Uttarakhand Getaways',
-        description: `Booking for ${selectedRoom.type} at ${hotel.name}`,
-        image: '/logo-icon.png',
-        order_id: order.id,
-        handler: async (response: any) => {
-            if (!firestore) return;
-            const bookingRef = doc(firestore, 'bookings', finalLockedBookingId);
-            const batch = writeBatch(firestore);
-            batch.update(bookingRef, { status: 'CONFIRMED', expiresAt: null });
-            await batch.commit();
-
-            await revalidateAdminOnBooking();
-
-            toast({
-                title: 'Payment Successful!',
-                description: `Your booking at ${hotel.name} is confirmed.`,
-            });
-            
-            router.push(`/booking/success/${finalLockedBookingId}`);
-        },
-        prefill: {
-            name: finalCustomerName,
-            email: finalCustomerEmail,
-        },
-        modal: {
-            ondismiss: async () => {
-                await cleanupLock();
-                toast({
-                    variant: 'destructive',
-                    title: 'Payment Canceled',
-                    description: 'Your payment was canceled. The room lock has been released.',
-                });
-                setIsProcessing(false);
-            }
-        }
-    };
-    
-    const rzp = new window.Razorpay(options);
-    rzp.open();
-  };
+  const { rooms, isLoading: isLoadingRooms } = useMemo(() => {
+    const filteredRooms = dummyRooms.filter(r => r.hotelId === hotel.id);
+    return { data: filteredRooms, isLoading: false };
+  }, [hotel.id]);
 
   const handleRoomSelect = (room: Room) => {
     setSelectedRoom(room);
   }
-
 
   return (
       <Card className="sticky top-24">
@@ -368,13 +193,15 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
                     <span>₹{(selectedRoom.price * nights).toLocaleString()}</span>
                 </div>
                  <Button
-                    onClick={handleProceedToBook}
                     size="lg"
                     className="w-full"
-                    disabled={isProcessing}
+                    disabled={true}
                 >
-                    {isProcessing ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Processing...</> : `Proceed to Book for ₹${(selectedRoom.price * nights).toLocaleString()}`}
+                    Booking Disabled
                 </Button>
+                <p className="text-xs text-center text-muted-foreground">
+                    Online booking is not available in this demonstration.
+                </p>
             </div>
           )}
         </CardContent>

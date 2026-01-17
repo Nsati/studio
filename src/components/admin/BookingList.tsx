@@ -2,8 +2,6 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { useCollection, useDoc, useFirestore } from '@/firebase';
-import { collection, doc } from 'firebase/firestore';
 import type { Booking, Hotel } from '@/lib/types';
 import {
   Table,
@@ -17,20 +15,16 @@ import { Card } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { format } from 'date-fns';
 import { Skeleton } from '../ui/skeleton';
+import { dummyBookings, dummyHotels } from '@/lib/dummy-data';
 
 function BookingRow({ booking }: { booking: Booking }) {
-    const firestore = useFirestore();
-    const hotelRef = useMemo(() => {
-        if (!firestore) return null;
-        return doc(firestore, 'hotels', booking.hotelId);
-    }, [firestore, booking.hotelId]);
+    const hotel = useMemo(() => {
+        return dummyHotels.find(h => h.id === booking.hotelId);
+    }, [booking.hotelId]);
 
-    const { data: hotel, isLoading } = useDoc<Hotel>(hotelRef);
-
-    const getStatusVariant = (status: 'CONFIRMED' | 'LOCKED' | 'CANCELLED') => {
+    const getStatusVariant = (status: 'CONFIRMED' | 'CANCELLED') => {
         switch (status) {
             case 'CONFIRMED': return 'default';
-            case 'LOCKED': return 'secondary';
             case 'CANCELLED': return 'destructive';
             default: return 'outline';
         }
@@ -39,14 +33,14 @@ function BookingRow({ booking }: { booking: Booking }) {
     return (
         <TableRow>
             <TableCell className="font-medium">
-                {isLoading ? <Skeleton className="h-5 w-24" /> : hotel?.name || 'Unknown Hotel'}
+                {hotel?.name || 'Unknown Hotel'}
             </TableCell>
             <TableCell>
                 <div className="font-medium">{booking.customerName}</div>
                 <div className="text-sm text-muted-foreground">{booking.customerEmail}</div>
             </TableCell>
             <TableCell>
-                {format((booking.checkIn as any).toDate(), 'LLL dd, y')} - {format((booking.checkOut as any).toDate(), 'LLL dd, y')}
+                {format(booking.checkIn, 'LLL dd, y')} - {format(booking.checkOut, 'LLL dd, y')}
             </TableCell>
                 <TableCell>
                 <Badge variant={getStatusVariant(booking.status)}>
@@ -62,14 +56,8 @@ function BookingRow({ booking }: { booking: Booking }) {
 
 
 export function BookingList() {
-    const firestore = useFirestore();
-
-    const bookingsQuery = useMemo(() => {
-        if (!firestore) return null;
-        return collection(firestore, 'bookings');
-    }, [firestore]);
-
-    const { data: bookings, isLoading } = useCollection<Booking>(bookingsQuery);
+    const isLoading = false;
+    const bookings = dummyBookings;
 
     return (
         <Card>
