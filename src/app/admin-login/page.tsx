@@ -19,10 +19,11 @@ export default function AdminLoginPage() {
   const firestore = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
-  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const adminEmail = 'admin@uttarakhandgetaways.com'; // Hardcoded admin email
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,7 +33,8 @@ export default function AdminLoginPage() {
     setError('');
 
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      // Use the hardcoded admin email
+      const userCredential = await signInWithEmailAndPassword(auth, adminEmail, password);
       const user = userCredential.user;
 
       // Check if user is an admin
@@ -40,14 +42,19 @@ export default function AdminLoginPage() {
       const userDoc = await getDoc(userDocRef);
 
       if (userDoc.exists() && (userDoc.data() as UserProfile).role === 'admin') {
-        toast({ title: 'Admin Login Successful!', description: `Welcome back, ${userDoc.data().displayName}!` });
+        toast({ title: 'Admin Login Successful!', description: `Welcome back, Admin!` });
         router.push('/admin');
       } else {
         await auth.signOut(); // Log out the user if they are not an admin
         setError('Access Denied. You do not have admin privileges.');
       }
     } catch (error: any) {
-      setError('Invalid email or password.');
+      // Provide a more helpful error for the user
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+          setError('Invalid Password. Please ensure the admin account exists and the password is correct.');
+      } else {
+        setError('An unknown error occurred.');
+      }
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -59,21 +66,14 @@ export default function AdminLoginPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="font-headline text-3xl">Admin Login</CardTitle>
-          <CardDescription>Enter your credentials to access the dashboard</CardDescription>
+          <CardDescription>
+            Enter the admin password to access the dashboard.
+            <br />
+            <span className="text-xs text-muted-foreground">(First, sign up with email: admin@uttarakhandgetaways.com to create the admin account)</span>
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="admin@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input

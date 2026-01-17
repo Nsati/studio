@@ -40,11 +40,12 @@ export default function SignupPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Check if this is the first user to make them an admin
+      // Check if this is the first user OR if the email is the special admin email
       const usersQuery = query(collection(firestore, 'users'), limit(1));
       const usersSnapshot = await getDocs(usersQuery);
       const isFirstUser = usersSnapshot.empty;
-      const role = isFirstUser ? 'admin' : 'user';
+      const isAdminEmail = email.toLowerCase() === 'admin@uttarakhandgetaways.com';
+      const role = isFirstUser || isAdminEmail ? 'admin' : 'user';
 
       // Create user profile in Firestore
       await setDoc(doc(firestore, 'users', user.uid), {
@@ -57,7 +58,7 @@ export default function SignupPage() {
       await revalidateAdminPanel();
       toast({ 
         title: role === 'admin' ? 'Welcome, Admin!' : 'Account created!', 
-        description: role === 'admin' ? "You are the first user, so you have been made an admin." : "You've been successfully signed up." 
+        description: role === 'admin' ? "You have been registered as an admin." : "You've been successfully signed up." 
       });
       router.push(role === 'admin' ? '/admin' : '/my-bookings');
 

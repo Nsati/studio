@@ -5,8 +5,6 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useAuth, useFirestore } from '@/firebase';
-import { doc, updateDoc } from 'firebase/firestore';
-import { revalidateAdminPanel } from '../admin/actions';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -33,26 +31,9 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-
-      // ---- START: ONE-TIME ADMIN PROMOTION ----
-      // IMPORTANT: Replace with your admin email, then log in once.
-      // You can remove this code after you have successfully become an admin.
-      const adminEmail = 'YOUR_EMAIL@example.com';
-      if (user.email && user.email.toLowerCase() === adminEmail.toLowerCase()) {
-        const userDocRef = doc(firestore, 'users', user.uid);
-        await updateDoc(userDocRef, { role: 'admin' });
-        await revalidateAdminPanel();
-        toast({
-          title: 'Admin Access Granted!',
-          description: 'You have been successfully promoted to an admin.',
-        });
-        router.push('/admin');
-        return; // Important to exit here
-      }
-      // ---- END: ONE-TIME ADMIN PROMOTION ----
-
+      await signInWithEmailAndPassword(auth, email, password);
+      
+      // Admin role is now handled at signup and they should use the /admin-login page.
 
       toast({ title: 'Login successful!', description: `Welcome back!` });
       router.push('/my-bookings');
