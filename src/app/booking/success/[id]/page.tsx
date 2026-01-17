@@ -28,7 +28,6 @@ import { format } from 'date-fns';
 import { generateConfirmationEmailAction } from '@/app/booking/actions';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDoc, useFirestore, useUser } from '@/firebase';
-import { dummyHotels } from '@/lib/dummy-data';
 
 interface EmailContent {
   subject: string;
@@ -50,10 +49,11 @@ export default function BookingSuccessPage() {
 
   const { data: booking, isLoading: isLoadingBooking } = useDoc<Booking>(bookingRef);
 
-  const hotel = useMemo(() => {
-    if (!booking) return null;
-    return dummyHotels.find(h => h.id === booking.hotelId) || null;
-  }, [booking]);
+  const hotelRef = useMemo(() => {
+    if (!firestore || !booking) return null;
+    return doc(firestore, 'hotels', booking.hotelId);
+  }, [firestore, booking]);
+  const { data: hotel, isLoading: isLoadingHotel } = useDoc<Hotel>(hotelRef);
 
 
   useEffect(() => {
@@ -89,7 +89,7 @@ export default function BookingSuccessPage() {
     getEmailContent();
   }, [booking, hotel]);
 
-  if (isLoadingBooking) {
+  if (isLoadingBooking || isLoadingHotel) {
       return (
           <div className="container mx-auto max-w-4xl py-12 px-4 md:px-6 space-y-8">
               <Skeleton className="h-24 w-full" />

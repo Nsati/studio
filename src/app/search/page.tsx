@@ -18,18 +18,51 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { Search } from 'lucide-react';
 import Loading from './loading';
-import { dummyCities, dummyHotels } from '@/lib/dummy-data';
+import { dummyCities } from '@/lib/dummy-data';
+import { useCollection, useFirestore } from '@/firebase';
+import { collection, query, where } from 'firebase/firestore';
+import { Skeleton } from '@/components/ui/skeleton';
 
 function SearchResults() {
   const searchParams = useSearchParams();
   const city = searchParams.get('city');
+  const firestore = useFirestore();
 
-  const hotels = useMemo(() => {
-    if (!city || city === 'All') {
-      return dummyHotels;
+  const hotelsQuery = useMemo(() => {
+    if (!firestore) return null;
+    let q = query(collection(firestore, 'hotels'));
+    if (city && city !== 'All') {
+      q = query(q, where('city', '==', city));
     }
-    return dummyHotels.filter(hotel => hotel.city === city);
-  }, [city]);
+    return q;
+  }, [firestore, city]);
+
+  const { data: hotels, isLoading } = useCollection<Hotel>(hotelsQuery);
+
+  if (isLoading) {
+    return (
+      <div className="flex-1">
+        <div className="mb-6">
+          <Skeleton className="h-9 w-1/2" />
+          <Skeleton className="mt-2 h-5 w-1/4" />
+        </div>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Card key={i}>
+              <CardContent className="p-0">
+                <Skeleton className="h-48 w-full" />
+              </CardContent>
+              <div className="p-4 space-y-2">
+                <Skeleton className="h-6 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+                <Skeleton className="h-4 w-1/4" />
+              </div>
+            </Card>
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex-1">

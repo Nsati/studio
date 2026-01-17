@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { useUser, useFirestore, useCollection } from '@/firebase';
+import { useUser, useFirestore, useCollection, useDoc } from '@/firebase';
 import type { Booking, Hotel } from '@/lib/types';
 import {
   Card,
@@ -19,16 +19,42 @@ import { Calendar, Hotel as HotelIcon, Home, Users, Loader2 } from 'lucide-react
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { collection } from 'firebase/firestore';
-import { dummyHotels } from '@/lib/dummy-data';
+import { collection, doc } from 'firebase/firestore';
 
 function BookingItem({ booking }: { booking: Booking }) {
-    const hotel = useMemo(() => {
-        return dummyHotels.find(h => h.id === booking.hotelId);
-    }, [booking.hotelId]);
+    const firestore = useFirestore();
+
+    const hotelRef = useMemo(() => {
+        if (!firestore) return null;
+        return doc(firestore, 'hotels', booking.hotelId);
+    }, [firestore, booking.hotelId]);
+
+    const { data: hotel, isLoading } = useDoc<Hotel>(hotelRef);
+
+
+    if (isLoading) {
+        return (
+            <Card className="overflow-hidden">
+                <div className="grid grid-cols-1 md:grid-cols-3">
+                    <div className="relative h-48 md:h-full">
+                        <Skeleton className="h-full w-full"/>
+                    </div>
+                     <div className="col-span-2 p-6 space-y-4">
+                        <Skeleton className="h-6 w-3/4"/>
+                        <Skeleton className="h-4 w-1/2"/>
+                        <div className="grid gap-4 pt-4 md:grid-cols-2">
+                            <Skeleton className="h-5 w-full"/>
+                            <Skeleton className="h-5 w-full"/>
+                            <Skeleton className="h-5 w-full"/>
+                            <Skeleton className="h-5 w-full"/>
+                        </div>
+                     </div>
+                </div>
+            </Card>
+        )
+    }
 
     if (!hotel) {
-        // This can happen if a hotel from a booking is no longer in dummy data
         return (
             <Card className="overflow-hidden">
                 <CardHeader>

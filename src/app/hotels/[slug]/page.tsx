@@ -3,12 +3,13 @@
 import { notFound, useParams } from 'next/navigation';
 import Image from 'next/image';
 import { Star, MapPin, BedDouble } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import React, { useMemo } from 'react';
 
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { AmenityIcon } from '@/components/hotel/AmenityIcon';
-import { dummyHotels } from '@/lib/dummy-data';
 import type { Hotel } from '@/lib/types';
+import { useDoc, useFirestore } from '@/firebase';
+import { doc } from 'firebase/firestore';
 
 import {
   Carousel,
@@ -26,30 +27,26 @@ import Loading from './loading';
 export default function HotelPage() {
   const params = useParams();
   const slug = params.slug as string;
-  const [hotel, setHotel] = useState<Hotel | null | undefined>(undefined);
+  const firestore = useFirestore();
   
-  useEffect(() => {
-      // The slug from useParams might not be available during the initial client render.
-      // We use useEffect to safely access it and find the hotel.
-      if (slug) {
-        const foundHotel = dummyHotels.find(h => h.id === slug);
-        setHotel(foundHotel || null);
-      }
-  }, [slug]);
-
+  const hotelRef = useMemo(() => {
+    if (!firestore || !slug) return null;
+    return doc(firestore, 'hotels', slug);
+  }, [firestore, slug]);
+  
+  const { data: hotel, isLoading } = useDoc<Hotel>(hotelRef);
+  
   const bookingSectionRef = React.useRef<HTMLDivElement>(null);
 
   const handleScrollToBooking = () => {
     bookingSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // While waiting for useEffect to run and find the hotel
-  if (hotel === undefined) {
+  if (isLoading) {
     return <Loading />;
   }
 
-  // After useEffect runs, if hotel is still not found
-  if (hotel === null) {
+  if (!hotel) {
     notFound();
   }
 

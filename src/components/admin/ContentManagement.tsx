@@ -2,7 +2,9 @@
 
 import React, { useState, useTransition, useMemo } from 'react';
 import type { Hotel, UserProfile, Booking } from '@/lib/types';
-import { dummyHotels, dummyUsers, dummyBookings } from '@/lib/dummy-data';
+import { dummyUsers, dummyBookings } from '@/lib/dummy-data';
+import { useCollection, useFirestore } from '@/firebase';
+import { collection, doc, deleteDoc } from 'firebase/firestore';
 
 import {
   Table,
@@ -49,32 +51,31 @@ function HotelManagement() {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingHotel, setEditingHotel] = useState<Partial<Hotel> | undefined>(undefined);
 
-    const hotels = dummyHotels;
-    const isLoading = false;
+    const firestore = useFirestore();
+    const hotelsQuery = useMemo(() => firestore ? collection(firestore, 'hotels') : null, [firestore]);
+    const { data: hotels, isLoading } = useCollection<Hotel>(hotelsQuery);
     
-    const showDummyDataToast = () => {
-        toast({
-            variant: 'destructive',
-            title: 'Action Disabled',
-            description: 'This functionality is disabled when using dummy data.',
-        });
-    };
-
     const handleEdit = (hotel: Hotel) => {
-        showDummyDataToast();
-        // setEditingHotel(hotel);
-        // setIsDialogOpen(true);
+        setEditingHotel(hotel);
+        setIsDialogOpen(true);
     };
 
     const handleAddNew = () => {
-        showDummyDataToast();
-        // setEditingHotel(undefined);
-        // setIsDialogOpen(true);
+        setEditingHotel(undefined);
+        setIsDialogOpen(true);
     }
 
     const handleDelete = (hotel: Hotel) => {
+        if (!firestore) return;
         startTransition(async () => {
-             showDummyDataToast();
+             try {
+                await deleteDoc(doc(firestore, "hotels", hotel.id));
+                toast({ title: "Hotel Deleted", description: `${hotel.name} has been removed.` });
+                await revalidateAdminPanel();
+                await revalidatePublicContent();
+             } catch (e: any) {
+                toast({ variant: "destructive", title: "Error", description: e.message });
+             }
         });
     };
 
@@ -137,7 +138,7 @@ function HotelManagement() {
                                     </Button>
                                     <AlertDialog>
                                         <AlertDialogTrigger asChild>
-                                            <Button variant="ghost" size="icon">
+                                            <Button variant="ghost" size="icon" disabled={isPending}>
                                                 {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4 text-destructive" />}
                                             </Button>
                                         </AlertDialogTrigger>
