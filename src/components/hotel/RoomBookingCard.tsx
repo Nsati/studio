@@ -10,6 +10,7 @@ import { collection } from 'firebase/firestore';
 import type { Hotel, Room } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useCollection, useFirestore } from '@/firebase';
+import { dummyRooms } from '@/lib/dummy-data';
 
 import {
   Card,
@@ -45,7 +46,16 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
       return collection(firestore, 'hotels', hotel.id, 'rooms');
   }, [firestore, hotel.id]);
 
-  const { data: rooms, isLoading: isLoadingRooms } = useCollection<Room>(roomsQuery);
+  const { data: liveRooms, isLoading: isLoadingRooms } = useCollection<Room>(roomsQuery);
+
+  const rooms = useMemo(() => {
+      if (isLoadingRooms) return null;
+
+      if (liveRooms && liveRooms.length > 0) {
+          return liveRooms;
+      }
+      return dummyRooms.filter(r => r.hotelId === hotel.id);
+  }, [isLoadingRooms, liveRooms, hotel.id]);
 
   const nights =
     dates?.from && dates?.to ? differenceInDays(dates.to, dates.from) : 0;
@@ -71,7 +81,7 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
       )
   }
   
-  if (rooms && rooms.length === 0) {
+  if (!rooms || rooms.length === 0) {
     return (
         <Card className="sticky top-24">
             <CardHeader>
@@ -85,7 +95,7 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
                     <AlertCircle className="h-4 w-4 !text-amber-600" />
                     <AlertTitle className="text-amber-800">Booking Not Available</AlertTitle>
                     <AlertDescription className="text-amber-700">
-                        Rooms for this hotel are not yet configured for online booking. Please check back later.
+                        Rooms for this hotel are not yet configured for online booking. Please check back later or add them in the admin panel.
                     </AlertDescription>
                 </Alert>
             </CardContent>

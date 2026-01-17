@@ -16,26 +16,43 @@ import { Badge } from '@/components/ui/badge';
 import { useMemo } from 'react';
 import { Skeleton } from '../ui/skeleton';
 import { dummyRooms } from '@/lib/dummy-data';
+import { useCollection, useFirestore } from '@/firebase';
+import { collection } from 'firebase/firestore';
 
 interface HotelCardProps {
   hotel: Hotel;
 }
 
 function HotelMinPrice({ hotelId }: { hotelId: string}) {
+  const firestore = useFirestore();
+
+  const roomsQuery = useMemo(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'hotels', hotelId, 'rooms');
+  }, [firestore, hotelId]);
+
+  const { data: liveRooms, isLoading } = useCollection<Room>(roomsQuery);
+
   const roomsForHotel = useMemo(() => {
+    if (isLoading) return null;
+    if (liveRooms && liveRooms.length > 0) return liveRooms;
     return dummyRooms.filter(room => room.hotelId === hotelId);
-  }, [hotelId]);
+  }, [hotelId, liveRooms, isLoading]);
 
   const minPrice = useMemo(() => {
     if (!roomsForHotel || roomsForHotel.length === 0) return 0;
     return Math.min(...roomsForHotel.map((r) => r.price))
   }, [roomsForHotel]);
+  
+  if (isLoading || roomsForHotel === null) {
+      return <Skeleton className="h-5 w-24" />
+  }
 
   if (minPrice === 0) return null;
 
   return (
     <Badge variant="secondary" className="text-sm">
-      from ₹{minPrice}/night
+      from ₹{minPrice.toLocaleString()}/night
     </Badge>
   )
 }

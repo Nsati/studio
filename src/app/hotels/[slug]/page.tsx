@@ -10,6 +10,7 @@ import { AmenityIcon } from '@/components/hotel/AmenityIcon';
 import type { Hotel } from '@/lib/types';
 import { useDoc, useFirestore } from '@/firebase';
 import { doc } from 'firebase/firestore';
+import { dummyHotels } from '@/lib/dummy-data';
 
 import {
   Carousel,
@@ -34,7 +35,13 @@ export default function HotelPage() {
     return doc(firestore, 'hotels', slug);
   }, [firestore, slug]);
   
-  const { data: hotel, isLoading } = useDoc<Hotel>(hotelRef);
+  const { data: liveHotel, isLoading } = useDoc<Hotel>(hotelRef);
+  
+  const hotel = useMemo(() => {
+    if (isLoading) return null;
+    if (liveHotel) return liveHotel;
+    return dummyHotels.find(h => h.id === slug);
+  }, [isLoading, liveHotel, slug]);
   
   const bookingSectionRef = React.useRef<HTMLDivElement>(null);
 
