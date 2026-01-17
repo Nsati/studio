@@ -8,9 +8,9 @@ import { useRouter } from 'next/navigation';
 
 import type { Hotel, Room } from '@/lib/types';
 import { useCollection, useFirestore, useUser } from '@/firebase';
-import { createRazorpayOrder } from '@/app/booking/actions';
+import { createRazorpayOrder, revalidateAdminOnBooking } from '@/app/booking/actions';
 import { useToast } from '@/hooks/use-toast';
-import { collection, doc, setDoc } from 'firebase/firestore';
+import { collection, doc, runTransaction } from 'firebase/firestore';
 
 import {
   Card,
@@ -30,7 +30,7 @@ import { cn } from '@/lib/utils';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import { revalidateAdminOnBooking } from '@/app/booking/actions';
+import { revalidatePublicContent } from '@/app/admin/actions';
 
 // Add this interface to handle the Razorpay window object
 declare global {
@@ -68,7 +68,10 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
   const { data: rooms, isLoading: isLoadingRooms } = useCollection<Room>(roomsQuery);
 
   const handleRoomSelect = (room: Room) => {
-    setSelectedRoom(room);
+    const isAvailable = (room.availableRooms === undefined || room.availableRooms > 0);
+    if (isDateRangeValid && isAvailable) {
+        setSelectedRoom(room);
+    }
   };
 
   const handlePayment = async () => {
@@ -136,28 +139,51 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
       image: 'https://cdn.worldvectorlogo.com/logos/uttarakhand-tourism.svg',
       order_id: result.order.id,
       handler: async function (response: any) {
-        if (!firestore || !user) return;
+        if (!firestore || !user || !selectedRoom || !dates?.from || !dates?.to) return;
         
-        try {
-            const bookingData = {
-                id: newBookingId,
-                hotelId: hotel.id,
-                userId: user.uid,
-                roomId: selectedRoom.id,
-                roomType: selectedRoom.type,
-                checkIn: dates!.from!,
-                checkOut: dates!.to!,
-                guests: 2, // Example, you might want a guest selector
-                totalPrice: amount,
-                customerName: customerDetails.name,
-                customerEmail: customerDetails.email,
-                status: 'CONFIRMED',
-                createdAt: new Date(),
-                razorpayPaymentId: response.razorpay_payment_id,
-            };
+        const roomRef = doc(firestore, 'hotels', hotel.id, 'rooms', selectedRoom.id);
+        const bookingRef = doc(firestore, 'users', user.uid, 'bookings', newBookingId);
 
-            await setDoc(doc(firestore, 'users', user.uid, 'bookings', newBookingId), bookingData);
+        try {
+            await runTransaction(firestore, async (transaction) => {
+                const roomDoc = await transaction.get(roomRef);
+                if (!roomDoc.exists()) {
+                  throw new Error("This room does not exist anymore.");
+                }
+                
+                const roomData = roomDoc.data();
+                const availableCount = roomData.availableRooms ?? roomData.totalRooms;
+    
+                if (availableCount < 1) {
+                  throw new Error("Sorry, this room just got booked by someone else!");
+                }
+    
+                const newAvailableCount = availableCount - 1;
+                transaction.update(roomRef, { availableRooms: newAvailableCount });
+
+                const bookingData = {
+                    id: newBookingId,
+                    hotelId: hotel.id,
+                    userId: user.uid,
+                    roomId: selectedRoom.id,
+                    roomType: selectedRoom.type,
+                    checkIn: dates.from!,
+                    checkOut: dates.to!,
+                    guests: 2, // Example, you might want a guest selector
+                    totalPrice: amount,
+                    customerName: customerDetails.name,
+                    customerEmail: customerDetails.email,
+                    status: 'CONFIRMED' as const,
+                    createdAt: new Date(),
+                    razorpayPaymentId: response.razorpay_payment_id,
+                };
+
+                transaction.set(bookingRef, bookingData);
+            });
+
+            // If transaction is successful
             await revalidateAdminOnBooking();
+            await revalidatePublicContent();
 
             toast({
               title: 'Payment Successful!',
@@ -165,13 +191,14 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
             });
             router.push(`/booking/success/${newBookingId}`);
 
-        } catch (error) {
-            console.error("Booking creation failed:", error);
+        } catch (error: any) {
+            console.error("Booking transaction failed:", error);
             toast({
                 variant: 'destructive',
                 title: 'Booking Failed',
-                description: 'We could not save your booking after payment. Please contact support.',
+                description: error.message || 'We could not save your booking after payment. Please contact support.',
             });
+            // In a real application, a refund should be programmatically initiated here.
             setIsBooking(false);
         }
       },
@@ -303,35 +330,43 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
 
         <div className="space-y-4">
           {isLoadingRooms && <Loader2 className="animate-spin" />}
-          {rooms?.map((room) => (
-            <Card
-              key={room.id}
-              onClick={() => isDateRangeValid && handleRoomSelect(room)}
-              className={cn(
-                'p-4 cursor-pointer transition-all',
-                isDateRangeValid && 'hover:bg-muted/50',
-                selectedRoom?.id === room.id && 'ring-2 ring-primary bg-primary/5',
-                !isDateRangeValid && 'bg-muted/30 opacity-60 cursor-not-allowed'
-              )}
-            >
-              <div className="flex flex-col gap-4 md:flex-row md:justify-between">
-                <div>
-                  <h4 className="font-semibold">{room.type} Room</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Fits up to {room.capacity} guests
-                  </p>
+          {rooms?.map((room) => {
+             const availableCount = room.availableRooms ?? room.totalRooms;
+             const isAvailable = availableCount > 0;
+            return (
+                <Card
+                key={room.id}
+                onClick={() => handleRoomSelect(room)}
+                className={cn(
+                    'p-4 transition-all',
+                    isDateRangeValid && isAvailable ? 'cursor-pointer hover:bg-muted/50' : 'cursor-not-allowed bg-muted/30 opacity-60',
+                    selectedRoom?.id === room.id && 'ring-2 ring-primary bg-primary/5',
+                )}
+                >
+                <div className="flex flex-col gap-4 md:flex-row md:justify-between">
+                    <div>
+                    <h4 className="font-semibold">{room.type} Room</h4>
+                    <p className="text-sm text-muted-foreground">
+                        Fits up to {room.capacity} guests
+                    </p>
+                     {!isAvailable ? (
+                        <p className="text-sm font-bold text-destructive">Sold Out!</p>
+                     ) : availableCount <= 5 ? (
+                        <p className="text-sm font-semibold text-amber-600">Only {availableCount} left!</p>
+                     ) : null}
+                    </div>
+                    <div className="flex flex-col items-start gap-2 md:items-end">
+                    <p className="text-lg font-bold text-primary">
+                        ₹{room.price.toLocaleString()}
+                        <span className="text-sm font-normal text-muted-foreground">
+                        /night
+                        </span>
+                    </p>
+                    </div>
                 </div>
-                <div className="flex flex-col items-start gap-2 md:items-end">
-                  <p className="text-lg font-bold text-primary">
-                    ₹{room.price.toLocaleString()}
-                    <span className="text-sm font-normal text-muted-foreground">
-                      /night
-                    </span>
-                  </p>
-                </div>
-              </div>
-            </Card>
-          ))}
+                </Card>
+            )
+          })}
         </div>
 
         {selectedRoom && isDateRangeValid && (

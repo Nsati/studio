@@ -1,4 +1,5 @@
 
+
 export interface Hotel {
   id: string; 
   name: string;
@@ -16,6 +17,7 @@ export interface Room {
   price: number;
   capacity: number;
   totalRooms: number;
+  availableRooms?: number;
 }
 
 export interface City {
