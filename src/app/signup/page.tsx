@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import { collection, doc, getDocs, limit, query, setDoc } from 'firebase/firestore';
 import { useAuth, useFirestore } from '@/firebase';
 
 import { Button } from '@/components/ui/button';
@@ -40,17 +40,27 @@ export default function SignupPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
+      // Check if this is the first user to make them an admin
+      const usersQuery = query(collection(firestore, 'users'), limit(1));
+      const usersSnapshot = await getDocs(usersQuery);
+      const isFirstUser = usersSnapshot.empty;
+      const role = isFirstUser ? 'admin' : 'user';
+
       // Create user profile in Firestore
       await setDoc(doc(firestore, 'users', user.uid), {
         uid: user.uid,
         displayName: name,
         email: user.email,
-        role: 'user'
+        role: role
       });
 
       await revalidateAdminPanel();
-      toast({ title: 'Account created!', description: "You've been successfully signed up." });
-      router.push('/my-bookings');
+      toast({ 
+        title: role === 'admin' ? 'Welcome, Admin!' : 'Account created!', 
+        description: role === 'admin' ? "You are the first user, so you have been made an admin." : "You've been successfully signed up." 
+      });
+      router.push(role === 'admin' ? '/admin' : '/my-bookings');
+
     } catch (error: any) {
         if (error.code === 'auth/email-already-in-use') {
             setError('A user with this email already exists.');

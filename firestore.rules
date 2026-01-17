@@ -2,15 +2,14 @@
  * This ruleset enforces a security model for the Uttarakhand Getaways application.
  *
  * Core Philosophy:
- * The security model is dual-pronged: it enforces strict user ownership for private data while allowing public, read-only access to shared content like hotel listings. A global admin role, managed through the `/roles_admin` collection, grants privileged write access to public data.
+ * The security model is dual-pronged: it enforces strict user ownership for private data while allowing public, read-only access to shared content like hotel listings. A global admin role, defined in the user's profile, grants privileged write access to public data.
  *
  * Data Structure:
- * - /users/{userId}: Private user profile data, accessible only by the owner.
+ * - /users/{userId}: Private user profile data, accessible only by the owner. The `role` field determines if a user is an 'admin' or 'user'.
  * - /users/{userId}/bookings/{bookingId}: Private booking data, nested under the owning user for strict access control.
  * - /hotels/{hotelId}: Publicly readable hotel information. Writable only by admins.
  * - /hotels/{hotelId}/rooms/{roomId}: Publicly readable room information. Writable only by admins.
  * - /cities/{cityId}: Publicly readable city information. Writable only by admins.
- * - /roles_admin/{userId}: A lookup collection. The existence of a document here grants a user admin privileges across the application.
  *
  * Key Security Decisions:
  * - User Privacy: Listing users from the top-level `/users` collection is explicitly forbidden to prevent user enumeration and protect privacy.
@@ -18,8 +17,8 @@
  * - Admin-Only Writes: All modifications to public data (hotels, rooms, cities) and role assignments are restricted to users with the admin role.
  * - Default Secure: Any path or operation not explicitly defined is denied by default.
  *
- * Denormalization for Authorization:
- * The ruleset uses the existence of a document in `/roles_admin/{userId}` to check for administrator privileges. This avoids a costly `get()` call to a user's profile document on every check, leading to faster and more efficient rule execution.
+ * Authorization Logic:
+ * Admin privileges are determined by checking the `role` field in the user's own profile document at `/users/$(request.auth.uid)`. This keeps authorization logic tied directly to the user's profile and simplifies role management.
  *
  * Structural Segregation:
  * User-specific, private data (like `/users/{userId}/bookings`) is stored in a separate data tree from public, shared data (`/hotels`). This clear separation simplifies security rules, prevents accidental data leakage, and improves query performance.
@@ -64,11 +63,10 @@ service cloud.firestore {
     }
 
     /**
-     * Checks if the user has an admin role by verifying the existence
-     * of their UID in the '/roles_admin' collection.
+     * Checks if the user has an admin role by reading their user profile.
      */
     function isAdmin() {
-      return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
     /**
@@ -89,19 +87,19 @@ service cloud.firestore {
      */
     function isUserDataValidOnCreate(userId) {
       let data = request.resource.data;
-      return data.id == userId &&
+      return data.uid == userId &&
              data.displayName is string &&
              data.email is string &&
-             data.role == 'user';
+             (data.role == 'user' || data.role == 'admin');
     }
 
     /**
      * Enforces immutability of the User document's 'id' field on update.
-     * This prevents re-assigning ownership of a user profile.
      */
     function isUserDataValidOnUpdate() {
-      return request.resource.data.id == resource.data.id &&
-             request.resource.data.role == resource.data.role; // Role should not be changed by user
+      // Allow admin to change role, but user cannot change their own ID or role.
+      let canChangeRole = isAdmin() || (request.resource.data.role == resource.data.role);
+      return request.resource.data.uid == resource.data.uid && canChangeRole;
     }
 
     /**
@@ -136,7 +134,7 @@ service cloud.firestore {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
       allow create: if isOwner(userId) && isUserDataValidOnCreate(userId);
-      allow update: if (isExistingOwner(userId) && isUserDataValidOnUpdate()) || isExistingAdmin();
+      allow update: if (isOwner(userId) && isUserDataValidOnUpdate()) || isExistingAdmin();
       allow delete: if isExistingOwner(userId) || isExistingAdmin();
 
       /**
@@ -201,23 +199,5 @@ service cloud.firestore {
         allow delete: if isExistingAdmin();
       }
     }
-
-    /**
-     * @description Manages the list of users with admin privileges.
-     * @path /roles_admin/{userId}
-     * @allow (create) An existing admin granting admin rights to another user.
-     * @deny (get) A non-admin user checking if another user is an admin.
-     * @deny (list) A non-admin user trying to get a list of all administrators.
-     * @principle Secures administrative roles by restricting all access to existing admins.
-     */
-    match /roles_admin/{userId} {
-      allow get: if isAdmin();
-      allow list: if isAdmin();
-      allow create: if isAdmin();
-      allow update: if isExistingAdmin();
-      allow delete: if isExistingAdmin();
-    }
   }
 }
-
-    
