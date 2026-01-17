@@ -10,6 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
+import { RoomManagement } from '@/components/admin/RoomManagement';
 
 
 export default function EditHotelPage() {
@@ -29,6 +30,9 @@ export default function EditHotelPage() {
             <div className="container mx-auto py-8 space-y-8">
                 <Skeleton className="h-10 w-1/2" />
                 <Skeleton className="h-96 w-full" />
+                <div className="mt-8">
+                    <Skeleton className="h-64 w-full" />
+                </div>
             </div>
         );
     }
@@ -53,6 +57,10 @@ export default function EditHotelPage() {
                     <HotelForm hotel={hotel} />
                 </CardContent>
             </Card>
+
+            <div className="mt-8">
+                <RoomManagement hotelId={hotel.id} />
+            </div>
         </div>
     );
 }

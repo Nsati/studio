@@ -1,14 +1,15 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { BedDouble, Calendar as CalendarIcon, AlertCircle, Info } from 'lucide-react';
+import { BedDouble, Calendar as CalendarIcon, AlertCircle, Info, Loader2 } from 'lucide-react';
 import { differenceInDays, format } from 'date-fns';
 import type { DateRange } from 'react-day-picker';
 import { useRouter } from 'next/navigation';
+import { collection } from 'firebase/firestore';
 
 import type { Hotel, Room } from '@/lib/types';
-
 import { useToast } from '@/hooks/use-toast';
+import { useCollection, useFirestore } from '@/firebase';
 
 import {
   Card,
@@ -28,7 +29,7 @@ import { cn } from '@/lib/utils';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import { dummyRooms } from '@/lib/dummy-data';
+import { Skeleton } from '../ui/skeleton';
 
 
 export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
@@ -37,17 +38,40 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
   const [guests, setGuests] = useState('1');
   const router = useRouter();
   const { toast } = useToast();
+  const firestore = useFirestore();
+
+  const roomsQuery = useMemo(() => {
+      if (!firestore || !hotel.id) return null;
+      return collection(firestore, 'hotels', hotel.id, 'rooms');
+  }, [firestore, hotel.id]);
+
+  const { data: rooms, isLoading: isLoadingRooms } = useCollection<Room>(roomsQuery);
 
   const nights =
     dates?.from && dates?.to ? differenceInDays(dates.to, dates.from) : 0;
 
   const isDateRangeValid = dates?.from && dates?.to && nights > 0;
 
-  const rooms = useMemo(() => {
-    return dummyRooms.filter(room => room.hotelId === hotel.id);
-  }, [hotel.id]);
-
-  if (rooms.length === 0) {
+  if (isLoadingRooms) {
+      return (
+          <Card className="sticky top-24">
+             <CardHeader>
+                <Skeleton className="h-8 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+             </CardHeader>
+             <CardContent className="space-y-4">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <div className="space-y-2 pt-4">
+                  <Skeleton className="h-20 w-full" />
+                  <Skeleton className="h-20 w-full" />
+                </div>
+             </CardContent>
+          </Card>
+      )
+  }
+  
+  if (rooms && rooms.length === 0) {
     return (
         <Card className="sticky top-24">
             <CardHeader>
@@ -177,7 +201,7 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
 
         <div className="space-y-4">
           {rooms?.map((room) => {
-             const isAvailable = true; // Always available with dummy data
+             const isAvailable = true; // For now, assume all fetched rooms are available
             return (
                 <Card
                 key={room.id}
