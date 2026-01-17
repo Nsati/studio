@@ -262,30 +262,28 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
           </Popover>
         </div>
 
-        {!user && (
-          <div className="space-y-4">
-            <h4 className="font-semibold mb-2">2. Your Details</h4>
-            <div>
-              <Label htmlFor='customerName'>Full Name</Label>
-              <Input
-                id="customerName"
-                placeholder="Your Name"
-                value={customerDetails.name}
-                onChange={(e) => setCustomerDetails({ ...customerDetails, name: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label htmlFor='customerEmail'>Email Address</Label>
-              <Input
-                id="customerEmail"
-                type="email"
-                placeholder="your.email@example.com"
-                value={customerDetails.email}
-                onChange={(e) => setCustomerDetails({ ...customerDetails, email: e.target.value })}
-              />
-            </div>
+        <div className="space-y-4">
+          <h4 className="font-semibold mb-2">2. Guest Details</h4>
+          <div>
+            <Label htmlFor='customerName'>Full Name</Label>
+            <Input
+              id="customerName"
+              placeholder="Your Name"
+              value={customerDetails.name}
+              onChange={(e) => setCustomerDetails({ ...customerDetails, name: e.target.value })}
+            />
           </div>
-        )}
+          <div>
+            <Label htmlFor='customerEmail'>Email Address</Label>
+            <Input
+              id="customerEmail"
+              type="email"
+              placeholder="your.email@example.com"
+              value={customerDetails.email}
+              onChange={(e) => setCustomerDetails({ ...customerDetails, email: e.target.value })}
+            />
+          </div>
+        </div>
 
         {!isDateRangeValid && (
           <Alert variant="default" className="bg-amber-50 border-amber-200">
