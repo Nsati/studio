@@ -1,4 +1,3 @@
-
 'use client';
 
 import { notFound, useParams } from 'next/navigation';
@@ -29,6 +28,7 @@ import { format } from 'date-fns';
 import { generateConfirmationEmailAction } from '@/app/booking/actions';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDoc, useFirestore, useUser } from '@/firebase';
+import { useToast } from '@/hooks/use-toast';
 
 interface EmailContent {
   subject: string;
@@ -38,6 +38,7 @@ interface EmailContent {
 export default function BookingSuccessPage() {
   const params = useParams();
   const id = params.id as string;
+  const { toast } = useToast();
   const { user } = useUser();
   const firestore = useFirestore();
   const [emailContent, setEmailContent] = useState<EmailContent | null>(null);
@@ -55,6 +56,17 @@ export default function BookingSuccessPage() {
     return doc(firestore, 'hotels', booking.hotelId);
   }, [firestore, booking]);
   const { data: hotel, isLoading: isLoadingHotel } = useDoc<Hotel>(hotelRef);
+
+
+  useEffect(() => {
+    if (booking && hotel) {
+      // Only show toast once we have the booking data to ensure we are on a valid page
+      toast({
+        title: 'Booking Confirmed!',
+        description: 'Your payment was successful. Your details are below.',
+      });
+    }
+  }, [booking, hotel, toast]);
 
 
   useEffect(() => {
