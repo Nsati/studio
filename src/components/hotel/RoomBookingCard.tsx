@@ -34,6 +34,7 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const { user, userProfile } = useUser();
   const [customerDetails, setCustomerDetails] = useState({ name: '', email: '' });
+  const router = useRouter();
 
   useEffect(() => {
     if(userProfile) {
@@ -54,6 +55,16 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
   const handleRoomSelect = (room: Room) => {
     setSelectedRoom(room);
   }
+
+  const handleBooking = () => {
+    if (!selectedRoom || !isDateRangeValid) return;
+
+    // For demo purposes, we can't create a new booking in dummy data.
+    // So we'll just redirect to the success page of an existing booking.
+    // A real app would handle payment and DB creation here.
+    const firstBookingId = 'booking-1';
+    router.push(`/booking/success/${firstBookingId}`);
+  };
 
   return (
       <Card className="sticky top-24">
@@ -193,14 +204,14 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
                     <span>₹{(selectedRoom.price * nights).toLocaleString()}</span>
                 </div>
                  <Button
+                    onClick={handleBooking}
                     size="lg"
                     className="w-full"
-                    disabled={true}
                 >
-                    Booking Disabled
+                    Book Now (Demo)
                 </Button>
                 <p className="text-xs text-center text-muted-foreground">
-                    Online booking is not available in this demonstration.
+                    This will take you to a sample confirmation page.
                 </p>
             </div>
           )}
