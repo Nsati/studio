@@ -4,6 +4,7 @@ import { notFound, useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import React, { useEffect, useState, useMemo } from 'react';
+import { doc } from 'firebase/firestore';
 
 import type { Booking, Hotel } from '@/lib/types';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -26,7 +27,7 @@ import {
 import { format } from 'date-fns';
 import { generateConfirmationEmailAction } from '@/app/booking/actions';
 import { Skeleton } from '@/components/ui/skeleton';
-import { dummyBookings, dummyHotels } from '@/lib/dummy-data';
+import { useDoc, useFirestore, useUser } from '@/firebase';
 
 interface EmailContent {
   subject: string;
@@ -36,19 +37,25 @@ interface EmailContent {
 export default function BookingSuccessPage() {
   const params = useParams();
   const id = params.id as string;
+  const { user } = useUser();
+  const firestore = useFirestore();
   const [emailContent, setEmailContent] = useState<EmailContent | null>(null);
   const [isLoadingEmail, setIsLoadingEmail] = useState(true);
   
-  const { data: booking, isLoading: isLoadingBooking } = useMemo(() => {
-      const bookingData = dummyBookings.find(b => b.id === id);
-      return { data: bookingData, isLoading: false };
-  }, [id]);
+  const bookingRef = useMemo(() => {
+      if (!firestore || !user || !id) return null;
+      // In a real multi-user app, you'd want to ensure the booking belongs to this user.
+      // The current path is simple for demo purposes.
+      return doc(firestore, 'users', user.uid, 'bookings', id);
+  }, [firestore, user, id]);
 
-  const { data: hotel, isLoading: isLoadingHotel } = useMemo(() => {
-    if (!booking) return { data: null, isLoading: false };
-    const hotelData = dummyHotels.find(h => h.id === booking.hotelId);
-    return { data: hotelData, isLoading: false };
-  }, [booking]);
+  const { data: booking, isLoading: isLoadingBooking } = useDoc<Booking>(bookingRef);
+
+  const hotelRef = useMemo(() => {
+    if (!firestore || !booking) return null;
+    return doc(firestore, 'hotels', booking.hotelId);
+  }, [firestore, booking]);
+  const { data: hotel, isLoading: isLoadingHotel } = useDoc<Hotel>(hotelRef);
 
 
   useEffect(() => {
@@ -57,11 +64,14 @@ export default function BookingSuccessPage() {
 
       setIsLoadingEmail(true);
       try {
+        const checkInDate = (booking.checkIn as any).toDate ? (booking.checkIn as any).toDate() : booking.checkIn;
+        const checkOutDate = (booking.checkOut as any).toDate ? (booking.checkOut as any).toDate() : booking.checkOut;
+
         const content = await generateConfirmationEmailAction({
             hotelName: hotel.name,
             customerName: booking.customerName,
-            checkIn: booking.checkIn.toISOString(),
-            checkOut: booking.checkOut.toISOString(),
+            checkIn: checkInDate.toISOString(),
+            checkOut: checkOutDate.toISOString(),
             roomType: booking.roomType,
             totalPrice: booking.totalPrice,
             bookingId: booking.id!,
@@ -96,6 +106,9 @@ export default function BookingSuccessPage() {
   }
 
   const hotelImage = PlaceHolderImages.find((img) => img.id === hotel.images[0]);
+  const checkInDate = (booking.checkIn as any).toDate ? (booking.checkIn as any).toDate() : booking.checkIn;
+  const checkOutDate = (booking.checkOut as any).toDate ? (booking.checkOut as any).toDate() : booking.checkOut;
+
 
   return (
     <div className="container mx-auto max-w-4xl py-12 px-4 md:px-6">
@@ -140,8 +153,8 @@ export default function BookingSuccessPage() {
             <div className="flex items-center gap-2 text-muted-foreground">
               <Calendar className="h-5 w-5" />
               <span>
-                {format(booking.checkIn, 'EEE, LLL dd')} -{' '}
-                {format(booking.checkOut, 'EEE, LLL dd')}
+                {format(checkInDate, 'EEE, LLL dd')} -{' '}
+                {format(checkOutDate, 'EEE, LLL dd')}
               </span>
             </div>
             <div className="flex items-center gap-2 text-muted-foreground">

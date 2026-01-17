@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore, useDoc, useCollection } from '@/firebase';
 import type { Booking, Hotel } from '@/lib/types';
 import {
   Card,
@@ -19,11 +19,17 @@ import { Calendar, Hotel as HotelIcon, Home, Users, Loader2 } from 'lucide-react
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { dummyBookings, dummyHotels } from '@/lib/dummy-data';
+import { collection, doc } from 'firebase/firestore';
 
 function BookingItem({ booking }: { booking: Booking }) {
-    const isLoading = false;
-    const hotel = dummyHotels.find(h => h.id === booking.hotelId);
+    const firestore = useFirestore();
+
+    const hotelRef = useMemo(() => {
+        if (!firestore) return null;
+        return doc(firestore, 'hotels', booking.hotelId);
+    }, [firestore, booking.hotelId]);
+
+    const { data: hotel, isLoading } = useDoc<Hotel>(hotelRef);
 
     if (isLoading) {
         return (
@@ -51,6 +57,9 @@ function BookingItem({ booking }: { booking: Booking }) {
     const hotelImage = PlaceHolderImages.find(
         (img) => img.id === hotel.images[0]
     );
+
+    const checkInDate = (booking.checkIn as any).toDate ? (booking.checkIn as any).toDate() : booking.checkIn;
+    const checkOutDate = (booking.checkOut as any).toDate ? (booking.checkOut as any).toDate() : booking.checkOut;
 
     return (
         <Card key={booking.id} className="overflow-hidden">
@@ -86,13 +95,13 @@ function BookingItem({ booking }: { booking: Booking }) {
                 <div className="flex items-center gap-2 text-muted-foreground">
                     <Calendar className="h-5 w-5" />
                     <span>
-                    {format(booking.checkIn, 'EEE, LLL dd, yyyy')}
+                    {format(checkInDate, 'EEE, LLL dd, yyyy')}
                     </span>
                 </div>
                 <div className="flex items-center gap-2 text-muted-foreground">
                     <Calendar className="h-5 w-5 text-red-500" />
                     <span>
-                        {format(booking.checkOut, 'EEE, LLL dd, yyyy')}
+                        {format(checkOutDate, 'EEE, LLL dd, yyyy')}
                     </span>
                 </div>
                 
@@ -113,6 +122,7 @@ function BookingItem({ booking }: { booking: Booking }) {
 export default function MyBookingsPage() {
   const { user, isLoading: isUserLoading } = useUser();
   const router = useRouter();
+  const firestore = useFirestore();
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -120,14 +130,12 @@ export default function MyBookingsPage() {
     }
   }, [user, isUserLoading, router]);
   
-  const { data: bookings, isLoading: areBookingsLoading } = useMemo(() => {
-    if (!user) return { data: [], isLoading: true };
-    // In a real app, you'd fetch this based on user.uid.
-    // For this demo, we'll show bookings for the dummy user if the email matches.
-    const matchingUser = user.email === 'ankit.sharma@example.com';
-    const userBookings = matchingUser ? dummyBookings.filter(b => b.userId === 'test-user-id') : [];
-    return { data: userBookings, isLoading: false };
-  }, [user]);
+  const bookingsQuery = useMemo(() => {
+    if (!firestore || !user) return null;
+    return collection(firestore, 'users', user.uid, 'bookings');
+  }, [firestore, user]);
+
+  const { data: bookings, isLoading: areBookingsLoading } = useCollection<Booking>(bookingsQuery);
 
   const isLoading = isUserLoading || areBookingsLoading;
 

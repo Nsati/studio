@@ -7,10 +7,10 @@ import type { DateRange } from 'react-day-picker';
 import { useRouter } from 'next/navigation';
 
 import type { Hotel, Room } from '@/lib/types';
-import { useUser } from '@/firebase';
-import { dummyRooms } from '@/lib/dummy-data';
+import { useCollection, useFirestore, useUser } from '@/firebase';
 import { createRazorpayOrder } from '@/app/booking/actions';
 import { useToast } from '@/hooks/use-toast';
+import { collection, doc, setDoc } from 'firebase/firestore';
 
 import {
   Card,
@@ -30,6 +30,7 @@ import { cn } from '@/lib/utils';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
+import { revalidateAdminOnBooking } from '@/app/booking/actions';
 
 // Add this interface to handle the Razorpay window object
 declare global {
@@ -46,6 +47,7 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
   const router = useRouter();
   const { toast } = useToast();
   const [isBooking, setIsBooking] = useState(false);
+  const firestore = useFirestore();
 
   useEffect(() => {
     if (userProfile) {
@@ -58,10 +60,12 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
 
   const isDateRangeValid = dates?.from && dates?.to && nights > 0;
 
-  const { data: rooms, isLoading: isLoadingRooms } = useMemo(() => {
-    const filteredRooms = dummyRooms.filter(r => r.hotelId === hotel.id);
-    return { data: filteredRooms, isLoading: false };
-  }, [hotel.id]);
+  const roomsQuery = useMemo(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'hotels', hotel.id, 'rooms');
+  }, [firestore, hotel.id]);
+
+  const { data: rooms, isLoading: isLoadingRooms } = useCollection<Room>(roomsQuery);
 
   const handleRoomSelect = (room: Room) => {
     setSelectedRoom(room);
@@ -85,15 +89,22 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
         return;
     }
 
+    if (!user) {
+        toast({
+            variant: 'destructive',
+            title: 'Not Logged In',
+            description: 'Please log in to make a booking.',
+        });
+        router.push('/login');
+        return;
+    }
+
     if (!process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID) {
       toast({
         variant: 'destructive',
         title: 'Payment Gateway Not Configured',
-        description: "The site owner hasn't set up Razorpay. Using demo booking flow.",
+        description: "The site owner hasn't set up Razorpay.",
       });
-      // Fallback to demo booking if keys aren't set
-      const firstBookingId = 'booking-1';
-      router.push(`/booking/success/${firstBookingId}`);
       return;
     }
 
@@ -113,6 +124,8 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
       setIsBooking(false);
       return;
     }
+    
+    const newBookingId = result.order.receipt;
 
     const options = {
       key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
@@ -123,15 +136,44 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
       image: 'https://cdn.worldvectorlogo.com/logos/uttarakhand-tourism.svg',
       order_id: result.order.id,
       handler: async function (response: any) {
-        toast({
-          title: 'Payment Successful!',
-          description: 'Redirecting to your confirmation...',
-        });
+        if (!firestore || !user) return;
         
-        // In a real app, you would create a booking in the DB and then redirect.
-        // For this demo, we'll just use a static booking ID.
-        const firstBookingId = 'booking-1';
-        router.push(`/booking/success/${firstBookingId}`);
+        try {
+            const bookingData = {
+                id: newBookingId,
+                hotelId: hotel.id,
+                userId: user.uid,
+                roomId: selectedRoom.id,
+                roomType: selectedRoom.type,
+                checkIn: dates!.from!,
+                checkOut: dates!.to!,
+                guests: 2, // Example, you might want a guest selector
+                totalPrice: amount,
+                customerName: customerDetails.name,
+                customerEmail: customerDetails.email,
+                status: 'CONFIRMED',
+                createdAt: new Date(),
+                razorpayPaymentId: response.razorpay_payment_id,
+            };
+
+            await setDoc(doc(firestore, 'users', user.uid, 'bookings', newBookingId), bookingData);
+            await revalidateAdminOnBooking();
+
+            toast({
+              title: 'Payment Successful!',
+              description: 'Redirecting to your confirmation...',
+            });
+            router.push(`/booking/success/${newBookingId}`);
+
+        } catch (error) {
+            console.error("Booking creation failed:", error);
+            toast({
+                variant: 'destructive',
+                title: 'Booking Failed',
+                description: 'We could not save your booking after payment. Please contact support.',
+            });
+            setIsBooking(false);
+        }
       },
       prefill: {
         name: customerDetails.name,
@@ -142,6 +184,7 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
         roomId: selectedRoom.id,
         checkIn: format(dates!.from!, 'yyyy-MM-dd'),
         checkOut: format(dates!.to!, 'yyyy-MM-dd'),
+        userId: user.uid,
       },
       theme: {
         color: '#418259',

@@ -21,7 +21,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Search } from 'lucide-react';
 import Loading from './loading';
 import { Skeleton } from '@/components/ui/skeleton';
-import { dummyCities } from '@/lib/dummy-data';
 
 function SearchResults() {
   const searchParams = useSearchParams();
@@ -91,7 +90,12 @@ function SearchResults() {
 }
 
 function SearchFilters() {
-  const cities = dummyCities;
+  const firestore = useFirestore();
+  const citiesQuery = useMemo(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'cities');
+  }, [firestore]);
+  const { data: cities } = useCollection<City>(citiesQuery);
   
   const searchParams = useSearchParams();
   const router = useRouter();
