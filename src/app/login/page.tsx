@@ -4,7 +4,9 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { useAuth } from '@/firebase';
+import { useAuth, useFirestore } from '@/firebase';
+import { doc, updateDoc } from 'firebase/firestore';
+import { revalidateAdminPanel } from '../admin/actions';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -15,6 +17,7 @@ import { Loader2 } from 'lucide-react';
 
 export default function LoginPage() {
   const auth = useAuth();
+  const firestore = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
   const [email, setEmail] = useState('');
@@ -24,13 +27,33 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth) return;
+    if (!auth || !firestore) return;
 
     setIsLoading(true);
     setError('');
 
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // ---- START: ONE-TIME ADMIN PROMOTION ----
+      // IMPORTANT: Replace with your admin email, then log in once.
+      // You can remove this code after you have successfully become an admin.
+      const adminEmail = 'YOUR_EMAIL@example.com';
+      if (user.email && user.email.toLowerCase() === adminEmail.toLowerCase()) {
+        const userDocRef = doc(firestore, 'users', user.uid);
+        await updateDoc(userDocRef, { role: 'admin' });
+        await revalidateAdminPanel();
+        toast({
+          title: 'Admin Access Granted!',
+          description: 'You have been successfully promoted to an admin.',
+        });
+        router.push('/admin');
+        return; // Important to exit here
+      }
+      // ---- END: ONE-TIME ADMIN PROMOTION ----
+
+
       toast({ title: 'Login successful!', description: `Welcome back!` });
       router.push('/my-bookings');
     } catch (error: any) {
@@ -72,7 +95,7 @@ export default function LoginPage() {
               />
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button type="submit" className="w-full" disabled={isLoading || !auth}>
+            <Button type="submit" className="w-full" disabled={isLoading || !auth || !firestore}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Log In
             </Button>
