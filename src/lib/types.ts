@@ -48,6 +48,7 @@ export interface Booking {
   customerEmail: string;
   status: 'CONFIRMED' | 'CANCELLED';
   createdAt: Date;
+  razorpayPaymentId?: string;
 }
 
 // This mock type is no longer used for primary auth state.
