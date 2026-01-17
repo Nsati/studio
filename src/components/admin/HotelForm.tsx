@@ -6,7 +6,6 @@ import * as z from 'zod';
 import { useTransition } from 'react';
 import { doc, updateDoc, setDoc } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
-import slugify from 'slugify';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -80,7 +79,12 @@ export function HotelForm({ hotel, onFinished }: HotelFormProps) {
             toast({ title: 'Hotel Updated!', description: `${data.name} has been successfully updated.` });
         } else {
             // Create new hotel
-            const id = slugify(data.name, { lower: true, strict: true });
+            const id = data.name
+              .toLowerCase()
+              .replace(/&/g, 'and')
+              .replace(/[^a-z0-9\s-]/g, '')
+              .replace(/\s+/g, '-')
+              .replace(/-+/g, '-');
             const hotelRef = doc(firestore, 'hotels', id);
             await setDoc(hotelRef, { ...hotelData, id });
             toast({ title: 'Hotel Added!', description: `${data.name} has been successfully added.` });
