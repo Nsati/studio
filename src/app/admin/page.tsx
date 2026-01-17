@@ -6,8 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2 } from 'lucide-react';
-import { HotelList } from '@/components/admin/HotelList';
 import { verifyAdminPassword } from './actions';
+import { ContentManagement } from '@/components/admin/ContentManagement';
 
 
 function AdminLoginPage({ onLoginSuccess }: { onLoginSuccess: () => void }) {
@@ -79,9 +79,9 @@ export default function AdminPage() {
     <div className="container mx-auto py-8">
       <div className="mb-8">
           <h1 className="font-headline text-4xl font-bold">Admin Dashboard</h1>
-          <p className="text-muted-foreground">Manage your hotels from this dashboard.</p>
+          <p className="text-muted-foreground">Manage your cities and hotels from this dashboard.</p>
       </div>
-      <HotelList />
+      <ContentManagement />
     </div>
   );
 }

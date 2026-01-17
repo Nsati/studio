@@ -35,7 +35,7 @@ const hotelFormSchema = z.object({
 type HotelFormValues = z.infer<typeof hotelFormSchema>;
 
 interface HotelFormProps {
-  hotel?: Hotel;
+  hotel?: Partial<Hotel>;
   onFinished: () => void;
 }
 
@@ -44,22 +44,20 @@ export function HotelForm({ hotel, onFinished }: HotelFormProps) {
   const { toast } = useToast();
   const firestore = useFirestore();
 
-  const defaultValues = hotel ? {
-      ...hotel,
-      amenities: hotel.amenities.join(', '),
-      images: hotel.images.join(', '),
-  } : {
-      name: '',
-      city: '',
-      description: '',
-      rating: 4,
-      amenities: 'wifi, restaurant, parking',
-      images: 'hotel-1-1, hotel-1-2',
+  const defaultValues = {
+      name: hotel?.name || '',
+      city: hotel?.city || '',
+      description: hotel?.description || '',
+      rating: hotel?.rating || 4,
+      amenities: hotel?.amenities?.join(', ') || 'wifi, restaurant, parking',
+      images: hotel?.images?.join(', ') || 'hotel-1-1, hotel-1-2',
   };
 
   const form = useForm<HotelFormValues>({
     resolver: zodResolver(hotelFormSchema),
     defaultValues,
+    // Reset form if hotel changes (e.g., from add to edit)
+    key: hotel?.id || 'new',
   });
 
   const onSubmit = (data: HotelFormValues) => {
@@ -122,7 +120,7 @@ export function HotelForm({ hotel, onFinished }: HotelFormProps) {
             <FormItem>
               <FormLabel>City</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. Nainital" {...field} />
+                <Input placeholder="e.g. Nainital" {...field} readOnly={!!(hotel?.city && !hotel.id)} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -187,7 +185,7 @@ export function HotelForm({ hotel, onFinished }: HotelFormProps) {
             <Button type="button" variant="ghost" onClick={onFinished}>Cancel</Button>
             <Button type="submit" disabled={isPending || !firestore}>
                 {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {hotel ? 'Update Hotel' : 'Create Hotel'}
+                {hotel?.id ? 'Update Hotel' : 'Create Hotel'}
             </Button>
         </div>
       </form>

@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState, useTransition, useMemo } from 'react';
-import type { Hotel } from '@/lib/types';
+import type { Hotel, City } from '@/lib/types';
 import { useCollection, useFirestore } from '@/firebase';
-import { collection, doc, deleteDoc } from 'firebase/firestore';
+import { collection, doc, deleteDoc, query, where } from 'firebase/firestore';
 import {
   Table,
   TableHeader,
@@ -30,7 +30,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { Star, Edit, Trash2, Loader2, PlusCircle } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
@@ -38,17 +37,21 @@ import { useToast } from '@/hooks/use-toast';
 import { revalidateAdminPanel, revalidatePublicContent } from '@/app/admin/actions';
 import { HotelForm } from './HotelForm';
 
-export function HotelList() {
+interface HotelListProps {
+    city: City;
+}
+
+export function HotelList({ city }: HotelListProps) {
     const firestore = useFirestore();
     const [isPending, startTransition] = useTransition();
     const { toast } = useToast();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [editingHotel, setEditingHotel] = useState<Hotel | undefined>(undefined);
+    const [editingHotel, setEditingHotel] = useState<Partial<Hotel> | undefined>(undefined);
 
     const hotelsQuery = useMemo(() => {
-        if (!firestore) return null;
-        return collection(firestore, 'hotels');
-    }, [firestore]);
+        if (!firestore || !city) return null;
+        return query(collection(firestore, 'hotels'), where('city', '==', city.name));
+    }, [firestore, city]);
 
     const { data: hotels, isLoading } = useCollection<Hotel>(hotelsQuery);
 
@@ -58,7 +61,7 @@ export function HotelList() {
     };
 
     const handleAddNew = () => {
-        setEditingHotel(undefined);
+        setEditingHotel({ city: city.name });
         setIsDialogOpen(true);
     }
 
@@ -85,17 +88,11 @@ export function HotelList() {
 
     return (
         <>
-        <Card>
-            <div className="p-6 flex justify-between items-start">
-                <div>
-                    <h2 className="text-2xl font-bold tracking-tight">Hotel Management</h2>
-                    <p className="text-muted-foreground">
-                        Add, edit, or delete hotels on the platform.
-                    </p>
-                </div>
-                <Button onClick={handleAddNew}>
+        <div className="border rounded-lg">
+            <div className="p-4 flex justify-end items-start">
+                <Button onClick={handleAddNew} size="sm">
                     <PlusCircle className="mr-2 h-4 w-4" />
-                    New Hotel
+                    New Hotel in {city.name}
                 </Button>
             </div>
             <div className="border-t">
@@ -103,24 +100,28 @@ export function HotelList() {
                     <TableHeader>
                         <TableRow>
                             <TableHead>Name</TableHead>
-                            <TableHead>City</TableHead>
                             <TableHead>Rating</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
+                            <TableHead className="text-right w-[100px]">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {isLoading && Array.from({length: 5}).map((_, i) => (
+                        {isLoading && Array.from({length: 2}).map((_, i) => (
                              <TableRow key={i}>
                                 <TableCell><Skeleton className="h-5 w-32" /></TableCell>
-                                <TableCell><Skeleton className="h-5 w-24" /></TableCell>
                                 <TableCell><Skeleton className="h-5 w-16" /></TableCell>
                                 <TableCell className="text-right"><Skeleton className="h-8 w-20" /></TableCell>
                             </TableRow>
                         ))}
+                        {!isLoading && hotels?.length === 0 && (
+                            <TableRow>
+                                <TableCell colSpan={3} className="h-24 text-center">
+                                    No hotels yet in {city.name}.
+                                </TableCell>
+                            </TableRow>
+                        )}
                         {hotels?.map((hotel) => (
                            <TableRow key={hotel.id}>
                                 <TableCell className="font-medium">{hotel.name}</TableCell>
-                                <TableCell>{hotel.city}</TableCell>
                                 <TableCell>
                                     <div className="flex items-center gap-1">
                                         <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
@@ -165,14 +166,14 @@ export function HotelList() {
                     </TableBody>
                 </Table>
             </div>
-        </Card>
+        </div>
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogContent className="sm:max-w-xl">
                 <DialogHeader>
-                    <DialogTitle>{editingHotel ? 'Edit Hotel' : 'Add New Hotel'}</DialogTitle>
+                    <DialogTitle>{editingHotel?.id ? 'Edit Hotel' : 'Add New Hotel'}</DialogTitle>
                     <DialogDescription>
-                        {editingHotel ? `Update the details for ${editingHotel.name}.` : 'Fill in the details for the new hotel.'}
+                        {editingHotel?.id ? `Update the details for ${editingHotel.name}.` : `Fill in the details for the new hotel in ${city.name}.`}
                     </DialogDescription>
                 </DialogHeader>
                 <HotelForm
