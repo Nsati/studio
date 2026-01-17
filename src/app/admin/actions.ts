@@ -6,8 +6,8 @@ export async function verifyAdminPassword(password: string): Promise<boolean> {
   // This is a simple way to protect the admin panel.
   // In a production app, consider a more robust authentication system.
   const adminPassword = process.env.ADMIN_PASSWORD;
-  if (!adminPassword || adminPassword === 'changeme') {
-    // Fail safe if the environment variable is not set or is default.
+  if (!adminPassword) {
+    // Fail safe if the environment variable is not set.
     console.error("ADMIN_PASSWORD is not set in .env file. Please set it for security.");
     return false;
   }
