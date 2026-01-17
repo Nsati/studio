@@ -1,42 +1,83 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { useUser } from '@/firebase';
-import { useEffect } from 'react';
-import { Skeleton } from '@/components/ui/skeleton';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Loader2, User, Briefcase, Hotel } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { User, Briefcase, Hotel } from 'lucide-react';
 import { UserList } from '@/components/admin/UserList';
 import { BookingList } from '@/components/admin/BookingList';
 import { HotelList } from '@/components/admin/HotelList';
+import { verifyAdminPassword } from './actions';
+
+
+function AdminLoginPage({ onLoginSuccess }: { onLoginSuccess: () => void }) {
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
+
+    try {
+        const success = await verifyAdminPassword(password);
+        if (success) {
+          onLoginSuccess();
+        } else {
+          setError('Invalid password.');
+        }
+    } catch (e) {
+        setError('An error occurred.');
+    } finally {
+        setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="container flex min-h-[80vh] items-center justify-center">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <CardTitle className="font-headline text-3xl">Admin Access</CardTitle>
+          <CardDescription>
+            Enter the password to access the dashboard.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+            {error && <p className="text-sm text-destructive">{error}</p>}
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Log In
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 
 export default function AdminPage() {
-  const { user, userProfile, isLoading } = useUser();
-  const router = useRouter();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  useEffect(() => {
-    // If loading is done and there's no user or the user is not an admin, redirect.
-    if (!isLoading && (!user || userProfile?.role !== 'admin')) {
-      router.push('/admin-login');
-    }
-  }, [user, userProfile, isLoading, router]);
-
-  // Show skeleton while loading or if we are about to redirect.
-  if (isLoading || !user || userProfile?.role !== 'admin') {
-    return (
-      <div className="container mx-auto p-4 space-y-8">
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-10 w-1/4" />
-        </div>
-        <div className="space-y-4">
-          <Skeleton className="h-16 w-full" />
-          <Skeleton className="h-16 w-full" />
-          <Skeleton className="h-16 w-full" />
-        </div>
-      </div>
-    );
+  if (!isLoggedIn) {
+    return <AdminLoginPage onLoginSuccess={() => setIsLoggedIn(true)} />;
   }
-
+  
   return (
     <div className="container mx-auto py-8">
       <div className="mb-8">

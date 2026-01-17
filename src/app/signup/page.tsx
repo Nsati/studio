@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { collection, doc, getDocs, limit, query, setDoc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 import { useAuth, useFirestore } from '@/firebase';
 
 import { Button } from '@/components/ui/button';
@@ -13,7 +13,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
-import { revalidateAdminPanel } from '../admin/actions';
 
 export default function SignupPage() {
   const auth = useAuth();
@@ -40,12 +39,7 @@ export default function SignupPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Check if this is the first user OR if the email is the special admin email
-      const usersQuery = query(collection(firestore, 'users'), limit(1));
-      const usersSnapshot = await getDocs(usersQuery);
-      const isFirstUser = usersSnapshot.empty;
-      const isAdminEmail = email.toLowerCase() === 'admin@uttarakhandgetaways.com';
-      const role = isFirstUser || isAdminEmail ? 'admin' : 'user';
+      const role = 'user'; // All new signups are regular users.
 
       // Create user profile in Firestore
       await setDoc(doc(firestore, 'users', user.uid), {
@@ -55,12 +49,11 @@ export default function SignupPage() {
         role: role
       });
 
-      await revalidateAdminPanel();
       toast({ 
-        title: role === 'admin' ? 'Welcome, Admin!' : 'Account created!', 
-        description: role === 'admin' ? "You have been registered as an admin." : "You've been successfully signed up." 
+        title: 'Account created!', 
+        description: "You've been successfully signed up." 
       });
-      router.push(role === 'admin' ? '/admin' : '/my-bookings');
+      router.push('/my-bookings');
 
     } catch (error: any) {
         if (error.code === 'auth/email-already-in-use') {

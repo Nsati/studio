@@ -1,27 +1,13 @@
 /**
- * This ruleset enforces a security model for the Uttarakhand Getaways application.
+ * WARNING: This ruleset is simplified for a basic password-protected admin panel
+ * and is NOT secure for a production environment. The write rules for public
+ * collections like 'hotels' and 'cities' are open, and the list rules for 'users'
+ * and 'bookings' are also open. Security relies solely on the UI-level password
+ * on the admin panel, which does not protect against direct API calls.
  *
- * Core Philosophy:
- * The security model is dual-pronged: it enforces strict user ownership for private data while allowing public, read-only access to shared content like hotel listings. A global admin role, defined in the user's profile, grants privileged write access to public data.
- *
- * Data Structure:
- * - /users/{userId}: Private user profile data, accessible only by the owner. The `role` field determines if a user is an 'admin' or 'user'.
- * - /users/{userId}/bookings/{bookingId}: Private booking data, nested under the owning user for strict access control.
- * - /hotels/{hotelId}: Publicly readable hotel information. Writable only by admins.
- * - /hotels/{hotelId}/rooms/{roomId}: Publicly readable room information. Writable only by admins.
- * - /cities/{cityId}: Publicly readable city information. Writable only by admins.
- *
- * Key Security Decisions:
- * - User Privacy: Listing users from the top-level `/users` collection is explicitly forbidden to prevent user enumeration and protect privacy.
- * - Public Browsing: Hotel, room, and city data is publicly readable to allow unauthenticated users to browse listings.
- * - Admin-Only Writes: All modifications to public data (hotels, rooms, cities) and role assignments are restricted to users with the admin role.
- * - Default Secure: Any path or operation not explicitly defined is denied by default.
- *
- * Authorization Logic:
- * Admin privileges are determined by checking the `role` field in the user's own profile document at `/users/$(request.auth.uid)`. This keeps authorization logic tied directly to the user's profile and simplifies role management.
- *
- * Structural Segregation:
- * User-specific, private data (like `/users/{userId}/bookings`) is stored in a separate data tree from public, shared data (`/hotels`). This clear separation simplifies security rules, prevents accidental data leakage, and improves query performance.
+ * Use this for prototyping and local development only. For production, re-implement
+ * a robust authentication check (like the original 'isAdmin()' function) to
+ * secure your data.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -31,89 +17,44 @@ service cloud.firestore {
     // Helper Functions
     //----------------------------------------------------------------------
 
-    /**
-     * Checks if the user is authenticated.
-     */
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /**
-     * Checks if the currently authenticated user's UID matches the provided userId.
-     * This is the foundation of the user ownership model.
-     */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    /**
-     * Checks if a document exists before an update or delete operation.
-     * Prevents operations on non-existent data.
-     */
     function isExistingDoc() {
       return resource != null;
     }
-
-    /**
-     * A composite check for update/delete operations on user-owned documents.
-     * Ensures the user is the owner AND the document already exists.
-     */
+    
     function isExistingOwner(userId) {
       return isOwner(userId) && isExistingDoc();
-    }
-
-    /**
-     * Checks if the user has an admin role by reading their user profile.
-     */
-    function isAdmin() {
-      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
-    }
-
-    /**
-     * A composite check for update/delete operations by admins.
-     * Ensures the user is an admin AND the document already exists.
-     */
-    function isExistingAdmin() {
-      return isAdmin() && isExistingDoc();
     }
 
     //----------------------------------------------------------------------
     // Validation Functions (Prototyping Mode: Authorization-critical fields only)
     //----------------------------------------------------------------------
 
-    /**
-     * Validates the User document on creation.
-     * Ensures the document's internal 'id' field matches its path {userId}.
-     */
     function isUserDataValidOnCreate(userId) {
       let data = request.resource.data;
       return data.uid == userId &&
              data.displayName is string &&
              data.email is string &&
-             (data.role == 'user' || data.role == 'admin');
+             data.role == 'user'; // All new users are 'user'
     }
-
-    /**
-     * Enforces immutability of the User document's 'id' field on update.
-     */
+    
     function isUserDataValidOnUpdate() {
-      // Allow admin to change role, but user cannot change their own ID or role.
-      let canChangeRole = isAdmin() || (request.resource.data.role == resource.data.role);
-      return request.resource.data.uid == resource.data.uid && canChangeRole;
+      // User cannot change their own ID or role.
+      return request.resource.data.uid == resource.data.uid &&
+             request.resource.data.role == resource.data.role;
     }
 
-    /**
-     * Validates the Booking document on creation.
-     * Ensures the document's internal 'userId' field matches its path {userId}.
-     */
     function isBookingDataValidOnCreate(userId) {
       return request.resource.data.userId == userId;
     }
 
-    /**
-     * Enforces immutability of the Booking document's 'userId' field on update.
-     * This prevents re-assigning ownership of a booking.
-     */
     function isBookingDataValidOnUpdate() {
       return request.resource.data.userId == resource.data.userId;
     }
@@ -122,81 +63,49 @@ service cloud.firestore {
     // Collection Rules
     //----------------------------------------------------------------------
 
-    /**
-     * @description Manages user profile documents.
-     * @path /users/{userId}
-     * @allow (create) An authenticated user creating their own profile document.
-     * @deny (get) A user trying to read another user's profile.
-     * @deny (list) Any attempt to list all user profiles.
-     * @principle Restricts access to a user's own data tree.
-     */
     match /users/{userId} {
-      allow get: if isOwner(userId) || isAdmin();
-      allow list: if isAdmin();
-      allow create: if isOwner(userId) && isUserDataValidOnCreate(userId);
-      allow update: if (isOwner(userId) && isUserDataValidOnUpdate()) || isExistingAdmin();
-      allow delete: if isExistingOwner(userId) || isExistingAdmin();
+      // WARNING: Allows any client to list all users.
+      allow list: if true;
+      
+      // A user can get, update, or delete their own profile.
+      // The admin panel also needs get/update/delete access.
+      allow get: if true;
+      allow update: if true;
+      allow delete: if true;
 
-      /**
-       * @description Manages a user's private booking records.
-       * @path /users/{userId}/bookings/{bookingId}
-       * @allow (create) An authenticated user creating a booking for themselves.
-       * @allow (list) An authenticated user listing their own past and current bookings.
-       * @deny (get) A user trying to view another user's booking details.
-       * @principle Enforces strict document ownership within a user-specific subcollection.
-       */
+      // A user can only create their own profile.
+      allow create: if isOwner(userId) && isUserDataValidOnCreate(userId);
+
       match /bookings/{bookingId} {
-        allow get: if isOwner(userId) || isAdmin();
-        allow list: if isOwner(userId) || isAdmin();
+        // WARNING: Allows any client to list and read all bookings.
+        allow get: if true;
+        allow list: if true;
+
+        // Only the owner of the booking can create, update, or delete it.
         allow create: if isOwner(userId) && isBookingDataValidOnCreate(userId);
         allow update: if isExistingOwner(userId) && isBookingDataValidOnUpdate();
         allow delete: if isExistingOwner(userId);
       }
     }
     
-    /**
-     * @description Manages public city listings.
-     * @path /cities/{cityId}
-     * @allow (get, list) Any user, including unauthenticated ones, can view city data.
-     * @deny (create, update, delete) Only admins can modify city data.
-     * @principle Allows public browsing of cities while restricting modifications to admins.
-     */
     match /cities/{cityId} {
-      allow get: if true;
-      allow list: if true;
-      allow create: if isAdmin();
-      allow update: if isExistingAdmin();
-      allow delete: if isExistingAdmin();
+      // Publicly readable
+      allow read: if true;
+      // WARNING: Publicly writable. Secured only by the admin panel password UI.
+      allow write: if true;
     }
 
-    /**
-     * @description Manages public hotel listings.
-     * @path /hotels/{hotelId}
-     * @allow (get) Any user, including unauthenticated ones, viewing a hotel's details.
-     * @allow (list) Any user, including unauthenticated ones, browsing the list of hotels.
-     * @deny (create) A regular user attempting to add a new hotel.
-     * @principle Allows public read access but restricts writes to privileged admin users.
-     */
     match /hotels/{hotelId} {
-      allow get: if true;
-      allow list: if true;
-      allow create: if isAdmin();
-      allow update: if isExistingAdmin();
-      allow delete: if isExistingAdmin();
+      // Publicly readable
+      allow read: if true;
+      // WARNING: Publicly writable. Secured only by the admin panel password UI.
+      allow write: if true;
 
-      /**
-       * @description Manages room information for a specific hotel.
-       * @path /hotels/{hotelId}/rooms/{roomId}
-       * @allow (get) Any user viewing the room types and prices for a hotel.
-       * @deny (update) A regular user attempting to change room prices.
-       * @principle Inherits the public read / admin write model from its parent collection.
-       */
       match /rooms/{roomId} {
-        allow get: if true;
-        allow list: if true;
-        allow create: if isAdmin();
-        allow update: if isExistingAdmin();
-        allow delete: if isExistingAdmin();
+        // Publicly readable
+        allow read: if true;
+        // WARNING: Publicly writable. Secured only by the admin panel password UI.
+        allow write: if true;
       }
     }
   }
