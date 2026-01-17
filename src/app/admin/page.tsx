@@ -5,10 +5,9 @@ import { useUser } from '@/firebase';
 import { useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { User, Briefcase, Hotel } from 'lucide-react';
+import { User, Briefcase } from 'lucide-react';
 import { UserList } from '@/components/admin/UserList';
 import { BookingList } from '@/components/admin/BookingList';
-import { HotelManagement } from '@/components/admin/HotelManagement';
 
 export default function AdminPage() {
   const { user, userProfile, isLoading } = useUser();
@@ -42,19 +41,15 @@ export default function AdminPage() {
           <p className="text-muted-foreground">Manage your entire operation from one place.</p>
       </div>
       <Tabs defaultValue="bookings" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="bookings"><Briefcase className="mr-2 h-4 w-4" />Bookings</TabsTrigger>
           <TabsTrigger value="users"><User className="mr-2 h-4 w-4" />Users</TabsTrigger>
-          <TabsTrigger value="hotels"><Hotel className="mr-2 h-4 w-4" />Hotels</TabsTrigger>
         </TabsList>
         <TabsContent value="bookings" className="mt-6">
           <BookingList />
         </TabsContent>
         <TabsContent value="users" className="mt-6">
           <UserList />
-        </TabsContent>
-        <TabsContent value="hotels" className="mt-6">
-          <HotelManagement />
         </TabsContent>
       </Tabs>
     </div>
