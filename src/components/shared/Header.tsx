@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, UserCircle, LogIn } from 'lucide-react';
+import { Menu, UserCircle, LogIn, Terminal } from 'lucide-react';
 import Link from 'next/link';
 import { Logo } from './Logo';
 import { usePathname, useRouter } from 'next/navigation';
@@ -24,6 +24,7 @@ import { Skeleton } from '../ui/skeleton';
 const navLinks = [
   { href: '/', label: 'Home' },
   { href: '/search', label: 'Explore Hotels' },
+  { href: '/terminal', label: 'Terminal' },
 ];
 
 export function Header() {
