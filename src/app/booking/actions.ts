@@ -1,3 +1,4 @@
+
 'use server';
 
 import Razorpay from 'razorpay';
@@ -19,8 +20,8 @@ export async function createRazorpayOrder(
 ): Promise<CreateOrderResponse> {
     // WARNING: Hardcoded keys for demo purposes.
     // In a production environment, load these from secure environment variables.
-    const keyId = "rzp_test_1234567890abcdef";
-    const keySecret = "abcdef1234567890abcdef";
+    const keyId = "rzp_test_S5ICwKJ6WWpmpH";
+    const keySecret = "5TAafkOKT3n53APiCAUqKEtW";
 
     if (!keyId || !keySecret) {
         console.error('Razorpay keys are not configured.');
@@ -68,7 +69,7 @@ export async function verifyRazorpayPayment(data: {
 }): Promise<VerifyPaymentResponse> {
   const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = data;
   // WARNING: Hardcoded secret for demo purposes.
-  const key_secret = "abcdef1234567890abcdef";
+  const key_secret = "5TAafkOKT3n53APiCAUqKEtW";
 
   if (!key_secret) {
     console.error('RAZORPAY_KEY_SECRET is not set.');
