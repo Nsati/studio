@@ -52,10 +52,17 @@ export function BookingForm() {
         return liveHotel || dummyHotels.find(h => h.id === hotelId);
     }, [liveHotel, isHotelLoading, hotelId]);
 
+    const roomRef = useMemo(() => {
+        if (!firestore || !hotelId || !roomId) return null;
+        return doc(firestore, 'hotels', hotelId, 'rooms', roomId);
+    }, [firestore, hotelId, roomId]);
+
+    const { data: liveRoom, isLoading: isRoomLoading } = useDoc<Room>(roomRef);
+
     const room = useMemo(() => {
-        if (!roomId) return null;
-        return dummyRooms.find(r => r.id === roomId);
-    }, [roomId]);
+        if (isRoomLoading) return null;
+        return liveRoom || dummyRooms.find(r => r.id === roomId);
+    }, [liveRoom, isRoomLoading, roomId]);
 
     const [customerDetails, setCustomerDetails] = useState({ name: '', email: '' });
     const [isBooking, setIsBooking] = useState(false);
@@ -66,7 +73,7 @@ export function BookingForm() {
         }
     }, [userProfile]);
 
-    if (isHotelLoading) {
+    if (isHotelLoading || isRoomLoading) {
         return <div>Loading...</div> // This will be handled by Suspense fallback
     }
 
