@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, useRouter, notFound } from 'next/navigation';
 import Image from 'next/image';
 import { differenceInDays, format, parse } from 'date-fns';
+import { createRazorpayOrder, verifyRazorpayPayment } from '@/app/booking/actions';
+
 
 import type { Hotel, Room, Booking } from '@/lib/types';
 import { dummyHotels, dummyRooms } from '@/lib/dummy-data';
@@ -19,6 +21,11 @@ import { Label } from '@/components/ui/label';
 import { Loader2, Calendar, Users, BedDouble, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
 
 export function BookingForm() {
     const searchParams = useSearchParams();
@@ -53,11 +60,11 @@ export function BookingForm() {
     const [customerDetails, setCustomerDetails] = useState({ name: '', email: '' });
     const [isBooking, setIsBooking] = useState(false);
 
-    useState(() => {
+    useEffect(() => {
         if (userProfile) {
             setCustomerDetails({ name: userProfile.displayName, email: userProfile.email });
         }
-    });
+    }, [userProfile]);
 
     if (isHotelLoading) {
         return <div>Loading...</div> // This will be handled by Suspense fallback
@@ -78,7 +85,7 @@ export function BookingForm() {
     const hotelImage = PlaceHolderImages.find((img) => img.id === hotel.images[0]);
     const totalPrice = room.price * nights;
 
-    const handleBooking = async () => {
+    const handlePayment = async () => {
         if (!customerDetails.name || !customerDetails.email) {
             toast({
                 variant: 'destructive',
@@ -88,7 +95,7 @@ export function BookingForm() {
             return;
         }
 
-        if (!user) {
+        if (!user || !firestore) {
             toast({
                 variant: 'destructive',
                 title: 'Not Logged In',
@@ -98,50 +105,102 @@ export function BookingForm() {
             return;
         }
         
-        if (!firestore) {
+        setIsBooking(true);
+
+        const orderResponse = await createRazorpayOrder(totalPrice);
+
+        if (!orderResponse.success || !orderResponse.order || !orderResponse.keyId) {
             toast({
                 variant: 'destructive',
-                title: 'Database Error',
-                description: 'Could not connect to the database.',
+                title: 'Payment Error',
+                description: orderResponse.error || 'Could not initiate payment. Please check server logs.',
             });
+            setIsBooking(false);
             return;
         }
 
-        setIsBooking(true);
-        const newBookingId = `booking_${Date.now()}`;
-        const bookingRef = doc(firestore, 'users', user.uid, 'bookings', newBookingId);
-        
+        const { order, keyId } = orderResponse;
+
+        const options = {
+            key: keyId,
+            amount: order.amount,
+            currency: order.currency,
+            name: "Uttarakhand Getaways",
+            description: `Booking for ${hotel.name}`,
+            order_id: order.id,
+            handler: async (response: any) => {
+                const verificationResult = await verifyRazorpayPayment({
+                    razorpay_order_id: response.razorpay_order_id,
+                    razorpay_payment_id: response.razorpay_payment_id,
+                    razorpay_signature: response.razorpay_signature,
+                });
+
+                if (verificationResult.success) {
+                    const newBookingId = `booking_${Date.now()}`;
+                    const bookingRef = doc(firestore, 'users', user.uid, 'bookings', newBookingId);
+                    
+                    const bookingData: Booking = {
+                        id: newBookingId,
+                        hotelId: hotel.id,
+                        userId: user.uid,
+                        roomId: room.id,
+                        roomType: room.type,
+                        checkIn: checkIn,
+                        checkOut: checkOut,
+                        guests: parseInt(guests),
+                        totalPrice: totalPrice,
+                        customerName: customerDetails.name,
+                        customerEmail: customerDetails.email,
+                        status: 'CONFIRMED',
+                        createdAt: new Date(),
+                        razorpayPaymentId: response.razorpay_payment_id,
+                    };
+                    
+                    await setDoc(bookingRef, bookingData);
+                    
+                    toast({
+                      title: 'Booking Confirmed!',
+                      description: 'Your payment was successful.',
+                    });
+                    router.push(`/booking/success/${newBookingId}`);
+
+                } else {
+                    toast({
+                        variant: "destructive",
+                        title: "Payment Verification Failed",
+                        description: "Your payment could not be verified. Please contact support.",
+                    });
+                    setIsBooking(false);
+                }
+            },
+            prefill: {
+                name: customerDetails.name,
+                email: customerDetails.email,
+            },
+            theme: {
+                color: "#166534", // primary theme color
+            },
+            modal: {
+                ondismiss: () => {
+                    setIsBooking(false);
+                    toast({
+                        variant: 'destructive',
+                        title: 'Payment Cancelled',
+                        description: 'You cancelled the payment process.',
+                    })
+                }
+            }
+        };
+
         try {
-            const bookingData: Booking = {
-                id: newBookingId,
-                hotelId: hotel.id,
-                userId: user.uid,
-                roomId: room.id,
-                roomType: room.type,
-                checkIn: checkIn,
-                checkOut: checkOut,
-                guests: parseInt(guests),
-                totalPrice: totalPrice,
-                customerName: customerDetails.name,
-                customerEmail: customerDetails.email,
-                status: 'CONFIRMED',
-                createdAt: new Date(),
-            };
-
-            await setDoc(bookingRef, bookingData);
-            
+            const rzp = new window.Razorpay(options);
+            rzp.open();
+        } catch(e) {
+            console.error(e);
             toast({
-              title: 'Booking Confirmed!',
-              description: 'Your booking has been made. Redirecting...',
-            });
-            router.push(`/booking/success/${newBookingId}`);
-
-        } catch (error: any) {
-            console.error("Booking save failed:", error);
-            toast({
-                variant: 'destructive',
-                title: 'Booking Failed',
-                description: 'Could not save your booking. Please try again.',
+                variant: "destructive",
+                title: "Payment Error",
+                description: "Failed to open payment gateway. Please refresh and try again.",
             });
             setIsBooking(false);
         }
@@ -232,9 +291,9 @@ export function BookingForm() {
                             </div>
                         </CardContent>
                     </Card>
-                    <Button onClick={handleBooking} size="lg" className="w-full text-lg" disabled={isBooking}>
+                    <Button onClick={handlePayment} size="lg" className="w-full text-lg" disabled={isBooking}>
                         {isBooking && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
-                        {isBooking ? 'Processing...' : 'Confirm Booking'}
+                        {isBooking ? 'Processing...' : `Pay ${totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })} & Book`}
                     </Button>
                 </div>
             </div>
