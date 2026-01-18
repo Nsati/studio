@@ -1,7 +1,7 @@
 
 'use server';
 
-import Razorpay from 'razorpay';
+const Razorpay = require('razorpay');
 import crypto from 'crypto';
 
 interface CreateOrderResponse {
