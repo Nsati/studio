@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2, Calendar, Users, BedDouble, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { dummyHotels, dummyRooms } from '@/lib/dummy-data';
 
 declare global {
   interface Window {
@@ -44,19 +45,39 @@ export function BookingForm() {
         return doc(firestore, 'hotels', hotelId);
     }, [firestore, hotelId]);
 
-    const { data: hotel, isLoading: isHotelLoading } = useDoc<Hotel>(hotelRef);
+    const { data: liveHotel, isLoading: isHotelLoading } = useDoc<Hotel>(hotelRef);
+    
+    const hotel = useMemo(() => {
+        if (isHotelLoading) return null;
+        if (liveHotel) return liveHotel;
+        return dummyHotels.find(h => h.id === hotelId);
+    }, [isHotelLoading, liveHotel, hotelId]);
+
 
     const roomsQuery = useMemo(() => {
         if (!firestore || !hotelId) return null;
         return collection(firestore, 'hotels', hotelId, 'rooms');
     }, [firestore, hotelId]);
     
-    const { data: rooms, isLoading: areRoomsLoading } = useCollection<Room>(roomsQuery);
+    const { data: liveRooms, isLoading: areRoomsLoading } = useCollection<Room>(roomsQuery);
 
     const room = useMemo(() => {
-        if (areRoomsLoading || !rooms) return null;
-        return rooms.find(r => r.id === roomId);
-    }, [areRoomsLoading, rooms, roomId]);
+        if (areRoomsLoading) return null; // Wait for loading to finish
+
+        // Prioritize live rooms
+        const roomFromLive = liveRooms?.find(r => r.id === roomId);
+        if (roomFromLive) return roomFromLive;
+        
+        // Fallback to dummy rooms if no live rooms are found for the hotel
+        if (!liveRooms || liveRooms.length === 0) {
+            const dummyRoom = dummyRooms.find(r => r.id === roomId && r.hotelId === hotelId);
+            if (dummyRoom) {
+                return dummyRoom;
+            }
+        }
+        
+        return null;
+    }, [areRoomsLoading, liveRooms, roomId, hotelId]);
 
 
     const [customerDetails, setCustomerDetails] = useState({ name: '', email: '' });
