@@ -4,7 +4,6 @@ import { Header } from '@/components/shared/Header';
 import { Footer } from '@/components/shared/Footer';
 import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
-import Script from 'next/script';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
@@ -38,7 +37,6 @@ export default function RootLayout({
           </div>
           <Toaster />
         </FirebaseClientProvider>
-        <Script src="https://checkout.razorpay.com/v1/checkout.js" />
       </body>
     </html>
   );

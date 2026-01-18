@@ -4,8 +4,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
     
     function isAdmin() {
-      // Check if the user is an admin by looking at their custom claims or a document.
-      // For this example, we check a 'role' field in their user profile.
+      // Check if the user is an admin by looking at their 'role' field in their user profile.
       return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
@@ -20,6 +19,11 @@ service cloud.firestore {
     // Bookings are private to the user, but fully accessible to admins.
     match /users/{userId}/bookings/{bookingId} {
       allow read, list, create, update, delete: if request.auth.uid == userId || isAdmin();
+    }
+
+    // This rule allows admins to perform a collection group query on all 'bookings' collections.
+    match /{path=**}/bookings/{bookingId} {
+        allow read, list: if isAdmin();
     }
 
     // Hotels, Rooms, and Cities are publicly readable.

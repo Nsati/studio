@@ -1,8 +1,6 @@
 
 'use server';
 
-import Razorpay from 'razorpay';
-import shortid from 'shortid';
 import {
   generateBookingConfirmationEmail,
   type GenerateBookingConfirmationEmailInput,
@@ -10,31 +8,34 @@ import {
 } from '@/ai/flows/generate-booking-confirmation-email';
 
 
-// Initialize Razorpay instance
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID!,
-  key_secret: process.env.RAZORPAY_KEY_SECRET!,
-});
+/**
+ * This function simulates a payment gateway interaction.
+ * It's for demo purposes only and should be replaced with a real
+ * payment gateway integration (e.g., Stripe, Razorpay) in production.
+ *
+ * @param amount The amount to "charge".
+ * @returns A promise that resolves to an object indicating success or failure.
+ */
+export async function simulatePayment(amount: number) {
+  // 1. Simulate API delay to feel like a real transaction.
+  await new Promise(resolve => setTimeout(resolve, 1500));
 
-export async function createRazorpayOrder(amount: number, receipt: string) {
-  const options = {
-    amount: amount * 100, // Amount in the smallest currency unit (paise)
-    currency: 'INR',
-    receipt: receipt || shortid.generate(),
-  };
+  // 2. Simulate payment success/failure.
+  // In a real demo, you might want this to be a toggle or a predictable value.
+  const isSuccess = Math.random() > 0.2; // 80% success rate
 
-  try {
-    const order = await razorpay.orders.create(options);
-    if (!order) {
-      throw new Error('Order creation failed');
-    }
-    return { success: true, order };
-  } catch (error) {
-    console.error('Razorpay order creation error:', error);
-    // In a real app, log this error to a monitoring service
-    return { success: false, error: 'Could not create payment order.' };
+  if (!isSuccess) {
+    console.log(`Dummy payment of ${amount} failed.`);
+    return { success: false, error: 'The payment was declined by your bank. Please try again.' };
   }
+
+  // 3. Generate a fake transaction ID for the successful "payment".
+  const fakeTransactionId = `DUMMY_PAY_${Date.now()}`;
+  console.log(`Dummy payment of ${amount} successful. Transaction ID: ${fakeTransactionId}`);
+
+  return { success: true, transactionId: fakeTransactionId };
 }
+
 
 export async function generateConfirmationEmailAction(
   input: GenerateBookingConfirmationEmailInput
