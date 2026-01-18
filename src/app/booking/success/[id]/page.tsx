@@ -102,8 +102,8 @@ export default function BookingSuccessPage() {
       generateBookingConfirmationEmail({
         hotelName: hotel.name,
         customerName: booking.customerName,
-        checkIn: (booking.checkIn as any).toDate().toISOString(),
-        checkOut: (booking.checkOut as any).toDate().toISOString(),
+        checkIn: booking.checkIn.toString(),
+        checkOut: booking.checkOut.toString(),
         roomType: booking.roomType,
         totalPrice: booking.totalPrice,
         bookingId: booking.id!,
@@ -114,7 +114,7 @@ export default function BookingSuccessPage() {
         console.log("-----------------------");
         toast({
           title: 'Booking Confirmed!',
-          description: `A confirmation email has been generated for ${booking.customerEmail}.`,
+          description: `An email preview has been generated in the logs for ${booking.customerEmail}.`,
         });
         setEmailSent(true);
       }).catch(err => {
@@ -183,7 +183,7 @@ export default function BookingSuccessPage() {
         <CardHeader>
           <CardTitle>Your Booking Details</CardTitle>
           <CardDescription>
-            A confirmation email has been sent to {booking.customerEmail}.
+            A confirmation for your booking will be sent to {booking.customerEmail}.
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-6 md:grid-cols-2">

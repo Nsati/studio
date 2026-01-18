@@ -8,9 +8,8 @@ import { createRazorpayOrder, verifyRazorpayPayment } from '@/app/booking/action
 
 
 import type { Hotel, Room, Booking } from '@/lib/types';
-import { dummyHotels, dummyRooms } from '@/lib/dummy-data';
-import { useUser, useFirestore, useDoc } from '@/firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { useUser, useFirestore, useDoc, useCollection } from '@/firebase';
+import { doc, setDoc, collection } from 'firebase/firestore';
 
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -45,28 +44,20 @@ export function BookingForm() {
         return doc(firestore, 'hotels', hotelId);
     }, [firestore, hotelId]);
 
-    const { data: liveHotel, isLoading: isHotelLoading } = useDoc<Hotel>(hotelRef);
+    const { data: hotel, isLoading: isHotelLoading } = useDoc<Hotel>(hotelRef);
 
-    const hotel = useMemo(() => {
-        if (isHotelLoading) return null;
-        return liveHotel || dummyHotels.find(h => h.id === hotelId);
-    }, [liveHotel, isHotelLoading, hotelId]);
-
-    const roomRef = useMemo(() => {
-        if (!firestore || !hotelId || !roomId) return null;
-        return doc(firestore, 'hotels', hotelId, 'rooms', roomId);
-    }, [firestore, hotelId, roomId]);
-
-    const { data: liveRoom, isLoading: isRoomLoading } = useDoc<Room>(roomRef);
+    const roomsQuery = useMemo(() => {
+        if (!firestore || !hotelId) return null;
+        return collection(firestore, 'hotels', hotelId, 'rooms');
+    }, [firestore, hotelId]);
+    
+    const { data: rooms, isLoading: areRoomsLoading } = useCollection<Room>(roomsQuery);
 
     const room = useMemo(() => {
-        if (isRoomLoading) return null;
-        const live = liveRoom;
-        if (live) return live;
-        
-        const dummy = dummyRooms.find(r => r.id === roomId && r.hotelId === hotelId);
-        return dummy;
-    }, [liveRoom, isRoomLoading, roomId, hotelId]);
+        if (areRoomsLoading || !rooms) return null;
+        return rooms.find(r => r.id === roomId);
+    }, [areRoomsLoading, rooms, roomId]);
+
 
     const [customerDetails, setCustomerDetails] = useState({ name: '', email: '' });
     const [isBooking, setIsBooking] = useState(false);
@@ -77,7 +68,7 @@ export function BookingForm() {
         }
     }, [userProfile]);
 
-    if (isHotelLoading || isRoomLoading) {
+    if (isHotelLoading || areRoomsLoading) {
         return <div>Loading...</div> // This will be handled by Suspense fallback
     }
 

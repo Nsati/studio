@@ -17,7 +17,6 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { useMemo } from 'react';
 import { Skeleton } from '../ui/skeleton';
-import { dummyRooms } from '@/lib/dummy-data';
 import { useCollection, useFirestore } from '@/firebase';
 import { collection } from 'firebase/firestore';
 
@@ -33,20 +32,14 @@ function HotelMinPrice({ hotelId }: { hotelId: string}) {
     return collection(firestore, 'hotels', hotelId, 'rooms');
   }, [firestore, hotelId]);
 
-  const { data: liveRooms, isLoading } = useCollection<Room>(roomsQuery);
-
-  const roomsForHotel = useMemo(() => {
-    if (isLoading) return null;
-    if (liveRooms && liveRooms.length > 0) return liveRooms;
-    return dummyRooms.filter(room => room.hotelId === hotelId);
-  }, [hotelId, liveRooms, isLoading]);
+  const { data: rooms, isLoading } = useCollection<Room>(roomsQuery);
 
   const minPrice = useMemo(() => {
-    if (!roomsForHotel || roomsForHotel.length === 0) return 0;
-    return Math.min(...roomsForHotel.map((r) => r.price))
-  }, [roomsForHotel]);
+    if (!rooms || rooms.length === 0) return 0;
+    return Math.min(...rooms.map((r) => r.price))
+  }, [rooms]);
   
-  if (isLoading || roomsForHotel === null) {
+  if (isLoading) {
       return <Skeleton className="h-5 w-24" />
   }
 
