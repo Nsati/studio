@@ -16,12 +16,10 @@ export function useCollection<T>(query: Query<DocumentData> | null) {
 
   useEffect(() => {
     if (!query) {
-      setData([]);
-      setIsLoading(false);
+      setData(null);
+      setIsLoading(true);
       return;
     }
-
-    setIsLoading(true);
 
     const unsubscribe = onSnapshot(
       query,

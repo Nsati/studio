@@ -60,6 +60,17 @@ service cloud.firestore {
     }
 
     //----------------------------------------------------------------------
+    // Collection Group Rules
+    //----------------------------------------------------------------------
+
+    // Rule for collection group query on 'bookings'
+    match /{path=**}/bookings/{bookingId} {
+      // WARNING: Publicly readable to allow admin panel to list all bookings.
+      // Secure this in production by checking for an admin role.
+      allow read: if true;
+    }
+
+    //----------------------------------------------------------------------
     // Collection Rules
     //----------------------------------------------------------------------
 
@@ -77,7 +88,7 @@ service cloud.firestore {
       allow create: if isOwner(userId) && isUserDataValidOnCreate(userId);
 
       match /bookings/{bookingId} {
-        // WARNING: Allows any client to list and read all bookings.
+        // WARNING: Allows any client to list and read all bookings for a user.
         allow get: if true;
         allow list: if true;
 

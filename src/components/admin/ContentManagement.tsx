@@ -3,7 +3,7 @@
 import React, { useTransition, useMemo } from 'react';
 import type { Hotel, UserProfile, Booking } from '@/lib/types';
 import { useCollection, useFirestore } from '@/firebase';
-import { collection, doc, deleteDoc } from 'firebase/firestore';
+import { collection, doc, deleteDoc, collectionGroup, query, orderBy } from 'firebase/firestore';
 import Link from 'next/link';
 
 import {
@@ -34,7 +34,7 @@ import { revalidateAdminPanel, revalidatePublicContent } from '@/app/admin/actio
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
-import { dummyUsers, dummyBookings, dummyHotels } from '@/lib/dummy-data';
+import { dummyHotels } from '@/lib/dummy-data';
 
 
 // --- Hotel Management Component ---
@@ -188,14 +188,15 @@ function HotelManagement() {
 
 // --- User List Component ---
 function UserList() {
-    const users = dummyUsers;
-    const isLoading = false;
+    const firestore = useFirestore();
+    const usersQuery = useMemo(() => firestore ? collection(firestore, 'users') : null, [firestore]);
+    const { data: users, isLoading } = useCollection<UserProfile>(usersQuery);
 
     return (
         <Card>
             <CardHeader>
                 <CardTitle>User Management</CardTitle>
-                <CardDescription>View and manage all registered users (showing dummy data).</CardDescription>
+                <CardDescription>View and manage all registered users.</CardDescription>
             </CardHeader>
             <CardContent>
                 <Table>
@@ -216,6 +217,13 @@ function UserList() {
                                 <TableCell><Skeleton className="h-5 w-40" /></TableCell>
                             </TableRow>
                         ))}
+                        {!isLoading && users?.length === 0 && (
+                            <TableRow>
+                                <TableCell colSpan={4} className="h-24 text-center">
+                                    No users found.
+                                </TableCell>
+                            </TableRow>
+                        )}
                         {users?.map((user) => (
                             <TableRow key={user.uid}>
                                 <TableCell className="font-medium">{user.displayName}</TableCell>
@@ -237,16 +245,20 @@ function UserList() {
 
 // --- Booking List Component ---
 function BookingList() {
-    const bookings = useMemo(() => {
-        return [...dummyBookings].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    }, []);
-    const isLoading = false;
+    const firestore = useFirestore();
+
+    const bookingsQuery = useMemo(() => {
+        if (!firestore) return null;
+        return query(collectionGroup(firestore, 'bookings'), orderBy('createdAt', 'desc'));
+    }, [firestore]);
+
+    const { data: bookings, isLoading } = useCollection<Booking>(bookingsQuery);
 
     return (
         <Card>
             <CardHeader>
                 <CardTitle>All Bookings</CardTitle>
-                <CardDescription>View all bookings made across the platform (showing dummy data).</CardDescription>
+                <CardDescription>View all bookings made across the platform.</CardDescription>
             </CardHeader>
             <CardContent>
                  <Table>
@@ -254,7 +266,7 @@ function BookingList() {
                         <TableRow>
                             <TableHead>Booking ID</TableHead>
                             <TableHead>Customer</TableHead>
-                            <TableHead>Hotel ID</TableHead>
+                            <TableHead>Hotel</TableHead>
                             <TableHead>Check-in</TableHead>
                             <TableHead>Check-out</TableHead>
                             <TableHead>Status</TableHead>
@@ -262,7 +274,7 @@ function BookingList() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {isLoading && Array.from({length: 3}).map((_, i) => (
+                        {isLoading && Array.from({length: 5}).map((_, i) => (
                              <TableRow key={i}>
                                 <TableCell><Skeleton className="h-5 w-24" /></TableCell>
                                 <TableCell><Skeleton className="h-5 w-40" /></TableCell>
@@ -273,7 +285,10 @@ function BookingList() {
                                 <TableCell><Skeleton className="h-5 w-20" /></TableCell>
                             </TableRow>
                         ))}
-                        {bookings?.map((booking) => (
+                        {bookings?.map((booking) => {
+                            const checkInDate = (booking.checkIn as any).toDate ? (booking.checkIn as any).toDate() : new Date(booking.checkIn);
+                            const checkOutDate = (booking.checkOut as any).toDate ? (booking.checkOut as any).toDate() : new Date(booking.checkOut);
+                            return (
                             <TableRow key={booking.id}>
                                 <TableCell className="font-mono text-xs">{booking.id}</TableCell>
                                 <TableCell>
@@ -281,12 +296,16 @@ function BookingList() {
                                     <div className="text-xs text-muted-foreground">{booking.customerEmail}</div>
                                 </TableCell>
                                 <TableCell className="font-mono text-xs">{booking.hotelId}</TableCell>
-                                <TableCell>{format(new Date(booking.checkIn), 'PPP')}</TableCell>
-                                <TableCell>{format(new Date(booking.checkOut), 'PPP')}</TableCell>
-                                <TableCell>{booking.status}</TableCell>
+                                <TableCell>{format(checkInDate, 'PPP')}</TableCell>
+                                <TableCell>{format(checkOutDate, 'PPP')}</TableCell>
+                                <TableCell>
+                                     <Badge variant={booking.status === 'CONFIRMED' ? 'default' : 'destructive'} className="capitalize">
+                                        {booking.status?.toLowerCase()}
+                                    </Badge>
+                                </TableCell>
                                 <TableCell>{booking.totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}</TableCell>
                             </TableRow>
-                        ))}
+                        )})}
                          {!isLoading && bookings?.length === 0 && (
                             <TableRow>
                                 <TableCell colSpan={7} className="h-24 text-center">
@@ -307,7 +326,7 @@ export function ContentManagement() {
     <Tabs defaultValue="hotels" className="w-full">
       <TabsList className="grid w-full grid-cols-3">
         <TabsTrigger value="hotels">Hotels</TabsTrigger>
-        <TabsTrigger value="users">Users</TabsTrigger>
+        <TabsTrigger value="users">Users</Tabs-trigger>
         <TabsTrigger value="bookings">Bookings</TabsTrigger>
       </TabsList>
       <TabsContent value="hotels">
