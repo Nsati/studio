@@ -61,8 +61,12 @@ export function BookingForm() {
 
     const room = useMemo(() => {
         if (isRoomLoading) return null;
-        return liveRoom || dummyRooms.find(r => r.id === roomId);
-    }, [liveRoom, isRoomLoading, roomId]);
+        const live = liveRoom;
+        if (live) return live;
+        
+        const dummy = dummyRooms.find(r => r.id === roomId && r.hotelId === hotelId);
+        return dummy;
+    }, [liveRoom, isRoomLoading, roomId, hotelId]);
 
     const [customerDetails, setCustomerDetails] = useState({ name: '', email: '' });
     const [isBooking, setIsBooking] = useState(false);
@@ -165,10 +169,6 @@ export function BookingForm() {
                     
                     await setDoc(bookingRef, bookingData);
                     
-                    toast({
-                      title: 'Booking Confirmed!',
-                      description: 'Your payment was successful.',
-                    });
                     router.push(`/booking/success/${newBookingId}`);
 
                 } else {
