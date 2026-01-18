@@ -1,4 +1,4 @@
-import {withGenkit} from '@genkit-ai/next';
+import withGenkit from '@genkit-ai/next';
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
