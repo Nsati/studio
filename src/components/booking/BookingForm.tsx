@@ -1,14 +1,15 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useSearchParams, useRouter, notFound } from 'next/navigation';
 import Image from 'next/image';
+import Script from 'next/script';
 import { differenceInDays, format, parse } from 'date-fns';
 
 import type { Hotel, Room, Booking } from '@/lib/types';
 import { dummyHotels, dummyRooms } from '@/lib/dummy-data';
 import { useUser, useFirestore, useDoc } from '@/firebase';
-import { doc, setDoc }from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -18,21 +19,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2, Calendar, Users, BedDouble, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
-
-// Function to load the Razorpay script
-const loadRazorpayScript = () => {
-    return new Promise(resolve => {
-        const script = document.createElement('script');
-        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-        script.onload = () => {
-            resolve(true);
-        };
-        script.onerror = () => {
-            resolve(false);
-        }
-        document.body.appendChild(script);
-    });
-};
 
 
 export function BookingForm() {
@@ -48,11 +34,6 @@ export function BookingForm() {
     const checkOutStr = searchParams.get('checkOut');
     const guests = searchParams.get('guests') || '1';
     
-    // Load the Razorpay script on component mount
-    useEffect(() => {
-        loadRazorpayScript();
-    }, []);
-
     const hotelRef = useMemo(() => {
         if (!firestore || !hotelId) return null;
         return doc(firestore, 'hotels', hotelId);
@@ -73,11 +54,11 @@ export function BookingForm() {
     const [customerDetails, setCustomerDetails] = useState({ name: '', email: '' });
     const [isBooking, setIsBooking] = useState(false);
 
-    useEffect(() => {
+    useState(() => {
         if (userProfile) {
             setCustomerDetails({ name: userProfile.displayName, email: userProfile.email });
         }
-    }, [userProfile]);
+    });
 
     if (isHotelLoading) {
         return <div>Loading...</div> // This will be handled by Suspense fallback
@@ -126,11 +107,20 @@ export function BookingForm() {
             });
             return;
         }
+        
+        if (typeof window === 'undefined' || !(window as any).Razorpay) {
+            toast({
+                variant: 'destructive',
+                title: 'Payment Gateway Not Ready',
+                description: 'The payment gateway is still loading. Please wait a moment and try again.',
+            });
+            return;
+        }
 
         setIsBooking(true);
 
         const options = {
-            key: 'rzp_test_OCsFj7p2wA8d2T', // HARDCODED FOR DEMO. In production, use env variables.
+            key: "rzp_test_OCsFj7p2wA8d2T", // Using public test key
             amount: totalPrice * 100, // amount in paise
             currency: 'INR',
             name: 'Uttarakhand Getaways',
@@ -182,7 +172,7 @@ export function BookingForm() {
                 email: customerDetails.email,
             },
             theme: {
-                color: '#166534',
+                color: '#388E3C', // Using primary color from theme
             },
             modal: {
                 ondismiss: function() {
@@ -208,6 +198,8 @@ export function BookingForm() {
     };
 
     return (
+        <>
+        <Script src="https://checkout.razorpay.com/v1/checkout.js" />
         <div className="container mx-auto max-w-4xl py-12 px-4 md:px-6">
             <Link href={`/hotels/${hotel.id}`} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary mb-8">
                 <ArrowLeft className="h-4 w-4" />
@@ -299,5 +291,6 @@ export function BookingForm() {
                 </div>
             </div>
         </div>
+        </>
     );
 }
