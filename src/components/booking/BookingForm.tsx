@@ -11,7 +11,7 @@ import { dummyHotels, dummyRooms } from '@/lib/dummy-data';
 import { useUser, useFirestore, useDoc } from '@/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import {
-  createRazorpayOrder,
+  simulatePayment,
 } from '@/app/booking/actions';
 
 import { useToast } from '@/hooks/use-toast';
@@ -23,11 +23,8 @@ import { Label } from '@/components/ui/label';
 import { Loader2, Calendar, Users, BedDouble, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
-declare global {
-  interface Window {
-    Razorpay: any;
-  }
-}
+// NOTE: The real Razorpay 'window' interface has been removed
+// as we are now using a dummy payment simulation.
 
 export function BookingForm() {
   const searchParams = useSearchParams();
@@ -107,108 +104,66 @@ export function BookingForm() {
       return;
     }
 
-    if (!process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID) {
-      toast({
-        variant: 'destructive',
-        title: 'Payment Gateway Not Configured',
-        description: "The site owner hasn't set up Razorpay.",
-      });
-      return;
-    }
-
     setIsBooking(true);
 
-    const receipt = `booking_${new Date().getTime()}`;
-    const result = await createRazorpayOrder(totalPrice, receipt);
+    // This is the dummy payment flow.
+    // In a real app, you would replace this with your payment gateway logic.
+    const paymentResult = await simulatePayment(totalPrice);
 
-    if (!result.success || !result.order) {
-      toast({
-        variant: 'destructive',
-        title: 'Payment Error',
-        description: result.error || 'Could not initiate payment.',
-      });
-      setIsBooking(false);
-      return;
-    }
-
-    const newBookingId = result.order.receipt;
-
-    const options = {
-      key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-      amount: result.order.amount,
-      currency: result.order.currency,
-      name: 'Uttarakhand Getaways',
-      description: `Booking for ${hotel.name}`,
-      image: 'https://cdn.worldvectorlogo.com/logos/uttarakhand-tourism.svg',
-      order_id: result.order.id,
-      handler: async (response: any) => {
-        if (!firestore || !user) return;
-        
-        const bookingRef = doc(firestore, 'users', user.uid, 'bookings', newBookingId);
-
-        try {
-            const bookingData: Booking = {
-                id: newBookingId,
-                hotelId: hotel.id,
-                userId: user.uid,
-                roomId: room.id,
-                roomType: room.type,
-                checkIn: checkIn,
-                checkOut: checkOut,
-                guests: parseInt(guests),
-                totalPrice: totalPrice,
-                customerName: customerDetails.name,
-                customerEmail: customerDetails.email,
-                status: 'CONFIRMED',
-                createdAt: new Date(),
-                razorpayPaymentId: response.razorpay_payment_id,
-            };
-
-            await setDoc(bookingRef, bookingData);
-            
-            toast({
-              title: 'Payment Successful!',
-              description: 'Redirecting to your confirmation...',
-            });
-            router.push(`/booking/success/${newBookingId}`);
-
-        } catch (error: any) {
-            console.error("Booking failed to save:", error);
-            toast({
-                variant: 'destructive',
-                title: 'Booking Failed',
-                description: 'We could not save your booking after payment. Please contact support.',
-            });
-            setIsBooking(false);
-        }
-      },
-      prefill: {
-        name: customerDetails.name,
-        email: customerDetails.email,
-      },
-      notes: {
-        hotelId: hotel.id,
-        roomId: room.id,
-        checkIn: checkInStr,
-        checkOut: checkOutStr,
-        userId: user.uid,
-      },
-      theme: {
-        color: '#418259',
-      },
-    };
-
-    const rzp = new window.Razorpay(options);
-    rzp.on('payment.failed', function (response: any) {
+    if (!paymentResult.success) {
       toast({
         variant: 'destructive',
         title: 'Payment Failed',
-        description: response.error.description,
+        description: paymentResult.error,
       });
       setIsBooking(false);
-    });
-    
-    rzp.open();
+      return;
+    }
+
+    // If dummy payment is successful, create the booking in our "dummy database" (Firestore).
+    if (!firestore) {
+        setIsBooking(false);
+        return;
+    }
+
+    const newBookingId = `booking_${Date.now()}`;
+    const bookingRef = doc(firestore, 'users', user.uid, 'bookings', newBookingId);
+
+    try {
+        const bookingData: Booking = {
+            id: newBookingId,
+            hotelId: hotel.id,
+            userId: user.uid,
+            roomId: room.id,
+            roomType: room.type,
+            checkIn: checkIn,
+            checkOut: checkOut,
+            guests: parseInt(guests),
+            totalPrice: totalPrice,
+            customerName: customerDetails.name,
+            customerEmail: customerDetails.email,
+            status: 'CONFIRMED',
+            createdAt: new Date(),
+            razorpayPaymentId: paymentResult.transactionId, // Using the dummy transaction ID
+        };
+
+        await setDoc(bookingRef, bookingData);
+        
+        toast({
+          title: 'Booking Confirmed!',
+          description: 'Payment was successful (simulated). Redirecting...',
+        });
+        router.push(`/booking/success/${newBookingId}`);
+
+    } catch (error: any) {
+        console.error("Booking save failed:", error);
+        toast({
+            variant: 'destructive',
+            title: 'Booking Save Failed',
+            description: 'Payment was successful, but we could not save your booking. Please contact support.',
+        });
+        setIsBooking(false);
+    }
   };
 
   return (
@@ -298,7 +253,7 @@ export function BookingForm() {
             </Card>
             <Button onClick={handlePayment} size="lg" className="w-full text-lg" disabled={isBooking}>
                 {isBooking && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
-                Pay Now & Confirm Booking
+                {isBooking ? 'Processing Payment...' : 'Pay Now & Confirm Booking'}
             </Button>
         </div>
       </div>
