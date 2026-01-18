@@ -15,34 +15,47 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
+    function isAdmin() {
+      // Check if the user has an admin role in their user document.
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
     //----------------------------------------------------------------------
     // Collection Rules
     //----------------------------------------------------------------------
 
     match /users/{userId} {
-      // A user can only create, read, update and delete their own profile.
-      allow read, write: if isOwner(userId);
+      // Admins can list all users.
+      allow list: if isAdmin();
+      // Admins can read/write any user profile. Users can only read/write their own.
+      allow read, write: if isAdmin() || isOwner(userId);
 
       match /bookings/{bookingId} {
+        // An admin can manage all bookings.
         // A user can only manage their own bookings.
-        allow read, write: if isOwner(userId);
+        allow read, write: if isAdmin() || isOwner(userId);
       }
     }
     
-    // Public collections are read-only for everyone.
-    // Writes would need to be handled by backend code or more specific rules.
+    // Admins need to be able to read all bookings for the admin panel
+    match /{path=**}/bookings/{bookingId} {
+        allow read: if isAdmin();
+    }
+
+    // Public collections can be read by anyone.
+    // Writes are restricted to admins.
     match /cities/{cityId} {
       allow read: if true;
-      allow write: if false;
+      allow write: if isAdmin();
     }
 
     match /hotels/{hotelId} {
       allow read: if true;
-      allow write: if false;
+      allow write: if isAdmin();
 
       match /rooms/{roomId} {
         allow read: if true;
-        allow write: if false;
+        allow write: if isAdmin();
       }
     }
   }
