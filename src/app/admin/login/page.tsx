@@ -1,26 +1,26 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
 import { useAuth, useFirestore } from '@/firebase';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Shield } from 'lucide-react';
+import { Logo } from '@/components/shared/Logo';
 
-export default function LoginPage() {
+export default function AdminLoginPage() {
   const auth = useAuth();
   const firestore = useFirestore();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { toast } = useToast();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('admin@example.com'); // Pre-fill for convenience
+  const [password, setPassword] = useState('admin123'); // Pre-fill for convenience
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -32,11 +32,23 @@ export default function LoginPage() {
     setError('');
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      
-      toast({ title: 'Login successful!', description: `Welcome back!` });
-      const redirect = searchParams.get('redirect');
-      router.push(redirect || '/my-bookings');
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Check if the user is an admin
+      const userDocRef = doc(firestore, 'users', user.uid);
+      const userDoc = await getDoc(userDocRef);
+
+      if (userDoc.exists() && userDoc.data().role === 'admin') {
+        toast({ title: 'Admin Login Successful!', description: `Welcome back, ${userDoc.data().displayName}!` });
+        router.push('/admin');
+      } else {
+        // Not an admin, log them out
+        if (auth) {
+            await auth.signOut();
+        }
+        setError('You do not have admin privileges.');
+      }
     } catch (error: any) {
       setError('Invalid email or password.');
       console.error(error);
@@ -46,17 +58,16 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="container flex min-h-[80vh] items-center justify-center">
+    <div className="flex min-h-screen items-center justify-center bg-muted/40">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="font-headline text-3xl">Welcome Back</CardTitle>
-          <CardDescription>
-            Log in to manage your bookings. Admins should use the{' '}
-            <Link href="/admin/login" className="font-semibold text-primary hover:underline">
-              admin portal
-            </Link>
-            .
-          </CardDescription>
+            <div className="flex justify-center mb-4">
+                <Logo />
+            </div>
+          <CardTitle className="font-headline text-3xl flex items-center justify-center gap-2">
+            <Shield className="h-7 w-7"/> Admin Portal
+          </CardTitle>
+          <CardDescription>Enter your admin credentials to access the dashboard.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -65,7 +76,7 @@ export default function LoginPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="ankit.sharma@example.com"
+                placeholder="admin@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -88,14 +99,6 @@ export default function LoginPage() {
             </Button>
           </form>
         </CardContent>
-        <CardFooter className="flex justify-center">
-          <p className="text-sm text-muted-foreground">
-            Don't have an account?{' '}
-            <Link href="/signup" className="font-semibold text-primary hover:underline">
-              Sign up
-            </Link>
-          </p>
-        </CardFooter>
       </Card>
     </div>
   );

@@ -2,12 +2,41 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // WARNING: These rules are insecure and allow anyone to read and write to
-    // your database. This is configured for an authentication-free admin panel
-    // as per user request.
-    // For a production app, you MUST implement proper security rules.
-    match /{document=**} {
-      allow read, write: if true;
+    
+    function isAdmin() {
+      // Check if the user is an admin by looking at their custom claims or a document.
+      // For this example, we check a 'role' field in their user profile.
+      return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Users can only manage their own profile. Admins can manage any profile.
+    match /users/{userId} {
+      allow read, update: if request.auth.uid == userId || isAdmin();
+      // Admins can list and delete users. Users can create their own doc.
+      allow list, delete: if isAdmin();
+      allow create: if request.auth.uid == userId;
+    }
+    
+    // Bookings are private to the user, but fully accessible to admins.
+    match /users/{userId}/bookings/{bookingId} {
+      allow read, list, create, update, delete: if request.auth.uid == userId || isAdmin();
+    }
+
+    // Hotels, Rooms, and Cities are publicly readable.
+    // Only admins can create, update, or delete them.
+    match /cities/{cityId} {
+        allow read: if true;
+        allow write: if isAdmin();
+    }
+
+    match /hotels/{hotelId} {
+        allow read: if true;
+        allow write: if isAdmin();
+    }
+    
+    match /hotels/{hotelId}/rooms/{roomId} {
+        allow read: if true;
+        allow write: if isAdmin();
     }
   }
 }
