@@ -9,59 +9,48 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-  CardFooter,
 } from '@/components/ui/card';
 import Image from 'next/image';
 import Link from 'next/link';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
-import { Calendar, Hotel as HotelIcon, Home, Users, Loader2, CreditCard, Hash, Download, FileText, Ban } from 'lucide-react';
+import { Calendar, Hotel as HotelIcon, Home, Users, Loader2, Download, Ban } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { collection, doc } from 'firebase/firestore';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 
 function BookingItemSkeleton() {
     return (
-        <Card className="shadow-md">
-            <CardHeader className="flex flex-row items-center justify-between">
-                <div className="space-y-2">
-                    <Skeleton className="h-7 w-48" />
-                    <Skeleton className="h-4 w-32" />
+        <Card className="overflow-hidden shadow-md">
+            <div className="flex flex-col md:flex-row">
+                <div className="relative h-48 w-full md:w-1/3 md:h-auto flex-shrink-0">
+                    <Skeleton className="h-full w-full"/>
                 </div>
-                <Skeleton className="h-7 w-24" />
-            </CardHeader>
-            <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="relative h-48 md:h-full">
-                         <Skeleton className="h-full w-full rounded-md"/>
+                <div className="flex flex-col flex-grow justify-between p-4 sm:p-6">
+                    <div>
+                        <Skeleton className="h-8 w-3/4 mb-2" />
+                        <Skeleton className="h-5 w-1/4 mb-4" />
+                        
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
+                            <Skeleton className="h-5 w-full" />
+                            <Skeleton className="h-5 w-full" />
+                            <Skeleton className="h-5 w-3/5" />
+                            <Skeleton className="h-5 w-2/5" />
+                            <Skeleton className="h-5 w-full sm:col-span-2" />
+                            <Skeleton className="h-5 w-1/2" />
+                            <Skeleton className="h-6 w-1/2" />
+                        </div>
                     </div>
-                    <div className="md:col-span-2 grid grid-cols-2 gap-6">
-                         <div className="space-y-4">
-                             <Skeleton className="h-5 w-24"/>
-                             <div className="space-y-3">
-                                <Skeleton className="h-10 w-full"/>
-                                <Skeleton className="h-10 w-full"/>
-                                <Skeleton className="h-10 w-full"/>
-                             </div>
-                         </div>
-                         <div className="space-y-4">
-                            <Skeleton className="h-5 w-24"/>
-                             <div className="space-y-3">
-                                <Skeleton className="h-10 w-full"/>
-                                <Skeleton className="h-10 w-full"/>
-                             </div>
-                         </div>
+                    <div className="flex flex-wrap gap-2 mt-6">
+                        <Skeleton className="h-9 w-28" />
+                        <Skeleton className="h-9 w-36" />
+                        <Skeleton className="h-9 w-36" />
                     </div>
                 </div>
-            </CardContent>
-            <CardFooter className="flex-wrap justify-end gap-2">
-                <Skeleton className="h-9 w-32"/>
-                <Skeleton className="h-9 w-36"/>
-            </CardFooter>
+            </div>
         </Card>
     );
 }
@@ -84,13 +73,10 @@ function BookingItem({ booking }: { booking: Booking }) {
 
     if (!hotel) {
         return (
-            <Card className="overflow-hidden">
-                <CardHeader>
-                    <CardTitle>Booking for an unknown hotel</CardTitle>
-                    <CardDescription>
-                        Booking ID: <span className="font-mono">{booking.id}</span>
-                    </CardDescription>
-                </CardHeader>
+            <Card className="p-4 border-destructive">
+                <p className="font-bold text-destructive">Hotel data not found for this booking.</p>
+                <p className="text-sm text-muted-foreground">The hotel might have been removed.</p>
+                <p className="mt-2 font-mono text-xs">Booking ID: {booking.id}</p>
             </Card>
         )
     }
@@ -103,93 +89,63 @@ function BookingItem({ booking }: { booking: Booking }) {
     const checkOutDate = (booking.checkOut as any).toDate ? (booking.checkOut as any).toDate() : new Date(booking.checkOut);
 
     return (
-        <Card key={booking.id} className="shadow-md transition-shadow hover:shadow-lg">
-             <CardHeader className="flex flex-row items-start justify-between p-4 md:p-6">
-                <div>
-                    <CardTitle className="font-headline text-2xl hover:text-primary">
-                        <Link href={`/hotels/${hotel.id}`}>{hotel.name}</Link>
-                    </CardTitle>
-                    <CardDescription className="pt-1">{hotel.city}</CardDescription>
+        <Card key={booking.id} className="overflow-hidden shadow-md transition-shadow hover:shadow-lg">
+            <div className="flex flex-col md:flex-row">
+                {/* Column 1: Image */}
+                <div className="relative h-48 w-full md:w-1/3 md:h-auto flex-shrink-0">
+                    {hotelImage ? (
+                        <Image
+                            src={hotelImage.imageUrl}
+                            alt={hotel.name}
+                            data-ai-hint={hotelImage.imageHint}
+                            fill
+                            className="object-cover"
+                        />
+                    ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-muted">
+                            <HotelIcon className="h-10 w-10 text-muted-foreground" />
+                        </div>
+                    )}
                 </div>
-                <Badge variant={booking.status === 'CONFIRMED' ? 'default' : 'destructive'} className="capitalize">
-                    {booking.status?.toLowerCase()}
-                </Badge>
-            </CardHeader>
 
-            <CardContent className="p-4 md:p-6 pt-0">
-                <Separator className="mb-6"/>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="relative h-48 md:h-full rounded-md overflow-hidden">
-                         {hotelImage && (
-                            <Image
-                                src={hotelImage.imageUrl}
-                                alt={hotel.name}
-                                data-ai-hint={hotelImage.imageHint}
-                                fill
-                                className="object-cover"
-                            />
+                {/* Column 2: Details */}
+                <div className="flex flex-col flex-grow justify-between p-4 sm:p-6">
+                    <div>
+                        <h3 className="font-headline text-xl sm:text-2xl font-bold hover:text-primary">
+                            <Link href={`/hotels/${hotel.id}`}>{hotel.name}</Link>
+                        </h3>
+                        <p className="text-muted-foreground mb-4">{hotel.city}</p>
+                        
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm text-muted-foreground">
+                            <p><span className="font-semibold text-foreground">Check-in:</span> {format(checkInDate, 'dd MMM yyyy')}</p>
+                            <p><span className="font-semibold text-foreground">Check-out:</span> {format(checkOutDate, 'dd MMM yyyy')}</p>
+                            <p><span className="font-semibold text-foreground">Room:</span> {booking.roomType}</p>
+                            <p><span className="font-semibold text-foreground">Guests:</span> {booking.guests}</p>
+                            <p className="col-span-1 sm:col-span-2"><span className="font-semibold text-foreground">Booking ID:</span> <span className="font-mono text-xs">{booking.id}</span></p>
+                            <p><span className="font-semibold text-foreground">Amount Paid:</span> <span className="font-bold text-foreground">{booking.totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}</span></p>
+                            <div className="flex items-center">
+                                <span className="font-semibold text-foreground mr-2">Payment Status:</span>
+                                <Badge variant={booking.status === 'CONFIRMED' ? 'default' : 'destructive'} className="capitalize">
+                                    {booking.status === 'CONFIRMED' ? '✅ ' : ''}
+                                    {booking.status?.toLowerCase()}
+                                </Badge>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2 mt-6">
+                        <Button variant="outline" size="sm" asChild>
+                            <Link href={`/hotels/${hotel.id}`}>View Details</Link>
+                        </Button>
+                        <Button variant="outline" size="sm"><Download className="mr-2 h-4 w-4" /> Download Invoice</Button>
+                        {booking.status === 'CONFIRMED' && (
+                            <Button variant="destructive" size="sm"><Ban className="mr-2 h-4 w-4" /> Cancel Booking</Button>
                         )}
                     </div>
-
-                    <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm">
-                        {/* Booking Summary */}
-                        <div>
-                             <h4 className="font-semibold text-base mb-3">Booking Summary</h4>
-                             <div className="space-y-3 text-muted-foreground">
-                                <div className="flex items-start gap-3">
-                                    <Calendar className="h-5 w-5 text-primary flex-shrink-0 mt-px" />
-                                    <div>
-                                        <p className="text-foreground font-medium">{format(checkInDate, 'EEE, LLL dd, yyyy')}</p>
-                                        <p>to {format(checkOutDate, 'EEE, LLL dd, yyyy')}</p>
-                                    </div>
-                                </div>
-                                 <div className="flex items-center gap-3">
-                                    <HotelIcon className="h-5 w-5 text-primary flex-shrink-0" />
-                                    <span>{booking.roomType} Room</span>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <Users className="h-5 w-5 text-primary flex-shrink-0" />
-                                    <span>{booking.guests} Guests</span>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <Hash className="h-5 w-5 text-primary flex-shrink-0" />
-                                    <span className="font-mono text-xs">{booking.id}</span>
-                                </div>
-                             </div>
-                        </div>
-
-                         {/* Payment Details */}
-                        <div>
-                            <h4 className="font-semibold text-base mb-3">Payment Details</h4>
-                             <div className="space-y-3 text-muted-foreground">
-                                <div className="flex items-start gap-3">
-                                    <CreditCard className="h-5 w-5 text-primary flex-shrink-0 mt-px" />
-                                    <div>
-                                        <p className="text-foreground font-bold text-lg">{booking.totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}</p>
-                                        <p>Paid via Razorpay</p>
-                                    </div>
-                                </div>
-                                {booking.razorpayPaymentId && (
-                                    <div className="flex items-center gap-3">
-                                        <FileText className="h-5 w-5 text-primary flex-shrink-0" />
-                                        <p>Txn ID: <span className="font-mono text-xs">{booking.razorpayPaymentId}</span></p>
-                                    </div>
-                                )}
-                             </div>
-                        </div>
-                    </div>
                 </div>
-
-            </CardContent>
-
-             <CardFooter className="bg-muted/50 p-4 flex-wrap justify-end gap-2">
-                <Button variant="outline"><Download className="mr-2 h-4 w-4" /> Download Invoice</Button>
-                {booking.status === 'CONFIRMED' && (
-                     <Button variant="destructive"><Ban className="mr-2 h-4 w-4" /> Cancel Booking</Button>
-                )}
-            </CardFooter>
+            </div>
         </Card>
-    )
+    );
 }
 
 
