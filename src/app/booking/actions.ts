@@ -3,7 +3,6 @@
 
 import crypto from 'crypto';
 import Razorpay from 'razorpay';
-import shortid from 'shortid';
 import {
   generateBookingConfirmationEmail,
   type GenerateBookingConfirmationEmailInput,
@@ -24,7 +23,7 @@ export async function createRazorpayOrder(amount: number) {
   const options = {
     amount: amount, // amount in the smallest currency unit
     currency: 'INR',
-    receipt: shortid.generate(),
+    receipt: `receipt_${crypto.randomBytes(8).toString('hex')}`,
   };
 
   try {
