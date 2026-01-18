@@ -186,11 +186,6 @@ export default function BookingSuccessPage() {
         <p className="mt-2 text-sm text-muted-foreground">
           Booking ID: <span className="font-mono">{booking.id}</span>
         </p>
-         {booking.razorpayPaymentId && (
-          <p className="mt-1 text-sm text-muted-foreground">
-            Payment ID: <span className="font-mono">{booking.razorpayPaymentId}</span>
-          </p>
-        )}
       </div>
 
       <Card className="mt-8">
