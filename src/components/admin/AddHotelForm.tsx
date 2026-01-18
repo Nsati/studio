@@ -1,5 +1,5 @@
 'use client';
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useRouter } from 'next/navigation';
@@ -36,13 +36,23 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { dummyCities } from '@/lib/dummy-data';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { Check, ChevronsUpDown, Loader2 } from 'lucide-react';
+import { Check, ChevronsUpDown, Loader2, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
+import { Separator } from '../ui/separator';
+import { Card, CardContent, CardHeader } from '../ui/card';
 
 
 const allAmenities = ['wifi', 'parking', 'restaurant', 'bar', 'spa', 'pool', 'gym', 'mountain-view', 'garden', 'library', 'river-view', 'ghat', 'adventure', 'trekking', 'skiing', 'heritage', 'safari'];
 const imageOptions = PlaceHolderImages.filter(img => !img.id.startsWith('city-')).map(img => ({ id: img.id, label: img.description }));
+
+
+const roomSchema = z.object({
+  type: z.enum(['Standard', 'Deluxe', 'Suite']),
+  price: z.coerce.number().min(1, 'Price must be positive.'),
+  capacity: z.coerce.number().min(1, 'Capacity must be at least 1.'),
+  totalRooms: z.coerce.number().min(1, 'Total rooms must be at least 1.'),
+});
 
 
 const formSchema = z.object({
@@ -52,6 +62,7 @@ const formSchema = z.object({
   rating: z.coerce.number().min(1).max(5).positive(),
   amenities: z.array(z.string()).min(1, 'Please select at least one amenity.'),
   images: z.array(z.string()).min(1, 'Please select at least one image.'),
+  rooms: z.array(roomSchema).min(1, 'Please add at least one room type.'),
 });
 
 export function AddHotelForm() {
@@ -69,7 +80,13 @@ export function AddHotelForm() {
       rating: 4.5,
       amenities: [],
       images: [],
+      rooms: [],
     },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: 'rooms',
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -83,14 +100,28 @@ export function AddHotelForm() {
 
     try {
         const hotelRef = doc(firestore, 'hotels', hotelId);
+        const { rooms, ...hotelData } = values;
+
         await setDoc(hotelRef, {
             id: hotelId,
-            ...values
+            ...hotelData
         });
+        
+        // Batch write for rooms can be implemented here for atomicity
+        for (const room of rooms) {
+            const roomId = slugify(`${values.name} ${room.type}`, { lower: true, strict: true });
+            const roomRef = doc(firestore, 'hotels', hotelId, 'rooms', roomId);
+            await setDoc(roomRef, {
+                id: roomId,
+                hotelId: hotelId,
+                ...room,
+                availableRooms: room.totalRooms, // Initially, all rooms are available
+            });
+        }
 
         toast({
             title: 'Hotel Added!',
-            description: `${values.name} has been successfully added.`,
+            description: `${values.name} and its rooms have been successfully added.`,
         });
 
         router.push('/admin/hotels');
@@ -293,6 +324,109 @@ export function AddHotelForm() {
                 </FormItem>
             )}
             />
+
+        <Separator />
+        
+        <div>
+            <h3 className="text-lg font-medium">Room Types</h3>
+            <FormDescription>
+              Add the different types of rooms available in this hotel.
+            </FormDescription>
+            <FormField
+              control={form.control}
+              name="rooms"
+              render={() => (
+                <FormItem>
+                  <FormMessage className="mt-2" />
+                </FormItem>
+              )}
+            />
+        </div>
+
+        <div className="space-y-4">
+          {fields.map((field, index) => (
+            <Card key={field.id} className="p-4">
+                <CardHeader className="flex flex-row items-center justify-between p-0 pb-4">
+                     <h4 className="font-semibold">Room Type {index + 1}</h4>
+                     <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                     </Button>
+                </CardHeader>
+                <CardContent className="p-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <FormField
+                    control={form.control}
+                    name={`rooms.${index}.type`}
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Type</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select a type" />
+                            </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                                <SelectItem value="Standard">Standard</SelectItem>
+                                <SelectItem value="Deluxe">Deluxe</SelectItem>
+                                <SelectItem value="Suite">Suite</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                     <FormField
+                    control={form.control}
+                    name={`rooms.${index}.price`}
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Price / night</FormLabel>
+                        <FormControl>
+                            <Input type="number" placeholder="e.g. 5000" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                    <FormField
+                    control={form.control}
+                    name={`rooms.${index}.capacity`}
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Capacity</FormLabel>
+                        <FormControl>
+                            <Input type="number" placeholder="e.g. 2" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                     <FormField
+                    control={form.control}
+                    name={`rooms.${index}.totalRooms`}
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Total Units</FormLabel>
+                        <FormControl>
+                            <Input type="number" placeholder="e.g. 10" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                </CardContent>
+            </Card>
+          ))}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => append({ type: 'Standard', price: 5000, capacity: 2, totalRooms: 10 })}
+          >
+            Add Room Type
+          </Button>
+        </div>
+
 
         <Button type="submit" disabled={isLoading}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
