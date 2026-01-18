@@ -28,6 +28,7 @@ import { format } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDoc, useFirestore, useUser } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
+import { generateBookingConfirmationEmail } from '@/ai/flows/generate-booking-confirmation-email';
 
 function LoadingSkeleton() {
     return (
@@ -61,8 +62,11 @@ export default function BookingSuccessPage() {
   const { toast } = useToast();
   const { user, isLoading: isUserLoading } = useUser();
   const firestore = useFirestore();
-  const [hasToastShown, setHasToastShown] = useState(false);
   
+  const [isEmailBeingSent, setIsEmailBeingSent] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
+
+
   useEffect(() => {
     if (!isUserLoading && !user) {
         toast({
@@ -90,14 +94,41 @@ export default function BookingSuccessPage() {
 
 
   useEffect(() => {
-    if (booking && hotel && !hasToastShown) {
-      toast({
-        title: 'Booking Confirmed!',
-        description: 'Your booking details are below.',
-      });
-      setHasToastShown(true);
+    if (booking && hotel && !isEmailBeingSent && !emailSent) {
+      setIsEmailBeingSent(true);
+      
+      console.log('Generating booking confirmation email...');
+
+      generateBookingConfirmationEmail({
+        hotelName: hotel.name,
+        customerName: booking.customerName,
+        checkIn: (booking.checkIn as any).toDate().toISOString(),
+        checkOut: (booking.checkOut as any).toDate().toISOString(),
+        roomType: booking.roomType,
+        totalPrice: booking.totalPrice,
+        bookingId: booking.id!,
+      }).then(emailContent => {
+        console.log("--- GENERATED EMAIL ---");
+        console.log("Subject:", emailContent.subject);
+        console.log("Body:", emailContent.body);
+        console.log("-----------------------");
+        toast({
+          title: 'Booking Confirmed!',
+          description: `A confirmation email has been generated for ${booking.customerEmail}.`,
+        });
+        setEmailSent(true);
+      }).catch(err => {
+        console.error("Failed to generate email:", err);
+        toast({
+            variant: 'destructive',
+            title: 'Email Generation Failed',
+            description: 'Could not generate the confirmation email.',
+        })
+      }).finally(() => {
+        setIsEmailBeingSent(false);
+      })
     }
-  }, [booking, hotel, toast, hasToastShown]);
+  }, [booking, hotel, isEmailBeingSent, emailSent, toast]);
 
 
   if (isUserLoading || !user) {
