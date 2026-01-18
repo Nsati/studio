@@ -27,7 +27,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { generateConfirmationEmailAction } from '@/app/booking/actions';
+import { generateBookingConfirmationEmail } from '@/ai/flows/generate-booking-confirmation-email';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDoc, useFirestore, useUser } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
@@ -119,7 +119,7 @@ export default function BookingSuccessPage() {
         const checkInDate = (booking.checkIn as any).toDate ? (booking.checkIn as any).toDate() : new Date(booking.checkIn);
         const checkOutDate = (booking.checkOut as any).toDate ? (booking.checkOut as any).toDate() : new Date(booking.checkOut);
 
-        const content = await generateConfirmationEmailAction({
+        const content = await generateBookingConfirmationEmail({
             hotelName: hotel.name,
             customerName: booking.customerName,
             checkIn: checkInDate.toISOString(),

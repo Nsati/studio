@@ -14,30 +14,23 @@ interface CreateOrderResponse {
   error?: string;
 }
 
-// Initialize Razorpay client
-let razorpayInstance: Razorpay | undefined;
-try {
-  if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
-    razorpayInstance = new Razorpay({
-      key_id: process.env.RAZORPAY_KEY_ID,
-      key_secret: process.env.RAZORPAY_KEY_SECRET,
-    });
-  } else {
-    console.warn('Razorpay keys are not configured in environment variables.');
-  }
-} catch (error) {
-    console.error("Failed to initialize Razorpay:", error);
-}
-
-
 export async function createRazorpayOrder(
   amount: number
 ): Promise<CreateOrderResponse> {
-    if (!razorpayInstance) {
-        return { success: false, error: 'Razorpay is not initialized on the server. Check server logs for details.' };
+    const keyId = process.env.RAZORPAY_KEY_ID;
+    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+
+    if (!keyId || !keySecret) {
+        console.error('Razorpay keys are not configured in environment variables.');
+        return { success: false, error: 'Razorpay keys are not configured on the server.' };
     }
 
   try {
+    const razorpayInstance = new Razorpay({
+        key_id: keyId,
+        key_secret: keySecret,
+    });
+
     const options = {
       amount: amount * 100, // amount in the smallest currency unit
       currency: 'INR',
@@ -52,11 +45,12 @@ export async function createRazorpayOrder(
         amount: order.amount,
         currency: order.currency,
       },
-      keyId: process.env.RAZORPAY_KEY_ID,
+      keyId: keyId,
     };
   } catch (error) {
     console.error('Error creating Razorpay order:', error);
-    return { success: false, error: 'Could not create Razorpay order.' };
+    const errorMessage = error instanceof Error ? error.message : 'Could not create Razorpay order.';
+    return { success: false, error: errorMessage };
   }
 }
 
