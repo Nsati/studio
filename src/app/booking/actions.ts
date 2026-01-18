@@ -1,39 +1,66 @@
 
 'use server';
 
+import crypto from 'crypto';
+import Razorpay from 'razorpay';
+import shortid from 'shortid';
 import {
   generateBookingConfirmationEmail,
   type GenerateBookingConfirmationEmailInput,
   type GenerateBookingConfirmationEmailOutput,
 } from '@/ai/flows/generate-booking-confirmation-email';
 
+const razorpay = new Razorpay({
+  key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
+  key_secret: process.env.RAZORPAY_KEY_SECRET!,
+});
 
 /**
- * This function simulates a payment gateway interaction.
- * It's for demo purposes only and should be replaced with a real
- * payment gateway integration (e.g., Stripe, Razorpay) in production.
- *
- * @param amount The amount to "charge".
- * @returns A promise that resolves to an object indicating success or failure.
+ * Creates a Razorpay order.
+ * @param amount The amount in the smallest currency unit (e.g., paisa for INR).
+ * @returns A promise that resolves to the Razorpay order object.
  */
-export async function simulatePayment(amount: number) {
-  // 1. Simulate API delay to feel like a real transaction.
-  await new Promise(resolve => setTimeout(resolve, 1500));
+export async function createRazorpayOrder(amount: number) {
+  const options = {
+    amount: amount, // amount in the smallest currency unit
+    currency: 'INR',
+    receipt: shortid.generate(),
+  };
 
-  // 2. Simulate payment success/failure.
-  // In a real demo, you might want this to be a toggle or a predictable value.
-  const isSuccess = Math.random() > 0.2; // 80% success rate
-
-  if (!isSuccess) {
-    console.log(`Dummy payment of ${amount} failed.`);
-    return { success: false, error: 'The payment was declined by your bank. Please try again.' };
+  try {
+    const order = await razorpay.orders.create(options);
+    return { success: true, order };
+  } catch (error) {
+    console.error('Error creating Razorpay order:', error);
+    return { success: false, error: 'Could not create order.' };
   }
+}
 
-  // 3. Generate a fake transaction ID for the successful "payment".
-  const fakeTransactionId = `DUMMY_PAY_${Date.now()}`;
-  console.log(`Dummy payment of ${amount} successful. Transaction ID: ${fakeTransactionId}`);
+/**
+ * Verifies a Razorpay payment signature.
+ * @param data The payment data from Razorpay checkout.
+ * @returns A promise that resolves to an object indicating if the payment is verified.
+ */
+export async function verifyRazorpayPayment(data: {
+  order_id: string;
+  payment_id: string;
+  signature: string;
+}) {
+  const { order_id, payment_id, signature } = data;
+  const body = order_id + '|' + payment_id;
 
-  return { success: true, transactionId: fakeTransactionId };
+  const expectedSignature = crypto
+    .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET!)
+    .update(body.toString())
+    .digest('hex');
+
+  const isAuthentic = expectedSignature === signature;
+
+  if (isAuthentic) {
+    return { success: true, isVerified: true };
+  } else {
+    return { success: false, isVerified: false, error: 'Payment verification failed.' };
+  }
 }
 
 
