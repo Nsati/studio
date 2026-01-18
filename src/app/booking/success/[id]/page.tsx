@@ -3,7 +3,7 @@
 import { notFound, useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { doc } from 'firebase/firestore';
 
 import type { Booking, Hotel } from '@/lib/types';
@@ -28,7 +28,6 @@ import { format } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDoc, useFirestore, useUser } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
-import { generateBookingConfirmationEmail } from '@/ai/flows/generate-booking-confirmation-email';
 
 function LoadingSkeleton() {
     return (
@@ -62,10 +61,6 @@ export default function BookingSuccessPage() {
   const { toast } = useToast();
   const { user, isLoading: isUserLoading } = useUser();
   const firestore = useFirestore();
-  
-  const [isEmailBeingSent, setIsEmailBeingSent] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
-
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -91,44 +86,6 @@ export default function BookingSuccessPage() {
     return doc(firestore, 'hotels', booking.hotelId);
   }, [firestore, booking]);
   const { data: hotel, isLoading: isLoadingHotel } = useDoc<Hotel>(hotelRef);
-
-
-  useEffect(() => {
-    if (booking && hotel && !isEmailBeingSent && !emailSent) {
-      setIsEmailBeingSent(true);
-      
-      console.log('Generating booking confirmation email...');
-
-      generateBookingConfirmationEmail({
-        hotelName: hotel.name,
-        customerName: booking.customerName,
-        checkIn: booking.checkIn.toString(),
-        checkOut: booking.checkOut.toString(),
-        roomType: booking.roomType,
-        totalPrice: booking.totalPrice,
-        bookingId: booking.id!,
-      }).then(emailContent => {
-        console.log("--- GENERATED EMAIL ---");
-        console.log("Subject:", emailContent.subject);
-        console.log("Body:", emailContent.body);
-        console.log("-----------------------");
-        toast({
-          title: 'Booking Confirmed!',
-          description: `An email preview has been generated in the logs for ${booking.customerEmail}.`,
-        });
-        setEmailSent(true);
-      }).catch(err => {
-        console.error("Failed to generate email:", err);
-        toast({
-            variant: 'destructive',
-            title: 'Email Generation Failed',
-            description: 'Could not generate the confirmation email.',
-        })
-      }).finally(() => {
-        setIsEmailBeingSent(false);
-      })
-    }
-  }, [booking, hotel, isEmailBeingSent, emailSent, toast]);
 
 
   if (isUserLoading || !user) {
