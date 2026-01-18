@@ -14,6 +14,10 @@ service cloud.firestore {
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
+    
+    function isAdmin() {
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
 
     function isExistingDoc() {
       return resource != null;
@@ -54,9 +58,11 @@ service cloud.firestore {
     //----------------------------------------------------------------------
 
     // Rule for collection group query on 'bookings'.
-    // WARNING: Publicly readable for prototyping the admin panel.
+    // Admin can read all bookings.
     match /{path=**}/bookings/{bookingId} {
-      allow read: if true;
+      allow read: if isAdmin();
+      // WARNING: No write access via collection group query.
+      // Write rules must be on direct paths.
     }
 
     //----------------------------------------------------------------------
@@ -64,47 +70,49 @@ service cloud.firestore {
     //----------------------------------------------------------------------
 
     match /users/{userId} {
-      // WARNING: Allows any client to list all users for the admin panel.
-      allow list: if true;
+      // Admin can list all users.
+      allow list: if isAdmin();
       
-      // Admin panel needs get/update access. Users can manage their own profile.
-      allow get: if true;
-      allow update: if true;
-      allow delete: if true;
+      // Admin can get/update/delete any user. Users can manage their own profile.
+      allow get: if isOwner(userId) || isAdmin();
+      allow update: if (isOwner(userId) && isUserDataValidOnUpdate()) || isAdmin();
+      allow delete: if isOwner(userId) || isAdmin();
 
       // A user can only create their own profile.
       allow create: if isOwner(userId) && isUserDataValidOnCreate(userId);
 
       match /bookings/{bookingId} {
-        // Allow users to access their own bookings. Admin panel also needs access.
-        allow get: if true;
-        allow list: if true;
+        // Users can access their own bookings. Admins can access any booking.
+        allow get: if isOwner(userId) || isAdmin();
+        allow list: if isOwner(userId) || isAdmin();
 
-        // Only the owner of the booking can create, update, or delete it.
+        // User can create their own booking.
         allow create: if isOwner(userId) && isBookingDataValidOnCreate(userId);
-        allow update: if isExistingOwner(userId) && isBookingDataValidOnUpdate();
-        allow delete: if isExistingOwner(userId);
+        
+        // User can update/delete their own booking. Admin can update/delete any booking.
+        allow update: if (isExistingOwner(userId) && isBookingDataValidOnUpdate()) || isAdmin();
+        allow delete: if isExistingOwner(userId) || isAdmin();
       }
     }
     
     match /cities/{cityId} {
       // Publicly readable.
       allow read: if true;
-      // WARNING: Publicly writable for prototyping the admin panel.
-      allow write: if true;
+      // Admin can write.
+      allow write: if isAdmin();
     }
 
     match /hotels/{hotelId} {
       // Publicly readable.
       allow read: if true;
-      // WARNING: Publicly writable for prototyping the admin panel.
-      allow write: if true;
+      // Admin can write.
+      allow write: if isAdmin();
 
       match /rooms/{roomId} {
         // Publicly readable.
         allow read: if true;
-        // WARNING: Publicly writable for prototyping the admin panel.
-        allow write: if true;
+        // Admin can write.
+        allow write: if isAdmin();
       }
     }
   }
