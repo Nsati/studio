@@ -51,11 +51,7 @@ export default function LoginPage() {
         <CardHeader className="text-center">
           <CardTitle className="font-headline text-3xl">Welcome Back</CardTitle>
           <CardDescription>
-            Log in to manage your bookings. Admins should use the{' '}
-            <Link href="/admin/login" className="font-semibold text-primary hover:underline">
-              admin portal
-            </Link>
-            .
+            Log in to manage your bookings.
           </CardDescription>
         </CardHeader>
         <CardContent>

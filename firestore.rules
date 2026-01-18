@@ -3,44 +3,11 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    function isAdmin() {
-      // Check if the user is an admin by looking at their 'role' field in their user profile.
-      return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
-    }
-
-    // Users can only manage their own profile. Admins can manage any profile.
-    match /users/{userId} {
-      allow read, update: if request.auth.uid == userId || isAdmin();
-      // Admins can list and delete users. Users can create their own doc.
-      allow list, delete: if isAdmin();
-      allow create: if request.auth.uid == userId;
-    }
-    
-    // Bookings are private to the user, but fully accessible to admins.
-    match /users/{userId}/bookings/{bookingId} {
-      allow read, list, create, update, delete: if request.auth.uid == userId || isAdmin();
-    }
-
-    // This rule allows admins to perform a collection group query on all 'bookings' collections.
-    match /{path=**}/bookings/{bookingId} {
-        allow read, list: if isAdmin();
-    }
-
-    // Hotels, Rooms, and Cities are publicly readable.
-    // Only admins can create, update, or delete them.
-    match /cities/{cityId} {
-        allow read: if true;
-        allow write: if isAdmin();
-    }
-
-    match /hotels/{hotelId} {
-        allow read: if true;
-        allow write: if isAdmin();
-    }
-    
-    match /hotels/{hotelId}/rooms/{roomId} {
-        allow read: if true;
-        allow write: if isAdmin();
+    // WARNING: These rules are wide open for development/demo purposes
+    // to allow a password-less admin panel.
+    // Do not use these in a production environment.
+    match /{document=**} {
+      allow read, write: if true;
     }
   }
 }

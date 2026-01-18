@@ -1,8 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
 import {
   LayoutDashboard,
   Hotel,
@@ -14,13 +12,9 @@ import {
   Receipt,
   BarChart,
   Tag,
-  Loader2,
-  LogOut,
 } from 'lucide-react';
 import { Logo } from '@/components/shared/Logo';
 import { Button } from '@/components/ui/button';
-import { useUser, useAuth } from '@/firebase';
-import { useToast } from '@/hooks/use-toast';
 
 const navItems = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
@@ -35,34 +29,6 @@ const navItems = [
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { user, userProfile, isLoading } = useUser();
-  const router = useRouter();
-  const auth = useAuth();
-  const { toast } = useToast();
-
-  useEffect(() => {
-    if (!isLoading) {
-      if (!user || userProfile?.role !== 'admin') {
-        router.replace('/admin/login');
-      }
-    }
-  }, [user, userProfile, isLoading, router]);
-
-  const handleLogout = async () => {
-    if (auth) {
-      await auth.signOut();
-      toast({ title: 'Logged out successfully.' });
-      router.push('/admin/login');
-    }
-  };
-
-  if (isLoading || !user || userProfile?.role !== 'admin') {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
 
   return (
     <div className="flex min-h-screen bg-muted/40">
@@ -88,10 +54,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     <Home className="mr-2 h-4 w-4" />
                     Back to Main Site
                 </Link>
-            </Button>
-             <Button onClick={handleLogout} variant="ghost" size="sm">
-              <LogOut className="mr-2 h-4 w-4" />
-              Logout
             </Button>
         </div>
       </aside>
