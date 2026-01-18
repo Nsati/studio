@@ -1,6 +1,6 @@
 'use client';
 
-import { notFound, useParams } from 'next/navigation';
+import { notFound, useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import React, { useEffect, useState, useMemo } from 'react';
@@ -35,8 +35,19 @@ interface EmailContent {
   body: string;
 }
 
+function LoadingSkeleton() {
+    return (
+        <div className="container mx-auto max-w-4xl py-12 px-4 md:px-6 space-y-8">
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-64 w-full" />
+            <Skeleton className="h-64 w-full" />
+        </div>
+    )
+}
+
 export default function BookingSuccessPage() {
   const params = useParams();
+  const router = useRouter();
   const id = params.id as string;
   const { toast } = useToast();
   const { user, isLoading: isUserLoading } = useUser();
@@ -44,6 +55,18 @@ export default function BookingSuccessPage() {
   const [emailContent, setEmailContent] = useState<EmailContent | null>(null);
   const [isLoadingEmail, setIsLoadingEmail] = useState(true);
   
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+        toast({
+            variant: 'destructive',
+            title: 'Authentication Required',
+            description: 'You need to be logged in to view this page.'
+        });
+        router.push(`/login?redirect=/booking/success/${id}`);
+    }
+  }, [isUserLoading, user, router, id, toast]);
+
+
   const bookingRef = useMemo(() => {
       if (!firestore || !user || !id) return null;
       return doc(firestore, 'users', user.uid, 'bookings', id);
@@ -60,7 +83,6 @@ export default function BookingSuccessPage() {
 
   useEffect(() => {
     if (booking && hotel) {
-      // Only show toast once we have the booking data to ensure we are on a valid page
       toast({
         title: 'Booking Confirmed!',
         description: 'Your payment was successful. Your details are below.',
@@ -102,17 +124,12 @@ export default function BookingSuccessPage() {
     getEmailContent();
   }, [booking, hotel]);
 
-  if (isUserLoading || isLoadingBooking || isLoadingHotel) {
-      return (
-          <div className="container mx-auto max-w-4xl py-12 px-4 md:px-6 space-y-8">
-              <Skeleton className="h-24 w-full" />
-              <Skeleton className="h-64 w-full" />
-              <Skeleton className="h-64 w-full" />
-          </div>
-      )
+  if (isUserLoading || !user || isLoadingBooking || isLoadingHotel) {
+      return <LoadingSkeleton />
   }
 
   if (!booking || !hotel) {
+    // This will be called if the booking doesn't exist or doesn't belong to the user
     notFound();
   }
 
