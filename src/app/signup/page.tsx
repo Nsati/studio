@@ -53,7 +53,7 @@ export default function SignupPage() {
         title: 'Account created!', 
         description: "You've been successfully signed up." 
       });
-      router.push('/my-bookings');
+      router.push('/terminal');
 
     } catch (error: any) {
         if (error.code === 'auth/email-already-in-use') {

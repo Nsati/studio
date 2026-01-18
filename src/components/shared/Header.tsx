@@ -24,7 +24,7 @@ import { Skeleton } from '../ui/skeleton';
 const navLinks = [
   { href: '/', label: 'Home' },
   { href: '/search', label: 'Explore Hotels' },
-  { href: '/terminal', label: 'Terminal' },
+  { href: '/terminal', label: 'My Bookings' },
 ];
 
 export function Header() {
@@ -75,7 +75,7 @@ export function Header() {
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link href="/my-bookings">My Bookings</Link>
+                  <Link href="/terminal">My Bookings</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
@@ -121,7 +121,7 @@ export function Header() {
                     {isLoading ? <Skeleton className="h-10 w-full" /> : user ? (
                        <div className="flex flex-col gap-4">
                            <p className="text-lg font-medium">{userProfile?.displayName || user.email}</p>
-                           <Link href="/my-bookings" onClick={() => setIsMenuOpen(false)} className="text-base text-muted-foreground">My Bookings</Link>
+                           <Link href="/terminal" onClick={() => setIsMenuOpen(false)} className="text-base text-muted-foreground">My Bookings</Link>
                            <Button onClick={() => { handleLogout(); setIsMenuOpen(false); }} variant="outline">Logout</Button>
                        </div>
                     ) : (

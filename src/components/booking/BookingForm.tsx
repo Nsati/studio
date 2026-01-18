@@ -185,7 +185,7 @@ export function BookingForm() {
                         title: "Booking Confirmed!",
                         description: "Your payment was successful. You can find your booking details under 'My Bookings'."
                     });
-                    router.push(`/my-bookings`);
+                    router.push(`/terminal`);
 
                 } else {
                     toast({
