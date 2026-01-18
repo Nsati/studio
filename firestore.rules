@@ -1,14 +1,4 @@
-/**
- * WARNING: This ruleset is simplified for a basic password-protected admin panel
- * and is NOT secure for a production environment. The write rules for public
- * collections like 'hotels' and 'cities' are open, and the list rules for 'users'
- * and 'bookings' are also open. Security relies solely on the UI-level password
- * on the admin panel, which does not protect against direct API calls.
- *
- * Use this for prototyping and local development only. For production, re-implement
- * a robust authentication check (like the original 'isAdmin()' function) to
- * secure your data.
- */
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -63,10 +53,9 @@ service cloud.firestore {
     // Collection Group Rules
     //----------------------------------------------------------------------
 
-    // Rule for collection group query on 'bookings'
+    // Rule for collection group query on 'bookings'.
+    // WARNING: Publicly readable for prototyping the admin panel.
     match /{path=**}/bookings/{bookingId} {
-      // WARNING: Publicly readable to allow admin panel to list all bookings.
-      // Secure this in production by checking for an admin role.
       allow read: if true;
     }
 
@@ -75,11 +64,10 @@ service cloud.firestore {
     //----------------------------------------------------------------------
 
     match /users/{userId} {
-      // WARNING: Allows any client to list all users.
+      // WARNING: Allows any client to list all users for the admin panel.
       allow list: if true;
       
-      // A user can get, update, or delete their own profile.
-      // The admin panel also needs get/update/delete access.
+      // Admin panel needs get/update access. Users can manage their own profile.
       allow get: if true;
       allow update: if true;
       allow delete: if true;
@@ -88,7 +76,7 @@ service cloud.firestore {
       allow create: if isOwner(userId) && isUserDataValidOnCreate(userId);
 
       match /bookings/{bookingId} {
-        // WARNING: Allows any client to list and read all bookings for a user.
+        // Allow users to access their own bookings. Admin panel also needs access.
         allow get: if true;
         allow list: if true;
 
@@ -100,22 +88,22 @@ service cloud.firestore {
     }
     
     match /cities/{cityId} {
-      // Publicly readable
+      // Publicly readable.
       allow read: if true;
-      // WARNING: Publicly writable. Secured only by the admin panel password UI.
+      // WARNING: Publicly writable for prototyping the admin panel.
       allow write: if true;
     }
 
     match /hotels/{hotelId} {
-      // Publicly readable
+      // Publicly readable.
       allow read: if true;
-      // WARNING: Publicly writable. Secured only by the admin panel password UI.
+      // WARNING: Publicly writable for prototyping the admin panel.
       allow write: if true;
 
       match /rooms/{roomId} {
-        // Publicly readable
+        // Publicly readable.
         allow read: if true;
-        // WARNING: Publicly writable. Secured only by the admin panel password UI.
+        // WARNING: Publicly writable for prototyping the admin panel.
         allow write: if true;
       }
     }

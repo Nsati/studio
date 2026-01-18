@@ -326,7 +326,7 @@ export function ContentManagement() {
     <Tabs defaultValue="hotels" className="w-full">
       <TabsList className="grid w-full grid-cols-3">
         <TabsTrigger value="hotels">Hotels</TabsTrigger>
-        <TabsTrigger value="users">Users</Tabs-trigger>
+        <TabsTrigger value="users">Users</TabsTrigger>
         <TabsTrigger value="bookings">Bookings</TabsTrigger>
       </TabsList>
       <TabsContent value="hotels">
