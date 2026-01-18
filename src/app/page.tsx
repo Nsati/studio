@@ -13,7 +13,7 @@ import { HeroSearchForm } from '@/components/home/HeroSearchForm';
 import { ArrowRight } from 'lucide-react';
 import type { City, Hotel } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
-import { dummyCities } from '@/lib/dummy-data';
+import { dummyCities, dummyHotels } from '@/lib/dummy-data';
 
 function FeaturedHotels() {
   const firestore = useFirestore();
@@ -23,7 +23,18 @@ function FeaturedHotels() {
     return query(collection(firestore, 'hotels'), limit(4));
   }, [firestore]);
 
-  const { data: featuredHotels, isLoading } = useCollection<Hotel>(hotelsQuery);
+  const { data: liveHotels, isLoading } = useCollection<Hotel>(hotelsQuery);
+
+  const featuredHotels = useMemo(() => {
+    if (liveHotels && liveHotels.length > 0) {
+      return liveHotels;
+    }
+    // If firestore is empty, fall back to first 4 dummy hotels
+    if (!isLoading && (!liveHotels || liveHotels.length === 0)) {
+        return dummyHotels.slice(0, 4);
+    }
+    return [];
+  }, [liveHotels, isLoading]);
 
   if (isLoading) {
     return (

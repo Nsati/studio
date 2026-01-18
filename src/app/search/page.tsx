@@ -18,7 +18,7 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { Search } from 'lucide-react';
 import Loading from './loading';
-import { dummyCities } from '@/lib/dummy-data';
+import { dummyCities, dummyHotels } from '@/lib/dummy-data';
 import { useCollection, useFirestore } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -26,18 +26,31 @@ import { Skeleton } from '@/components/ui/skeleton';
 function SearchResults() {
   const searchParams = useSearchParams();
   const firestore = useFirestore();
+  const city = searchParams.get('city');
 
   const hotelsQuery = useMemo(() => {
     if (!firestore) return null;
-    const city = searchParams.get('city');
     let q = query(collection(firestore, 'hotels'));
     if (city && city !== 'All') {
       q = query(q, where('city', '==', city));
     }
     return q;
-  }, [firestore, searchParams]);
+  }, [firestore, city]);
 
-  const { data: hotels, isLoading } = useCollection<Hotel>(hotelsQuery);
+  const { data: liveHotels, isLoading } = useCollection<Hotel>(hotelsQuery);
+
+  const hotels = useMemo(() => {
+    if (liveHotels && liveHotels.length > 0) {
+      return liveHotels;
+    }
+    if (!isLoading && (!liveHotels || liveHotels.length === 0)) {
+      if (city && city !== 'All') {
+        return dummyHotels.filter(h => h.city === city);
+      }
+      return dummyHotels;
+    }
+    return null;
+  }, [liveHotels, isLoading, city]);
 
   if (isLoading || hotels === null) {
     return (
