@@ -17,11 +17,13 @@ interface CreateOrderResponse {
 export async function createRazorpayOrder(
   amount: number
 ): Promise<CreateOrderResponse> {
-    const keyId = process.env.RAZORPAY_KEY_ID;
-    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+    // WARNING: Hardcoded keys for demo purposes.
+    // In a production environment, load these from secure environment variables.
+    const keyId = "rzp_test_1234567890abcdef";
+    const keySecret = "abcdef1234567890abcdef";
 
     if (!keyId || !keySecret) {
-        console.error('Razorpay keys are not configured in environment variables.');
+        console.error('Razorpay keys are not configured.');
         return { success: false, error: 'Razorpay keys are not configured on the server.' };
     }
 
@@ -65,7 +67,8 @@ export async function verifyRazorpayPayment(data: {
   razorpay_signature: string;
 }): Promise<VerifyPaymentResponse> {
   const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = data;
-  const key_secret = process.env.RAZORPAY_KEY_SECRET;
+  // WARNING: Hardcoded secret for demo purposes.
+  const key_secret = "abcdef1234567890abcdef";
 
   if (!key_secret) {
     console.error('RAZORPAY_KEY_SECRET is not set.');
