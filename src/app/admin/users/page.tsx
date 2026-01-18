@@ -1,7 +1,7 @@
 'use client';
 import { useMemo } from 'react';
 import { useFirestore, useCollection } from '@/firebase';
-import { collection, query, orderBy } from 'firebase/firestore';
+import { collection } from 'firebase/firestore';
 import type { UserProfile } from '@/lib/types';
 import {
   Table,
@@ -31,10 +31,17 @@ export default function UsersPage() {
 
     const usersQuery = useMemo(() => {
         if (!firestore) return null;
-        return query(collection(firestore, 'users'), orderBy('displayName'));
+        // Query without orderBy to avoid needing a composite index in Firestore.
+        return collection(firestore, 'users');
     }, [firestore]);
 
-    const { data: users, isLoading } = useCollection<UserProfile>(usersQuery);
+    const { data: usersData, isLoading } = useCollection<UserProfile>(usersQuery);
+
+    // Sort users on the client-side.
+    const users = useMemo(() => {
+        if (!usersData) return null;
+        return [...usersData].sort((a, b) => a.displayName.localeCompare(b.displayName));
+    }, [usersData]);
 
   return (
     <div className="space-y-6">
