@@ -4,7 +4,7 @@ import Link from 'next/link';
 import {
   LayoutDashboard,
   Hotel,
-  BookOpen,
+  Book,
   Users2,
   Settings,
   Home,
@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/button';
 const navItems = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/hotels', label: 'Hotels', icon: Hotel },
-  { href: '/admin/bookings', label: 'Bookings', icon: BookOpen },
+  { href: '/admin/bookings', label: 'Bookings', icon: Book },
   { href: '/admin/users', label: 'Users', icon: Users2 },
   { href: '/admin/reviews', label: 'Reviews', icon: Star },
   { href: '/admin/payments', label: 'Payments', icon: Receipt },
