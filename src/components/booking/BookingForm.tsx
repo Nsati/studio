@@ -12,7 +12,6 @@ import { useUser, useFirestore, useDoc } from '@/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import {
   createRazorpayOrder,
-  revalidateAdminOnBooking,
 } from '@/app/booking/actions';
 
 import { useToast } from '@/hooks/use-toast';
@@ -166,7 +165,6 @@ export function BookingForm() {
             };
 
             await setDoc(bookingRef, bookingData);
-            await revalidateAdminOnBooking();
             
             toast({
               title: 'Payment Successful!',

@@ -58,17 +58,6 @@ export function Header() {
               {link.label}
             </Link>
           ))}
-          {userProfile?.role === 'admin' && (
-             <Link
-              href="/admin"
-              className={cn(
-                'text-sm font-medium transition-colors hover:text-primary',
-                pathname === '/admin' ? 'text-primary' : 'text-muted-foreground'
-              )}
-            >
-              Admin Panel
-            </Link>
-          )}
         </nav>
 
         <div className="flex items-center gap-4">
@@ -88,11 +77,6 @@ export function Header() {
                 <DropdownMenuItem asChild>
                   <Link href="/my-bookings">My Bookings</Link>
                 </DropdownMenuItem>
-                 {userProfile?.role === 'admin' && (
-                  <DropdownMenuItem asChild>
-                    <Link href="/admin">Admin Panel</Link>
-                  </DropdownMenuItem>
-                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
               </DropdownMenuContent>
@@ -138,9 +122,6 @@ export function Header() {
                        <div className="flex flex-col gap-4">
                            <p className="text-lg font-medium">{userProfile?.displayName || user.email}</p>
                            <Link href="/my-bookings" onClick={() => setIsMenuOpen(false)} className="text-base text-muted-foreground">My Bookings</Link>
-                            {userProfile?.role === 'admin' && (
-                              <Link href="/admin" onClick={() => setIsMenuOpen(false)} className="text-base text-muted-foreground">Admin Panel</Link>
-                            )}
                            <Button onClick={() => { handleLogout(); setIsMenuOpen(false); }} variant="outline">Logout</Button>
                        </div>
                     ) : (
