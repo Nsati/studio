@@ -284,7 +284,7 @@ function BookingList() {
                                 <TableCell>{format(new Date(booking.checkIn), 'PPP')}</TableCell>
                                 <TableCell>{format(new Date(booking.checkOut), 'PPP')}</TableCell>
                                 <TableCell>{booking.status}</TableCell>
-                                <TableCell>₹{booking.totalPrice.toLocaleString()}</TableCell>
+                                <TableCell>{booking.totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}</TableCell>
                             </TableRow>
                         ))}
                          {!isLoading && bookings?.length === 0 && (

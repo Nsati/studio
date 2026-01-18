@@ -140,7 +140,7 @@ function BookingItem({ booking }: { booking: Booking }) {
                             </Badge>
                             <div className="text-right">
                                 <p className="text-sm text-muted-foreground">Total Paid</p>
-                                <p className="font-headline text-2xl font-bold">₹{booking.totalPrice.toLocaleString()}</p>
+                                <p className="font-headline text-2xl font-bold">{booking.totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}</p>
                             </div>
                         </div>
                     </CardFooter>

@@ -285,8 +285,8 @@ export function BookingForm() {
                 </CardHeader>
                 <CardContent className="space-y-2">
                     <div className="flex justify-between">
-                        <span>{room.price.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })} x {nights} nights</span>
-                        <span>{totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}</span>
+                        <span>{room.price.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })} x {nights} nights</span>
+                        <span>{totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}</span>
                     </div>
                      <div className="flex justify-between text-muted-foreground text-sm">
                         <span>Taxes & Fees</span>
@@ -294,7 +294,7 @@ export function BookingForm() {
                     </div>
                     <div className="border-t pt-2 mt-2 flex justify-between font-bold text-lg">
                         <span>Total Amount</span>
-                        <span>{totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}</span>
+                        <span>{totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}</span>
                     </div>
                 </CardContent>
             </Card>

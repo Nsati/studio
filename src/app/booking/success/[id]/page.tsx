@@ -175,7 +175,7 @@ export default function BookingSuccessPage() {
             <div className="border-t pt-4">
               <div className="flex justify-between font-bold">
                 <span>Total Paid</span>
-                <span>₹{booking.totalPrice.toLocaleString()}</span>
+                <span>{booking.totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}</span>
               </div>
             </div>
           </div>

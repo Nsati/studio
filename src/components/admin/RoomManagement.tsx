@@ -233,7 +233,7 @@ export function RoomManagement({ hotelId }: { hotelId: string }) {
                         {rooms?.map((room) => (
                             <TableRow key={room.id}>
                                 <TableCell className="font-medium">{room.type}</TableCell>
-                                <TableCell>₹{room.price.toLocaleString()}</TableCell>
+                                <TableCell>{room.price.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}</TableCell>
                                 <TableCell>{room.capacity}</TableCell>
                                 <TableCell>{room.totalRooms}</TableCell>
                                 <TableCell className="text-right space-x-2">

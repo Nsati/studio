@@ -231,7 +231,7 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
                     </div>
                     <div className="flex flex-col items-start gap-2 md:items-end">
                     <p className="text-lg font-bold text-primary">
-                        ₹{room.price.toLocaleString()}
+                        {room.price.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}
                         <span className="text-sm font-normal text-muted-foreground">
                         /night
                         </span>
@@ -247,7 +247,7 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
           <div className='border-t pt-6 space-y-4'>
             <div className="flex justify-between items-center font-bold">
               <span>{selectedRoom.type} Room x {nights} nights</span>
-              <span>₹{(selectedRoom.price * nights).toLocaleString()}</span>
+              <span>{(selectedRoom.price * nights).toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}</span>
             </div>
             <Button
               onClick={handleBookNow}
