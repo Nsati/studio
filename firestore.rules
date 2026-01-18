@@ -2,12 +2,46 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // Helper function to check for admin role
+    function isAdmin() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Users can read their own profile. Admins can read/write any profile.
+    match /users/{userId} {
+      allow read, update: if request.auth.uid == userId;
+      allow read, write: if isAdmin();
+    }
+
+    // Cities, Hotels, and Rooms are publicly readable. Only admins can modify them.
+    match /cities/{cityId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
     
-    // WARNING: These rules are wide open for development/demo purposes
-    // to allow a password-less admin panel.
-    // Do not use these in a production environment.
-    match /{document=**} {
-      allow read, write: if true;
+    match /hotels/{hotelId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /hotels/{hotelId}/rooms/{roomId} {
+        allow read: if true;
+        allow write: if isAdmin();
+    }
+
+    // Users can create, read, update, and delete their own bookings.
+    // Admins can read any booking for management purposes.
+    match /users/{userId}/bookings/{bookingId} {
+      allow create: if request.auth.uid == userId && request.resource.data.userId == request.auth.uid;
+      allow read, update, delete: if request.auth.uid == userId && resource.data.userId == request.auth.uid;
+      allow read, list: if isAdmin();
+    }
+    
+    // Collection group query for admin booking list
+    match /{path=**}/bookings/{bookingId} {
+        allow read, list: if isAdmin();
     }
   }
 }

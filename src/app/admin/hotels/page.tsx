@@ -5,7 +5,6 @@ import Image from 'next/image';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import type { Hotel } from '@/lib/types';
-import { dummyHotels } from '@/lib/dummy-data';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -77,14 +76,8 @@ export default function HotelsPage() {
         return collection(firestore, 'hotels');
     }, [firestore]);
 
-    const { data: liveHotels, isLoading } = useCollection<Hotel>(hotelsQuery);
+    const { data: allHotels, isLoading } = useCollection<Hotel>(hotelsQuery);
     
-    const allHotels = useMemo(() => {
-        const live = liveHotels || [];
-        const dummies = dummyHotels.filter(dh => !live.some(lh => lh.id === dh.id));
-        return [...live, ...dummies];
-    }, [liveHotels]);
-
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-start">
@@ -104,14 +97,14 @@ export default function HotelsPage() {
             
             {isLoading ? <HotelGridSkeleton /> : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {allHotels.map(hotel => (
+                    {allHotels?.map(hotel => (
                         <HotelAdminCard key={hotel.id} hotel={hotel} />
                     ))}
                 </div>
             )}
-            {!isLoading && allHotels.length === 0 && (
+            {!isLoading && (!allHotels || allHotels.length === 0) && (
                  <div className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-lg">
-                    <p>No hotels found. Get started by adding one.</p>
+                    <p>No hotels found in the database. Get started by adding one.</p>
                 </div>
             )}
         </div>

@@ -10,7 +10,6 @@ import { collection } from 'firebase/firestore';
 import type { Hotel, Room } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useCollection, useFirestore } from '@/firebase';
-import { dummyRooms } from '@/lib/dummy-data';
 
 import {
   Card,
@@ -46,16 +45,8 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
       return collection(firestore, 'hotels', hotel.id, 'rooms');
   }, [firestore, hotel.id]);
 
-  const { data: liveRooms, isLoading: isLoadingRooms } = useCollection<Room>(roomsQuery);
+  const { data: rooms, isLoading: isLoadingRooms } = useCollection<Room>(roomsQuery);
 
-  const rooms = useMemo(() => {
-      if (isLoadingRooms) return null;
-
-      if (liveRooms && liveRooms.length > 0) {
-          return liveRooms;
-      }
-      return dummyRooms.filter(r => r.hotelId === hotel.id);
-  }, [isLoadingRooms, liveRooms, hotel.id]);
 
   const nights =
     dates?.from && dates?.to ? differenceInDays(dates.to, dates.from) : 0;

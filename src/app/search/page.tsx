@@ -18,7 +18,7 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { Search } from 'lucide-react';
 import Loading from './loading';
-import { dummyCities, dummyHotels } from '@/lib/dummy-data';
+import { dummyCities } from '@/lib/dummy-data';
 import { useCollection, useFirestore } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -37,29 +37,7 @@ function SearchResults() {
     return q;
   }, [firestore, searchParams]);
 
-  const { data: liveHotels, isLoading } = useCollection<Hotel>(hotelsQuery);
-
-  const hotels = useMemo(() => {
-    if (isLoading) return null; // Return null to continue showing skeletons
-
-    const city = searchParams.get('city');
-    const liveHotelsList = liveHotels || [];
-    
-    const filteredDummies = dummyHotels.filter(hotel => {
-        // Exclude dummies that are already present in the live list
-        if (liveHotelsList.some(live => live.id === hotel.id)) {
-            return false;
-        }
-        // Filter by city
-        if (city && city !== 'All') {
-            return hotel.city === city;
-        }
-        return true;
-    });
-
-    return [...liveHotelsList, ...filteredDummies];
-  }, [liveHotels, isLoading, searchParams]);
-
+  const { data: hotels, isLoading } = useCollection<Hotel>(hotelsQuery);
 
   if (isLoading || hotels === null) {
     return (

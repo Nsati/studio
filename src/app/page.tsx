@@ -13,7 +13,7 @@ import { HeroSearchForm } from '@/components/home/HeroSearchForm';
 import { ArrowRight } from 'lucide-react';
 import type { City, Hotel } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
-import { dummyCities, dummyHotels } from '@/lib/dummy-data';
+import { dummyCities } from '@/lib/dummy-data';
 
 function FeaturedHotels() {
   const firestore = useFirestore();
@@ -23,18 +23,7 @@ function FeaturedHotels() {
     return query(collection(firestore, 'hotels'), limit(4));
   }, [firestore]);
 
-  const { data: liveHotels, isLoading } = useCollection<Hotel>(hotelsQuery);
-
-  const featuredHotels = useMemo(() => {
-      if (isLoading) return [];
-      
-      const live = liveHotels || [];
-      // Get dummy hotels that are not in the live list
-      const dummies = dummyHotels.filter(dh => !live.some(lh => lh.id === dh.id));
-      
-      // Prioritize live hotels, then fill up to 4 with unique dummies
-      return [...live, ...dummies].slice(0, 4);
-  }, [liveHotels, isLoading]);
+  const { data: featuredHotels, isLoading } = useCollection<Hotel>(hotelsQuery);
 
   if (isLoading) {
     return (
