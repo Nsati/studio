@@ -1,4 +1,3 @@
-
 'use server';
 
 import crypto from 'crypto';
@@ -16,11 +15,14 @@ import {
  * @returns A promise that resolves to the Razorpay order object.
  */
 export async function createRazorpayOrder(amount: number) {
-  const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
-  const keySecret = process.env.RAZORPAY_KEY_SECRET;
+  // --- JUGAAD / WORKAROUND: Hardcoding keys to bypass environment variable issues for demo ---
+  // WARNING: DO NOT USE THIS IN PRODUCTION.
+  // In a real app, these should always come from secure environment variables (e.g., process.env).
+  const keyId = 'rzp_test_eJ9v3b1X4qY5pX';
+  const keySecret = 'T9pSg5nL2mR5zO8gE1fB0hJ7';
 
   if (!keyId || !keySecret) {
-    console.error('Razorpay Key ID or Key Secret is not defined in environment variables.');
+    console.error('Razorpay Key ID or Key Secret is not defined.');
     return { success: false, error: 'Payment gateway credentials are not configured.' };
   }
   
@@ -55,10 +57,13 @@ export async function verifyRazorpayPayment(data: {
   signature: string;
 }) {
   const { order_id, payment_id, signature } = data;
-  const keySecret = process.env.RAZORPAY_KEY_SECRET;
+  
+  // --- JUGAAD / WORKAROUND: Hardcoding secret key to bypass environment variable issues for demo ---
+  // WARNING: DO NOT USE THIS IN PRODUCTION.
+  const keySecret = 'T9pSg5nL2mR5zO8gE1fB0hJ7';
   
   if (!keySecret) {
-    console.error('Razorpay Key Secret is not defined in environment variables.');
+    console.error('Razorpay Key Secret is not defined.');
     return { success: false, isVerified: false, error: 'Payment verification is not configured.' };
   }
   
