@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ShieldAlert } from 'lucide-react';
 import { verifyAdminPassword } from './actions';
 import { ContentManagement } from '@/components/admin/ContentManagement';
+import { useUser } from '@/firebase';
 
 
 function AdminLoginPage({ onLoginSuccess }: { onLoginSuccess: () => void }) {
@@ -67,12 +68,39 @@ function AdminLoginPage({ onLoginSuccess }: { onLoginSuccess: () => void }) {
   );
 }
 
+function NotAuthorized() {
+    return (
+        <div className="container flex min-h-[80vh] flex-col items-center justify-center text-center">
+            <ShieldAlert className="h-16 w-16 text-destructive" />
+            <h1 className="mt-8 font-headline text-4xl font-bold">
+                Not Authorized
+            </h1>
+            <p className="mt-2 text-lg text-muted-foreground">
+                You do not have the required permissions to view this page.
+            </p>
+        </div>
+    )
+}
+
 
 export default function AdminPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { userProfile, isLoading } = useUser();
 
   if (!isLoggedIn) {
     return <AdminLoginPage onLoginSuccess={() => setIsLoggedIn(true)} />;
+  }
+  
+  if (isLoading) {
+      return (
+        <div className="container flex min-h-[80vh] items-center justify-center">
+            <Loader2 className="h-16 w-16 animate-spin text-primary" />
+        </div>
+      )
+  }
+
+  if (userProfile?.role !== 'admin') {
+      return <NotAuthorized />;
   }
   
   return (
