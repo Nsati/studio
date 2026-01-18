@@ -1,4 +1,3 @@
-
 'use client';
 
 import { notFound, useParams, useRouter } from 'next/navigation';
@@ -23,19 +22,12 @@ import {
   Calendar,
   Users,
   Hotel as HotelIcon,
-  Mail,
   Loader2,
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { generateBookingConfirmationEmail } from '@/ai/flows/generate-booking-confirmation-email';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDoc, useFirestore, useUser } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
-
-interface EmailContent {
-  subject: string;
-  body: string;
-}
 
 function LoadingSkeleton() {
     return (
@@ -69,8 +61,6 @@ export default function BookingSuccessPage() {
   const { toast } = useToast();
   const { user, isLoading: isUserLoading } = useUser();
   const firestore = useFirestore();
-  const [emailContent, setEmailContent] = useState<EmailContent | null>(null);
-  const [isLoadingEmail, setIsLoadingEmail] = useState(true);
   const [hasToastShown, setHasToastShown] = useState(false);
   
   useEffect(() => {
@@ -109,41 +99,6 @@ export default function BookingSuccessPage() {
     }
   }, [booking, hotel, toast, hasToastShown]);
 
-
-  useEffect(() => {
-    async function getEmailContent() {
-      if (!booking || !hotel) return;
-
-      setIsLoadingEmail(true);
-      try {
-        const checkInDate = (booking.checkIn as any).toDate ? (booking.checkIn as any).toDate() : new Date(booking.checkIn);
-        const checkOutDate = (booking.checkOut as any).toDate ? (booking.checkOut as any).toDate() : new Date(booking.checkOut);
-
-        const content = await generateBookingConfirmationEmail({
-            hotelName: hotel.name,
-            customerName: booking.customerName,
-            checkIn: checkInDate.toISOString(),
-            checkOut: checkOutDate.toISOString(),
-            roomType: booking.roomType,
-            totalPrice: booking.totalPrice,
-            bookingId: booking.id!,
-        });
-        setEmailContent(content);
-      } catch (error) {
-        console.error("Failed to generate email content", error);
-        setEmailContent({
-            subject: `Booking Confirmation: ${booking.id}`,
-            body: `<p>Thank you for your booking at ${hotel.name}. Details are available in your account.</p>`
-        });
-      } finally {
-        setIsLoadingEmail(false);
-      }
-    }
-
-    if (booking && hotel) {
-        getEmailContent();
-    }
-  }, [booking, hotel]);
 
   if (isUserLoading || !user) {
       return <LoadingSkeleton />
@@ -236,35 +191,6 @@ export default function BookingSuccessPage() {
               </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
-      
-      <Card className="mt-8">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Mail className="h-6 w-6" />
-            Email Confirmation Preview
-          </CardTitle>
-          <CardDescription>
-            This is a preview of the email sent to your inbox.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-            {isLoadingEmail ? (
-                <div className="space-y-4">
-                    <Skeleton className="h-6 w-3/4" />
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-5/6" />
-                </div>
-            ) : emailContent ? (
-                <div className="prose prose-sm max-w-none rounded-md border bg-muted/30 p-4">
-                    <h4 className="font-bold">Subject: {emailContent.subject}</h4>
-                    <div dangerouslySetInnerHTML={{ __html: emailContent.body }} />
-                </div>
-            ) : (
-                <p>Could not load email preview.</p>
-            )}
         </CardContent>
       </Card>
       
