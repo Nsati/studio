@@ -1,7 +1,7 @@
 'use client';
 import { useMemo } from 'react';
 import { useFirestore, useCollection } from '@/firebase';
-import { collectionGroup, query, orderBy } from 'firebase/firestore';
+import { collectionGroup } from 'firebase/firestore';
 import type { Booking } from '@/lib/types';
 import { format } from 'date-fns';
 
@@ -37,11 +37,21 @@ export default function BookingsPage() {
         if (!firestore) return null;
         // This is a collection group query. It fetches documents from all 'bookings'
         // subcollections across the entire database.
-        // This is enabled by the firestore.rules configuration.
-        return query(collectionGroup(firestore, 'bookings'), orderBy('createdAt', 'desc'));
+        return collectionGroup(firestore, 'bookings');
     }, [firestore]);
 
-    const { data: bookings, isLoading } = useCollection<Booking>(bookingsQuery);
+    const { data: bookingsData, isLoading } = useCollection<Booking>(bookingsQuery);
+    
+    const bookings = useMemo(() => {
+        if (!bookingsData) return null;
+        // Sort bookings by creation date on the client-side
+        return bookingsData.sort((a, b) => {
+             const dateA = (a.createdAt as any).toDate ? (a.createdAt as any).toDate() : new Date(a.createdAt);
+             const dateB = (b.createdAt as any).toDate ? (b.createdAt as any).toDate() : new Date(b.createdAt);
+             return dateB.getTime() - dateA.getTime();
+        });
+    }, [bookingsData]);
+
 
   return (
     <div className="space-y-6">
@@ -49,7 +59,7 @@ export default function BookingsPage() {
        <Card>
         <CardHeader>
             <CardTitle>All Bookings</CardTitle>
-            <CardDescription>This is a list of all bookings made on the platform, using our dummy data store (Firestore).</CardDescription>
+            <CardDescription>This is a live list of all bookings made across the platform.</CardDescription>
         </CardHeader>
         <CardContent>
             <Table>
@@ -100,7 +110,7 @@ export default function BookingsPage() {
             </Table>
             {!isLoading && bookings?.length === 0 && (
                 <div className="text-center text-muted-foreground p-8">
-                    No bookings found. Try making one!
+                    No bookings found yet.
                 </div>
             )}
         </CardContent>
