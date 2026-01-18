@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
@@ -9,7 +8,7 @@ import { differenceInDays, format, parse } from 'date-fns';
 import type { Hotel, Room, Booking } from '@/lib/types';
 import { dummyHotels, dummyRooms } from '@/lib/dummy-data';
 import { useUser, useFirestore, useDoc } from '@/firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc }from 'firebase/firestore';
 
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -128,36 +127,17 @@ export function BookingForm() {
             return;
         }
 
-        const razorpayKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
-        if (!razorpayKey) {
-            toast({
-                variant: 'destructive',
-                title: 'Payment Error',
-                description: 'Razorpay Key ID is not configured. Cannot proceed with payment.',
-            });
-            console.error("Razorpay Key ID is not set in environment variables.");
-            return;
-        }
-
         setIsBooking(true);
 
         const options = {
-            key: razorpayKey,
+            key: 'rzp_test_OCsFj7p2wA8d2T', // HARDCODED FOR DEMO. In production, use env variables.
             amount: totalPrice * 100, // amount in paise
             currency: 'INR',
             name: 'Uttarakhand Getaways',
             description: `Booking for ${room.type} room at ${hotel.name}`,
             
-            // This handler function is called after a successful payment
             handler: async function (response: any) {
                 const { razorpay_payment_id } = response;
-                
-                //
-                // In a real app, you would now send this payment_id to your backend
-                // to verify the payment signature before saving the booking.
-                // For this demo, we will skip verification and save directly.
-                //
-                
                 const newBookingId = `booking_${Date.now()}`;
                 const bookingRef = doc(firestore, 'users', user.uid, 'bookings', newBookingId);
                 
@@ -176,7 +156,7 @@ export function BookingForm() {
                         customerEmail: customerDetails.email,
                         status: 'CONFIRMED',
                         createdAt: new Date(),
-                        razorpayPaymentId: razorpay_payment_id, // Store the payment ID
+                        razorpayPaymentId: razorpay_payment_id,
                     };
 
                     await setDoc(bookingRef, bookingData);
@@ -202,7 +182,7 @@ export function BookingForm() {
                 email: customerDetails.email,
             },
             theme: {
-                color: '#166534', // primary color
+                color: '#166534',
             },
             modal: {
                 ondismiss: function() {
