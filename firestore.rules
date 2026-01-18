@@ -14,105 +14,35 @@ service cloud.firestore {
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
-    
-    function isAdmin() {
-      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
-    }
-
-    function isExistingDoc() {
-      return resource != null;
-    }
-    
-    function isExistingOwner(userId) {
-      return isOwner(userId) && isExistingDoc();
-    }
-
-    //----------------------------------------------------------------------
-    // Validation Functions (Prototyping Mode: Authorization-critical fields only)
-    //----------------------------------------------------------------------
-
-    function isUserDataValidOnCreate(userId) {
-      let data = request.resource.data;
-      return data.uid == userId &&
-             data.displayName is string &&
-             data.email is string &&
-             data.role == 'user'; // All new users are 'user'
-    }
-    
-    function isUserDataValidOnUpdate() {
-      // User cannot change their own ID or role.
-      return request.resource.data.uid == resource.data.uid &&
-             request.resource.data.role == resource.data.role;
-    }
-
-    function isBookingDataValidOnCreate(userId) {
-      return request.resource.data.userId == userId;
-    }
-
-    function isBookingDataValidOnUpdate() {
-      return request.resource.data.userId == resource.data.userId;
-    }
-
-    //----------------------------------------------------------------------
-    // Collection Group Rules
-    //----------------------------------------------------------------------
-
-    // Rule for collection group query on 'bookings'.
-    // Admin can read all bookings.
-    match /{path=**}/bookings/{bookingId} {
-      allow read: if isAdmin();
-      // WARNING: No write access via collection group query.
-      // Write rules must be on direct paths.
-    }
 
     //----------------------------------------------------------------------
     // Collection Rules
     //----------------------------------------------------------------------
 
     match /users/{userId} {
-      // Admin can list all users.
-      allow list: if isAdmin();
-      
-      // Admin can get/update/delete any user. Users can manage their own profile.
-      allow get: if isOwner(userId) || isAdmin();
-      allow update: if (isOwner(userId) && isUserDataValidOnUpdate()) || isAdmin();
-      allow delete: if isOwner(userId) || isAdmin();
-
-      // A user can only create their own profile.
-      allow create: if isOwner(userId) && isUserDataValidOnCreate(userId);
+      // A user can only create, read, update and delete their own profile.
+      allow read, write: if isOwner(userId);
 
       match /bookings/{bookingId} {
-        // Users can access their own bookings. Admins can access any booking.
-        allow get: if isOwner(userId) || isAdmin();
-        allow list: if isOwner(userId) || isAdmin();
-
-        // User can create their own booking.
-        allow create: if isOwner(userId) && isBookingDataValidOnCreate(userId);
-        
-        // User can update/delete their own booking. Admin can update/delete any booking.
-        allow update: if (isExistingOwner(userId) && isBookingDataValidOnUpdate()) || isAdmin();
-        allow delete: if isExistingOwner(userId) || isAdmin();
+        // A user can only manage their own bookings.
+        allow read, write: if isOwner(userId);
       }
     }
     
+    // Public collections are read-only for everyone.
+    // Writes would need to be handled by backend code or more specific rules.
     match /cities/{cityId} {
-      // Publicly readable.
       allow read: if true;
-      // Admin can write.
-      allow write: if isAdmin();
+      allow write: if false;
     }
 
     match /hotels/{hotelId} {
-      // Publicly readable.
       allow read: if true;
-      // Admin can write.
-      allow write: if isAdmin();
+      allow write: if false;
 
       match /rooms/{roomId} {
-        // Publicly readable.
         allow read: if true;
-        // Admin can write.
-        allow write: if isAdmin();
+        allow write: if false;
       }
     }
   }
