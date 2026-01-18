@@ -23,6 +23,7 @@ import {
   Users,
   Hotel as HotelIcon,
   Mail,
+  Loader2,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { generateConfirmationEmailAction } from '@/app/booking/actions';
@@ -45,6 +46,21 @@ function LoadingSkeleton() {
     )
 }
 
+function VerifyingBooking() {
+    return (
+        <div className="container mx-auto flex min-h-[60vh] flex-col items-center justify-center text-center">
+            <Loader2 className="h-16 w-16 animate-spin text-primary" />
+            <h1 className="mt-8 font-headline text-4xl font-bold">
+                Verifying Your Booking...
+            </h1>
+            <p className="mt-2 text-lg text-muted-foreground">
+                Please wait a moment. This should only take a few seconds.
+            </p>
+        </div>
+    )
+}
+
+
 export default function BookingSuccessPage() {
   const params = useParams();
   const router = useRouter();
@@ -54,6 +70,7 @@ export default function BookingSuccessPage() {
   const firestore = useFirestore();
   const [emailContent, setEmailContent] = useState<EmailContent | null>(null);
   const [isLoadingEmail, setIsLoadingEmail] = useState(true);
+  const [hasToastShown, setHasToastShown] = useState(false);
   
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -82,13 +99,14 @@ export default function BookingSuccessPage() {
 
 
   useEffect(() => {
-    if (booking && hotel) {
+    if (booking && hotel && !hasToastShown) {
       toast({
         title: 'Booking Confirmed!',
         description: 'Your payment was successful. Your details are below.',
       });
+      setHasToastShown(true);
     }
-  }, [booking, hotel, toast]);
+  }, [booking, hotel, toast, hasToastShown]);
 
 
   useEffect(() => {
@@ -121,15 +139,31 @@ export default function BookingSuccessPage() {
       }
     }
 
-    getEmailContent();
+    if (booking && hotel) {
+        getEmailContent();
+    }
   }, [booking, hotel]);
 
-  if (isUserLoading || !user || isLoadingBooking || isLoadingHotel) {
+  if (isUserLoading || !user) {
       return <LoadingSkeleton />
   }
 
-  if (!booking || !hotel) {
-    // This will be called if the booking doesn't exist or doesn't belong to the user
+  if (isLoadingBooking) {
+      return <LoadingSkeleton />
+  }
+
+  if (!booking) {
+    // Instead of 404, show a verifying state to handle Firestore replication delay.
+    // onSnapshot will trigger a re-render once the document is available.
+    return <VerifyingBooking />;
+  }
+
+  if (isLoadingHotel) {
+      return <LoadingSkeleton />
+  }
+
+  if (!hotel) {
+    // If booking exists but hotel doesn't, that's a data integrity issue.
     notFound();
   }
 
