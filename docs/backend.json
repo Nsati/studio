@@ -212,10 +212,6 @@
             "type": "string",
             "description": "The date the booking was created.",
             "format": "date-time"
-        },
-        "razorpayPaymentId": {
-            "type": "string",
-            "description": "The payment ID from Razorpay."
         }
       },
       "required": [

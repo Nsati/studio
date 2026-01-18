@@ -1,3 +1,4 @@
+
 'use client';
 
 import { notFound, useParams, useRouter } from 'next/navigation';
@@ -102,7 +103,7 @@ export default function BookingSuccessPage() {
     if (booking && hotel && !hasToastShown) {
       toast({
         title: 'Booking Confirmed!',
-        description: 'Your payment was successful. Your details are below.',
+        description: 'Your booking details are below.',
       });
       setHasToastShown(true);
     }
@@ -185,11 +186,6 @@ export default function BookingSuccessPage() {
         <p className="mt-2 text-sm text-muted-foreground">
           Booking ID: <span className="font-mono">{booking.id}</span>
         </p>
-        {booking.razorpayPaymentId && (
-            <p className="mt-1 text-xs text-muted-foreground">
-                Payment ID: <span className="font-mono">{booking.razorpayPaymentId}</span>
-            </p>
-        )}
       </div>
 
       <Card className="mt-8">
@@ -230,7 +226,7 @@ export default function BookingSuccessPage() {
             </div>
             <div className="border-t pt-4">
               <div className="flex justify-between font-bold">
-                <span>Total Paid</span>
+                <span>Total Price</span>
                 <span>{booking.totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}</span>
               </div>
             </div>
