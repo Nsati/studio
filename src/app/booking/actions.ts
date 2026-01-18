@@ -37,7 +37,7 @@ export async function createRazorpayOrder(amount: number) {
 
   try {
     const order = await razorpay.orders.create(options);
-    return { success: true, order };
+    return { success: true, order, keyId };
   } catch (error) {
     console.error('Error creating Razorpay order:', error);
     return { success: false, error: 'Could not create payment order. Check server logs for details.' };

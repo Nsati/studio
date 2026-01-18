@@ -140,7 +140,7 @@ export function BookingForm() {
 
     const orderResult = await createRazorpayOrder(totalPriceInPaisa);
 
-    if (!orderResult.success || !orderResult.order) {
+    if (!orderResult.success || !orderResult.order || !orderResult.keyId) {
         toast({
             variant: 'destructive',
             title: 'Payment Error',
@@ -151,7 +151,7 @@ export function BookingForm() {
     }
 
     const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        key: orderResult.keyId,
         amount: orderResult.order.amount,
         currency: orderResult.order.currency,
         name: 'Uttarakhand Getaways',
