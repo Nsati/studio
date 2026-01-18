@@ -160,7 +160,11 @@ export function BookingForm() {
                     
                     await setDoc(bookingRef, bookingData);
                     
-                    router.push(`/booking/success/${newBookingId}`);
+                    toast({
+                        title: "Booking Confirmed!",
+                        description: "Your payment was successful. You can find your booking details under 'My Bookings'."
+                    });
+                    router.push(`/my-bookings`);
 
                 } else {
                     toast({
