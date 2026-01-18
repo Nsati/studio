@@ -39,7 +39,7 @@ export default function BookingSuccessPage() {
   const params = useParams();
   const id = params.id as string;
   const { toast } = useToast();
-  const { user } = useUser();
+  const { user, isLoading: isUserLoading } = useUser();
   const firestore = useFirestore();
   const [emailContent, setEmailContent] = useState<EmailContent | null>(null);
   const [isLoadingEmail, setIsLoadingEmail] = useState(true);
@@ -102,7 +102,7 @@ export default function BookingSuccessPage() {
     getEmailContent();
   }, [booking, hotel]);
 
-  if (isLoadingBooking || isLoadingHotel) {
+  if (isUserLoading || isLoadingBooking || isLoadingHotel) {
       return (
           <div className="container mx-auto max-w-4xl py-12 px-4 md:px-6 space-y-8">
               <Skeleton className="h-24 w-full" />
