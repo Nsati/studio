@@ -82,7 +82,7 @@ const generateBookingConfirmationEmailFlow = ai.defineFlow(
     inputSchema: GenerateBookingConfirmationEmailInputSchema,
     outputSchema: GenerateBookingConfirmationEmailOutputSchema,
   },
-  async input => {
+  async (input: GenerateBookingConfirmationEmailInput) => {
     // Format dates before sending to the prompt for better processing
     const formattedInput = {
       ...input,
