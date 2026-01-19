@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
   Hotel,
@@ -15,9 +16,9 @@ import {
   Tag,
   ShieldAlert,
 } from 'lucide-react';
+import { useUser } from '@/firebase';
 import { Logo } from '@/components/shared/Logo';
 import { Button } from '@/components/ui/button';
-import { AdminPasswordPrompt } from '@/components/admin/AdminPasswordPrompt';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -33,44 +34,49 @@ const navItems = [
   { href: '/admin/settings', label: 'Settings', icon: Settings },
 ];
 
-function AdminGuard({ children }: { children: React.ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+function AdminAuthGuard({ children }: { children: React.ReactNode }) {
+  const { user, userProfile, isLoading } = useUser();
+  const router = useRouter();
 
   useEffect(() => {
-    // This effect runs only on the client-side
-    const isAdmin = localStorage.getItem('admin_authenticated') === 'true';
-    if (isAdmin) {
-      setIsAuthenticated(true);
+    if (!isLoading) {
+      if (!user) {
+        // Not logged in, redirect to login page for authentication.
+        router.replace('/login?redirect=/admin');
+      } else if (userProfile && userProfile.role !== 'admin') {
+        // Logged in but not an admin, redirect to home page.
+        router.replace('/');
+      }
     }
-    setIsLoading(false);
-  }, []);
+  }, [user, userProfile, isLoading, router]);
 
   if (isLoading) {
-    // Render a skeleton loader to prevent flash of un-authenticated content
-    return <div className="flex h-screen w-full items-center justify-center"><Skeleton className="h-32 w-32 rounded-full" /></div>;
+    return (
+        <div className="flex h-screen w-full items-center justify-center bg-muted/40">
+            <div className="flex items-center gap-4 text-lg">
+                <Skeleton className="h-12 w-12 rounded-full" />
+                <p>Verifying credentials...</p>
+            </div>
+        </div>
+    );
   }
-
-  if (!process.env.NEXT_PUBLIC_ADMIN_PASSWORD || process.env.NEXT_PUBLIC_ADMIN_PASSWORD === 'changeme') {
-      return (
-          <div className="flex h-screen items-center justify-center bg-muted/40 p-4">
+  
+  if (!user || userProfile?.role !== 'admin') {
+     // This state is temporary while redirecting
+    return (
+        <div className="flex h-screen items-center justify-center bg-muted/40 p-4">
               <Alert variant="destructive" className="max-w-lg">
                   <ShieldAlert className="h-4 w-4" />
-                  <AlertTitle>Configuration Error: Admin Panel is Insecure</AlertTitle>
+                  <AlertTitle>Access Denied</AlertTitle>
                   <AlertDescription>
-                      The admin password is not set or is still the default. Please set the 
-                      <code className="font-mono bg-destructive/20 px-1 py-0.5 rounded">NEXT_PUBLIC_ADMIN_PASSWORD</code> 
-                      environment variable to a strong, unique password in both your <code className="font-mono bg-destructive/20 px-1 py-0.5 rounded">.env</code> file and your deployment environment (e.g., Netlify) to secure the admin panel.
+                     You must be an administrator to access this page. You will be redirected shortly.
                   </AlertDescription>
               </Alert>
           </div>
-      );
+    );
   }
-
-  if (!isAuthenticated) {
-    return <AdminPasswordPrompt onSuccess={() => setIsAuthenticated(true)} />;
-  }
-
+  
+  // If we reach here, user is an authenticated admin.
   return <>{children}</>;
 }
 
@@ -78,7 +84,7 @@ function AdminGuard({ children }: { children: React.ReactNode }) {
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
 
   return (
-    <AdminGuard>
+    <AdminAuthGuard>
         <div className="flex min-h-screen bg-muted/40">
         <aside className="hidden w-64 flex-col border-r bg-background p-4 sm:flex">
             <div className="mb-8">
@@ -107,6 +113,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </aside>
         <main className="flex-1 p-8">{children}</main>
         </div>
-    </AdminGuard>
+    </AdminAuthGuard>
   );
 }
