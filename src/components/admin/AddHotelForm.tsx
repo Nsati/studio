@@ -53,7 +53,7 @@ const formSchema = z.object({
   description: z.string().min(10, 'Description must be at least 10 characters long.'),
   rating: z.coerce.number().min(1).max(5).positive(),
   amenities: z.array(z.string()).min(1, 'Please select at least one amenity.'),
-  images: z.array(z.string().url({ message: "Please enter a valid image URL."})).min(1, 'Please select at least one image.'),
+  imageUrls: z.array(z.string().url({ message: "Please enter a valid image URL."})).min(1, 'Please provide at least one image URL.'),
   rooms: z.array(roomSchema).min(1, 'Please add at least one room type.'),
 });
 
@@ -71,7 +71,7 @@ export function AddHotelForm() {
       description: '',
       rating: 4.5,
       amenities: [],
-      images: [],
+      imageUrls: [],
       rooms: [],
     },
   });
@@ -83,8 +83,8 @@ export function AddHotelForm() {
   
   const { fields: imageFields, append: appendImage, remove: removeImage } = useFieldArray({
     control: form.control,
-    name: "images"
-});
+    name: "imageUrls"
+  });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     if (!firestore) {
@@ -98,10 +98,11 @@ export function AddHotelForm() {
 
     // 1. Set the hotel document
     const hotelRef = doc(firestore, 'hotels', hotelId);
-    const { rooms, ...hotelData } = values;
+    const { rooms, imageUrls, ...hotelData } = values;
     batch.set(hotelRef, {
         id: hotelId,
-        ...hotelData
+        ...hotelData,
+        images: imageUrls, // Map form's 'imageUrls' to Firestore's 'images'
     });
 
     // 2. Set the room documents
@@ -271,7 +272,7 @@ export function AddHotelForm() {
             </FormDescription>
             <FormField
               control={form.control}
-              name="images"
+              name="imageUrls"
               render={() => (
                 <FormItem>
                   <FormMessage className="mt-2" />
@@ -292,7 +293,7 @@ export function AddHotelForm() {
                 <CardContent className="p-0">
                     <FormField
                     control={form.control}
-                    name={`images.${index}`}
+                    name={`imageUrls.${index}`}
                     render={({ field }) => (
                         <FormItem>
                         <FormLabel>Image URL</FormLabel>
