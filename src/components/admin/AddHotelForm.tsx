@@ -3,11 +3,13 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useRouter } from 'next/navigation';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, writeBatch } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import slugify from 'slugify';
 import { useState } from 'react';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 import {
   Form,
@@ -82,7 +84,7 @@ export function AddHotelForm() {
     name: 'rooms',
   });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  function onSubmit(values: z.infer<typeof formSchema>) {
     if (!firestore) {
         toast({ variant: 'destructive', title: 'Firestore not available' });
         return;
@@ -90,46 +92,51 @@ export function AddHotelForm() {
 
     setIsLoading(true);
     const hotelId = slugify(values.name, { lower: true, strict: true });
+    const batch = writeBatch(firestore);
 
-    try {
-        const hotelRef = doc(firestore, 'hotels', hotelId);
-        const { rooms, ...hotelData } = values;
+    // 1. Set the hotel document
+    const hotelRef = doc(firestore, 'hotels', hotelId);
+    const { rooms, ...hotelData } = values;
+    batch.set(hotelRef, {
+        id: hotelId,
+        ...hotelData
+    });
 
-        await setDoc(hotelRef, {
-            id: hotelId,
-            ...hotelData
+    // 2. Set the room documents
+    for (const room of rooms) {
+        const roomId = slugify(`${values.name} ${room.type}`, { lower: true, strict: true });
+        const roomRef = doc(firestore, 'hotels', hotelId, 'rooms', roomId);
+        batch.set(roomRef, {
+            id: roomId,
+            hotelId: hotelId,
+            ...room,
+            availableRooms: room.totalRooms, // Initially, all rooms are available
         });
-        
-        // Batch write for rooms can be implemented here for atomicity
-        for (const room of rooms) {
-            const roomId = slugify(`${values.name} ${room.type}`, { lower: true, strict: true });
-            const roomRef = doc(firestore, 'hotels', hotelId, 'rooms', roomId);
-            await setDoc(roomRef, {
-                id: roomId,
-                hotelId: hotelId,
-                ...room,
-                availableRooms: room.totalRooms, // Initially, all rooms are available
-            });
-        }
+    }
 
+    // 3. Commit the batch
+    batch.commit()
+      .then(() => {
         toast({
             title: 'Hotel Added!',
             description: `${values.name} and its rooms have been successfully added.`,
         });
-
         router.push('/admin/hotels');
         router.refresh();
-
-    } catch (error) {
-        console.error('Error adding hotel: ', error);
-        toast({
-            variant: 'destructive',
-            title: 'Uh oh! Something went wrong.',
-            description: 'There was a problem saving the hotel.',
+      })
+      .catch((serverError) => {
+         // Create the contextual error
+        const permissionError = new FirestorePermissionError({
+          path: hotelRef.path, // We can use the main hotel path as the context
+          operation: 'create',
+          requestResourceData: values, // Send the whole form data for context
         });
-    } finally {
+        // Emit the error for the global listener to catch and display
+        errorEmitter.emit('permission-error', permissionError);
+      })
+      .finally(() => {
         setIsLoading(false);
-    }
+      });
   }
 
   return (
