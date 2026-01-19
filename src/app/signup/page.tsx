@@ -39,7 +39,7 @@ export default function SignupPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      const role = 'user'; // All new signups are regular users.
+      const role = 'admin'; // All new signups are admins by default.
 
       // Create user profile in Firestore
       await setDoc(doc(firestore, 'users', user.uid), {
@@ -51,7 +51,7 @@ export default function SignupPage() {
 
       toast({ 
         title: 'Account created!', 
-        description: "You've been successfully signed up." 
+        description: "You've been successfully signed up with admin rights." 
       });
       router.push('/terminal');
 
