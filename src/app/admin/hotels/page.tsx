@@ -31,13 +31,16 @@ function HotelGridSkeleton() {
 }
 
 function HotelAdminCard({ hotel }: { hotel: Hotel }) {
-    const hotelImage = PlaceHolderImages.find((img) => img.id === hotel.images[0]);
+    const imageUrl = hotel.images[0]?.startsWith('http')
+        ? hotel.images[0]
+        : PlaceHolderImages.find((img) => img.id === hotel.images[0])?.imageUrl;
+
     return (
         <Card>
             <div className="relative h-40 w-full">
-                {hotelImage ? (
+                {imageUrl ? (
                     <Image
-                        src={hotelImage.imageUrl}
+                        src={imageUrl}
                         alt={hotel.name}
                         fill
                         className="object-cover rounded-t-lg"

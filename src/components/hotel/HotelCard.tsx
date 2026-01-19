@@ -53,18 +53,24 @@ function HotelMinPrice({ hotelId }: { hotelId: string}) {
 }
 
 export function HotelCard({ hotel }: HotelCardProps) {
-  const hotelImage = PlaceHolderImages.find((img) => img.id === hotel.images[0]);
+  const imageUrl = hotel.images[0]?.startsWith('http')
+    ? hotel.images[0]
+    : PlaceHolderImages.find((img) => img.id === hotel.images[0])?.imageUrl;
+
+  const imageHint = !hotel.images[0]?.startsWith('http')
+    ? PlaceHolderImages.find((img) => img.id === hotel.images[0])?.imageHint
+    : undefined;
 
   return (
     <Link href={`/hotels/${hotel.id}`} className="group block">
       <Card className="h-full overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
         <CardContent className="p-0">
           <div className="relative h-48 w-full">
-            {hotelImage ? (
+            {imageUrl ? (
               <Image
-                src={hotelImage.imageUrl}
+                src={imageUrl}
                 alt={hotel.name}
-                data-ai-hint={hotelImage.imageHint}
+                data-ai-hint={imageHint}
                 fill
                 className="object-cover"
               />

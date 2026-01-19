@@ -82,16 +82,23 @@ export default function HotelPage() {
       <section className="mb-12">
         <Carousel className="w-full">
           <CarouselContent>
-            {hotel.images.map((imgId, index) => {
-              const imgData = PlaceHolderImages.find((i) => i.id === imgId);
+            {hotel.images.map((imgSrc, index) => {
+              const isUrl = imgSrc.startsWith('http');
+              const imageUrl = isUrl
+                ? imgSrc
+                : PlaceHolderImages.find((i) => i.id === imgSrc)?.imageUrl;
+              const imgData = !isUrl
+                ? PlaceHolderImages.find((i) => i.id === imgSrc)
+                : null;
+
               return (
-                <CarouselItem key={imgId}>
+                <CarouselItem key={imgSrc}>
                   <div className="relative h-[500px] w-full overflow-hidden rounded-lg">
-                    {imgData && (
+                    {imageUrl && (
                       <Image
-                        src={imgData.imageUrl}
-                        alt={imgData.description}
-                        data-ai-hint={imgData.imageHint}
+                        src={imageUrl}
+                        alt={imgData?.description || hotel.name}
+                        data-ai-hint={imgData?.imageHint}
                         fill
                         className="object-cover"
                         priority={index === 0}

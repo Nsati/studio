@@ -32,15 +32,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { dummyCities } from '@/lib/dummy-data';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Loader2, Trash2 } from 'lucide-react';
 import { Separator } from '../ui/separator';
 import { Card, CardContent, CardHeader } from '../ui/card';
 
 
 const allAmenities = ['wifi', 'parking', 'restaurant', 'bar', 'spa', 'pool', 'gym', 'mountain-view', 'garden', 'library', 'river-view', 'ghat', 'adventure', 'trekking', 'skiing', 'heritage', 'safari'];
-const imageOptions = PlaceHolderImages.filter(img => !img.id.startsWith('city-')).map(img => ({ id: img.id, label: img.description }));
-
 
 const roomSchema = z.object({
   type: z.enum(['Standard', 'Deluxe', 'Suite']),
@@ -56,7 +53,7 @@ const formSchema = z.object({
   description: z.string().min(10, 'Description must be at least 10 characters long.'),
   rating: z.coerce.number().min(1).max(5).positive(),
   amenities: z.array(z.string()).min(1, 'Please select at least one amenity.'),
-  images: z.array(z.string()).min(1, 'Please select at least one image.'),
+  images: z.array(z.string().url({ message: "Please enter a valid image URL."})).min(1, 'Please select at least one image.'),
   rooms: z.array(roomSchema).min(1, 'Please add at least one room type.'),
 });
 
@@ -79,10 +76,15 @@ export function AddHotelForm() {
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields: roomFields, append: appendRoom, remove: removeRoom } = useFieldArray({
     control: form.control,
     name: 'rooms',
   });
+  
+  const { fields: imageFields, append: appendImage, remove: removeImage } = useFieldArray({
+    control: form.control,
+    name: "images"
+});
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     if (!firestore) {
@@ -263,56 +265,60 @@ export function AddHotelForm() {
             )}
         />
 
-         <FormField
-            control={form.control}
-            name="images"
-            render={({ field }) => (
+        <Separator />
+        
+        <div>
+            <h3 className="text-lg font-medium">Hotel Images</h3>
+            <FormDescription>
+              Add public URLs for the hotel images. You can upload images to a free service like imgur.com
+            </FormDescription>
+            <FormField
+              control={form.control}
+              name="images"
+              render={() => (
                 <FormItem>
-                    <div className="mb-4">
-                        <FormLabel className="text-base">Images</FormLabel>
-                        <FormDescription>
-                        Select the images that best represent the hotel.
-                        </FormDescription>
-                    </div>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-h-96 overflow-y-auto p-2 border rounded-md">
-                    {imageOptions.map((item) => (
-                        <FormField
-                        key={item.id}
-                        control={form.control}
-                        name="images"
-                        render={({ field }) => {
-                            return (
-                            <FormItem
-                                key={item.id}
-                                className="flex flex-row items-start space-x-3 space-y-0"
-                            >
-                                <FormControl>
-                                <Checkbox
-                                    checked={field.value?.includes(item.id)}
-                                    onCheckedChange={(checked) => {
-                                    return checked
-                                        ? field.onChange([...field.value, item.id])
-                                        : field.onChange(
-                                            field.value?.filter(
-                                                (value) => value !== item.id
-                                            )
-                                            )
-                                    }}
-                                />
-                                </FormControl>
-                                <FormLabel className="text-sm font-normal">
-                                    {item.label}
-                                </FormLabel>
-                            </FormItem>
-                            )
-                        }}
-                        />
-                    ))}
-                    </div>
-                    <FormMessage />
+                  <FormMessage className="mt-2" />
                 </FormItem>
-            )}
+              )}
             />
+        </div>
+
+        <div className="space-y-4">
+          {imageFields.map((field, index) => (
+            <Card key={field.id} className="p-4">
+                <CardHeader className="flex flex-row items-center justify-between p-0 pb-4">
+                     <h4 className="font-semibold">Image {index + 1}</h4>
+                     <Button type="button" variant="ghost" size="icon" onClick={() => removeImage(index)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                     </Button>
+                </CardHeader>
+                <CardContent className="p-0">
+                    <FormField
+                    control={form.control}
+                    name={`images.${index}`}
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Image URL</FormLabel>
+                        <FormControl>
+                            <Input placeholder="https://example.com/image.jpg" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                </CardContent>
+            </Card>
+          ))}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => appendImage("")}
+          >
+            Add Image URL
+          </Button>
+        </div>
+
 
         <Separator />
         
@@ -333,11 +339,11 @@ export function AddHotelForm() {
         </div>
 
         <div className="space-y-4">
-          {fields.map((field, index) => (
+          {roomFields.map((field, index) => (
             <Card key={field.id} className="p-4">
                 <CardHeader className="flex flex-row items-center justify-between p-0 pb-4">
                      <h4 className="font-semibold">Room Type {index + 1}</h4>
-                     <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
+                     <Button type="button" variant="ghost" size="icon" onClick={() => removeRoom(index)}>
                         <Trash2 className="h-4 w-4 text-destructive" />
                      </Button>
                 </CardHeader>
@@ -410,7 +416,7 @@ export function AddHotelForm() {
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => append({ type: 'Standard', price: 5000, capacity: 2, totalRooms: 10 })}
+            onClick={() => appendRoom({ type: 'Standard', price: 5000, capacity: 2, totalRooms: 10 })}
           >
             Add Room Type
           </Button>
