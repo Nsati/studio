@@ -53,7 +53,6 @@ const formSchema = z.object({
   description: z.string().min(10, 'Description must be at least 10 characters long.'),
   rating: z.coerce.number().min(1).max(5).positive(),
   amenities: z.array(z.string()).min(1, 'Please select at least one amenity.'),
-  imageUrls: z.array(z.string().url({ message: "Please enter a valid image URL."})).min(1, 'Please provide at least one image URL.'),
   rooms: z.array(roomSchema).min(1, 'Please add at least one room type.'),
 });
 
@@ -62,6 +61,7 @@ export function AddHotelForm() {
   const firestore = useFirestore();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [imageUrls, setImageUrls] = useState<string[]>(['']);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -71,7 +71,6 @@ export function AddHotelForm() {
       description: '',
       rating: 4.5,
       amenities: [],
-      imageUrls: [],
       rooms: [],
     },
   });
@@ -80,16 +79,53 @@ export function AddHotelForm() {
     control: form.control,
     name: 'rooms',
   });
-  
-  const { fields: imageFields, append: appendImage, remove: removeImage } = useFieldArray({
-    control: form.control,
-    name: "imageUrls"
-  });
+
+  const handleImageUrlChange = (index: number, value: string) => {
+    const newImageUrls = [...imageUrls];
+    newImageUrls[index] = value;
+    setImageUrls(newImageUrls);
+  };
+
+  const addImageUrl = () => {
+    setImageUrls(prev => [...prev, '']);
+  };
+
+  const removeImageUrl = (index: number) => {
+    if (imageUrls.length > 1) {
+      setImageUrls(prev => prev.filter((_, i) => i !== index));
+    } else {
+      setImageUrls(['']);
+    }
+  };
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     if (!firestore) {
         toast({ variant: 'destructive', title: 'Firestore not available' });
         return;
+    }
+
+    const filledImageUrls = imageUrls.map(url => url.trim()).filter(url => url !== '');
+
+    if (filledImageUrls.length === 0) {
+      toast({
+        variant: 'destructive',
+        title: 'Validation Error',
+        description: 'Please provide at least one image URL.',
+      });
+      return;
+    }
+
+    for (const url of filledImageUrls) {
+      try {
+        new URL(url);
+      } catch (_) {
+        toast({
+          variant: 'destructive',
+          title: 'Invalid Image URL',
+          description: `The URL "${url}" is not valid. Please correct it.`,
+        });
+        return;
+      }
     }
 
     setIsLoading(true);
@@ -98,11 +134,11 @@ export function AddHotelForm() {
 
     // 1. Set the hotel document
     const hotelRef = doc(firestore, 'hotels', hotelId);
-    const { rooms, imageUrls, ...hotelData } = values;
+    const { rooms, ...hotelData } = values;
     batch.set(hotelRef, {
         id: hotelId,
         ...hotelData,
-        images: imageUrls, // Map form's 'imageUrls' to Firestore's 'images'
+        images: filledImageUrls, // Map form's 'imageUrls' to Firestore's 'images'
     });
 
     // 2. Set the room documents
@@ -132,7 +168,7 @@ export function AddHotelForm() {
         const permissionError = new FirestorePermissionError({
           path: hotelRef.path, // We can use the main hotel path as the context
           operation: 'create',
-          requestResourceData: values, // Send the whole form data for context
+          requestResourceData: {...values, images: filledImageUrls }, // Send the whole form data for context
         });
         // Emit the error for the global listener to catch and display
         errorEmitter.emit('permission-error', permissionError);
@@ -270,40 +306,28 @@ export function AddHotelForm() {
             <FormDescription>
               Add public URLs for the hotel images. You can upload images to a free service like imgur.com
             </FormDescription>
-            <FormField
-              control={form.control}
-              name="imageUrls"
-              render={() => (
-                <FormItem>
-                  <FormMessage className="mt-2" />
-                </FormItem>
-              )}
-            />
         </div>
 
         <div className="space-y-4">
-          {imageFields.map((field, index) => (
-            <Card key={field.id} className="p-4">
+          {imageUrls.map((url, index) => (
+            <Card key={index} className="p-4">
                 <CardHeader className="flex flex-row items-center justify-between p-0 pb-4">
                      <h4 className="font-semibold">Image {index + 1}</h4>
-                     <Button type="button" variant="ghost" size="icon" onClick={() => removeImage(index)}>
+                     <Button type="button" variant="ghost" size="icon" onClick={() => removeImageUrl(index)}>
                         <Trash2 className="h-4 w-4 text-destructive" />
                      </Button>
                 </CardHeader>
                 <CardContent className="p-0">
-                    <FormField
-                    control={form.control}
-                    name={`imageUrls.${index}`}
-                    render={({ field }) => (
-                        <FormItem>
+                    <FormItem>
                         <FormLabel>Image URL</FormLabel>
                         <FormControl>
-                            <Input placeholder="https://example.com/image.jpg" {...field} />
+                            <Input 
+                                placeholder="https://example.com/image.jpg" 
+                                value={url} 
+                                onChange={(e) => handleImageUrlChange(index, e.target.value)} 
+                            />
                         </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                    />
+                    </FormItem>
                 </CardContent>
             </Card>
           ))}
@@ -311,7 +335,7 @@ export function AddHotelForm() {
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => appendImage("")}
+            onClick={addImageUrl}
           >
             Add Image URL
           </Button>
