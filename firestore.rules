@@ -35,9 +35,14 @@ service cloud.firestore {
     // Users can create, read, update, and delete their own bookings.
     // Admins can read any booking for management purposes.
     match /users/{userId}/bookings/{bookingId} {
+      // User can create their own booking.
       allow create: if request.auth.uid == userId && request.resource.data.userId == request.auth.uid;
-      allow read, update, delete: if request.auth.uid == userId && resource.data.userId == request.auth.uid;
-      allow read: if isAdmin();
+      
+      // User can read (get/list) their own bookings. Admins can read any.
+      allow read: if request.auth.uid == userId || isAdmin();
+      
+      // User can update/delete their own bookings. The resource check adds extra security.
+      allow update, delete: if request.auth.uid == userId && resource.data.userId == request.auth.uid;
     }
     
     // Collection group query for admin booking list.
