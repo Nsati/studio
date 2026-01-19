@@ -9,7 +9,7 @@ import { createRazorpayOrder, verifyRazorpayPayment } from '@/app/booking/action
 
 import type { Hotel, Room, Booking } from '@/lib/types';
 import { useUser, useFirestore, useDoc, useCollection } from '@/firebase';
-import { doc, setDoc, collection } from 'firebase/firestore';
+import { doc, setDoc, collection, writeBatch, increment } from 'firebase/firestore';
 
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -150,7 +150,6 @@ export function BookingForm() {
 
                 if (verificationResult.success) {
                     const newBookingId = `booking_${Date.now()}`;
-                    const bookingRef = doc(firestore, 'users', user.uid, 'bookings', newBookingId);
                     
                     const bookingData: Booking = {
                         id: newBookingId,
@@ -168,14 +167,32 @@ export function BookingForm() {
                         createdAt: new Date(),
                         razorpayPaymentId: response.razorpay_payment_id,
                     };
-                    
-                    await setDoc(bookingRef, bookingData);
-                    
-                    toast({
-                        title: "Booking Confirmed!",
-                        description: "Your payment was successful. You can find your booking details under 'My Bookings'."
-                    });
-                    router.push(`/terminal`);
+
+                    try {
+                        const batch = writeBatch(firestore);
+                        const bookingRef = doc(firestore, 'users', user.uid, 'bookings', newBookingId);
+                        batch.set(bookingRef, bookingData);
+
+                        const roomRef = doc(firestore, 'hotels', hotel.id, 'rooms', room.id);
+                        batch.update(roomRef, { availableRooms: increment(-1) });
+                        
+                        await batch.commit();
+
+                        toast({
+                            title: "Booking Confirmed!",
+                            description: "Your payment was successful. You'll be redirected shortly."
+                        });
+                        router.push(`/booking/success/${newBookingId}`);
+
+                    } catch (e) {
+                         console.error("Error writing booking to firestore: ", e);
+                         toast({
+                            variant: "destructive",
+                            title: "Booking Error",
+                            description: "Your payment was successful, but we couldn't save your booking. Please contact support.",
+                        });
+                        setIsBooking(false);
+                    }
 
                 } else {
                     toast({
@@ -191,7 +208,7 @@ export function BookingForm() {
                 email: customerDetails.email,
             },
             theme: {
-                color: "#166534", // primary theme color
+                color: "#388E3C",
             },
             modal: {
                 ondismiss: () => {
