@@ -25,20 +25,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from '@/components/ui/popover';
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { dummyCities } from '@/lib/dummy-data';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { Check, ChevronsUpDown, Loader2, Trash2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
+import { Loader2, Trash2 } from 'lucide-react';
 import { Separator } from '../ui/separator';
 import { Card, CardContent, CardHeader } from '../ui/card';
 
@@ -198,81 +191,70 @@ export function AddHotelForm() {
           )}
         />
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <FormField
+        <FormField
+        control={form.control}
+        name="rating"
+        render={({ field }) => (
+            <FormItem>
+            <FormLabel>Rating</FormLabel>
+            <FormControl>
+                <Input type="number" step="0.1" min="1" max="5" {...field} />
+            </FormControl>
+            <FormMessage />
+            </FormItem>
+        )}
+        />
+
+        <FormField
             control={form.control}
-            name="rating"
-            render={({ field }) => (
+            name="amenities"
+            render={() => (
                 <FormItem>
-                <FormLabel>Rating</FormLabel>
-                <FormControl>
-                    <Input type="number" step="0.1" min="1" max="5" {...field} />
-                </FormControl>
-                <FormMessage />
+                    <div className="mb-4">
+                        <FormLabel className="text-base">Amenities</FormLabel>
+                        <FormDescription>
+                        Select all amenities that apply.
+                        </FormDescription>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-2 border rounded-md">
+                    {allAmenities.map((item) => (
+                        <FormField
+                        key={item}
+                        control={form.control}
+                        name="amenities"
+                        render={({ field }) => {
+                            return (
+                            <FormItem
+                                key={item}
+                                className="flex flex-row items-start space-x-3 space-y-0"
+                            >
+                                <FormControl>
+                                <Checkbox
+                                    checked={field.value?.includes(item)}
+                                    onCheckedChange={(checked) => {
+                                    return checked
+                                        ? field.onChange([...field.value, item])
+                                        : field.onChange(
+                                            field.value?.filter(
+                                                (value) => value !== item
+                                            )
+                                            )
+                                    }}
+                                />
+                                </FormControl>
+                                <FormLabel className="text-sm font-normal capitalize">
+                                    {item}
+                                </FormLabel>
+                            </FormItem>
+                            )
+                        }}
+                        />
+                    ))}
+                    </div>
+                    <FormMessage />
                 </FormItem>
             )}
-            />
-
-            <FormField
-                control={form.control}
-                name="amenities"
-                render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Amenities</FormLabel>
-                         <Popover>
-                            <PopoverTrigger asChild>
-                                <FormControl>
-                                    <Button
-                                    variant="outline"
-                                    role="combobox"
-                                    className={cn(
-                                        "w-full justify-between",
-                                        !field.value.length && "text-muted-foreground"
-                                    )}
-                                    >
-                                    {field.value.length > 0 ? `${field.value.length} selected` : "Select amenities"}
-                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                    </Button>
-                                </FormControl>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                                <Command>
-                                    <CommandInput placeholder="Search amenities..." />
-                                    <CommandEmpty>No amenity found.</CommandEmpty>
-                                    <CommandGroup className="max-h-60 overflow-y-auto">
-                                        {allAmenities.map((amenity) => (
-                                        <CommandItem
-                                            value={amenity}
-                                            key={amenity}
-                                            onSelect={() => {
-                                                const currentValue = field.value;
-                                                const newValue = currentValue.includes(amenity)
-                                                    ? currentValue.filter(a => a !== amenity)
-                                                    : [...currentValue, amenity];
-                                                form.setValue("amenities", newValue);
-                                            }}
-                                        >
-                                            <Check
-                                            className={cn(
-                                                "mr-2 h-4 w-4",
-                                                field.value.includes(amenity) ? "opacity-100" : "opacity-0"
-                                            )}
-                                            />
-                                            <span className="capitalize">{amenity}</span>
-                                        </CommandItem>
-                                        ))}
-                                    </CommandGroup>
-                                </Command>
-                            </PopoverContent>
-                        </Popover>
-                        <FormDescription>
-                            Select all amenities that apply.
-                        </FormDescription>
-                        <FormMessage />
-                    </FormItem>
-                )}
-            />
-        </div>
+        />
 
          <FormField
             control={form.control}
