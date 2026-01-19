@@ -36,7 +36,7 @@ export default function LoginPage() {
       
       toast({ title: 'Login successful!', description: `Welcome back!` });
       const redirect = searchParams.get('redirect');
-      router.push(redirect || '/terminal');
+      router.push(redirect || '/my-bookings');
     } catch (error: any) {
       setError('Invalid email or password.');
       console.error(error);

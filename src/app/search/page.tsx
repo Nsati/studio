@@ -113,7 +113,20 @@ function SearchResults() {
 }
 
 function SearchFilters() {
-  const cities = dummyCities;
+  const firestore = useFirestore();
+  const citiesQuery = useMemo(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'cities');
+  }, [firestore]);
+
+  const { data: citiesFromDB, isLoading: isLoadingCities } = useCollection<City>(citiesQuery);
+
+  const cities = useMemo(() => {
+    const sortedCities = (citiesFromDB || []).sort((a, b) => a.name.localeCompare(b.name));
+    if (sortedCities.length > 0) return sortedCities;
+    if (!isLoadingCities) return dummyCities;
+    return [];
+  }, [citiesFromDB, isLoadingCities]);
   
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -163,9 +176,9 @@ function SearchFilters() {
               <Label htmlFor="location" className="text-lg font-semibold">
                 Location
               </Label>
-              <Select value={selectedCity} onValueChange={handleCityChange}>
+              <Select value={selectedCity} onValueChange={handleCityChange} disabled={isLoadingCities}>
                 <SelectTrigger id="location">
-                  <SelectValue placeholder="Select a city" />
+                  <SelectValue placeholder={isLoadingCities ? "Loading cities..." : "Select a city"} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="All">All Locations</SelectItem>

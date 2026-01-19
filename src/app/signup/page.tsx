@@ -39,7 +39,9 @@ export default function SignupPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      const role = 'admin'; // All new signups are admins by default.
+      // Default all new users to the 'user' role for security.
+      // Admins should be designated manually in the Firestore console.
+      const role = 'user';
 
       // Create user profile in Firestore
       await setDoc(doc(firestore, 'users', user.uid), {
@@ -51,9 +53,9 @@ export default function SignupPage() {
 
       toast({ 
         title: 'Account created!', 
-        description: "You've been successfully signed up with admin rights." 
+        description: "You've been successfully signed up."
       });
-      router.push('/terminal');
+      router.push('/my-bookings');
 
     } catch (error: any) {
         if (error.code === 'auth/email-already-in-use') {

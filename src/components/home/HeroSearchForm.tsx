@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
+import { collection } from 'firebase/firestore';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -30,11 +31,30 @@ import type { City } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import type { DateRange } from 'react-day-picker';
 import { dummyCities } from '@/lib/dummy-data';
+import { useCollection, useFirestore } from '@/firebase';
 
 export function HeroSearchForm() {
   const router = useRouter();
   
-  const cities = dummyCities;
+  const firestore = useFirestore();
+  const citiesQuery = useMemo(() => {
+    if (!firestore) return null;
+    // Order by name for consistent ordering
+    return collection(firestore, 'cities');
+  }, [firestore]);
+
+  const { data: citiesFromDB, isLoading: isLoadingCities } = useCollection<City>(citiesQuery);
+
+  const cities = useMemo(() => {
+    // Sort cities alphabetically
+    const sortedCities = (citiesFromDB || []).sort((a, b) => a.name.localeCompare(b.name));
+    
+    if (sortedCities.length > 0) return sortedCities;
+    // Fallback to dummy data if firestore is empty or loading
+    if (!isLoadingCities) return dummyCities; 
+    return [];
+  }, [citiesFromDB, isLoadingCities]);
+
 
   const [city, setCity] = useState<string>('');
   const [dates, setDates] = useState<DateRange | undefined>();
@@ -61,9 +81,9 @@ export function HeroSearchForm() {
           <div className="md:col-span-3">
             <div className="flex items-center gap-2 rounded-md bg-muted/50 p-2">
               <MapPin className="h-5 w-5 text-muted-foreground" />
-              <Select onValueChange={setCity} value={city}>
+              <Select onValueChange={setCity} value={city} disabled={isLoadingCities}>
                 <SelectTrigger className="w-full border-0 bg-transparent focus:ring-0">
-                  <SelectValue placeholder="Where to?" />
+                  <SelectValue placeholder={isLoadingCities ? "Loading cities..." : "Where to?"} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="All">All Locations</SelectItem>

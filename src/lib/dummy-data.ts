@@ -1,4 +1,4 @@
-import { Hotel, Room, City, Booking, UserProfile } from './types';
+import { Hotel, Room, City } from './types';
 
 export const dummyCities: City[] = [
   { id: 'nainital', name: 'Nainital', image: 'city-nainital' },
@@ -87,57 +87,4 @@ export const dummyRooms: Room[] = [
   // The Savoy
   { id: 'sv-std', hotelId: 'the-savoy', type: 'Standard', price: 16000, capacity: 2, totalRooms: 25 },
   { id: 'sv-ste', hotelId: 'the-savoy', type: 'Suite', price: 28000, capacity: 4, totalRooms: 10 },
-];
-
-export const dummyUsers: UserProfile[] = [
-    { uid: 'admin-user-id', displayName: 'Admin User', email: 'admin@example.com', role: 'admin' },
-    { uid: 'test-user-id', displayName: 'Ankit Sharma', email: 'ankit.sharma@example.com', role: 'user' },
-];
-
-export const dummyBookings: Booking[] = [
-    {
-        id: 'booking-1',
-        hotelId: 'the-naini-retreat',
-        userId: 'test-user-id',
-        roomId: 'nr-dlx',
-        roomType: 'Deluxe',
-        checkIn: new Date('2024-09-10'),
-        checkOut: new Date('2024-09-12'),
-        guests: 2,
-        totalPrice: 24000,
-        customerName: 'Ankit Sharma',
-        customerEmail: 'ankit.sharma@example.com',
-        status: 'CONFIRMED',
-        createdAt: new Date('2024-08-01'),
-    },
-    {
-        id: 'booking-2',
-        hotelId: 'jw-marriott-mussoorie',
-        userId: 'test-user-id',
-        roomId: 'jw-ste',
-        roomType: 'Suite',
-        checkIn: new Date('2024-10-20'),
-        checkOut: new Date('2024-10-25'),
-        guests: 4,
-        totalPrice: 250000,
-        customerName: 'Ankit Sharma',
-        customerEmail: 'ankit.sharma@example.com',
-        status: 'CONFIRMED',
-        createdAt: new Date('2024-08-15'),
-    },
-    {
-        id: 'booking-3',
-        hotelId: 'aloha-on-the-ganges',
-        userId: 'another-user-id',
-        roomId: 'ag-std',
-        roomType: 'Standard',
-        checkIn: new Date('2024-11-01'),
-        checkOut: new Date('2024-11-03'),
-        guests: 2,
-        totalPrice: 20000,
-        customerName: 'Priya Singh',
-        customerEmail: 'priya.singh@example.com',
-        status: 'CANCELLED',
-        createdAt: new Date('2024-08-20'),
-    }
 ];

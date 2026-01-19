@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, UserCircle, LogIn, Terminal } from 'lucide-react';
+import { Menu, UserCircle, LogIn } from 'lucide-react';
 import Link from 'next/link';
 import { Logo } from './Logo';
 import { usePathname, useRouter } from 'next/navigation';
@@ -24,7 +24,7 @@ import { Skeleton } from '../ui/skeleton';
 const navLinks = [
   { href: '/', label: 'Home' },
   { href: '/search', label: 'Explore Hotels' },
-  { href: '/terminal', label: 'My Bookings' },
+  { href: '/my-bookings', label: 'My Bookings' },
 ];
 
 export function Header() {
@@ -75,8 +75,13 @@ export function Header() {
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link href="/terminal">My Bookings</Link>
+                  <Link href="/my-bookings">My Bookings</Link>
                 </DropdownMenuItem>
+                {userProfile?.role === 'admin' && (
+                  <DropdownMenuItem asChild>
+                    <Link href="/admin">Admin Dashboard</Link>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
               </DropdownMenuContent>
@@ -121,7 +126,10 @@ export function Header() {
                     {isLoading ? <Skeleton className="h-10 w-full" /> : user ? (
                        <div className="flex flex-col gap-4">
                            <p className="text-lg font-medium">{userProfile?.displayName || user.email}</p>
-                           <Link href="/terminal" onClick={() => setIsMenuOpen(false)} className="text-base text-muted-foreground">My Bookings</Link>
+                           <Link href="/my-bookings" onClick={() => setIsMenuOpen(false)} className="text-base text-muted-foreground">My Bookings</Link>
+                            {userProfile?.role === 'admin' && (
+                                <Link href="/admin" onClick={() => setIsMenuOpen(false)} className="text-base text-muted-foreground">Admin Dashboard</Link>
+                            )}
                            <Button onClick={() => { handleLogout(); setIsMenuOpen(false); }} variant="outline">Logout</Button>
                        </div>
                     ) : (

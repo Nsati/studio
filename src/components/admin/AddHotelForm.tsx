@@ -47,6 +47,8 @@ const roomSchema = z.object({
 });
 
 
+// The form schema no longer contains `imageUrls` to avoid type conflicts with useFieldArray.
+// Image URLs will be managed in a separate React state.
 const formSchema = z.object({
   name: z.string().min(3, 'Hotel name must be at least 3 characters long.'),
   city: z.string().min(1, 'Please select a city.'),
@@ -61,6 +63,8 @@ export function AddHotelForm() {
   const firestore = useFirestore();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Manage image URLs using a simple state hook to avoid complex form library issues.
   const [imageUrls, setImageUrls] = useState<string[]>(['']);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -91,9 +95,11 @@ export function AddHotelForm() {
   };
 
   const removeImageUrl = (index: number) => {
+    // Only allow removal if there's more than one input field
     if (imageUrls.length > 1) {
       setImageUrls(prev => prev.filter((_, i) => i !== index));
     } else {
+      // If it's the last one, just clear it
       setImageUrls(['']);
     }
   };
@@ -104,17 +110,18 @@ export function AddHotelForm() {
         return;
     }
 
+    // Manual validation for image URLs from the state
     const filledImageUrls = imageUrls.map(url => url.trim()).filter(url => url !== '');
-
     if (filledImageUrls.length === 0) {
       toast({
         variant: 'destructive',
         title: 'Validation Error',
-        description: 'Please provide at least one image URL.',
+        description: 'Please provide at least one valid image URL.',
       });
       return;
     }
 
+    // Validate each URL format
     for (const url of filledImageUrls) {
       try {
         new URL(url);
@@ -132,16 +139,14 @@ export function AddHotelForm() {
     const hotelId = slugify(values.name, { lower: true, strict: true });
     const batch = writeBatch(firestore);
 
-    // 1. Set the hotel document
     const hotelRef = doc(firestore, 'hotels', hotelId);
     const { rooms, ...hotelData } = values;
     batch.set(hotelRef, {
         id: hotelId,
         ...hotelData,
-        images: filledImageUrls, // Map form's 'imageUrls' to Firestore's 'images'
+        images: filledImageUrls,
     });
 
-    // 2. Set the room documents
     for (const room of rooms) {
         const roomId = slugify(`${values.name} ${room.type}`, { lower: true, strict: true });
         const roomRef = doc(firestore, 'hotels', hotelId, 'rooms', roomId);
@@ -149,11 +154,10 @@ export function AddHotelForm() {
             id: roomId,
             hotelId: hotelId,
             ...room,
-            availableRooms: room.totalRooms, // Initially, all rooms are available
+            availableRooms: room.totalRooms,
         });
     }
 
-    // 3. Commit the batch
     batch.commit()
       .then(() => {
         toast({
@@ -164,13 +168,11 @@ export function AddHotelForm() {
         router.refresh();
       })
       .catch((serverError) => {
-         // Create the contextual error
         const permissionError = new FirestorePermissionError({
-          path: hotelRef.path, // We can use the main hotel path as the context
+          path: hotelRef.path,
           operation: 'create',
-          requestResourceData: {...values, images: filledImageUrls }, // Send the whole form data for context
+          requestResourceData: {...values, images: filledImageUrls },
         });
-        // Emit the error for the global listener to catch and display
         errorEmitter.emit('permission-error', permissionError);
       })
       .finally(() => {
@@ -251,84 +253,85 @@ export function AddHotelForm() {
         )}
         />
 
-        <FormItem>
-            <div className="mb-4">
-            <FormLabel className="text-base">Amenities</FormLabel>
-            <FormDescription>
-                Select all amenities that apply.
-            </FormDescription>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-2 border rounded-md">
-            {allAmenities.map((item) => (
-                <FormField
-                key={item}
-                control={form.control}
-                name="amenities"
-                render={({ field }) => {
-                    return (
-                    <FormItem
-                        className="flex flex-row items-start space-x-3 space-y-0"
-                    >
-                        <FormControl>
-                        <Checkbox
-                            checked={field.value?.includes(item)}
-                            onCheckedChange={(checked) => {
-                            return checked
-                                ? field.onChange([...(field.value || []), item])
-                                : field.onChange(
-                                    (field.value || [])?.filter(
-                                    (value) => value !== item
-                                    )
-                                );
-                            }}
+        <FormField
+            control={form.control}
+            name="amenities"
+            render={() => (
+                 <FormItem>
+                    <div className="mb-4">
+                    <FormLabel className="text-base">Amenities</FormLabel>
+                    <FormDescription>
+                        Select all amenities that apply.
+                    </FormDescription>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-2 border rounded-md">
+                    {allAmenities.map((item) => (
+                        <FormField
+                        key={item}
+                        control={form.control}
+                        name="amenities"
+                        render={({ field }) => {
+                            return (
+                            <FormItem
+                                className="flex flex-row items-start space-x-3 space-y-0"
+                            >
+                                <FormControl>
+                                <Checkbox
+                                    checked={field.value?.includes(item)}
+                                    onCheckedChange={(checked) => {
+                                    return checked
+                                        ? field.onChange([...(field.value || []), item])
+                                        : field.onChange(
+                                            (field.value || [])?.filter(
+                                            (value) => value !== item
+                                            )
+                                        );
+                                    }}
+                                />
+                                </FormControl>
+                                <FormLabel className="text-sm font-normal capitalize">
+                                {item}
+                                </FormLabel>
+                            </FormItem>
+                            );
+                        }}
                         />
-                        </FormControl>
-                        <FormLabel className="text-sm font-normal capitalize">
-                        {item}
-                        </FormLabel>
-                    </FormItem>
-                    );
-                }}
-                />
-            ))}
-            </div>
-            <FormField
-              control={form.control}
-              name="amenities"
-              render={()=>(<FormMessage className="mt-2" />)}
-            />
-        </FormItem>
+                    ))}
+                    </div>
+                     <FormMessage className="mt-2" />
+                </FormItem>
+            )}
+        />
 
         <Separator />
         
         <div>
             <h3 className="text-lg font-medium">Hotel Images</h3>
             <FormDescription>
-              Add public URLs for the hotel images. You can upload images to a free service like imgur.com
+              Add public URLs for the hotel images. You can use a free service like Unsplash or Imgur.
             </FormDescription>
         </div>
 
         <div className="space-y-4">
           {imageUrls.map((url, index) => (
             <Card key={index} className="p-4">
-                <CardHeader className="flex flex-row items-center justify-between p-0 pb-4">
-                     <h4 className="font-semibold">Image {index + 1}</h4>
-                     <Button type="button" variant="ghost" size="icon" onClick={() => removeImageUrl(index)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                     </Button>
-                </CardHeader>
-                <CardContent className="p-0">
-                    <FormItem>
-                        <FormLabel>Image URL</FormLabel>
+                <div className="flex items-center justify-between gap-4">
+                    <FormItem className="flex-grow">
+                        <FormLabel htmlFor={`image-url-${index}`}>Image URL {index + 1}</FormLabel>
                         <FormControl>
-                            <Input 
-                                placeholder="https://example.com/image.jpg" 
+                            <Input
+                                id={`image-url-${index}`}
+                                placeholder="https://images.unsplash.com/..." 
                                 value={url} 
                                 onChange={(e) => handleImageUrlChange(index, e.target.value)} 
                             />
                         </FormControl>
                     </FormItem>
-                </CardContent>
+                     <Button type="button" variant="ghost" size="icon" className="mt-6" onClick={() => removeImageUrl(index)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                        <span className="sr-only">Remove Image URL</span>
+                     </Button>
+                </div>
             </Card>
           ))}
           <Button
@@ -337,7 +340,7 @@ export function AddHotelForm() {
             size="sm"
             onClick={addImageUrl}
           >
-            Add Image URL
+            Add Another Image URL
           </Button>
         </div>
 
