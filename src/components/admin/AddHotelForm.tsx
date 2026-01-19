@@ -215,54 +215,48 @@ export function AddHotelForm() {
         />
 
         <FormField
-            control={form.control}
-            name="amenities"
-            render={() => (
-                <FormItem>
-                    <div className="mb-4">
-                        <FormLabel className="text-base">Amenities</FormLabel>
-                        <FormDescription>
-                        Select all amenities that apply.
-                        </FormDescription>
-                    </div>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-2 border rounded-md">
-                    {allAmenities.map((item) => (
-                        <FormField
-                        key={item}
-                        control={form.control}
-                        name="amenities"
-                        render={({ field }) => {
-                            return (
-                            <FormItem
-                                key={item}
-                                className="flex flex-row items-start space-x-3 space-y-0"
-                            >
-                                <FormControl>
-                                <Checkbox
-                                    checked={field.value?.includes(item)}
-                                    onCheckedChange={(checked) => {
-                                    return checked
-                                        ? field.onChange([...field.value, item])
-                                        : field.onChange(
-                                            field.value?.filter(
-                                                (value) => value !== item
-                                            )
-                                            )
-                                    }}
-                                />
-                                </FormControl>
-                                <FormLabel className="text-sm font-normal capitalize">
-                                    {item}
-                                </FormLabel>
-                            </FormItem>
-                            )
+          control={form.control}
+          name="amenities"
+          render={({ field }) => (
+            <FormItem>
+              <div className="mb-4">
+                <FormLabel className="text-base">Amenities</FormLabel>
+                <FormDescription>
+                  Select all amenities that apply.
+                </FormDescription>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-2 border rounded-md">
+                {allAmenities.map((item) => (
+                  <FormItem
+                    key={item}
+                    className="flex flex-row items-start space-x-3 space-y-0"
+                  >
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value?.includes(item)}
+                        onCheckedChange={(checked) => {
+                          const currentValue = field.value || [];
+                          if (checked) {
+                            field.onChange([...currentValue, item]);
+                          } else {
+                            field.onChange(
+                              currentValue.filter(
+                                (value) => value !== item
+                              )
+                            );
+                          }
                         }}
-                        />
-                    ))}
-                    </div>
-                    <FormMessage />
-                </FormItem>
-            )}
+                      />
+                    </FormControl>
+                    <FormLabel className="text-sm font-normal capitalize">
+                      {item}
+                    </FormLabel>
+                  </FormItem>
+                ))}
+              </div>
+              <FormMessage />
+            </FormItem>
+          )}
         />
 
         <Separator />
