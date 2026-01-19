@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2, Calendar, Users, BedDouble, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { dummyHotels, dummyRooms } from '@/lib/dummy-data';
 
 declare global {
   interface Window {
@@ -44,19 +45,27 @@ export function BookingForm() {
         return doc(firestore, 'hotels', hotelId);
     }, [firestore, hotelId]);
 
-    const { data: hotel, isLoading: isHotelLoading } = useDoc<Hotel>(hotelRef);
+    const { data: liveHotel, isLoading: isHotelLoading } = useDoc<Hotel>(hotelRef);
     
+    const hotel = useMemo(() => {
+        if (isHotelLoading) return null;
+        if (liveHotel) return liveHotel;
+        return dummyHotels.find(h => h.id === hotelId);
+    }, [isHotelLoading, liveHotel, hotelId]);
+
     const roomsQuery = useMemo(() => {
         if (!firestore || !hotelId) return null;
         return collection(firestore, 'hotels', hotelId, 'rooms');
     }, [firestore, hotelId]);
     
-    const { data: rooms, isLoading: areRoomsLoading } = useCollection<Room>(roomsQuery);
+    const { data: liveRooms, isLoading: areRoomsLoading } = useCollection<Room>(roomsQuery);
 
     const room = useMemo(() => {
-        if (!rooms) return null;
-        return rooms.find(r => r.id === roomId);
-    }, [rooms, roomId]);
+        if (areRoomsLoading) return null;
+        const liveRoom = liveRooms?.find(r => r.id === roomId);
+        if (liveRoom) return liveRoom;
+        return dummyRooms.find(r => r.id === roomId && r.hotelId === hotelId);
+    }, [areRoomsLoading, liveRooms, roomId, hotelId]);
 
 
     const [customerDetails, setCustomerDetails] = useState({ name: '', email: '' });
@@ -68,7 +77,9 @@ export function BookingForm() {
         }
     }, [userProfile]);
 
-    if (isHotelLoading || areRoomsLoading) {
+    const isLoading = isHotelLoading || areRoomsLoading;
+
+    if (isLoading) {
         return <div>Loading...</div> // This will be handled by Suspense fallback
     }
 
