@@ -57,10 +57,14 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
   const isDateRangeValid = dates?.from && dates?.to && nights > 0;
 
   const rooms = useMemo(() => {
-    return (liveRooms && liveRooms.length > 0)
-    ? liveRooms
-    : dummyRooms.filter(r => r.hotelId === hotel.id);
-  }, [liveRooms, hotel.id]);
+    if (liveRooms && liveRooms.length > 0) {
+      return liveRooms;
+    }
+    if (!isLoadingRooms && (!liveRooms || liveRooms.length === 0)) {
+        return dummyRooms.filter(r => r.hotelId === hotel.id);
+    }
+    return [];
+  }, [liveRooms, isLoadingRooms, hotel.id]);
   
   useEffect(() => {
     if (!isDateRangeValid || !firestore || rooms.length === 0) {
@@ -70,55 +74,65 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
 
     const checkAvailability = async () => {
       setIsCheckingAvail(true);
-      const userCheckIn = dates.from!;
-      const userCheckOut = dates.to!;
+      try {
+        const userCheckIn = dates.from!;
+        const userCheckOut = dates.to!;
 
-      // Query for all bookings in this hotel that could potentially overlap
-      const bookingsRef = collectionGroup(firestore, 'bookings');
-      const q = query(
-        bookingsRef,
-        where('hotelId', '==', hotel.id),
-        where('status', '==', 'CONFIRMED'),
-        where('checkIn', '<', userCheckOut)
-      );
-
-      const querySnapshot = await getDocs(q);
-      const bookings: Booking[] = [];
-      querySnapshot.forEach(doc => {
-          const data = doc.data();
-          // Convert Firestore Timestamps to JS Dates
-          const bookingData = {
-            ...data,
-            checkIn: (data.checkIn as Timestamp).toDate(),
-            checkOut: (data.checkOut as Timestamp).toDate(),
-          } as Booking;
-
-           if (bookingData.checkOut > userCheckIn) {
-            bookings.push(bookingData);
-          }
-      });
-      
-      const newAvailability: Record<string, { available: number; text: string }> = {};
-
-      for (const room of rooms) {
-        const overlappingBookings = bookings.filter(booking => 
-            booking.roomId === room.id
+        // Query for all bookings in this hotel that could potentially overlap
+        const bookingsRef = collectionGroup(firestore, 'bookings');
+        const q = query(
+          bookingsRef,
+          where('hotelId', '==', hotel.id),
+          where('status', '==', 'CONFIRMED'),
+          where('checkIn', '<', userCheckOut)
         );
+
+        const querySnapshot = await getDocs(q);
+        const bookings: Booking[] = [];
+        querySnapshot.forEach(doc => {
+            const data = doc.data();
+            // Convert Firestore Timestamps to JS Dates
+            const bookingData = {
+              ...data,
+              checkIn: (data.checkIn as Timestamp).toDate(),
+              checkOut: (data.checkOut as Timestamp).toDate(),
+            } as Booking;
+
+             if (bookingData.checkOut > userCheckIn) {
+              bookings.push(bookingData);
+            }
+        });
         
-        const bookedCount = overlappingBookings.length;
-        const availableCount = (room.totalRooms || 0) - bookedCount;
-        
-        newAvailability[room.id] = {
-            available: availableCount,
-            text: availableCount <= 0 ? 'Sold Out' : `${availableCount} rooms left`
-        };
+        const newAvailability: Record<string, { available: number; text: string }> = {};
+
+        for (const room of rooms) {
+          const overlappingBookings = bookings.filter(booking => 
+              booking.roomId === room.id
+          );
+          
+          const bookedCount = overlappingBookings.length;
+          const availableCount = (room.totalRooms || 0) - bookedCount;
+          
+          newAvailability[room.id] = {
+              available: availableCount,
+              text: availableCount <= 0 ? 'Sold Out' : `${availableCount} rooms left`
+          };
+        }
+        setAvailability(newAvailability);
+      } catch (error) {
+          console.error("Error checking availability:", error);
+          toast({
+              variant: "destructive",
+              title: "Could not check availability",
+              description: "There was an error checking for room availability. Please try again.",
+          });
+      } finally {
+        setIsCheckingAvail(false);
       }
-      setAvailability(newAvailability);
-      setIsCheckingAvail(false);
     };
 
     checkAvailability();
-  }, [dates, firestore, hotel.id, isDateRangeValid, rooms]);
+  }, [dates, firestore, hotel.id, isDateRangeValid, rooms, toast]);
 
 
   if (isLoadingRooms) {
