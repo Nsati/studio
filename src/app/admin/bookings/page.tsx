@@ -1,9 +1,12 @@
 'use client';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useFirestore, useCollection } from '@/firebase';
-import { collectionGroup } from 'firebase/firestore';
+import { collectionGroup, doc, deleteDoc } from 'firebase/firestore';
 import type { Booking } from '@/lib/types';
 import { format } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 import {
   Table,
@@ -13,9 +16,22 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import { Loader2, Trash2 } from 'lucide-react';
 
 function BookingRowSkeleton() {
     return (
@@ -25,9 +41,65 @@ function BookingRowSkeleton() {
             <TableCell><Skeleton className="h-4 w-24" /></TableCell>
             <TableCell><Skeleton className="h-4 w-24" /></TableCell>
             <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-            <TableCell className="text-right"><Skeleton className="h-4 w-20" /></TableCell>
+            <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+            <TableCell className="text-right"><Skeleton className="h-9 w-9" /></TableCell>
         </TableRow>
     )
+}
+
+function DeleteBookingAction({ booking }: { booking: Booking }) {
+    const firestore = useFirestore();
+    const { toast } = useToast();
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    const handleDelete = async () => {
+        if (!firestore || !booking.id) return;
+
+        setIsDeleting(true);
+        const bookingRef = doc(firestore, 'users', booking.userId, 'bookings', booking.id);
+
+        deleteDoc(bookingRef)
+            .then(() => {
+                toast({
+                    title: 'Booking Deleted',
+                    description: `Booking ID ${booking.id} has been successfully deleted.`,
+                });
+            })
+            .catch((serverError) => {
+                const permissionError = new FirestorePermissionError({
+                    path: bookingRef.path,
+                    operation: 'delete',
+                });
+                errorEmitter.emit('permission-error', permissionError);
+            })
+            .finally(() => {
+                setIsDeleting(false);
+            });
+    };
+
+    return (
+        <AlertDialog>
+            <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="icon" disabled={isDeleting} aria-label="Delete booking">
+                    {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4 text-destructive" />}
+                </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete the booking record for {booking.customerName}.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
+                        {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Yes, delete booking'}
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+    );
 }
 
 export default function BookingsPage() {
@@ -70,7 +142,8 @@ export default function BookingsPage() {
                         <TableHead>Dates</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Hotel ID</TableHead>
-                        <TableHead className="text-right">Total Price</TableHead>
+                        <TableHead>Total Price</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -100,8 +173,11 @@ export default function BookingsPage() {
                                     </Badge>
                                 </TableCell>
                                 <TableCell className="font-mono text-xs">{booking.hotelId}</TableCell>
-                                <TableCell className="text-right font-medium">
+                                <TableCell>
                                     {booking.totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
+                                </TableCell>
+                                <TableCell className="text-right">
+                                    <DeleteBookingAction booking={booking} />
                                 </TableCell>
                             </TableRow>
                         )
