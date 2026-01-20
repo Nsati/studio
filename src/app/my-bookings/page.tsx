@@ -92,7 +92,7 @@ function BookingItem({ booking }: { booking: Booking }) {
         <Card key={booking.id} className="overflow-hidden shadow-md transition-shadow hover:shadow-lg">
             <div className="flex flex-col md:flex-row">
                 {/* Column 1: Image */}
-                <div className="relative h-48 w-full md:w-1/3 md:h-auto flex-shrink-0">
+                <div className="relative w-full aspect-video md:w-1/3 md:aspect-auto flex-shrink-0">
                     {hotelImage ? (
                         <Image
                             src={hotelImage.imageUrl}

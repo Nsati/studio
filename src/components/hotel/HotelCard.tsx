@@ -65,7 +65,7 @@ export function HotelCard({ hotel }: HotelCardProps) {
     <Link href={`/hotels/${hotel.id}`} className="group block">
       <Card className="h-full overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
         <CardContent className="p-0">
-          <div className="relative h-48 w-full">
+          <div className="relative w-full aspect-[4/3]">
             {imageUrl ? (
               <Image
                 src={imageUrl}

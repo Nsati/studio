@@ -93,7 +93,7 @@ export default function HotelPage() {
 
               return (
                 <CarouselItem key={imgSrc}>
-                  <div className="relative h-[500px] w-full overflow-hidden rounded-lg">
+                  <div className="relative h-[300px] md:h-[400px] lg:h-[500px] w-full overflow-hidden rounded-lg">
                     {imageUrl && (
                       <Image
                         src={imageUrl}

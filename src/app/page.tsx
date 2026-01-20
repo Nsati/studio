@@ -82,7 +82,7 @@ function CitiesList() {
               <Link href={`/search?city=${city.name}`} key={city.name}>
                 <Card className="group overflow-hidden">
                   <CardContent className="p-0">
-                    <div className="relative h-64 w-full">
+                    <div className="relative w-full aspect-[4/3]">
                       {cityImage && (
                         <Image
                           src={cityImage.imageUrl}

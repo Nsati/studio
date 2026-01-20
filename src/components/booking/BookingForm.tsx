@@ -263,7 +263,7 @@ export function BookingForm() {
                         </CardHeader>
                         <CardContent>
                             {hotelImage && (
-                                <div className="relative h-48 w-full overflow-hidden rounded-lg mb-4">
+                                <div className="relative w-full aspect-video overflow-hidden rounded-lg mb-4">
                                     <Image src={hotelImage.imageUrl} alt={hotel.name} data-ai-hint={hotelImage.imageHint} fill className="object-cover" />
                                 </div>
                             )}
