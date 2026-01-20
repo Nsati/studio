@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2, Calendar, Users, BedDouble, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { dummyHotels, dummyRooms } from '@/lib/dummy-data';
@@ -70,6 +71,8 @@ export function BookingForm() {
 
     const [customerDetails, setCustomerDetails] = useState({ name: '', email: '' });
     const [isBooking, setIsBooking] = useState(false);
+    const [termsAccepted, setTermsAccepted] = useState(false);
+
 
     useEffect(() => {
         if (userProfile) {
@@ -248,7 +251,7 @@ export function BookingForm() {
     };
 
     return (
-        <div className="container mx-auto max-w-4xl py-12 px-4 md:px-6">
+        <div className="container mx-auto max-w-4xl py-8 md:py-12 px-4 md:px-6">
             <Link href={`/hotels/${hotel.id}`} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary mb-8">
                 <ArrowLeft className="h-4 w-4" />
                 Back to Hotel
@@ -323,7 +326,7 @@ export function BookingForm() {
                                 <span>{totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}</span>
                             </div>
                             <div className="flex justify-between text-muted-foreground text-sm">
-                                <span>Taxes & Fees</span>
+                                <span>Taxes &amp; Fees</span>
                                 <span>Included</span>
                             </div>
                             <div className="border-t pt-2 mt-2 flex justify-between font-bold text-lg">
@@ -332,7 +335,21 @@ export function BookingForm() {
                             </div>
                         </CardContent>
                     </Card>
-                    <Button onClick={handlePayment} size="lg" className="w-full text-lg h-14 bg-accent text-accent-foreground hover:bg-accent/90" disabled={isBooking}>
+
+                     <div className="items-top flex space-x-3">
+                        <Checkbox id="terms" checked={termsAccepted} onCheckedChange={(checked) => setTermsAccepted(checked as boolean)} className="mt-0.5" />
+                        <div className="grid gap-1.5 leading-none">
+                            <label
+                            htmlFor="terms"
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                            >
+                            I understand and agree to the rules of this hotel and Uttarakhand Getaways' <Link href="#" className="text-primary font-semibold hover:underline">Terms of Use</Link> &amp; <Link href="#" className="text-primary font-semibold hover:underline">Privacy Policy</Link>.
+                            </label>
+                        </div>
+                    </div>
+
+
+                    <Button onClick={handlePayment} size="lg" className="w-full text-lg h-14 bg-accent text-accent-foreground hover:bg-accent/90 disabled:bg-accent/50" disabled={isBooking || !termsAccepted}>
                         {isBooking && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
                         {isBooking ? 'Processing...' : `Pay ${totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })} & Book`}
                     </Button>
