@@ -5,11 +5,11 @@ import { BedDouble, Calendar as CalendarIcon, AlertCircle, Info } from 'lucide-r
 import { differenceInDays, format } from 'date-fns';
 import type { DateRange } from 'react-day-picker';
 import { useRouter } from 'next/navigation';
-import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, Timestamp, collectionGroup } from 'firebase/firestore';
 
 import type { Hotel, Room, Booking } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { useFirestore } from '@/firebase';
+import { useFirestore, useCollection } from '@/firebase';
 import { dummyRooms } from '@/lib/dummy-data';
 
 import {
@@ -72,7 +72,7 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
       const userCheckOut = dates.to!;
 
       // Query for all bookings in this hotel that could potentially overlap
-      const bookingsRef = collection(firestore, 'bookings');
+      const bookingsRef = collectionGroup(firestore, 'bookings');
       const q = query(
         bookingsRef,
         where('hotelId', '==', hotel.id),
