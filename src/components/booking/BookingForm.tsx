@@ -210,8 +210,9 @@ export function BookingForm() {
                     razorpay_payment_id: response.razorpay_payment_id,
                     razorpay_signature: response.razorpay_signature,
                 });
-
+                
                 if (verificationResult.success) {
+                    const newBookingId = `booking_${Date.now()}`;
                     try {
                       await runTransaction(firestore, async (transaction) => {
                         const roomRef = doc(firestore, 'hotels', hotel.id, 'rooms', room.id);
@@ -221,10 +222,8 @@ export function BookingForm() {
                             throw new Error("This room just got sold out!");
                         }
                         
-                        // Atomically decrement room count and create booking
                         transaction.update(roomRef, { availableRooms: increment(-1) });
 
-                        const newBookingId = `booking_${Date.now()}`;
                         const bookingRef = doc(firestore, 'users', userIdForBooking!, 'bookings', newBookingId);
                         
                         const bookingData: Booking = {
@@ -244,15 +243,14 @@ export function BookingForm() {
                             razorpayPaymentId: response.razorpay_payment_id,
                         };
                         transaction.set(bookingRef, bookingData);
-                        
-                        // Redirect on successful transaction completion
-                        router.push(`/booking/success/${newBookingId}`);
                       });
                       
+                      // If transaction completes successfully, we get here.
                       toast({
                         title: "Booking Confirmed!",
                         description: "Your payment was successful. You'll be redirected shortly."
                       });
+                      router.push(`/booking/success/${newBookingId}`);
 
                     } catch (e: any) {
                          console.error("Error writing booking to firestore: ", e);
