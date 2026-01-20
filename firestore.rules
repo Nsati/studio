@@ -6,7 +6,10 @@ service cloud.firestore {
     // Helper function to check for admin role
     function isAdmin() {
       // Check if the user is authenticated and has the 'admin' role in their user profile.
-      return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      // The exists() check is crucial to prevent errors for users without a profile doc (e.g., anonymous users).
+      return request.auth != null &&
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
     // Users can read/update their own profile. Admins can read any profile.
