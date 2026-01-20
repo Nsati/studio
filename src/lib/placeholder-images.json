@@ -7,6 +7,30 @@
       "imageHint": "mountain landscape"
     },
     {
+      "id": "about-hero",
+      "description": "A group of friends enjoying a scenic viewpoint in the mountains of Uttarakhand.",
+      "imageUrl": "https://images.unsplash.com/photo-1588506041246-5a17a5b357f8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHx1dHRhcmFraGFuZCUyMHRyYXZlbHxlbnwwfHx8fDE3NjcxODEyNTJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "travel group"
+    },
+    {
+      "id": "team-member-1",
+      "description": "Portrait of a smiling man.",
+      "imageUrl": "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxtYW4lMjBzbWlsaW5nfGVufDB8fHx8MTc2NzE4MTI1M3ww&ixlib=rb-4.1.0&q=80&w=400",
+      "imageHint": "smiling man"
+    },
+    {
+      "id": "team-member-2",
+      "description": "Portrait of a smiling woman.",
+      "imageUrl": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHx3b21hbiUyMHNtaWxpbmd8ZW58MHx8fHwxNzY3MTgxMjUzfDA&ixlib=rb-4.1.0&q=80&w=400",
+      "imageHint": "smiling woman"
+    },
+    {
+      "id": "team-member-3",
+      "description": "Portrait of a man.",
+      "imageUrl": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxtYW4lMjBzbWlsaW5nfGVufDB8fHx8MTc2NzE4MTI1M3ww&ixlib=rb-4.1.0&q=80&w=400",
+      "imageHint": "man portrait"
+    },
+    {
       "id": "city-nainital",
       "description": "A view of Naini Lake in Nainital with colorful boats.",
       "imageUrl": "https://images.unsplash.com/photo-1678620071844-8377e26f1944?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxsYWtlJTIwdG93bnxlbnwwfHx8fDE3NjcwNjUyODN8MA&ixlib=rb-4.1.0&q=80&w=1080",

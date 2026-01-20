@@ -9,7 +9,7 @@ const footerLinks = {
     { label: 'My Bookings', href: '/my-bookings' },
   ],
   'Company': [
-    { label: 'About Us', href: '#' },
+    { label: 'About Us', href: '/about' },
     { label: 'Careers', href: '#' },
     { label: 'Blog', href: '#' },
   ],
