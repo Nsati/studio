@@ -10,7 +10,7 @@ import { signInAnonymously } from 'firebase/auth';
 
 import type { Hotel, Room, Booking } from '@/lib/types';
 import { useUser, useFirestore, useDoc, useCollection, useAuth } from '@/firebase';
-import { doc, setDoc, collection, writeBatch, increment } from 'firebase/firestore';
+import { doc, runTransaction, collection, increment } from 'firebase/firestore';
 
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -212,47 +212,56 @@ export function BookingForm() {
                 });
 
                 if (verificationResult.success) {
-                    const newBookingId = `booking_${Date.now()}`;
-                    
-                    const bookingData: Booking = {
-                        id: newBookingId,
-                        hotelId: hotel.id,
-                        userId: userIdForBooking!,
-                        roomId: room.id,
-                        roomType: room.type,
-                        checkIn: checkIn,
-                        checkOut: checkOut,
-                        guests: parseInt(guests),
-                        totalPrice: totalPrice,
-                        customerName: customerDetails.name,
-                        customerEmail: customerDetails.email,
-                        status: 'CONFIRMED',
-                        createdAt: new Date(),
-                        razorpayPaymentId: response.razorpay_payment_id,
-                    };
-
                     try {
-                        const batch = writeBatch(firestore);
-                        const bookingRef = doc(firestore, 'users', userIdForBooking!, 'bookings', newBookingId);
-                        batch.set(bookingRef, bookingData);
-
+                      await runTransaction(firestore, async (transaction) => {
                         const roomRef = doc(firestore, 'hotels', hotel.id, 'rooms', room.id);
-                        batch.update(roomRef, { availableRooms: increment(-1) });
+                        const roomDoc = await transaction.get(roomRef);
+
+                        if (!roomDoc.exists() || (roomDoc.data().availableRooms || 0) <= 0) {
+                            throw new Error("This room just got sold out!");
+                        }
                         
-                        await batch.commit();
+                        // Atomically decrement room count and create booking
+                        transaction.update(roomRef, { availableRooms: increment(-1) });
 
-                        toast({
-                            title: "Booking Confirmed!",
-                            description: "Your payment was successful. You'll be redirected shortly."
-                        });
+                        const newBookingId = `booking_${Date.now()}`;
+                        const bookingRef = doc(firestore, 'users', userIdForBooking!, 'bookings', newBookingId);
+                        
+                        const bookingData: Booking = {
+                            id: newBookingId,
+                            hotelId: hotel.id,
+                            userId: userIdForBooking!,
+                            roomId: room.id,
+                            roomType: room.type,
+                            checkIn: checkIn,
+                            checkOut: checkOut,
+                            guests: parseInt(guests),
+                            totalPrice: totalPrice,
+                            customerName: customerDetails.name,
+                            customerEmail: customerDetails.email,
+                            status: 'CONFIRMED',
+                            createdAt: new Date(),
+                            razorpayPaymentId: response.razorpay_payment_id,
+                        };
+                        transaction.set(bookingRef, bookingData);
+                        
+                        // Redirect on successful transaction completion
                         router.push(`/booking/success/${newBookingId}`);
+                      });
+                      
+                      toast({
+                        title: "Booking Confirmed!",
+                        description: "Your payment was successful. You'll be redirected shortly."
+                      });
 
-                    } catch (e) {
+                    } catch (e: any) {
                          console.error("Error writing booking to firestore: ", e);
                          toast({
                             variant: "destructive",
-                            title: "Booking Error",
-                            description: "Your payment was successful, but we couldn't save your booking. Please contact support.",
+                            title: "Booking Failed",
+                            description: e.message === 'This room just got sold out!'
+                                ? e.message
+                                : "Your payment was successful, but we couldn't save your booking. Please contact support.",
                         });
                         setIsBooking(false);
                     }
@@ -360,7 +369,7 @@ export function BookingForm() {
                                     type="email"
                                     placeholder="your.email@example.com"
                                     value={customerDetails.email}
-                                    onChange={(e) => setCustomerDetails({ ...customerDetails, email: e.target.value })}
+                                    onChange={(e) => setCustomerDetails({ ...customerDetails, name: e.target.value })}
                                 />
                             </div>
                         </CardContent>
