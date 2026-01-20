@@ -42,14 +42,14 @@ function AdminAuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoading) {
-      if (!user) {
-        // Not logged in, redirect to login page for authentication.
-        router.replace('/login?redirect=/admin');
-      } else if (userProfile && userProfile.role !== 'admin') {
-        // Logged in but not an admin, redirect to home page.
-        router.replace('/');
-      }
+    if (isLoading) return; // Wait until loading is done
+
+    if (!user) {
+      // Not logged in, redirect to login page for authentication.
+      router.replace('/login?redirect=/admin');
+    } else if (!userProfile || userProfile.role !== 'admin') {
+      // Logged in but not an admin (or profile is missing), redirect to home page.
+      router.replace('/');
     }
   }, [user, userProfile, isLoading, router]);
 
@@ -64,23 +64,33 @@ function AdminAuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
   
-  if (!user || userProfile?.role !== 'admin') {
-     // This state is temporary while redirecting
-    return (
-        <div className="flex h-screen items-center justify-center bg-muted/40 p-4">
-              <Alert variant="destructive" className="max-w-lg">
-                  <ShieldAlert className="h-4 w-4" />
-                  <AlertTitle>Access Denied</AlertTitle>
-                  <AlertDescription>
-                     You must be an administrator to access this page. You will be redirected shortly.
-                  </AlertDescription>
-              </Alert>
-          </div>
-    );
+  if (userProfile?.role === 'admin') {
+    // User is logged in and is an admin.
+    return <>{children}</>;
   }
   
-  // If we reach here, user is an authenticated admin.
-  return <>{children}</>;
+  // If we reach here, the user is not an admin. Show a detailed error message.
+  // This UI is shown temporarily before the useEffect redirect kicks in.
+  let errorDescription;
+  if (!user) {
+    errorDescription = "You are not logged in. Redirecting to login page..."
+  } else if (!userProfile) {
+    errorDescription = `Your user account was found, but a profile document is missing from the database. This document should be in the 'users' collection with the ID '${user.uid}'. Please ask an administrator to create it. You will be redirected to the homepage.`;
+  } else {
+    errorDescription = `Your account role is '${userProfile.role}'. You must have the 'admin' role to access this page. Please contact a super-administrator to upgrade your role. You will be redirected to the homepage.`;
+  }
+
+  return (
+      <div className="flex h-screen items-center justify-center bg-muted/40 p-4">
+            <Alert variant="destructive" className="max-w-lg">
+                <ShieldAlert className="h-4 w-4" />
+                <AlertTitle>Access Denied</AlertTitle>
+                <AlertDescription>
+                   {errorDescription}
+                </AlertDescription>
+            </Alert>
+        </div>
+  );
 }
 
 
