@@ -99,6 +99,17 @@ export function BookingForm() {
     const totalPrice = room.price * nights;
 
     const handlePayment = async () => {
+        if (!process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID) {
+            toast({
+                variant: 'destructive',
+                title: 'Payment Gateway Not Configured',
+                description: 'The payment gateway is not set up correctly. Please contact support.',
+            });
+            console.error("CRITICAL: NEXT_PUBLIC_RAZORPAY_KEY_ID environment variable is not set.");
+            setIsBooking(false);
+            return;
+        }
+
         if (!customerDetails.name || !customerDetails.email) {
             toast({
                 variant: 'destructive',
