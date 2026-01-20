@@ -170,7 +170,7 @@ function SearchFilters() {
   return (
      <aside className="w-full lg:w-1/4 lg:pr-8">
       <Card>
-        <CardContent>
+        <CardContent className="p-4">
           <form className="space-y-6" onSubmit={handleFormSubmit}>
             <div className="space-y-2">
               <Label htmlFor="location" className="text-lg font-semibold">
@@ -208,9 +208,9 @@ function SearchFilters() {
               </Label>
               <Input id="guests" type="number" min="1" placeholder="2" value={guests} onChange={e => setGuests(e.target.value)} />
             </div>
-            <Button type="submit" className="w-full">
+            <Button type="submit" className="w-full text-lg h-12 bg-accent text-accent-foreground hover:bg-accent/90">
               <Search className="mr-2 h-4 w-4" />
-              Update Search
+              Search
             </Button>
           </form>
         </CardContent>

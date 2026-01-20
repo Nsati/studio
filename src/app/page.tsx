@@ -38,11 +38,11 @@ function FeaturedHotels() {
 
   if (isLoading) {
     return (
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {Array.from({ length: 4 }).map((_, i) => (
-                <Card key={i}>
+                <Card key={i} className="border-border">
                     <CardContent className="p-0">
-                    <Skeleton className="h-48 w-full" />
+                    <Skeleton className="aspect-[4/3] w-full" />
                     </CardContent>
                     <div className="p-4 space-y-2">
                     <Skeleton className="h-6 w-3/4" />
@@ -61,7 +61,7 @@ function FeaturedHotels() {
 
 
   return (
-    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
       {featuredHotels.map((hotel) => (
         <HotelCard key={hotel.id} hotel={hotel} />
       ))}
@@ -80,7 +80,7 @@ function CitiesList() {
             );
             return (
               <Link href={`/search?city=${city.name}`} key={city.name}>
-                <Card className="group overflow-hidden">
+                <Card className="group overflow-hidden border-border">
                   <CardContent className="p-0">
                     <div className="relative w-full aspect-[4/3]">
                       {cityImage && (
@@ -111,7 +111,7 @@ export default function HomePage() {
 
   return (
     <div className="space-y-16 pb-16">
-      <section className="relative h-[60vh] min-h-[400px] w-full">
+      <section className="relative flex h-[70vh] min-h-[500px] w-full items-center justify-center">
         {heroImage && (
           <Image
             src={heroImage.imageUrl}
@@ -122,18 +122,17 @@ export default function HomePage() {
             priority
           />
         )}
-        <div className="absolute inset-0 bg-black/50" />
-        <div className="relative z-10 flex h-full flex-col items-center justify-center text-center text-white p-4">
-          <h1 className="font-headline text-4xl font-bold leading-tight sm:text-5xl md:text-7xl">
-            Discover Serenity
+        <div className="absolute inset-0 bg-black/40" />
+        <div className="relative z-10 w-full max-w-5xl px-4 text-center">
+           <h1 className="font-headline text-4xl font-bold text-white sm:text-5xl md:text-6xl">
+            Book Hotels at the Best Prices
           </h1>
-          <p className="mt-4 max-w-2xl text-base sm:text-lg">
-            Find your perfect escape in the heart of the Himalayas. Unforgettable
-            views and unparalleled hospitality await.
+          <p className="mt-4 text-lg text-white/90">
+            Search from thousands of properties to find your perfect stay.
           </p>
-        </div>
-        <div className="relative z-20 mx-auto -mt-16 w-[90%] max-w-6xl">
-          <HeroSearchForm />
+          <div className="mt-8">
+            <HeroSearchForm />
+          </div>
         </div>
       </section>
 

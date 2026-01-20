@@ -46,9 +46,13 @@ function HotelMinPrice({ hotelId }: { hotelId: string}) {
   if (minPrice === 0) return null;
 
   return (
-    <Badge variant="secondary" className="text-sm">
-      from {minPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}/night
-    </Badge>
+    <div>
+        <span className="text-xs text-muted-foreground">Starts from </span>
+        <p className="font-bold text-lg text-foreground">
+        {minPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}
+        <span className="text-sm font-normal text-muted-foreground">/night</span>
+        </p>
+    </div>
   )
 }
 
@@ -63,7 +67,7 @@ export function HotelCard({ hotel }: HotelCardProps) {
 
   return (
     <Link href={`/hotels/${hotel.id}`} className="group block">
-      <Card className="h-full overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+      <Card className="h-full overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border-border">
         <CardContent className="p-0">
           <div className="relative w-full aspect-[4/3]">
             {imageUrl ? (
@@ -90,12 +94,12 @@ export function HotelCard({ hotel }: HotelCardProps) {
             {hotel.city}
           </CardDescription>
         </CardHeader>
-        <CardFooter className="flex justify-between p-4 pt-0">
+        <CardFooter className="flex justify-between items-end p-4 pt-0">
           <HotelMinPrice hotelId={hotel.id} />
-          <div className="flex items-center gap-1 text-sm font-semibold text-amber-500">
-            <Star className="h-4 w-4 fill-current" />
+          <Badge>
+            <Star className="h-4 w-4 fill-current mr-1" />
             <span>{hotel.rating}</span>
-          </div>
+          </Badge>
         </CardFooter>
       </Card>
     </Link>

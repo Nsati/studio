@@ -41,7 +41,7 @@ export function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
       <div className="container flex h-16 max-w-7xl items-center justify-between">
         <Logo />
 
@@ -52,7 +52,7 @@ export function Header() {
               href={link.href}
               className={cn(
                 'text-sm font-medium transition-colors hover:text-primary',
-                pathname === link.href ? 'text-primary' : 'text-muted-foreground'
+                pathname === link.href ? 'text-primary font-semibold' : 'text-muted-foreground'
               )}
             >
               {link.label}
@@ -67,7 +67,7 @@ export function Header() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="flex items-center gap-2">
-                  <UserCircle className="h-5 w-5" />
+                  <UserCircle className="h-5 w-5 text-primary" />
                   {userProfile?.displayName || user.email}
                 </Button>
               </DropdownMenuTrigger>
@@ -88,7 +88,7 @@ export function Header() {
             </DropdownMenu>
           ) : (
             <div className="hidden items-center gap-2 md:flex">
-              <Button asChild variant="ghost">
+              <Button asChild variant="outline">
                 <Link href="/login">Log In</Link>
               </Button>
               <Button asChild>
@@ -134,8 +134,8 @@ export function Header() {
                        </div>
                     ) : (
                         <div className="flex flex-col gap-4">
-                            <Button onClick={() => { router.push('/login'); setIsMenuOpen(false); }} variant="outline">Log In</Button>
-                            <Button onClick={() => { router.push('/signup'); setIsMenuOpen(false); }}>Sign Up</Button>
+                            <Button onClick={() => { router.push('/login'); setIsMenuOpen(false); }}>Log In</Button>
+                            <Button onClick={() => { router.push('/signup'); setIsMenuOpen(false); }} variant="outline">Sign Up</Button>
                         </div>
                     )}
                 </div>

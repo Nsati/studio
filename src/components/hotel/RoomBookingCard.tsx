@@ -185,10 +185,10 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
          </div>
 
         {!isDateRangeValid && (
-          <Alert variant="default" className="bg-amber-50 border-amber-200">
-            <AlertCircle className="h-4 w-4 !text-amber-600" />
-            <AlertTitle className="text-amber-800">Select Dates</AlertTitle>
-            <AlertDescription className="text-amber-700">
+          <Alert variant="default" className="bg-blue-50 border-blue-200">
+            <AlertCircle className="h-4 w-4 !text-blue-600" />
+            <AlertTitle className="text-blue-800">Select Dates</AlertTitle>
+            <AlertDescription className="text-blue-700">
               Please select a valid date range to see room prices and availability.
             </AlertDescription>
           </Alert>
@@ -247,7 +247,7 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
             <Button
               onClick={handleBookNow}
               size="lg"
-              className="w-full"
+              className="w-full h-12 text-lg bg-accent text-accent-foreground hover:bg-accent/90"
             >
               Book Now & Proceed to Payment
             </Button>

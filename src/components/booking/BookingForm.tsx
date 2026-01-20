@@ -219,7 +219,7 @@ export function BookingForm() {
                 email: customerDetails.email,
             },
             theme: {
-                color: "#388E3C",
+                color: "#0b57d0", // MMT blue
             },
             modal: {
                 ondismiss: () => {
@@ -332,7 +332,7 @@ export function BookingForm() {
                             </div>
                         </CardContent>
                     </Card>
-                    <Button onClick={handlePayment} size="lg" className="w-full text-lg" disabled={isBooking}>
+                    <Button onClick={handlePayment} size="lg" className="w-full text-lg h-14 bg-accent text-accent-foreground hover:bg-accent/90" disabled={isBooking}>
                         {isBooking && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
                         {isBooking ? 'Processing...' : `Pay ${totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })} & Book`}
                     </Button>
