@@ -61,7 +61,7 @@ function RoleSelector({ user }: { user: UserProfile }) {
             .then(() => {
                 toast({
                     title: 'Role Updated',
-                    description: `${user.displayName}'s role has been changed to ${newRole}.`
+                    description: `${user.displayName || user.email}'s role has been changed to ${newRole}.`
                 });
             })
             .catch((serverError) => {
@@ -107,7 +107,7 @@ export default function UsersPage() {
 
     const users = useMemo(() => {
         if (!usersData) return null;
-        return [...usersData].sort((a, b) => a.displayName.localeCompare(b.displayName));
+        return [...usersData].sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''));
     }, [usersData]);
 
   return (
@@ -143,7 +143,7 @@ export default function UsersPage() {
                     )}
                     {users && users.map(user => (
                         <TableRow key={user.uid}>
-                            <TableCell className="font-medium">{user.displayName}</TableCell>
+                            <TableCell className="font-medium">{user.displayName || '(No Name)'}</TableCell>
                             <TableCell className="text-muted-foreground">{user.email}</TableCell>
                             <TableCell className="font-mono text-xs">{user.uid}</TableCell>
                             <TableCell className="text-right">
