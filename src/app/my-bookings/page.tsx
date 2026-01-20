@@ -133,7 +133,7 @@ function BookingItem({ booking }: { booking: Booking }) {
                         </div>
                     </div>
 
-                    <div className="flex flex-wrap gap-2 mt-6">
+                    <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 mt-6">
                         <Button variant="outline" size="sm" asChild>
                             <Link href={`/hotels/${hotel.id}`}>View Details</Link>
                         </Button>

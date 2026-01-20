@@ -5,10 +5,11 @@ import { useSearchParams, useRouter, notFound } from 'next/navigation';
 import Image from 'next/image';
 import { differenceInDays, format, parse } from 'date-fns';
 import { createRazorpayOrder, verifyRazorpayPayment } from '@/app/booking/actions';
+import { signInAnonymously } from 'firebase/auth';
 
 
 import type { Hotel, Room, Booking } from '@/lib/types';
-import { useUser, useFirestore, useDoc, useCollection } from '@/firebase';
+import { useUser, useFirestore, useDoc, useCollection, useAuth } from '@/firebase';
 import { doc, setDoc, collection, writeBatch, increment } from 'firebase/firestore';
 
 import { useToast } from '@/hooks/use-toast';
@@ -32,6 +33,7 @@ export function BookingForm() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const { user, userProfile } = useUser();
+    const auth = useAuth(); // For guest checkout
     const { toast } = useToast();
     const firestore = useFirestore();
 
@@ -146,17 +148,40 @@ export function BookingForm() {
             return;
         }
 
-        if (!user || !firestore) {
-            toast({
-                variant: 'destructive',
-                title: 'Not Logged In',
-                description: 'Please log in to make a booking.',
-            });
-            router.push(`/booking?${searchParams.toString()}`);
+        if (!firestore) {
+            toast({ variant: 'destructive', title: 'Database not available' });
             return;
         }
         
         setIsBooking(true);
+
+        let userIdForBooking = user?.uid;
+
+        if (!userIdForBooking) {
+            if (!auth) {
+                 toast({ variant: 'destructive', title: 'Authentication service not available' });
+                 setIsBooking(false);
+                 return;
+            }
+            try {
+                const userCredential = await signInAnonymously(auth);
+                userIdForBooking = userCredential.user.uid;
+                toast({
+                    title: 'Booking as Guest',
+                    description: 'Your booking will be saved temporarily. Create an account to view it anytime.',
+                });
+            } catch (error) {
+                console.error("Anonymous sign-in failed:", error);
+                toast({
+                    variant: 'destructive',
+                    title: 'Guest Checkout Failed',
+                    description: 'Could not proceed with the booking. Please try again.',
+                });
+                setIsBooking(false);
+                return;
+            }
+        }
+
 
         const orderResponse = await createRazorpayOrder(totalPrice);
 
@@ -192,7 +217,7 @@ export function BookingForm() {
                     const bookingData: Booking = {
                         id: newBookingId,
                         hotelId: hotel.id,
-                        userId: user.uid,
+                        userId: userIdForBooking!,
                         roomId: room.id,
                         roomType: room.type,
                         checkIn: checkIn,
@@ -208,7 +233,7 @@ export function BookingForm() {
 
                     try {
                         const batch = writeBatch(firestore);
-                        const bookingRef = doc(firestore, 'users', user.uid, 'bookings', newBookingId);
+                        const bookingRef = doc(firestore, 'users', userIdForBooking!, 'bookings', newBookingId);
                         batch.set(bookingRef, bookingData);
 
                         const roomRef = doc(firestore, 'hotels', hotel.id, 'rooms', room.id);
