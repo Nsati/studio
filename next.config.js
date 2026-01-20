@@ -21,6 +21,12 @@ const nextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'geof.storyboardthat.com',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
 };
