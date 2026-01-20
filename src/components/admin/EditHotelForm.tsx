@@ -3,13 +3,15 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useRouter } from 'next/navigation';
-import { doc, writeBatch } from 'firebase/firestore';
+import { doc, writeBatch, deleteDoc } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import slugify from 'slugify';
 import { useState } from 'react';
+import type { Hotel, Room } from '@/lib/types';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+
 
 import {
   Form,
@@ -35,20 +37,21 @@ import { dummyCities } from '@/lib/dummy-data';
 import { Loader2, Trash2 } from 'lucide-react';
 import { Separator } from '../ui/separator';
 import { Card, CardContent, CardHeader } from '../ui/card';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
 
 
 const allAmenities = ['wifi', 'parking', 'restaurant', 'bar', 'spa', 'pool', 'gym', 'mountain-view', 'garden', 'library', 'river-view', 'ghat', 'adventure', 'trekking', 'skiing', 'heritage', 'safari'];
 
 const roomSchema = z.object({
+  id: z.string().optional(), // Existing rooms will have an ID
   type: z.enum(['Standard', 'Deluxe', 'Suite']),
   price: z.coerce.number().min(1, 'Price must be positive.'),
   capacity: z.coerce.number().min(1, 'Capacity must be at least 1.'),
   totalRooms: z.coerce.number().min(1, 'Total rooms must be at least 1.'),
+  availableRooms: z.coerce.number().optional(),
 });
 
 
-// The form schema no longer contains `imageUrls` to avoid type conflicts with useFieldArray.
-// Image URLs will be managed in a separate React state.
 const formSchema = z.object({
   name: z.string().min(3, 'Hotel name must be at least 3 characters long.'),
   city: z.string().min(1, 'Please select a city.'),
@@ -58,24 +61,31 @@ const formSchema = z.object({
   rooms: z.array(roomSchema).min(1, 'Please add at least one room type.'),
 });
 
-export function AddHotelForm() {
+type EditHotelFormProps = {
+    hotel: Hotel;
+    rooms: Room[];
+}
+
+export function EditHotelForm({ hotel, rooms: initialRooms }: EditHotelFormProps) {
   const router = useRouter();
   const firestore = useFirestore();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   
-  // Manage image URLs using a simple state hook to avoid complex form library issues.
-  const [imageUrls, setImageUrls] = useState<string[]>(['']);
+  const [imageUrls, setImageUrls] = useState<string[]>(hotel.images.length > 0 ? hotel.images : ['']);
+  // Keep track of rooms to be deleted from firestore
+  const [roomsToDelete, setRoomsToDelete] = useState<string[]>([]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: '',
-      city: '',
-      description: '',
-      rating: 4.5,
-      amenities: [],
-      rooms: [],
+      name: hotel.name,
+      city: hotel.city,
+      description: hotel.description,
+      rating: hotel.rating,
+      amenities: hotel.amenities,
+      rooms: initialRooms,
     },
   });
 
@@ -95,14 +105,21 @@ export function AddHotelForm() {
   };
 
   const removeImageUrl = (index: number) => {
-    // Only allow removal if there's more than one input field
     if (imageUrls.length > 1) {
       setImageUrls(prev => prev.filter((_, i) => i !== index));
     } else {
-      // If it's the last one, just clear it
       setImageUrls(['']);
     }
   };
+
+  const handleRemoveRoom = (index: number) => {
+    const roomToRemove = roomFields[index];
+    if (roomToRemove.id) {
+        // If it's an existing room, mark it for deletion from Firestore
+        setRoomsToDelete(prev => [...prev, roomToRemove.id!]);
+    }
+    removeRoom(index);
+  }
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     if (!firestore) {
@@ -110,7 +127,6 @@ export function AddHotelForm() {
         return;
     }
 
-    // Manual validation for image URLs from the state
     const filledImageUrls = imageUrls.map(url => url.trim()).filter(url => url !== '');
     if (filledImageUrls.length === 0) {
       toast({
@@ -136,33 +152,53 @@ export function AddHotelForm() {
     }
 
     setIsLoading(true);
-    const hotelId = slugify(values.name, { lower: true, strict: true });
+    const hotelId = hotel.id;
     const batch = writeBatch(firestore);
 
+    // Update hotel document
     const hotelRef = doc(firestore, 'hotels', hotelId);
     const { rooms, ...hotelData } = values;
-    batch.set(hotelRef, {
-        id: hotelId,
+    batch.update(hotelRef, {
         ...hotelData,
         images: filledImageUrls,
     });
 
+    // Handle room updates and additions
     for (const room of rooms) {
-        const roomId = slugify(`${values.name} ${room.type}`, { lower: true, strict: true });
-        const roomRef = doc(firestore, 'hotels', hotelId, 'rooms', roomId);
-        batch.set(roomRef, {
-            id: roomId,
-            hotelId: hotelId,
-            ...room,
-            availableRooms: room.totalRooms,
-        });
+        if (room.id) { // Existing room, update it
+            const roomRef = doc(firestore, 'hotels', hotelId, 'rooms', room.id);
+            // Calculate available rooms if it's not set
+            const currentInitialRoom = initialRooms.find(r => r.id === room.id);
+            const totalRoomsDelta = currentInitialRoom ? room.totalRooms - currentInitialRoom.totalRooms : 0;
+            const newAvailableRooms = (currentInitialRoom?.availableRooms || 0) + totalRoomsDelta;
+
+            batch.update(roomRef, { 
+                ...room,
+                availableRooms: newAvailableRooms > 0 ? newAvailableRooms : 0,
+            });
+        } else { // New room, add it
+            const roomId = slugify(`${values.name} ${room.type} ${Math.random()}`, { lower: true, strict: true });
+            const roomRef = doc(firestore, 'hotels', hotelId, 'rooms', roomId);
+            batch.set(roomRef, {
+                id: roomId,
+                hotelId: hotelId,
+                ...room,
+                availableRooms: room.totalRooms,
+            });
+        }
     }
 
+    // Handle room deletions
+    for (const roomId of roomsToDelete) {
+        const roomRef = doc(firestore, 'hotels', hotelId, 'rooms', roomId);
+        batch.delete(roomRef);
+    }
+    
     batch.commit()
       .then(() => {
         toast({
-            title: 'Hotel Added!',
-            description: `${values.name} and its rooms have been successfully added.`,
+            title: 'Hotel Updated!',
+            description: `${values.name} and its rooms have been successfully updated.`,
         });
         router.push('/admin/hotels');
         router.refresh();
@@ -170,7 +206,7 @@ export function AddHotelForm() {
       .catch((serverError) => {
         const permissionError = new FirestorePermissionError({
           path: hotelRef.path,
-          operation: 'create',
+          operation: 'update',
           requestResourceData: {...values, images: filledImageUrls },
         });
         errorEmitter.emit('permission-error', permissionError);
@@ -180,9 +216,46 @@ export function AddHotelForm() {
       });
   }
 
+  const handleDeleteHotel = async () => {
+    if (!firestore) return;
+
+    setIsDeleting(true);
+
+    const batch = writeBatch(firestore);
+    
+    // Delete all room sub-collections first
+    for(const room of initialRooms) {
+      const roomRef = doc(firestore, 'hotels', hotel.id, 'rooms', room.id);
+      batch.delete(roomRef);
+    }
+
+    // Then delete the hotel document
+    const hotelRef = doc(firestore, 'hotels', hotel.id);
+    batch.delete(hotelRef);
+
+    await batch.commit()
+        .then(() => {
+            toast({
+                title: 'Hotel Deleted',
+                description: `${hotel.name} has been removed from the platform.`,
+            });
+            router.push('/admin/hotels');
+            router.refresh();
+        })
+        .catch((serverError) => {
+            const permissionError = new FirestorePermissionError({
+                path: hotelRef.path,
+                operation: 'delete',
+            });
+            errorEmitter.emit('permission-error', permissionError);
+            setIsDeleting(false);
+        });
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        {/* All the FormField components from AddHotelForm go here */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <FormField
             control={form.control}
@@ -350,7 +423,7 @@ export function AddHotelForm() {
         <div>
             <h3 className="text-lg font-medium">Room Types</h3>
             <FormDescription>
-              Add the different types of rooms available in this hotel.
+              Manage the different types of rooms available in this hotel.
             </FormDescription>
             <FormField
               control={form.control}
@@ -367,8 +440,8 @@ export function AddHotelForm() {
           {roomFields.map((field, index) => (
             <Card key={field.id} className="p-4">
                 <CardHeader className="flex flex-row items-center justify-between p-0 pb-4">
-                     <h4 className="font-semibold">Room Type {index + 1}</h4>
-                     <Button type="button" variant="ghost" size="icon" onClick={() => removeRoom(index)}>
+                     <h4 className="font-semibold">Room Configuration {index + 1}</h4>
+                     <Button type="button" variant="ghost" size="icon" onClick={() => handleRemoveRoom(index)}>
                         <Trash2 className="h-4 w-4 text-destructive" />
                      </Button>
                 </CardHeader>
@@ -448,10 +521,35 @@ export function AddHotelForm() {
         </div>
 
 
-        <Button type="submit" disabled={isLoading}>
-            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isLoading ? 'Saving...' : 'Add Hotel'}
-        </Button>
+        <div className="flex items-center justify-between pt-8 border-t">
+            <Button type="submit" disabled={isLoading}>
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isLoading ? 'Saving...' : 'Save Changes'}
+            </Button>
+
+            <AlertDialog>
+                <AlertDialogTrigger asChild>
+                    <Button type="button" variant="destructive" disabled={isDeleting}>
+                         {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Delete Hotel
+                    </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete the hotel and all its associated rooms. Bookings will NOT be deleted but will be orphaned.
+                    </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDeleteHotel} className="bg-destructive hover:bg-destructive/90">
+                        Yes, delete hotel
+                    </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </div>
       </form>
     </Form>
   );

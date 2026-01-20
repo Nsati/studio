@@ -1,7 +1,7 @@
 'use client';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useFirestore, useCollection } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { collection, doc, updateDoc } from 'firebase/firestore';
 import type { UserProfile } from '@/lib/types';
 import {
   Table,
@@ -11,9 +11,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
+import { useUser } from '@/firebase';
 
 function UserRowSkeleton() {
     return (
@@ -21,23 +31,80 @@ function UserRowSkeleton() {
             <TableCell><Skeleton className="h-4 w-48" /></TableCell>
             <TableCell><Skeleton className="h-4 w-32" /></TableCell>
             <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-            <TableCell className="text-right"><Skeleton className="h-4 w-16" /></TableCell>
+            <TableCell className="text-right"><Skeleton className="h-10 w-28" /></TableCell>
         </TableRow>
     )
 }
+
+function RoleSelector({ user }: { user: UserProfile }) {
+    const { user: currentUser } = useUser();
+    const firestore = useFirestore();
+    const { toast } = useToast();
+    const [isUpdating, setIsUpdating] = useState(false);
+    
+    const handleRoleChange = async (newRole: 'user' | 'admin') => {
+        if (!firestore || !currentUser) return;
+        // Prevent users from changing their own role to avoid self-lockout
+        if (user.uid === currentUser.uid) {
+            toast({
+                variant: 'destructive',
+                title: 'Action Forbidden',
+                description: 'You cannot change your own role.',
+            });
+            return;
+        }
+
+        setIsUpdating(true);
+        const userRef = doc(firestore, 'users', user.uid);
+        
+        updateDoc(userRef, { role: newRole })
+            .then(() => {
+                toast({
+                    title: 'Role Updated',
+                    description: `${user.displayName}'s role has been changed to ${newRole}.`
+                });
+            })
+            .catch((serverError) => {
+                const permissionError = new FirestorePermissionError({
+                    path: userRef.path,
+                    operation: 'update',
+                    requestResourceData: { role: newRole },
+                });
+                errorEmitter.emit('permission-error', permissionError);
+            })
+            .finally(() => {
+                setIsUpdating(false);
+            });
+    };
+
+    return (
+         <Select 
+            defaultValue={user.role} 
+            onValueChange={(value: 'user' | 'admin') => handleRoleChange(value)}
+            disabled={isUpdating || user.uid === currentUser?.uid}
+        >
+            <SelectTrigger className="w-[120px]">
+                <SelectValue placeholder="Select role" />
+            </SelectTrigger>
+            <SelectContent>
+                <SelectItem value="user">User</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+            </SelectContent>
+        </Select>
+    )
+}
+
 
 export default function UsersPage() {
     const firestore = useFirestore();
 
     const usersQuery = useMemo(() => {
         if (!firestore) return null;
-        // Query without orderBy to avoid needing a composite index in Firestore.
         return collection(firestore, 'users');
     }, [firestore]);
 
     const { data: usersData, isLoading } = useCollection<UserProfile>(usersQuery);
 
-    // Sort users on the client-side.
     const users = useMemo(() => {
         if (!usersData) return null;
         return [...usersData].sort((a, b) => a.displayName.localeCompare(b.displayName));
@@ -45,7 +112,10 @@ export default function UsersPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="font-headline text-3xl font-bold">User Management</h1>
+      <div>
+        <h1 className="font-headline text-3xl font-bold">User & Role Management</h1>
+        <p className="text-muted-foreground">View users and manage their access roles.</p>
+      </div>
       <Card>
         <CardHeader>
             <CardTitle>All Users</CardTitle>
@@ -77,9 +147,7 @@ export default function UsersPage() {
                             <TableCell className="text-muted-foreground">{user.email}</TableCell>
                             <TableCell className="font-mono text-xs">{user.uid}</TableCell>
                             <TableCell className="text-right">
-                                <Badge variant={user.role === 'admin' ? 'destructive' : 'secondary'} className="capitalize">
-                                    {user.role}
-                                </Badge>
+                                <RoleSelector user={user} />
                             </TableCell>
                         </TableRow>
                     ))}
