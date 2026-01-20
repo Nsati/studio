@@ -369,7 +369,7 @@ export function BookingForm() {
                                     type="email"
                                     placeholder="your.email@example.com"
                                     value={customerDetails.email}
-                                    onChange={(e) => setCustomerDetails({ ...customerDetails, name: e.target.value })}
+                                    onChange={(e) => setCustomerDetails({ ...customerDetails, email: e.target.value })}
                                 />
                             </div>
                         </CardContent>
