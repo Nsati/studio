@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
-import { BedDouble, Calendar as CalendarIcon, AlertCircle, Info } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { BedDouble, Calendar as CalendarIcon, AlertCircle } from 'lucide-react';
 import { differenceInDays, format } from 'date-fns';
 import type { DateRange } from 'react-day-picker';
 import { useRouter } from 'next/navigation';
-import { collection, query, where, getDocs, Timestamp, collectionGroup } from 'firebase/firestore';
+import { collection } from 'firebase/firestore';
 
-import type { Hotel, Room, Booking } from '@/lib/types';
+import type { Hotel, Room } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useCollection } from '@/firebase';
 import { dummyRooms } from '@/lib/dummy-data';
@@ -31,15 +31,12 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Skeleton } from '../ui/skeleton';
-import { Loader2 } from 'lucide-react';
 
 
 export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
   const [dates, setDates] = useState<DateRange | undefined>();
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [guests, setGuests] = useState('1');
-  const [availability, setAvailability] = useState<Record<string, { available: number; text: string }>>({});
-  const [isCheckingAvail, setIsCheckingAvail] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
   const firestore = useFirestore();
@@ -66,75 +63,6 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
     return [];
   }, [liveRooms, isLoadingRooms, hotel.id]);
   
-  useEffect(() => {
-    if (!isDateRangeValid || !firestore || rooms.length === 0) {
-      setAvailability({});
-      return;
-    }
-
-    const checkAvailability = async () => {
-      setIsCheckingAvail(true);
-      try {
-        const userCheckIn = dates.from!;
-        const userCheckOut = dates.to!;
-
-        // Query for all bookings in this hotel that could potentially overlap
-        const bookingsRef = collectionGroup(firestore, 'bookings');
-        const q = query(
-          bookingsRef,
-          where('hotelId', '==', hotel.id),
-          where('status', '==', 'CONFIRMED'),
-          where('checkIn', '<', userCheckOut)
-        );
-
-        const querySnapshot = await getDocs(q);
-        const bookings: Booking[] = [];
-        querySnapshot.forEach(doc => {
-            const data = doc.data();
-            // Convert Firestore Timestamps to JS Dates
-            const bookingData = {
-              ...data,
-              checkIn: (data.checkIn as Timestamp).toDate(),
-              checkOut: (data.checkOut as Timestamp).toDate(),
-            } as Booking;
-
-             if (bookingData.checkOut > userCheckIn) {
-              bookings.push(bookingData);
-            }
-        });
-        
-        const newAvailability: Record<string, { available: number; text: string }> = {};
-
-        for (const room of rooms) {
-          const overlappingBookings = bookings.filter(booking => 
-              booking.roomId === room.id
-          );
-          
-          const bookedCount = overlappingBookings.length;
-          const availableCount = (room.totalRooms || 0) - bookedCount;
-          
-          newAvailability[room.id] = {
-              available: availableCount,
-              text: availableCount <= 0 ? 'Sold Out' : `${availableCount} rooms left`
-          };
-        }
-        setAvailability(newAvailability);
-      } catch (error) {
-          console.error("Error checking availability:", error);
-          toast({
-              variant: "destructive",
-              title: "Could not check availability",
-              description: "There was an error checking for room availability. Please try again.",
-          });
-      } finally {
-        setIsCheckingAvail(false);
-      }
-    };
-
-    checkAvailability();
-  }, [dates, firestore, hotel.id, isDateRangeValid, rooms, toast]);
-
-
   if (isLoadingRooms) {
       return (
           <Card className="sticky top-24">
@@ -178,7 +106,7 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
 
 
   const handleRoomSelect = (room: Room) => {
-    if (isDateRangeValid && availability[room.id]?.available > 0) {
+    if (isDateRangeValid) {
         setSelectedRoom(room);
     }
   };
@@ -193,15 +121,6 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
         return;
     }
     
-    if (availability[selectedRoom.id]?.available <= 0) {
-        toast({
-            variant: 'destructive',
-            title: 'Room Not Available',
-            description: 'This room is sold out for the selected dates. Please choose another room or date.',
-        });
-        return;
-    }
-
     const params = new URLSearchParams();
     params.set('hotelId', hotel.id);
     params.set('roomId', selectedRoom.id);
@@ -221,7 +140,7 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
           Book Your Stay
         </CardTitle>
         <CardDescription>
-          Select your dates to check real-time availability.
+          Select your dates and room type to proceed.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -276,31 +195,15 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
             <AlertCircle className="h-4 w-4 !text-blue-600" />
             <AlertTitle className="text-blue-800">Select Dates</AlertTitle>
             <AlertDescription className="text-blue-700">
-              Please select a valid date range to see room prices and availability.
+              Please select a valid date range to see room prices.
             </AlertDescription>
           </Alert>
         )}
 
-        {isDateRangeValid && (
-          <Alert variant="default" className="bg-blue-50 border-blue-200">
-            <Info className="h-4 w-4 !text-blue-600" />
-            <AlertTitle className="text-blue-800">3. Select a Room</AlertTitle>
-             {isCheckingAvail ? (
-                <div className="flex items-center text-blue-700">
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin"/> Checking availability...
-                </div>
-            ) : (
-                <AlertDescription className="text-blue-700">
-                    Click on an available room to select it for booking.
-                </AlertDescription>
-            )}
-          </Alert>
-        )}
-
         <div className="space-y-4">
+          {isDateRangeValid && <h4 className="font-semibold">3. Select a Room</h4>}
           {rooms?.map((room) => {
-             const isAvailable = isDateRangeValid && availability[room.id]?.available > 0;
-             const isDisabled = !isDateRangeValid || isCheckingAvail || !availability[room.id] || availability[room.id]?.available <= 0;
+             const isDisabled = !isDateRangeValid;
             return (
                 <Card
                 key={room.id}
@@ -323,12 +226,6 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
                           {room.price.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}
                           <span className="text-sm font-normal text-muted-foreground">/night</span>
                       </p>
-                      {isDateRangeValid && !isCheckingAvail && availability[room.id] && (
-                        <p className={cn(
-                            "text-sm font-semibold",
-                            isAvailable ? "text-green-600" : "text-destructive"
-                        )}>{availability[room.id].text}</p>
-                      )}
                     </div>
                 </div>
                 </Card>
@@ -346,7 +243,6 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
               onClick={handleBookNow}
               size="lg"
               className="w-full h-12 text-lg bg-accent text-accent-foreground hover:bg-accent/90"
-              disabled={availability[selectedRoom.id]?.available <= 0}
             >
               Book Now & Proceed to Payment
             </Button>
