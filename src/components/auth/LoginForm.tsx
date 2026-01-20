@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useAuth, useFirestore } from '@/firebase';
+import { doc, getDoc, setDoc } from 'firebase/firestore'; // <-- Import firestore functions
 
 import { Button } from '@/components/ui/button';
 import {
@@ -39,7 +40,28 @@ export function LoginForm() {
     setError('');
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Check for user profile and create if it doesn't exist
+      const userDocRef = doc(firestore, 'users', user.uid);
+      const userDocSnap = await getDoc(userDocRef);
+
+      if (!userDocSnap.exists()) {
+        // Document is missing, let's create it.
+        await setDoc(userDocRef, {
+          uid: user.uid,
+          email: user.email,
+          // A sensible default for displayName, since it's required by the schema
+          displayName: user.displayName || user.email?.split('@')[0] || 'New User',
+          role: 'user', // Always default to 'user' for security
+        });
+        toast({
+            title: 'Profile Created',
+            description: 'We created a basic profile for you to get started.'
+        });
+      }
+
 
       toast({ title: 'Login successful!', description: `Welcome back!` });
       const redirect = searchParams.get('redirect');
