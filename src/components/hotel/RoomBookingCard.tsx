@@ -56,9 +56,11 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
 
   const isDateRangeValid = dates?.from && dates?.to && nights > 0;
 
-  const rooms = (liveRooms && liveRooms.length > 0) 
-    ? liveRooms 
+  const rooms = useMemo(() => {
+    return (liveRooms && liveRooms.length > 0)
+    ? liveRooms
     : dummyRooms.filter(r => r.hotelId === hotel.id);
+  }, [liveRooms, hotel.id]);
   
   useEffect(() => {
     if (!isDateRangeValid || !firestore || rooms.length === 0) {
@@ -85,19 +87,22 @@ export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
       querySnapshot.forEach(doc => {
           const data = doc.data();
           // Convert Firestore Timestamps to JS Dates
-          bookings.push({
+          const bookingData = {
             ...data,
             checkIn: (data.checkIn as Timestamp).toDate(),
             checkOut: (data.checkOut as Timestamp).toDate(),
-          } as Booking);
+          } as Booking;
+
+           if (bookingData.checkOut > userCheckIn) {
+            bookings.push(bookingData);
+          }
       });
       
       const newAvailability: Record<string, { available: number; text: string }> = {};
 
       for (const room of rooms) {
         const overlappingBookings = bookings.filter(booking => 
-            booking.roomId === room.id &&
-            (booking.checkIn < userCheckOut && booking.checkOut > userCheckIn)
+            booking.roomId === room.id
         );
         
         const bookedCount = overlappingBookings.length;
