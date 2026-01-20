@@ -255,10 +255,10 @@ export function BookingForm() {
             </Link>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
                 <div className="space-y-6">
-                    <h1 className="font-headline text-3xl font-bold">Review Your Booking</h1>
+                    <h1 className="font-headline text-2xl font-bold md:text-3xl">Review Your Booking</h1>
                     <Card>
                         <CardHeader>
-                            <CardTitle className="font-headline text-2xl">{hotel.name}</CardTitle>
+                            <CardTitle className="font-headline">{hotel.name}</CardTitle>
                             <CardDescription>{hotel.city}</CardDescription>
                         </CardHeader>
                         <CardContent>
@@ -286,7 +286,7 @@ export function BookingForm() {
                 </div>
 
                 <div className="space-y-6">
-                    <h2 className="font-headline text-3xl font-bold">Confirm & Book</h2>
+                    <h2 className="font-headline text-2xl font-bold md:text-3xl">Confirm & Book</h2>
                     <Card>
                         <CardHeader>
                             <CardTitle>Guest Details</CardTitle>

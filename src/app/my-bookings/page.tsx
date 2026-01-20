@@ -188,8 +188,8 @@ export default function MyBookingsPage() {
     <div className="bg-muted/40 min-h-[calc(100vh-4rem)]">
         <div className="container mx-auto max-w-5xl py-12 px-4 md:px-6">
         <div className="mb-8">
-            <h1 className="font-headline text-4xl font-bold">My Bookings</h1>
-            <p className="mt-2 text-lg text-muted-foreground">
+            <h1 className="font-headline text-3xl font-bold md:text-4xl">My Bookings</h1>
+            <p className="mt-2 text-base text-muted-foreground md:text-lg">
             Here are all the amazing trips you've planned with us.
             </p>
         </div>
@@ -197,7 +197,7 @@ export default function MyBookingsPage() {
         {bookings?.length === 0 ? (
             <Card className="flex flex-col items-center justify-center py-20 text-center border-2 border-dashed bg-transparent">
             <CardHeader>
-                <CardTitle className="font-headline text-2xl">No Bookings Yet</CardTitle>
+                <CardTitle className="font-headline">No Bookings Yet</CardTitle>
                 <CardDescription>
                 You haven't booked any stays with us. Let's find your next
                 adventure!

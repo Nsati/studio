@@ -61,7 +61,7 @@ export default function HotelPage() {
     <div className="container mx-auto max-w-7xl py-8 px-4 md:px-6">
       <section className="mb-8">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-            <h1 className="font-headline text-4xl font-bold">{hotel.name}</h1>
+            <h1 className="font-headline text-3xl font-bold md:text-4xl">{hotel.name}</h1>
             <Button onClick={handleScrollToBooking} className="mt-4 md:mt-0">
                 <BedDouble className="mr-2 h-5 w-5" />
                 Book a Room
@@ -109,8 +109,8 @@ export default function HotelPage() {
               );
             })}
           </CarouselContent>
-          <CarouselPrevious className="absolute left-4" />
-          <CarouselNext className="absolute right-4" />
+          <CarouselPrevious className="absolute left-4 bg-background/50 hover:bg-background/80" />
+          <CarouselNext className="absolute right-4 bg-background/50 hover:bg-background/80" />
         </Carousel>
       </section>
 

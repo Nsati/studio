@@ -123,11 +123,11 @@ export default function HomePage() {
           />
         )}
         <div className="absolute inset-0 bg-black/50" />
-        <div className="relative z-10 flex h-full flex-col items-center justify-center text-center text-white">
-          <h1 className="font-headline text-5xl font-bold leading-tight md:text-7xl">
+        <div className="relative z-10 flex h-full flex-col items-center justify-center text-center text-white p-4">
+          <h1 className="font-headline text-4xl font-bold leading-tight sm:text-5xl md:text-7xl">
             Discover Serenity
           </h1>
-          <p className="mt-4 max-w-2xl text-lg md:text-xl">
+          <p className="mt-4 max-w-2xl text-base sm:text-lg">
             Find your perfect escape in the heart of the Himalayas. Unforgettable
             views and unparalleled hospitality await.
           </p>

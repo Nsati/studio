@@ -80,7 +80,7 @@ function SearchResults() {
   return (
     <div className="flex-1">
       <div className="mb-6">
-        <h2 className="font-headline text-3xl font-bold">
+        <h2 className="font-headline text-2xl font-bold md:text-3xl">
           {searchParams.get('city') && searchParams.get('city') !== 'All' ? `Stays in ${searchParams.get('city')}` : 'All Our Stays'}
         </h2>
         <p className="text-muted-foreground">{hotels?.length || 0} properties found.</p>
@@ -170,7 +170,7 @@ function SearchFilters() {
   return (
      <aside className="w-full lg:w-1/4 lg:pr-8">
       <Card>
-        <CardContent className="p-4">
+        <CardContent>
           <form className="space-y-6" onSubmit={handleFormSubmit}>
             <div className="space-y-2">
               <Label htmlFor="location" className="text-lg font-semibold">
