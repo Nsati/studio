@@ -46,15 +46,13 @@ const roomSchema = z.object({
   totalRooms: z.coerce.number().min(1, 'Total rooms must be at least 1.'),
 });
 
-
-// The form schema no longer contains `imageUrls` to avoid type conflicts with useFieldArray.
-// Image URLs will be managed in a separate React state.
 const formSchema = z.object({
   name: z.string().min(3, 'Hotel name must be at least 3 characters long.'),
   city: z.string().min(1, 'Please select a city.'),
   description: z.string().min(10, 'Description must be at least 10 characters long.'),
   rating: z.coerce.number().min(1).max(5).positive(),
   amenities: z.array(z.string()).min(1, 'Please select at least one amenity.'),
+  images: z.string().min(1, 'Please provide at least one image URL.'),
   rooms: z.array(roomSchema).min(1, 'Please add at least one room type.'),
 });
 
@@ -64,9 +62,6 @@ export function AddHotelForm() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   
-  // Manage image URLs using a simple state hook to avoid complex form library issues.
-  const [imageUrls, setImageUrls] = useState<string[]>(['']);
-
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -75,6 +70,7 @@ export function AddHotelForm() {
       description: '',
       rating: 4.5,
       amenities: [],
+      images: '',
       rooms: [],
     },
   });
@@ -84,35 +80,14 @@ export function AddHotelForm() {
     name: 'rooms',
   });
 
-  const handleImageUrlChange = (index: number, value: string) => {
-    const newImageUrls = [...imageUrls];
-    newImageUrls[index] = value;
-    setImageUrls(newImageUrls);
-  };
-
-  const addImageUrl = () => {
-    setImageUrls(prev => [...prev, '']);
-  };
-
-  const removeImageUrl = (index: number) => {
-    // Only allow removal if there's more than one input field
-    if (imageUrls.length > 1) {
-      setImageUrls(prev => prev.filter((_, i) => i !== index));
-    } else {
-      // If it's the last one, just clear it
-      setImageUrls(['']);
-    }
-  };
-
   function onSubmit(values: z.infer<typeof formSchema>) {
     if (!firestore) {
         toast({ variant: 'destructive', title: 'Firestore not available' });
         return;
     }
 
-    // Manual validation for image URLs from the state
-    const filledImageUrls = imageUrls.map(url => url.trim()).filter(url => url !== '');
-    if (filledImageUrls.length === 0) {
+    const imageUrls = values.images.split('\n').map(url => url.trim()).filter(url => url);
+    if (imageUrls.length === 0) {
       toast({
         variant: 'destructive',
         title: 'Validation Error',
@@ -121,8 +96,7 @@ export function AddHotelForm() {
       return;
     }
 
-    // Validate each URL format
-    for (const url of filledImageUrls) {
+    for (const url of imageUrls) {
       try {
         new URL(url);
       } catch (_) {
@@ -140,11 +114,11 @@ export function AddHotelForm() {
     const batch = writeBatch(firestore);
 
     const hotelRef = doc(firestore, 'hotels', hotelId);
-    const { rooms, ...hotelData } = values;
+    const { rooms, images, ...hotelData } = values;
     batch.set(hotelRef, {
         id: hotelId,
         ...hotelData,
-        images: filledImageUrls,
+        images: imageUrls,
     });
 
     for (const room of rooms) {
@@ -171,7 +145,7 @@ export function AddHotelForm() {
         const permissionError = new FirestorePermissionError({
           path: hotelRef.path,
           operation: 'create',
-          requestResourceData: {...values, images: filledImageUrls },
+          requestResourceData: {...values, images: imageUrls },
         });
         errorEmitter.emit('permission-error', permissionError);
       })
@@ -305,44 +279,27 @@ export function AddHotelForm() {
 
         <Separator />
         
-        <div>
-            <h3 className="text-lg font-medium">Hotel Images</h3>
-            <FormDescription>
-              Add public URLs for the hotel images. You can use a free service like Unsplash or Imgur.
-            </FormDescription>
-        </div>
-
-        <div className="space-y-4">
-          {imageUrls.map((url, index) => (
-            <Card key={index} className="p-4">
-                <div className="flex items-center justify-between gap-4">
-                    <FormItem className="flex-grow">
-                        <FormLabel htmlFor={`image-url-${index}`}>Image URL {index + 1}</FormLabel>
-                        <FormControl>
-                            <Input
-                                id={`image-url-${index}`}
-                                placeholder="https://images.unsplash.com/..." 
-                                value={url} 
-                                onChange={(e) => handleImageUrlChange(index, e.target.value)} 
-                            />
-                        </FormControl>
-                    </FormItem>
-                     <Button type="button" variant="ghost" size="icon" className="mt-6" onClick={() => removeImageUrl(index)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                        <span className="sr-only">Remove Image URL</span>
-                     </Button>
-                </div>
-            </Card>
-          ))}
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={addImageUrl}
-          >
-            Add Another Image URL
-          </Button>
-        </div>
+        <FormField
+          control={form.control}
+          name="images"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Hotel Images</FormLabel>
+               <FormDescription>
+                Add public URLs for the hotel images. Paste each URL on a new line.
+              </FormDescription>
+              <FormControl>
+                <Textarea
+                  placeholder="https://images.unsplash.com/photo-1...
+https://images.unsplash.com/photo-2..."
+                  className="resize-y min-h-[120px] font-mono text-xs"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
 
         <Separator />
