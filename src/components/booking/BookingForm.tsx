@@ -343,7 +343,7 @@ export function BookingForm() {
                             htmlFor="terms"
                             className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                             >
-                            I understand and agree to the rules of this hotel and Uttarakhand Getaways' <Link href="#" className="text-primary font-semibold hover:underline">Terms of Use</Link> &amp; <Link href="#" className="text-primary font-semibold hover:underline">Privacy Policy</Link>.
+                            I understand and agree to the rules of this hotel and Uttarakhand Getaways' <Link href="/terms" target="_blank" className="text-primary font-semibold hover:underline">Terms of Use</Link> &amp; <Link href="/privacy" target="_blank" className="text-primary font-semibold hover:underline">Privacy Policy</Link>.
                             </label>
                         </div>
                     </div>

@@ -16,8 +16,8 @@ const footerLinks = {
   'Help & Support': [
     { label: 'Contact Us', href: '#' },
     { label: 'FAQ', href: '#' },
-    { label: 'Terms of Service', href: '#' },
-    { label: 'Privacy Policy', href: '#' },
+    { label: 'Terms of Service', href: '/terms' },
+    { label: 'Privacy Policy', href: '/privacy' },
   ],
 };
 
