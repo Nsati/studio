@@ -4,8 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { useAuth } from '@/firebase';
-import { sendOtpAction } from '@/app/auth/actions';
+import { useAuth, useFirestore } from '@/firebase';
+import { doc, setDoc } from 'firebase/firestore';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -23,6 +23,7 @@ import { Loader2 } from 'lucide-react';
 
 export function SignupForm() {
   const auth = useAuth();
+  const firestore = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
   const [name, setName] = useState('');
@@ -33,7 +34,7 @@ export function SignupForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth) return;
+    if (!auth || !firestore) return;
     if (password.length < 6) {
       setError('Password must be at least 6 characters long.');
       return;
@@ -49,24 +50,21 @@ export function SignupForm() {
       );
       const user = userCredential.user;
 
-      // Call server action to create profile and send OTP
-      const otpResult = await sendOtpAction({
-        userId: user.uid,
-        email: user.email!,
-        name: name,
+      // Create user profile in Firestore
+      await setDoc(doc(firestore, 'users', user.uid), {
+        uid: user.uid,
+        displayName: name,
+        email: user.email,
+        role: 'user',
       });
 
-      if (!otpResult.success) {
-        throw new Error(otpResult.error || 'Failed to send OTP.');
-      }
-      
       toast({
-        title: 'One last step...',
-        description: 'We have sent a verification code to your email.',
+        title: 'Account Created!',
+        description: 'You can now log in with your credentials.',
       });
 
-      // Redirect to the OTP verification page
-      router.push(`/verify-otp?email=${encodeURIComponent(email)}`);
+      // Redirect to the login page as requested
+      router.push(`/login`);
 
     } catch (error: any) {
       if (error.code === 'auth/email-already-in-use') {

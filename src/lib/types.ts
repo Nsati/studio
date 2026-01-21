@@ -1,6 +1,3 @@
-
-
-
 export interface Hotel {
   id: string; 
   name: string;
@@ -32,7 +29,6 @@ export interface UserProfile {
   displayName: string;
   email: string;
   role: 'user' | 'admin';
-  status: 'pending' | 'active';
 }
 
 
@@ -62,4 +58,3 @@ export type MockUser = {
     role: 'user' | 'admin';
     photoURL?: string | null;
 };
-

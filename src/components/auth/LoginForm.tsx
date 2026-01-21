@@ -44,32 +44,16 @@ export function LoginForm() {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Check user profile for verification status
+      // Check user profile exists
       const userDocRef = doc(firestore, 'users', user.uid);
       const userDocSnap = await getDoc(userDocRef);
 
       if (!userDocSnap.exists()) {
         // This case should ideally not happen if signup is correct
-        throw new Error('User profile not found. Please sign up again.');
+        throw new Error('User profile not found. Please contact support.');
       }
       
       const userProfile = userDocSnap.data() as UserProfile;
-
-      if (userProfile.status === 'pending') {
-        await auth.signOut(); // Log the user out
-        router.push(`/verify-otp?email=${encodeURIComponent(email)}`);
-        toast({
-          variant: 'destructive',
-          title: 'Verification Required',
-          description: 'Please verify your email address with the OTP we sent you.',
-        });
-        setIsLoading(false);
-        return;
-      }
-      
-      if (userProfile.status !== 'active') {
-          throw new Error('Your account is not active. Please contact support.');
-      }
 
       toast({ title: 'Login successful!', description: `Welcome back, ${userProfile.displayName}!` });
       const redirect = searchParams.get('redirect');

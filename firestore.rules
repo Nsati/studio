@@ -15,18 +15,15 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      // Users can create their own profile with a 'user' role and 'pending' status.
-      // This prevents them from creating themselves as an admin.
+      // Users can create their own profile with a 'user' role.
       allow create: if isOwner(userId) && 
-                      request.resource.data.role == 'user' &&
-                      request.resource.data.status == 'pending';
+                      request.resource.data.role == 'user';
 
       // Users can read their own profile. Admins can read any profile.
       allow read: if isOwner(userId) || isAdmin();
       
       // A user can update their own profile, but they CANNOT change their role.
-      // This allows them to activate their account (pending -> active) or change their name,
-      // while preventing privilege escalation. Admins can update anything.
+      // This prevents privilege escalation. Admins can update anything.
       allow update: if isAdmin() || (isOwner(userId) && request.resource.data.role == resource.data.role);
                       
       // Only admins can delete user profiles.
@@ -74,13 +71,6 @@ service cloud.firestore {
     // Use `list` to cover the collection group query.
     match /{path=**}/bookings/{bookingId} {
         allow list: if isAdmin();
-    }
-    
-    // OTP verification documents can only be accessed by their owner.
-    match /otp_verification/{userId} {
-      allow read, create, delete: if isOwner(userId);
-      // OTPs are single-use and should not be updated.
-      allow update: if false;
     }
   }
 }
