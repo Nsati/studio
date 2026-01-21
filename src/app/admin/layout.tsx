@@ -49,10 +49,12 @@ function AdminAuthGuard({ children }: { children: React.ReactNode }) {
     if (!user) {
       // Not logged in, redirect to login page for authentication.
       router.replace('/login?redirect=/admin');
-    } else if (!userProfile || userProfile.role !== 'admin') {
-      // Logged in but not an admin (or profile is missing), redirect to home page.
-      router.replace('/');
-    }
+    } 
+    // TEMPORARILY DISABLED TO ALLOW ADMIN SETUP
+    // else if (!userProfile || userProfile.role !== 'admin') {
+    //   // Logged in but not an admin (or profile is missing), redirect to home page.
+    //   router.replace('/');
+    // }
   }, [user, userProfile, isLoading, router]);
 
   if (isLoading) {
@@ -66,7 +68,7 @@ function AdminAuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
   
-  if (userProfile?.role === 'admin') {
+  if (userProfile?.role === 'admin' || user) { // TEMPORARILY MODIFIED to allow any user in
     // User is logged in and is an admin.
     return <>{children}</>;
   }

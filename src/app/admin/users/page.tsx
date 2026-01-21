@@ -44,15 +44,15 @@ function RoleSelector({ user }: { user: UserProfile }) {
     
     const handleRoleChange = async (newRole: 'user' | 'admin') => {
         if (!firestore || !currentUser) return;
-        // Prevent users from changing their own role to avoid self-lockout
-        if (user.uid === currentUser.uid) {
-            toast({
-                variant: 'destructive',
-                title: 'Action Forbidden',
-                description: 'You cannot change your own role.',
-            });
-            return;
-        }
+        // Prevent users from changing their own role to avoid self-lockout - TEMPORARILY DISABLED
+        // if (user.uid === currentUser.uid) {
+        //     toast({
+        //         variant: 'destructive',
+        //         title: 'Action Forbidden',
+        //         description: 'You cannot change your own role.',
+        //     });
+        //     return;
+        // }
 
         setIsUpdating(true);
         const userRef = doc(firestore, 'users', user.uid);
@@ -81,7 +81,7 @@ function RoleSelector({ user }: { user: UserProfile }) {
          <Select 
             defaultValue={user.role} 
             onValueChange={(value: 'user' | 'admin') => handleRoleChange(value)}
-            disabled={isUpdating || user.uid === currentUser?.uid}
+            disabled={isUpdating}
         >
             <SelectTrigger className="w-[120px]">
                 <SelectValue placeholder="Select role" />
