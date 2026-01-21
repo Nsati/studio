@@ -51,6 +51,8 @@ function AdminAuthGuard({ children }: { children: React.ReactNode }) {
       router.replace('/login?redirect=/admin');
     } 
     // TEMPORARILY DISABLED TO ALLOW ADMIN SETUP
+    // We are letting any logged-in user through for now.
+    // The check below handles the UI temporarily.
     // else if (!userProfile || userProfile.role !== 'admin') {
     //   // Logged in but not an admin (or profile is missing), redirect to home page.
     //   router.replace('/');
@@ -68,29 +70,21 @@ function AdminAuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
   
-  if (user) { // TEMPORARILY MODIFIED to allow any logged-in user in
-    // User is logged in.
+  // Temporarily allow any logged-in user to access the admin section
+  // to allow the first user to set their role to 'admin'.
+  if (user) {
     return <>{children}</>;
   }
   
-  // If we reach here, the user is not authenticated. Show a detailed error message.
-  // This UI is shown temporarily before the useEffect redirect kicks in.
-  let errorDescription;
-  if (!user) {
-    errorDescription = "You are not logged in. Redirecting to login page..."
-  } else if (!userProfile) {
-    errorDescription = "Your user account was found, but a profile document is missing from the database. This document should be in the 'users' collection with the ID '" + user.uid + "'. Please ask an administrator to create it. You will be redirected to the homepage.";
-  } else {
-    errorDescription = "Your account role is '" + userProfile.role + "'. You must have the 'admin' role to access this page. Please contact a super-administrator to upgrade your role. You will be redirected to the homepage.";
-  }
-
+  // If we reach here, the user is not authenticated. Show a detailed error message
+  // while the useEffect redirect kicks in.
   return (
       <div className="flex h-screen items-center justify-center bg-muted/40 p-4">
             <Alert variant="destructive" className="max-w-lg">
                 <ShieldAlert className="h-4 w-4" />
                 <AlertTitle>Access Denied</AlertTitle>
                 <AlertDescription>
-                   {errorDescription}
+                   You are not logged in. Redirecting to login page...
                 </AlertDescription>
             </Alert>
         </div>
