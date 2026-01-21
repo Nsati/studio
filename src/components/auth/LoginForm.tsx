@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { signInWithEmailAndPassword, sendEmailVerification, signOut } from 'firebase/auth';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useAuth, useFirestore } from '@/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore'; 
 
@@ -32,24 +32,6 @@ export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleResendVerification = async () => {
-    if (!auth || !email) return;
-    try {
-        // We need to sign in the user temporarily to get their user object
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        if (userCredential.user && !userCredential.user.emailVerified) {
-            await sendEmailVerification(userCredential.user);
-            toast({
-                title: 'Verification Link Sent',
-                description: 'A new verification link has been sent to your email address.',
-            });
-        }
-        await signOut(auth); // Sign out immediately after
-    } catch (e) {
-        setError("Could not resend verification email. Please check your credentials.");
-    }
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!auth || !firestore) return;
@@ -60,25 +42,6 @@ export function LoginForm() {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-
-      // Reload the user's profile to get the latest emailVerified status
-      await user.reload(); 
-      
-      // After reload, auth.currentUser will be updated with the latest state.
-      if (!auth.currentUser?.emailVerified) {
-        setError('Please verify your email before logging in.');
-        // Sign out the user so they can't access any part of the app
-        await signOut(auth);
-        
-        toast({
-            variant: 'destructive',
-            title: 'Email Not Verified',
-            description: 'A verification link was sent to your email. Please check your inbox and verify.',
-        });
-        
-        setIsLoading(false);
-        return;
-      }
 
       // Check for user profile and create if it doesn't exist
       const userDocRef = doc(firestore, 'users', user.uid);
@@ -96,7 +59,6 @@ export function LoginForm() {
             description: 'We created a basic profile for you to get started.'
         });
       }
-
 
       toast({ title: 'Login successful!', description: `Welcome back!` });
       const redirect = searchParams.get('redirect');
@@ -145,11 +107,6 @@ export function LoginForm() {
               />
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
-            {error === 'Please verify your email before logging in.' && (
-                 <Button variant="link" type="button" onClick={handleResendVerification} className="p-0 h-auto">
-                    Resend verification email
-                </Button>
-            )}
             <Button
               type="submit"
               className="w-full"

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { useAuth, useFirestore } from '@/firebase';
 
@@ -50,9 +50,6 @@ export function SignupForm() {
       );
       const user = userCredential.user;
 
-      // Send verification email
-      await sendEmailVerification(user);
-
       // Create user profile in Firestore
       await setDoc(doc(firestore, 'users', user.uid), {
         uid: user.uid,
@@ -61,8 +58,13 @@ export function SignupForm() {
         role: 'user', // Default role
       });
 
-      // Redirect to the verify email page to guide the user.
-      router.push('/verify-email');
+      toast({
+        title: 'Account Created!',
+        description: 'Welcome! You are now logged in.',
+      });
+
+      // Redirect to the my-bookings page as the user is now logged in.
+      router.push('/my-bookings');
     } catch (error: any) {
       if (error.code === 'auth/email-already-in-use') {
         setError('A user with this email already exists.');
