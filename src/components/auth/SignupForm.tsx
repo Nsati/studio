@@ -63,9 +63,9 @@ export function SignupForm() {
 
       toast({
         title: 'Account Created!',
-        description: "We've sent a verification link to your email.",
+        description: "We've sent a verification link to your email. Please verify, then log in.",
       });
-      router.push('/verify-email');
+      router.push('/login');
     } catch (error: any) {
       if (error.code === 'auth/email-already-in-use') {
         setError('A user with this email already exists.');
