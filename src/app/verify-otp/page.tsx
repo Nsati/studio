@@ -69,7 +69,7 @@ function VerifyOtpComponent() {
         throw new Error('OTP has expired. Please request a new one.');
       }
 
-      if (otpData.otp !== otp) {
+      if (otpData.otp !== otp.trim()) {
         throw new Error('Invalid OTP. Please try again.');
       }
 
