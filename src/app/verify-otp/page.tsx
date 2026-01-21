@@ -91,7 +91,7 @@ function VerifyOtpComponent() {
         await handleOtpSend(firestore, user.uid, email);
         toast({
             title: 'OTP Resent',
-            description: 'A new OTP has been sent to your email address.'
+            description: 'A new OTP has been generated in your server console.'
         })
     } catch (error: any) {
         toast({
@@ -122,9 +122,12 @@ function VerifyOtpComponent() {
       <CardHeader className="text-center">
         <CardTitle className="font-headline text-3xl">Verify Your Account</CardTitle>
         <CardDescription>
-          We've sent a 6-digit code to <br />{' '}
+          We've "sent" a 6-digit code to <br />{' '}
           <span className="font-semibold text-foreground">{email}</span>
         </CardDescription>
+        <p className="text-xs text-muted-foreground pt-2">
+          (For development, the OTP is printed to your server console)
+        </p>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleVerify} className="space-y-6">

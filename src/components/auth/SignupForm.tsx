@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { useAuth, useFirestore } from '@/firebase';
-import { doc, writeBatch } from 'firebase/firestore';
+import { doc, writeBatch, setDoc } from 'firebase/firestore';
 import crypto from 'crypto';
 
 import { Button } from '@/components/ui/button';
@@ -24,13 +24,18 @@ import { Loader2 } from 'lucide-react';
 import { OtpVerification } from '@/lib/types';
 
 
-// This function simulates sending an email. In a real app, you'd use a service like SendGrid or Mailgun.
+// This function simulates sending an email by logging it to the console.
+// For a production app, you would replace this with a real email service
+// like SendGrid, Mailgun, or AWS SES.
 async function sendOtpEmail(email: string, otp: string) {
-  console.log('--- OTP VERIFICATION EMAIL ---');
-  console.log(`To: ${email}`);
-  console.log(`Your verification code is: ${otp}`);
-  console.log('--- In production, this would be sent via a real email service. ---');
+  console.log('--- OTP VERIFICATION (SIMULATED EMAIL) ---');
+  console.log('This is NOT a real email.');
+  console.log('In a production environment, you would integrate an email service here.');
+  console.log(`> Recipient: ${email}`);
+  console.log(`> Your verification code is: ${otp}`);
+  console.log('-------------------------------------------');
 }
+
 
 export async function handleOtpSend(
   firestore: any,
@@ -87,18 +92,11 @@ export function SignupForm() {
         status: 'pending',
       });
       
-      // 2. Create and store OTP
-      const otp = Math.floor(100000 + Math.random() * 900000).toString();
-      const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes expiry
-      const otpRef = doc(firestore, 'otp_verification', user.uid);
-      const otpData: OtpVerification = { otp, expiresAt };
-      batch.set(otpRef, otpData);
-
-      // Commit both writes at once
+      // Commit the user profile write
       await batch.commit();
 
-      // 3. Send OTP email (simulation)
-      await sendOtpEmail(user.email!, otp);
+      // 2. Create, store, and "send" OTP
+      await handleOtpSend(firestore, user.uid, user.email!);
 
       toast({
         title: 'Account Created!',
