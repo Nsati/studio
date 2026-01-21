@@ -99,7 +99,7 @@ export function SignupForm() {
 
       toast({
         title: 'Account Created!',
-        description: "We've 'sent' a verification code to your email. Check your server console.",
+        description: "We've 'sent' a verification code. Please check your server console.",
       });
       
       router.push(`/verify-otp?email=${encodeURIComponent(user.email!)}`);

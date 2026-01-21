@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import {
   InputOTP,
   InputOTPGroup,
@@ -17,7 +17,6 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useUser } from '@/firebase';
 import { doc, getDoc, writeBatch } from 'firebase/firestore';
@@ -36,6 +35,21 @@ function VerifyOtpComponent() {
   const [isLoading, setIsLoading] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const email = searchParams.get('email');
+
+  const RESEND_TIMEOUT = 60; // seconds
+  const [timeLeft, setTimeLeft] = useState(RESEND_TIMEOUT);
+  const [canResend, setCanResend] = useState(false);
+
+  useEffect(() => {
+    if (timeLeft <= 0) {
+      setCanResend(true);
+      return;
+    }
+    const timer = setTimeout(() => {
+      setTimeLeft(timeLeft - 1);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [timeLeft]);
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,37 +96,41 @@ function VerifyOtpComponent() {
       setIsLoading(false);
     }
   };
-  
+
   const handleResend = async () => {
     if (!firestore || !user || !email) return;
 
     setIsResending(true);
     try {
-        await handleOtpSend(firestore, user.uid, email);
-        toast({
-            title: 'OTP Resent',
-            description: 'A new OTP has been generated in your server console.'
-        })
+      await handleOtpSend(firestore, user.uid, email);
+      toast({
+        title: 'OTP Resent',
+        description: 'A new OTP has been generated in your server console.',
+      });
+      setTimeLeft(RESEND_TIMEOUT);
+      setCanResend(false);
     } catch (error: any) {
-        toast({
-            variant: 'destructive',
-            title: 'Failed to Resend',
-            description: error.message,
-        })
+      toast({
+        variant: 'destructive',
+        title: 'Failed to Resend',
+        description: error.message,
+      });
     } finally {
-        setIsResending(false);
+      setIsResending(false);
     }
-  }
+  };
 
   if (isUserLoading) {
     return (
-        <div className="flex items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-    )
+      <div className="flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
   if (!user || !email) {
+    // If the user isn't logged in (which they should be after signup)
+    // or email is missing, redirect them to a safe page.
     router.replace('/login');
     return null;
   }
@@ -122,7 +140,7 @@ function VerifyOtpComponent() {
       <CardHeader className="text-center">
         <CardTitle className="font-headline text-3xl">Verify Your Account</CardTitle>
         <CardDescription>
-          We've "sent" a 6-digit code to <br />{' '}
+          A 6-digit code was sent to your email address: <br />{' '}
           <span className="font-semibold text-foreground">{email}</span>
         </CardDescription>
         <p className="text-xs text-muted-foreground pt-2">
@@ -154,9 +172,19 @@ function VerifyOtpComponent() {
       </CardContent>
       <CardFooter className="flex flex-col items-center justify-center text-sm">
         <p className="text-muted-foreground">Didn't receive the code?</p>
-        <Button variant="link" className="p-0 h-auto" onClick={handleResend} disabled={isResending}>
-            {isResending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Resend OTP
+        <Button
+          variant="link"
+          className="p-0 h-auto"
+          onClick={handleResend}
+          disabled={isResending || !canResend}
+        >
+          {isResending ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : !canResend ? (
+            `Resend in ${timeLeft}s`
+          ) : (
+            'Resend OTP'
+          )}
         </Button>
       </CardFooter>
     </Card>
@@ -166,9 +194,9 @@ function VerifyOtpComponent() {
 export default function VerifyOtpPage() {
   return (
     <div className="container flex min-h-[80vh] items-center justify-center">
-        <Suspense fallback={<Loader2 className="h-8 w-8 animate-spin" />}>
-            <VerifyOtpComponent />
-        </Suspense>
+      <Suspense fallback={<Loader2 className="h-8 w-8 animate-spin" />}>
+        <VerifyOtpComponent />
+      </Suspense>
     </div>
   );
 }
