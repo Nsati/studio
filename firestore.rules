@@ -15,12 +15,23 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      // Temporarily simplified for debugging.
-      // WARNING: This is insecure as a user could potentially change their own role.
-      allow read, write: if isOwner(userId);
+      // On creation (signup), a user can create their own document.
+      // We enforce that the role is 'user' and status is 'pending' to prevent self-promotion.
+      allow create: if isOwner(userId) && 
+                      request.resource.data.uid == userId &&
+                      request.resource.data.role == 'user' &&
+                      request.resource.data.status == 'pending';
+
+      // A user can read their own profile. An admin can read any profile.
+      allow read: if isOwner(userId) || isAdmin();
       
-      // Admin rules still apply for full access over any user document.
-      allow read, write, delete: if isAdmin();
+      // An admin can update any field in any profile.
+      // A regular user can update their own profile, as long as they don't change their role.
+      // This allows them to change their name, or for the OTP flow to change their status to 'active'.
+      allow update: if isAdmin() || (isOwner(userId) && request.resource.data.role == resource.data.role);
+
+      // Only an admin can delete a user profile.
+      allow delete: if isAdmin();
     }
     
     // New collection for OTPs

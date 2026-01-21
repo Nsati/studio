@@ -49,14 +49,10 @@ function AdminAuthGuard({ children }: { children: React.ReactNode }) {
     if (!user) {
       // Not logged in, redirect to login page for authentication.
       router.replace('/login?redirect=/admin');
-    } 
-    // TEMPORARILY DISABLED TO ALLOW ADMIN SETUP
-    // We are letting any logged-in user through for now.
-    // The check below handles the UI temporarily.
-    // else if (!userProfile || userProfile.role !== 'admin') {
-    //   // Logged in but not an admin (or profile is missing), redirect to home page.
-    //   router.replace('/');
-    // }
+    } else if (!userProfile || userProfile.role !== 'admin') {
+      // Logged in but not an admin (or profile is missing), redirect to home page.
+      router.replace('/');
+    }
   }, [user, userProfile, isLoading, router]);
 
   if (isLoading) {
@@ -70,21 +66,20 @@ function AdminAuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
   
-  // Temporarily allow any logged-in user to access the admin section
-  // to allow the first user to set their role to 'admin'.
-  if (user) {
-    return <>{children}</>;
+  // If we have a user and they are an admin, show the content.
+  if (user && userProfile && userProfile.role === 'admin') {
+      return <>{children}</>;
   }
   
-  // If we reach here, the user is not authenticated. Show a detailed error message
-  // while the useEffect redirect kicks in.
+  // If we reach here, the user is not an admin or not logged in.
+  // Show an access denied message while the useEffect redirect kicks in.
   return (
       <div className="flex h-screen items-center justify-center bg-muted/40 p-4">
             <Alert variant="destructive" className="max-w-lg">
                 <ShieldAlert className="h-4 w-4" />
                 <AlertTitle>Access Denied</AlertTitle>
                 <AlertDescription>
-                   You are not logged in. Redirecting to login page...
+                   You do not have the required permissions to view this page. Redirecting...
                 </AlertDescription>
             </Alert>
         </div>
