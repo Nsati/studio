@@ -68,20 +68,20 @@ function AdminAuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
   
-  if (userProfile?.role === 'admin' || user) { // TEMPORARILY MODIFIED to allow any user in
-    // User is logged in and is an admin.
+  if (user) { // TEMPORARILY MODIFIED to allow any logged-in user in
+    // User is logged in.
     return <>{children}</>;
   }
   
-  // If we reach here, the user is not an admin. Show a detailed error message.
+  // If we reach here, the user is not authenticated. Show a detailed error message.
   // This UI is shown temporarily before the useEffect redirect kicks in.
   let errorDescription;
   if (!user) {
     errorDescription = "You are not logged in. Redirecting to login page..."
   } else if (!userProfile) {
-    errorDescription = `Your user account was found, but a profile document is missing from the database. This document should be in the 'users' collection with the ID '${user.uid}'. Please ask an administrator to create it. You will be redirected to the homepage.`;
+    errorDescription = "Your user account was found, but a profile document is missing from the database. This document should be in the 'users' collection with the ID '" + user.uid + "'. Please ask an administrator to create it. You will be redirected to the homepage.";
   } else {
-    errorDescription = `Your account role is '${userProfile.role}'. You must have the 'admin' role to access this page. Please contact a super-administrator to upgrade your role. You will be redirected to the homepage.`;
+    errorDescription = "Your account role is '" + userProfile.role + "'. You must have the 'admin' role to access this page. Please contact a super-administrator to upgrade your role. You will be redirected to the homepage.";
   }
 
   return (
