@@ -108,6 +108,14 @@ export function LoginForm() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
+              <div className="text-right">
+                 <Link
+                    href="/forgot-password"
+                    className="text-sm font-medium text-primary hover:underline"
+                >
+                    Forgot your password?
+                </Link>
+              </div>
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <Button
