@@ -24,11 +24,20 @@ service cloud.firestore {
       allow read: if isOwner(userId) || isAdmin();
       
       // Allow user to update their own displayName.
+      // Allow user to update their own status from 'pending' to 'active' after OTP verification.
       // Admins can update any field.
-      // The verifyOtpAction will update the status, which needs a rule.
-      allow update: if (isOwner(userId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName'])) ||
-                      (isOwner(userId) && request.resource.data.status == 'active' && resource.data.status == 'pending') ||
-                      isAdmin();
+      allow update: if 
+        isAdmin() ||
+        (isOwner(userId) && (
+          // Case 1: Updating only the displayName
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName']) ||
+          // Case 2: Activating the account (and only changing status)
+          (
+            request.resource.data.status == 'active' &&
+            resource.data.status == 'pending' &&
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+          )
+        ));
                       
       allow delete: if isAdmin();
     }
