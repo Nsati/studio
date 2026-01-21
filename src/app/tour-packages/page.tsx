@@ -3,8 +3,9 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { dummyTourPackages } from '@/lib/dummy-data';
-import { Calendar, IndianRupee, Mountain, Tag } from 'lucide-react';
+import { Calendar, IndianRupee, Mountain, MapPin } from 'lucide-react';
 import Link from 'next/link';
+import { Badge } from '@/components/ui/badge';
 
 function TourPackageCard({ tourPackage }: { tourPackage: (typeof dummyTourPackages)[0] }) {
   const image = PlaceHolderImages.find((img) => img.id === tourPackage.image);
@@ -29,6 +30,17 @@ function TourPackageCard({ tourPackage }: { tourPackage: (typeof dummyTourPackag
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-grow">
+        <div className="mb-4">
+            <p className="text-sm font-semibold flex items-center gap-2 mb-2">
+                <MapPin className="h-4 w-4 text-primary" />
+                Destinations Covered
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+                {tourPackage.destinations.map((dest) => (
+                    <Badge key={dest} variant="outline" className="font-normal">{dest}</Badge>
+                ))}
+            </div>
+        </div>
         <p className="text-sm text-muted-foreground">{tourPackage.description}</p>
       </CardContent>
       <CardFooter className="flex items-center justify-between bg-muted/50 p-4">

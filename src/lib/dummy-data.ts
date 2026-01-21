@@ -91,51 +91,57 @@ export const dummyRooms: Room[] = [
 
 export const dummyTourPackages: TourPackage[] = [
   {
-    id: 'char-dham-yatra',
-    title: 'Char Dham Yatra by Helicopter',
-    duration: '6 Days / 5 Nights',
-    price: 175000,
-    image: 'tour-char-dham',
-    description: 'Embark on a divine journey to the four sacred shrines - Yamunotri, Gangotri, Kedarnath, and Badrinath, with our exclusive helicopter service.'
-  },
-  {
-    id: 'nainital-adventure',
-    title: 'Nainital & Jim Corbett Adventure',
-    duration: '4 Days / 3 Nights',
-    price: 15000,
-    image: 'tour-nainital-corbett',
-    description: 'Experience the thrill of the wild at Jim Corbett National Park and the serene beauty of the lake city, Nainital.'
-  },
-  {
-    id: 'rishikesh-rafting',
-    title: 'Rishikesh Rafting & Camping',
-    duration: '2 Days / 1 Night',
-    price: 3500,
-    image: 'tour-rishikesh-rafting',
-    description: 'Challenge the thrilling rapids of the Ganges and camp under the stars in the yoga capital of the world, Rishikesh.'
-  },
-  {
-    id: 'auli-skiing-wonder',
-    title: 'Auli Skiing Wonderland',
-    duration: '5 Days / 4 Nights',
-    price: 25000,
-    image: 'tour-auli-skiing',
-    description: 'Glide down the powdery slopes of Auli, one of India’s premier skiing destinations, with breathtaking views of the Himalayas.'
-  },
-  {
-    id: 'valley-of-flowers-trek',
-    title: 'Valley of Flowers Trek',
-    duration: '7 Days / 6 Nights',
+    id: 'amazing-uttarakhand',
+    title: 'Amazing Uttarakhand Tour',
+    duration: '6 Nights / 7 Days',
+    destinations: ['Haridwar', 'Mussoorie', 'Rishikesh'],
     price: 18000,
-    image: 'tour-valley-of-flowers',
-    description: 'A vibrant and splendid national park reposing in West Himalayas. Explore this enchanting valley carpeted with alpine flowers.'
+    image: 'tour-amazing-uttarakhand',
+    description: 'Explore the queen of hills Mussoorie, spiritual city Rishikesh and holy city Haridwar in this amazing tour.'
   },
   {
-    id: 'mussoorie-magic',
-    title: 'Mussoorie - The Queen of Hills',
-    duration: '3 Days / 2 Nights',
-    price: 8000,
-    image: 'tour-mussoorie',
-    description: 'Discover the colonial charm of Mussoorie, with its lush green hills, varied flora and fauna, and majestic views of the Shivalik ranges.'
+    id: 'char-dham-yatra',
+    title: 'Char Dham Yatra Tour Package',
+    duration: '9 Nights / 10 Days',
+    destinations: ['Haridwar', 'Yamunotri', 'Gangotri', 'Kedarnath', 'Badrinath'],
+    price: 30000,
+    image: 'tour-char-dham-yatra',
+    description: 'Embark on a spiritual journey to the four most sacred sites in Uttarakhand with our complete Char Dham Yatra package.'
+  },
+  {
+    id: 'do-dham-yatra',
+    title: 'Do Dham Yatra Tour Package',
+    duration: '7 Nights / 8 Days',
+    destinations: ['Haridwar', 'Kedarnath', 'Badrinath'],
+    price: 22000,
+    image: 'tour-do-dham-yatra',
+    description: 'A divine journey to the two prominent dhams, Kedarnath and Badrinath, for a truly spiritual experience.'
+  },
+  {
+    id: 'uttarakhand-honeymoon',
+    title: 'Uttarakhand Honeymoon Tour Package',
+    duration: '4 Nights / 5 Days',
+    destinations: ['Haridwar', 'Mussoorie', 'Rishikesh'],
+    price: 16000,
+    image: 'tour-honeymoon',
+    description: 'Celebrate your love amidst the romantic landscapes of Mussoorie and Rishikesh with our special honeymoon package.'
+  },
+  {
+    id: 'mussoorie-dhanaulti',
+    title: 'Mussoorie Dhanaulti Tour Package',
+    duration: '2 Nights / 3 Days',
+    destinations: ['Haridwar', 'Mussoorie', 'Dhanaulti'],
+    price: 7500,
+    image: 'tour-mussoorie-dhanaulti',
+    description: 'A short and refreshing trip to the picturesque hill stations of Mussoorie and Dhanaulti.'
+  },
+  {
+    id: 'nainital-corbett-tour',
+    title: 'Nainital Corbett Tour Package',
+    duration: '4 Nights / 5 Days',
+    destinations: ['Haridwar', 'Nainital', 'Jim Corbett'],
+    price: 14500,
+    image: 'tour-nainital-corbett-2',
+    description: 'Experience the best of both worlds - the serene lakes of Nainital and the thrilling wildlife of Jim Corbett National Park.'
   }
 ];

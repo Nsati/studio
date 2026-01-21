@@ -201,7 +201,7 @@
     {
       "id": "hotel-17-2",
       "description": "Snowy mountain view from Clifftop Club, Auli.",
-      "imageUrl": "https://images.unsplash.com/photo-1710333493101-1e4237982ba7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxzbm93eSUyMG1vdW50YWlufGVufDB8fHx8MTc2NzE1Mzc5OXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1710333493101-1e4237982ba7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxzbm93eSUyMG1vdW50YWlufGVufDB8fHx8MTc2NzE1Mzc5OXww&ixlib-rb-4.1.0&q=80&w=1080",
       "imageHint": "snowy mountain"
     },
     {
@@ -231,13 +231,13 @@
     {
       "id": "hotel-21-1",
       "description": "The Riverview Retreat, Corbett.",
-      "imageUrl": "https://images.unsplash.com/photo-1674342589284-727140a8af5f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxyaXZlciUyMHJldHJlYXR8ZW58MHx8fHwxNzY3MTgxMjUyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1674342589284-727140a8af5f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxyaXZlciUyMHJldHJlYXR8ZW58MHx8fHwxNzY3MTgxMjUyfDA&ixlib-rb-4.1.0&q=80&w=1080",
       "imageHint": "river retreat"
     },
     {
       "id": "hotel-22-1",
       "description": "Namah Resort, Jim Corbett.",
-      "imageUrl": "https://images.unsplash.com/photo-1728436491560-b4bedb63b844?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxuYXR1cmUlMjByZXNvcnR8ZW58MHx8fHwxNzY3MTgxMjUyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1728436491560-b4bedb63b844?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxuYXR1cmUlMjByZXNvcnR8ZW58MHx8fHwxNzY3MTgxMjUyfDA&ixlib-rb-4.1.0&q=80&w=1080",
       "imageHint": "nature resort"
     },
     {
@@ -259,40 +259,40 @@
       "imageHint": "mountain road"
     },
     {
-      "id": "tour-char-dham",
+      "id": "tour-amazing-uttarakhand",
+      "description": "A group of friends enjoying a scenic viewpoint in the mountains of Uttarakhand.",
+      "imageUrl": "https://images.unsplash.com/photo-1588506041246-5a17a5b357f8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHx1dHRhcmFraGFuZCUyMHRyYXZlbHxlbnwwfHx8fDE3NjcxODEyNTJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "uttarakhand travel"
+    },
+    {
+      "id": "tour-char-dham-yatra",
       "description": "Kedarnath Temple covered in snow.",
       "imageUrl": "https://images.unsplash.com/photo-1698261372138-23405b822237?q=80&w=1964&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      "imageHint": "snowy temple"
+      "imageHint": "pilgrimage yatra"
     },
     {
-      "id": "tour-nainital-corbett",
-      "description": "A tiger in Jim Corbett National Park.",
-      "imageUrl": "https://images.unsplash.com/photo-1610471329129-a11c142e0a29?q=80&w=1964&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      "imageHint": "tiger wildlife"
+      "id": "tour-do-dham-yatra",
+      "description": "Badrinath Temple with mountains in the background.",
+      "imageUrl": "https://images.unsplash.com/photo-1628182289656-b6059a45b85a?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "imageHint": "badrinath temple"
     },
     {
-      "id": "tour-rishikesh-rafting",
-      "description": "People rafting in the Ganges river in Rishikesh.",
-      "imageUrl": "https://images.unsplash.com/photo-1628260274195-234d7a86f7b1?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      "imageHint": "river rafting"
+      "id": "tour-honeymoon",
+      "description": "A couple enjoying a romantic moment in the mountains.",
+      "imageUrl": "https://images.unsplash.com/photo-1542318383-4a7a81b22998?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "imageHint": "honeymoon couple"
     },
     {
-      "id": "tour-auli-skiing",
-      "description": "A skier on a snowy slope in Auli.",
-      "imageUrl": "https://images.unsplash.com/photo-1551524392-9a61031f0246?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      "imageHint": "skiing slope"
-    },
-    {
-      "id": "tour-valley-of-flowers",
-      "description": "A valley filled with colorful alpine flowers.",
-      "imageUrl": "https://images.unsplash.com/photo-1597818413284-4274936e3988?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      "imageHint": "flower valley"
-    },
-    {
-      "id": "tour-mussoorie",
+      "id": "tour-mussoorie-dhanaulti",
       "description": "A scenic view of the hills in Mussoorie.",
       "imageUrl": "https://images.unsplash.com/photo-1615966192539-f1731963b19a?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      "imageHint": "green hills"
+      "imageHint": "dhanaulti hills"
+    },
+    {
+      "id": "tour-nainital-corbett-2",
+      "description": "A serene view of Naini Lake in Nainital.",
+      "imageUrl": "https://images.unsplash.com/photo-1678620071844-8377e26f1944?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxsYWtlJTIwdG93bnxlbnwwfHx8fDE3NjcwNjUyODN8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "nainital lake"
     }
   ]
 }

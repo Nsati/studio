@@ -62,6 +62,7 @@ export interface TourPackage {
   id: string;
   title: string;
   duration: string;
+  destinations: string[];
   price: number;
   image: string;
   description: string;
