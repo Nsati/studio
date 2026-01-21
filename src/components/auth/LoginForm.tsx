@@ -5,7 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useAuth, useFirestore } from '@/firebase';
-import { doc, getDoc, setDoc } from 'firebase/firestore'; 
+import { doc, getDoc } from 'firebase/firestore'; 
+import type { UserProfile } from '@/lib/types';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -43,24 +44,34 @@ export function LoginForm() {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Check for user profile and create if it doesn't exist
+      // Check user profile for verification status
       const userDocRef = doc(firestore, 'users', user.uid);
       const userDocSnap = await getDoc(userDocRef);
 
       if (!userDocSnap.exists()) {
-        await setDoc(userDocRef, {
-          uid: user.uid,
-          email: user.email,
-          displayName: user.displayName || user.email?.split('@')[0] || 'New User',
-          role: 'user',
-        });
+        // This case should ideally not happen if signup is correct
+        throw new Error('User profile not found. Please sign up again.');
+      }
+      
+      const userProfile = userDocSnap.data() as UserProfile;
+
+      if (userProfile.status === 'pending') {
+        await auth.signOut(); // Log the user out
+        router.push(`/verify-otp?email=${encodeURIComponent(email)}`);
         toast({
-            title: 'Profile Created',
-            description: 'We created a basic profile for you to get started.'
+          variant: 'destructive',
+          title: 'Verification Required',
+          description: 'Please verify your email address with the OTP we sent you.',
         });
+        setIsLoading(false);
+        return;
+      }
+      
+      if (userProfile.status !== 'active') {
+          throw new Error('Your account is not active. Please contact support.');
       }
 
-      toast({ title: 'Login successful!', description: `Welcome back!` });
+      toast({ title: 'Login successful!', description: `Welcome back, ${userProfile.displayName}!` });
       const redirect = searchParams.get('redirect');
       router.push(redirect || '/my-bookings');
 
@@ -68,10 +79,9 @@ export function LoginForm() {
       if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
         setError('Invalid email or password.');
       } else {
-        setError('An error occurred during login.');
+        setError(error.message || 'An error occurred during login.');
         console.error(error);
       }
-    } finally {
       setIsLoading(false);
     }
   };

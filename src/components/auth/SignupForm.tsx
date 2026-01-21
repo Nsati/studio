@@ -4,8 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
-import { useAuth, useFirestore } from '@/firebase';
+import { useAuth } from '@/firebase';
+import { sendOtpAction } from '@/app/auth/actions';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -23,7 +23,6 @@ import { Loader2 } from 'lucide-react';
 
 export function SignupForm() {
   const auth = useAuth();
-  const firestore = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
   const [name, setName] = useState('');
@@ -34,7 +33,7 @@ export function SignupForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth || !firestore) return;
+    if (!auth) return;
     if (password.length < 6) {
       setError('Password must be at least 6 characters long.');
       return;
@@ -50,29 +49,32 @@ export function SignupForm() {
       );
       const user = userCredential.user;
 
-      // Create user profile in Firestore
-      await setDoc(doc(firestore, 'users', user.uid), {
-        uid: user.uid,
-        displayName: name,
-        email: user.email,
-        role: 'user', // Default role
+      // Call server action to create profile and send OTP
+      const otpResult = await sendOtpAction({
+        userId: user.uid,
+        email: user.email!,
+        name: name,
       });
 
+      if (!otpResult.success) {
+        throw new Error(otpResult.error || 'Failed to send OTP.');
+      }
+      
       toast({
-        title: 'Account Created!',
-        description: 'Welcome! You are now logged in.',
+        title: 'One last step...',
+        description: 'We have sent a verification code to your email.',
       });
 
-      // Redirect to the my-bookings page as the user is now logged in.
-      router.push('/my-bookings');
+      // Redirect to the OTP verification page
+      router.push(`/verify-otp?email=${encodeURIComponent(email)}`);
+
     } catch (error: any) {
       if (error.code === 'auth/email-already-in-use') {
         setError('A user with this email already exists.');
       } else {
-        setError('An error occurred during signup.');
+        setError(error.message || 'An error occurred during signup.');
         console.error(error);
       }
-    } finally {
       setIsLoading(false);
     }
   };
@@ -126,7 +128,7 @@ export function SignupForm() {
             <Button
               type="submit"
               className="w-full"
-              disabled={isLoading || !auth || !firestore}
+              disabled={isLoading || !auth}
             >
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Sign Up

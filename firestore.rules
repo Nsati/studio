@@ -5,17 +5,32 @@ service cloud.firestore {
 
     // Helper function to check for admin role
     function isAdmin() {
-      // Check if the user is authenticated and has the 'admin' role in their user profile.
-      // The exists() check is crucial to prevent errors for users without a profile doc (e.g., anonymous users).
       return request.auth != null &&
              exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
 
-    // Users can create, read, and update their own profile. Admins have full access.
+    // Users can create their own profile with a 'pending' status.
+    // They can only update their displayName. Admins have full access.
     match /users/{userId} {
-      allow create, read, update: if request.auth.uid == userId;
-      allow read, write: if isAdmin();
+      allow create: if isOwner(userId) && 
+                      request.resource.data.role == 'user' &&
+                      request.resource.data.status == 'pending';
+
+      allow read: if isOwner(userId) || isAdmin();
+      
+      // Allow user to update their own displayName.
+      // Admins can update any field.
+      // The verifyOtpAction will update the status, which needs a rule.
+      allow update: if (isOwner(userId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName'])) ||
+                      (isOwner(userId) && request.resource.data.status == 'active' && resource.data.status == 'pending') ||
+                      isAdmin();
+                      
+      allow delete: if isAdmin();
     }
 
     // Cities are publicly readable. Only admins can modify them.
@@ -46,19 +61,25 @@ service cloud.firestore {
     // Admins can read any booking for management purposes.
     match /users/{userId}/bookings/{bookingId} {
       // User can create their own booking.
-      allow create: if request.auth.uid == userId && request.resource.data.userId == request.auth.uid;
+      allow create: if isOwner(userId) && request.resource.data.userId == request.auth.uid;
       
       // User can read (get/list) their own bookings. Admins can read any.
-      allow read: if request.auth.uid == userId || isAdmin();
+      allow read: if isOwner(userId) || isAdmin();
       
       // User can update/delete their own bookings. The resource check adds extra security.
-      allow update, delete: if request.auth.uid == userId && resource.data.userId == request.auth.uid;
+      allow update, delete: if isOwner(userId) && resource.data.userId == request.auth.uid;
     }
     
     // Collection group query for admin booking list.
     // Use `list` to cover the collection group query.
     match /{path=**}/bookings/{bookingId} {
         allow list: if isAdmin();
+    }
+    
+    // OTP verification documents
+    match /otp_verification/{userId} {
+      allow read, create, delete: if isOwner(userId);
+      allow update: if false; // OTPs are created and deleted, not updated.
     }
   }
 }
