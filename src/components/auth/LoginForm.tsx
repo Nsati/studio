@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, sendEmailVerification, signOut } from 'firebase/auth';
 import { useAuth, useFirestore } from '@/firebase';
-import { doc, getDoc, setDoc } from 'firebase/firestore'; // <-- Import firestore functions
+import { doc, getDoc, setDoc } from 'firebase/firestore'; 
 
 import { Button } from '@/components/ui/button';
 import {
@@ -32,6 +32,24 @@ export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const handleResendVerification = async () => {
+    if (!auth || !email) return;
+    try {
+        // We need to sign in the user temporarily to get their user object
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        if (userCredential.user && !userCredential.user.emailVerified) {
+            await sendEmailVerification(userCredential.user);
+            toast({
+                title: 'Verification Link Sent',
+                description: 'A new verification link has been sent to your email address.',
+            });
+        }
+        await signOut(auth); // Sign out immediately after
+    } catch (e) {
+        setError("Could not resend verification email. Please check your credentials.");
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!auth || !firestore) return;
@@ -43,18 +61,32 @@ export function LoginForm() {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
+      // Check if email is verified
+      if (!user.emailVerified) {
+        setError('Please verify your email before logging in.');
+        // Sign out the user
+        await signOut(auth);
+        
+        toast({
+            variant: 'destructive',
+            title: 'Email Not Verified',
+            description: 'Please check your inbox for the verification link.',
+        });
+        
+        setIsLoading(false);
+        return;
+      }
+
       // Check for user profile and create if it doesn't exist
       const userDocRef = doc(firestore, 'users', user.uid);
       const userDocSnap = await getDoc(userDocRef);
 
       if (!userDocSnap.exists()) {
-        // Document is missing, let's create it.
         await setDoc(userDocRef, {
           uid: user.uid,
           email: user.email,
-          // A sensible default for displayName, since it's required by the schema
           displayName: user.displayName || user.email?.split('@')[0] || 'New User',
-          role: 'user', // Always default to 'user' for security
+          role: 'user',
         });
         toast({
             title: 'Profile Created',
@@ -66,9 +98,14 @@ export function LoginForm() {
       toast({ title: 'Login successful!', description: `Welcome back!` });
       const redirect = searchParams.get('redirect');
       router.push(redirect || '/my-bookings');
+
     } catch (error: any) {
-      setError('Invalid email or password.');
-      console.error(error);
+      if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+        setError('Invalid email or password.');
+      } else {
+        setError('An error occurred during login.');
+        console.error(error);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -105,6 +142,11 @@ export function LoginForm() {
               />
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
+            {error === 'Please verify your email before logging in.' && (
+                 <Button variant="link" type="button" onClick={handleResendVerification} className="p-0 h-auto">
+                    Resend verification email
+                </Button>
+            )}
             <Button
               type="submit"
               className="w-full"

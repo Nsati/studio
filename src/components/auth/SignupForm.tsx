@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { useAuth, useFirestore } from '@/firebase';
 
@@ -50,23 +50,22 @@ export function SignupForm() {
       );
       const user = userCredential.user;
 
-      // Default all new users to the 'user' role for security.
-      // Admins should be designated manually in the Firestore console.
-      const role = 'user';
+      // Send verification email
+      await sendEmailVerification(user);
 
       // Create user profile in Firestore
       await setDoc(doc(firestore, 'users', user.uid), {
         uid: user.uid,
         displayName: name,
         email: user.email,
-        role: role,
+        role: 'user', // Default role
       });
 
       toast({
-        title: 'Account created!',
-        description: "You've been successfully signed up.",
+        title: 'Account Created!',
+        description: "We've sent a verification link to your email.",
       });
-      router.push('/my-bookings');
+      router.push('/verify-email');
     } catch (error: any) {
       if (error.code === 'auth/email-already-in-use') {
         setError('A user with this email already exists.');
