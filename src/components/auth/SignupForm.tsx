@@ -6,6 +6,9 @@ import Link from 'next/link';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { useAuth, useFirestore } from '@/firebase';
 import { doc, writeBatch, setDoc } from 'firebase/firestore';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -16,8 +19,15 @@ import {
   CardDescription,
   CardFooter,
 } from '@/components/ui/card';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { OtpVerification } from '@/lib/types';
@@ -35,74 +45,91 @@ export async function handleOtpSend(
 
   // First, save the OTP to Firestore
   await setDoc(otpRef, otpData);
+  
   // Then, call the server action to send the SMS
-  await sendOtpSmsAction(phoneNumber, otp);
+  const result = await sendOtpSmsAction(phoneNumber, otp);
+
+  // Throw an error from the server action if it fails, so we can catch it.
+  if (!result.success) {
+    throw new Error('Failed to send OTP SMS. Please check server logs.');
+  }
 }
+
+const formSchema = z.object({
+  name: z
+    .string()
+    .min(2, { message: 'Name must be at least 2 characters.' }),
+  email: z.string().email({ message: 'Please enter a valid email address.' }),
+  phoneNumber: z
+    .string()
+    .regex(/^\d{10}$/, { message: 'Please enter a valid 10-digit mobile number.' }),
+  password: z
+    .string()
+    .min(8, { message: 'Password must be at least 8 characters.' })
+    .regex(/[a-z]/, { message: 'Password needs a lowercase letter.' })
+    .regex(/[A-Z]/, { message: 'Password needs an uppercase letter.' })
+    .regex(/[0-9]/, { message: 'Password needs a number.' })
+    .regex(/[^a-zA-Z0-9]/, { message: 'Password needs a special character.' }),
+});
 
 export function SignupForm() {
   const auth = useAuth();
   const firestore = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [serverError, setServerError] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: '',
+      email: '',
+      phoneNumber: '',
+      password: '',
+    },
+  });
+
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (!auth || !firestore) return;
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters long.');
-      return;
-    }
-    if (!/^\d{10}$/.test(phoneNumber)) {
-      setError('Please enter a valid 10-digit mobile number.');
-      return;
-    }
+
     setIsLoading(true);
-    setError('');
+    setServerError('');
 
     try {
       const userCredential = await createUserWithEmailAndPassword(
         auth,
-        email,
-        password
+        values.email,
+        values.password
       );
       const user = userCredential.user;
 
       const batch = writeBatch(firestore);
 
-      // 1. Create user profile in 'users' collection
       const userRef = doc(firestore, 'users', user.uid);
       batch.set(userRef, {
         uid: user.uid,
-        displayName: name,
+        displayName: values.name,
         email: user.email,
-        phoneNumber: phoneNumber,
+        phoneNumber: values.phoneNumber,
         role: 'user',
         status: 'pending',
       });
 
-      // Commit the user profile write
       await batch.commit();
-
-      // 2. Create, store, and send OTP
-      await handleOtpSend(firestore, user.uid, phoneNumber);
+      await handleOtpSend(firestore, user.uid, values.phoneNumber);
 
       toast({
         title: 'Account Created!',
         description: "We've sent an OTP to your mobile. Please verify to continue.",
       });
 
-      router.push(`/verify-otp?phone=${encodeURIComponent(phoneNumber)}`);
+      router.push(`/verify-otp?phone=${encodeURIComponent(values.phoneNumber)}`);
     } catch (error: any) {
       if (error.code === 'auth/email-already-in-use') {
-        setError('A user with this email already exists.');
+        form.setError('email', { message: 'A user with this email already exists.' });
       } else {
-        setError(error.message || 'An error occurred during signup.');
+        setServerError(error.message || 'An error occurred during signup.');
         console.error(error);
       }
       setIsLoading(false);
@@ -121,60 +148,76 @@ export function SignupForm() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input
-                id="name"
-                type="text"
-                placeholder="Ankit Sharma"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Full Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ankit Sharma" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="phoneNumber">Mobile Number</Label>
-              <Input
-                id="phoneNumber"
-                type="tel"
-                placeholder="9876543210"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                required
+              <FormField
+                control={form.control}
+                name="phoneNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Mobile Number</FormLabel>
+                    <FormControl>
+                      <Input placeholder="9876543210" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="ankit.sharma@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input type="email" placeholder="ankit.sharma@example.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" {...field} />
+                    </FormControl>
+                     <FormDescription className="text-xs">
+                        Must be 8+ characters with uppercase, lowercase, number, and special characters.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isLoading || !auth}
-            >
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Sign Up
-            </Button>
-          </form>
+              
+              {serverError && <p className="text-sm text-destructive">{serverError}</p>}
+              
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isLoading || !auth}
+              >
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Sign Up
+              </Button>
+            </form>
+          </Form>
         </CardContent>
         <CardFooter className="flex justify-center">
           <p className="text-sm text-muted-foreground">
