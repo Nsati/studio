@@ -251,6 +251,48 @@
       "description": "Dining area at Namah Resort.",
       "imageUrl": "https://images.unsplash.com/photo-1703565426315-4209c2e88eea?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxob3RlbCUyMHJlc3RhdXJhbnR8ZW58MHx8fHwxNzY3MTgxMjUyfDA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "hotel restaurant"
+    },
+    {
+      "id": "tour-packages-hero",
+      "description": "A winding road through the mountains of Uttarakhand.",
+      "imageUrl": "https://images.unsplash.com/photo-1542382257-80ded5e78a9c?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "imageHint": "mountain road"
+    },
+    {
+      "id": "tour-char-dham",
+      "description": "Kedarnath Temple covered in snow.",
+      "imageUrl": "https://images.unsplash.com/photo-1698261372138-23405b822237?q=80&w=1964&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "imageHint": "snowy temple"
+    },
+    {
+      "id": "tour-nainital-corbett",
+      "description": "A tiger in Jim Corbett National Park.",
+      "imageUrl": "https://images.unsplash.com/photo-1610471329129-a11c142e0a29?q=80&w=1964&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "imageHint": "tiger wildlife"
+    },
+    {
+      "id": "tour-rishikesh-rafting",
+      "description": "People rafting in the Ganges river in Rishikesh.",
+      "imageUrl": "https://images.unsplash.com/photo-1628260274195-234d7a86f7b1?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "imageHint": "river rafting"
+    },
+    {
+      "id": "tour-auli-skiing",
+      "description": "A skier on a snowy slope in Auli.",
+      "imageUrl": "https://images.unsplash.com/photo-1551524392-9a61031f0246?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "imageHint": "skiing slope"
+    },
+    {
+      "id": "tour-valley-of-flowers",
+      "description": "A valley filled with colorful alpine flowers.",
+      "imageUrl": "https://images.unsplash.com/photo-1597818413284-4274936e3988?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "imageHint": "flower valley"
+    },
+    {
+      "id": "tour-mussoorie",
+      "description": "A scenic view of the hills in Mussoorie.",
+      "imageUrl": "https://images.unsplash.com/photo-1615966192539-f1731963b19a?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "imageHint": "green hills"
     }
   ]
 }

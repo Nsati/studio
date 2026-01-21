@@ -23,7 +23,8 @@ import { Skeleton } from '../ui/skeleton';
 
 const navLinks = [
   { href: '/', label: 'Home' },
-  { href: '/search', label: 'Explore Hotels' },
+  { href: '/search', label: 'Hotels' },
+  { href: '/tour-packages', label: 'Tour Packages' },
   { href: '/my-bookings', label: 'My Bookings' },
 ];
 

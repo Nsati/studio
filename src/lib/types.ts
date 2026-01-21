@@ -58,6 +58,16 @@ export interface Booking {
   razorpayPaymentId?: string;
 }
 
+export interface TourPackage {
+  id: string;
+  title: string;
+  duration: string;
+  price: number;
+  image: string;
+  description: string;
+}
+
+
 // This mock type is no longer used for primary auth state.
 export type MockUser = {
     uid: string;
