@@ -14,31 +14,22 @@ service cloud.firestore {
       return request.auth.uid == userId;
     }
 
-    // Users can create their own profile with a 'pending' status.
-    // They can only update their displayName. Admins have full access.
     match /users/{userId} {
+      // Users can create their own profile with a 'user' role and 'pending' status.
+      // This prevents them from creating themselves as an admin.
       allow create: if isOwner(userId) && 
                       request.resource.data.role == 'user' &&
                       request.resource.data.status == 'pending';
 
+      // Users can read their own profile. Admins can read any profile.
       allow read: if isOwner(userId) || isAdmin();
       
-      // Allow user to update their own displayName.
-      // Allow user to update their own status from 'pending' to 'active' after OTP verification.
-      // Admins can update any field.
-      allow update: if 
-        isAdmin() ||
-        (isOwner(userId) && (
-          // Case 1: Updating only the displayName
-          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName']) ||
-          // Case 2: Activating the account (and only changing status)
-          (
-            request.resource.data.status == 'active' &&
-            resource.data.status == 'pending' &&
-            request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
-          )
-        ));
+      // A user can update their own profile, but they CANNOT change their role.
+      // This allows them to activate their account (pending -> active) or change their name,
+      // while preventing privilege escalation. Admins can update anything.
+      allow update: if isAdmin() || (isOwner(userId) && request.resource.data.role == resource.data.role);
                       
+      // Only admins can delete user profiles.
       allow delete: if isAdmin();
     }
 
@@ -85,10 +76,11 @@ service cloud.firestore {
         allow list: if isAdmin();
     }
     
-    // OTP verification documents
+    // OTP verification documents can only be accessed by their owner.
     match /otp_verification/{userId} {
       allow read, create, delete: if isOwner(userId);
-      allow update: if false; // OTPs are created and deleted, not updated.
+      // OTPs are single-use and should not be updated.
+      allow update: if false;
     }
   }
 }
