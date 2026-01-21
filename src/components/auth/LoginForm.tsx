@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { useAuth, useFirestore } from '@/firebase';
+import { useAuth, useFirestore, useUser } from '@/firebase';
 import { doc, getDoc } from 'firebase/firestore'; 
 import type { UserProfile } from '@/lib/types';
 
@@ -44,16 +44,33 @@ export function LoginForm() {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Check user profile exists
+      // Check user profile for active status
       const userDocRef = doc(firestore, 'users', user.uid);
       const userDocSnap = await getDoc(userDocRef);
 
       if (!userDocSnap.exists()) {
-        // This case should ideally not happen if signup is correct
         throw new Error('User profile not found. Please contact support.');
       }
       
       const userProfile = userDocSnap.data() as UserProfile;
+
+      if (userProfile.status !== 'active') {
+        // Log user out and show error if not active
+        await auth.signOut();
+        setError('Your account is not active.');
+        toast({
+          variant: 'destructive',
+          title: 'Account Pending',
+          description: 'Please verify your OTP to activate your account.',
+          action: (
+            <Button variant="secondary" size="sm" onClick={() => router.push(`/verify-otp?email=${encodeURIComponent(email)}`)}>
+              Verify OTP
+            </Button>
+          )
+        });
+        setIsLoading(false);
+        return;
+      }
 
       toast({ title: 'Login successful!', description: `Welcome back, ${userProfile.displayName}!` });
       const redirect = searchParams.get('redirect');

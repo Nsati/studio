@@ -29,6 +29,13 @@ export interface UserProfile {
   displayName: string;
   email: string;
   role: 'user' | 'admin';
+  status: 'pending' | 'active';
+}
+
+export interface OtpVerification {
+  id?: string; // Corresponds to userId
+  otp: string;
+  expiresAt: Date;
 }
 
 
