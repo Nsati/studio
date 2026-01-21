@@ -1,12 +1,12 @@
 'use client';
 
 import { Suspense } from 'react';
-import { BookingForm } from '@/components/booking/BookingForm';
-import Loading from './loading';
+import { BookingForm } from './BookingForm';
+import { BookingFormSkeleton } from './BookingFormSkeleton';
 
 export default function BookingPage() {
   return (
-    <Suspense fallback={<Loading />}>
+    <Suspense fallback={<BookingFormSkeleton />}>
       <BookingForm />
     </Suspense>
   );

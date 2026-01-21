@@ -5,11 +5,12 @@ import { useSearchParams, useRouter, notFound } from 'next/navigation';
 import Image from 'next/image';
 import { differenceInDays, format, parse } from 'date-fns';
 import { createRazorpayOrder, verifyRazorpayPayment } from '@/app/booking/actions';
+import { signInAnonymously } from 'firebase/auth';
 
 
 import type { Hotel, Room, Booking } from '@/lib/types';
-import { useUser, useFirestore, useDoc, useCollection } from '@/firebase';
-import { doc, setDoc, collection, writeBatch, increment } from 'firebase/firestore';
+import { useUser, useFirestore, useDoc, useCollection, useAuth } from '@/firebase';
+import { doc, runTransaction, collection, increment } from 'firebase/firestore';
 
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -17,9 +18,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2, Calendar, Users, BedDouble, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { dummyHotels, dummyRooms } from '@/lib/dummy-data';
+import { BookingFormSkeleton } from './BookingFormSkeleton';
 
 declare global {
   interface Window {
@@ -31,6 +34,7 @@ export function BookingForm() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const { user, userProfile } = useUser();
+    const auth = useAuth(); // For guest checkout
     const { toast } = useToast();
     const firestore = useFirestore();
 
@@ -70,6 +74,8 @@ export function BookingForm() {
 
     const [customerDetails, setCustomerDetails] = useState({ name: '', email: '' });
     const [isBooking, setIsBooking] = useState(false);
+    const [termsAccepted, setTermsAccepted] = useState(false);
+
 
     useEffect(() => {
         if (userProfile) {
@@ -80,11 +86,35 @@ export function BookingForm() {
     const isLoading = isHotelLoading || areRoomsLoading;
 
     if (isLoading) {
-        return <div>Loading...</div> // This will be handled by Suspense fallback
+        return <BookingFormSkeleton />; // Use the skeleton component
     }
 
-    if (!hotelId || !roomId || !checkInStr || !checkOutStr || !hotel || !room) {
+    if (!hotelId || !roomId || !checkInStr || !checkOutStr) {
         return notFound();
+    }
+    
+    if (!hotel || !room) {
+        return (
+            <div className="container mx-auto max-w-lg py-12 px-4 md:px-6 text-center">
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-destructive">Booking Details Not Found</CardTitle>
+                        <CardDescription>
+                            We couldn't find the hotel or room you're trying to book. The link
+                            may be outdated or incorrect.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-sm text-muted-foreground mb-4">
+                            Please go back and try selecting the hotel and room again.
+                        </p>
+                        <Button asChild>
+                            <Link href="/search">Explore Hotels</Link>
+                        </Button>
+                    </CardContent>
+                </Card>
+            </div>
+        );
     }
 
     const checkIn = parse(checkInStr, 'yyyy-MM-dd', new Date());
@@ -99,6 +129,17 @@ export function BookingForm() {
     const totalPrice = room.price * nights;
 
     const handlePayment = async () => {
+        if (!process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID) {
+            toast({
+                variant: 'destructive',
+                title: 'Payment Gateway Not Configured',
+                description: 'The payment gateway is not set up correctly. Please contact support.',
+            });
+            console.error("CRITICAL: NEXT_PUBLIC_RAZORPAY_KEY_ID environment variable is not set.");
+            setIsBooking(false);
+            return;
+        }
+
         if (!customerDetails.name || !customerDetails.email) {
             toast({
                 variant: 'destructive',
@@ -108,17 +149,40 @@ export function BookingForm() {
             return;
         }
 
-        if (!user || !firestore) {
-            toast({
-                variant: 'destructive',
-                title: 'Not Logged In',
-                description: 'Please log in to make a booking.',
-            });
-            router.push(`/login?redirect=/booking?${searchParams.toString()}`);
+        if (!firestore) {
+            toast({ variant: 'destructive', title: 'Database not available' });
             return;
         }
         
         setIsBooking(true);
+
+        let userIdForBooking = user?.uid;
+
+        if (!userIdForBooking) {
+            if (!auth) {
+                 toast({ variant: 'destructive', title: 'Authentication service not available' });
+                 setIsBooking(false);
+                 return;
+            }
+            try {
+                const userCredential = await signInAnonymously(auth);
+                userIdForBooking = userCredential.user.uid;
+                toast({
+                    title: 'Booking as Guest',
+                    description: 'Your booking will be saved temporarily. Create an account to view it anytime.',
+                });
+            } catch (error) {
+                console.error("Anonymous sign-in failed:", error);
+                toast({
+                    variant: 'destructive',
+                    title: 'Guest Checkout Failed',
+                    description: 'Could not proceed with the booking. Please try again.',
+                });
+                setIsBooking(false);
+                return;
+            }
+        }
+
 
         const orderResponse = await createRazorpayOrder(totalPrice);
 
@@ -147,49 +211,56 @@ export function BookingForm() {
                     razorpay_payment_id: response.razorpay_payment_id,
                     razorpay_signature: response.razorpay_signature,
                 });
-
+                
                 if (verificationResult.success) {
                     const newBookingId = `booking_${Date.now()}`;
-                    
-                    const bookingData: Booking = {
-                        id: newBookingId,
-                        hotelId: hotel.id,
-                        userId: user.uid,
-                        roomId: room.id,
-                        roomType: room.type,
-                        checkIn: checkIn,
-                        checkOut: checkOut,
-                        guests: parseInt(guests),
-                        totalPrice: totalPrice,
-                        customerName: customerDetails.name,
-                        customerEmail: customerDetails.email,
-                        status: 'CONFIRMED',
-                        createdAt: new Date(),
-                        razorpayPaymentId: response.razorpay_payment_id,
-                    };
-
                     try {
-                        const batch = writeBatch(firestore);
-                        const bookingRef = doc(firestore, 'users', user.uid, 'bookings', newBookingId);
-                        batch.set(bookingRef, bookingData);
-
+                      await runTransaction(firestore, async (transaction) => {
                         const roomRef = doc(firestore, 'hotels', hotel.id, 'rooms', room.id);
-                        batch.update(roomRef, { availableRooms: increment(-1) });
+                        const roomDoc = await transaction.get(roomRef);
+
+                        if (!roomDoc.exists() || (roomDoc.data().availableRooms || 0) <= 0) {
+                            throw new Error("This room just got sold out!");
+                        }
                         
-                        await batch.commit();
+                        transaction.update(roomRef, { availableRooms: increment(-1) });
 
-                        toast({
-                            title: "Booking Confirmed!",
-                            description: "Your payment was successful. You'll be redirected shortly."
-                        });
-                        router.push(`/booking/success/${newBookingId}`);
+                        const bookingRef = doc(firestore, 'users', userIdForBooking!, 'bookings', newBookingId);
+                        
+                        const bookingData: Booking = {
+                            id: newBookingId,
+                            hotelId: hotel.id,
+                            userId: userIdForBooking!,
+                            roomId: room.id,
+                            roomType: room.type,
+                            checkIn: checkIn,
+                            checkOut: checkOut,
+                            guests: parseInt(guests),
+                            totalPrice: totalPrice,
+                            customerName: customerDetails.name,
+                            customerEmail: customerDetails.email,
+                            status: 'CONFIRMED',
+                            createdAt: new Date(),
+                            razorpayPaymentId: response.razorpay_payment_id,
+                        };
+                        transaction.set(bookingRef, bookingData);
+                      });
+                      
+                      // If transaction completes successfully, we get here.
+                      toast({
+                        title: "Booking Confirmed!",
+                        description: "Your payment was successful. You'll be redirected shortly."
+                      });
+                      router.push(`/booking/success/${newBookingId}`);
 
-                    } catch (e) {
+                    } catch (e: any) {
                          console.error("Error writing booking to firestore: ", e);
                          toast({
                             variant: "destructive",
-                            title: "Booking Error",
-                            description: "Your payment was successful, but we couldn't save your booking. Please contact support.",
+                            title: "Booking Failed",
+                            description: e.message === 'This room just got sold out!'
+                                ? e.message
+                                : "Your payment was successful, but we couldn't save your booking. Please contact support.",
                         });
                         setIsBooking(false);
                     }
@@ -208,7 +279,7 @@ export function BookingForm() {
                 email: customerDetails.email,
             },
             theme: {
-                color: "#388E3C",
+                color: "#0b57d0", // MMT blue
             },
             modal: {
                 ondismiss: () => {
@@ -237,22 +308,22 @@ export function BookingForm() {
     };
 
     return (
-        <div className="container mx-auto max-w-4xl py-12 px-4 md:px-6">
+        <div className="container mx-auto max-w-4xl py-8 md:py-12 px-4 md:px-6">
             <Link href={`/hotels/${hotel.id}`} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary mb-8">
                 <ArrowLeft className="h-4 w-4" />
                 Back to Hotel
             </Link>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
                 <div className="space-y-6">
-                    <h1 className="font-headline text-3xl font-bold">Review Your Booking</h1>
+                    <h1 className="font-headline text-2xl font-bold md:text-3xl">Review Your Booking</h1>
                     <Card>
                         <CardHeader>
-                            <CardTitle className="font-headline text-2xl">{hotel.name}</CardTitle>
+                            <CardTitle className="font-headline">{hotel.name}</CardTitle>
                             <CardDescription>{hotel.city}</CardDescription>
                         </CardHeader>
                         <CardContent>
                             {hotelImage && (
-                                <div className="relative h-48 w-full overflow-hidden rounded-lg mb-4">
+                                <div className="relative w-full aspect-video overflow-hidden rounded-lg mb-4">
                                     <Image src={hotelImage.imageUrl} alt={hotel.name} data-ai-hint={hotelImage.imageHint} fill className="object-cover" />
                                 </div>
                             )}
@@ -275,7 +346,7 @@ export function BookingForm() {
                 </div>
 
                 <div className="space-y-6">
-                    <h2 className="font-headline text-3xl font-bold">Confirm & Book</h2>
+                    <h2 className="font-headline text-2xl font-bold md:text-3xl">Confirm & Book</h2>
                     <Card>
                         <CardHeader>
                             <CardTitle>Guest Details</CardTitle>
@@ -312,7 +383,7 @@ export function BookingForm() {
                                 <span>{totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}</span>
                             </div>
                             <div className="flex justify-between text-muted-foreground text-sm">
-                                <span>Taxes & Fees</span>
+                                <span>Taxes &amp; Fees</span>
                                 <span>Included</span>
                             </div>
                             <div className="border-t pt-2 mt-2 flex justify-between font-bold text-lg">
@@ -321,7 +392,21 @@ export function BookingForm() {
                             </div>
                         </CardContent>
                     </Card>
-                    <Button onClick={handlePayment} size="lg" className="w-full text-lg" disabled={isBooking}>
+
+                     <div className="items-top flex space-x-3">
+                        <Checkbox id="terms" checked={termsAccepted} onCheckedChange={(checked) => setTermsAccepted(checked as boolean)} className="mt-0.5" />
+                        <div className="grid gap-1.5 leading-none">
+                            <label
+                            htmlFor="terms"
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                            >
+                            I understand and agree to the rules of this hotel and Uttarakhand Getaways' <Link href="/terms" target="_blank" className="text-primary font-semibold hover:underline">Terms of Use</Link> &amp; <Link href="/privacy" target="_blank" className="text-primary font-semibold hover:underline">Privacy Policy</Link>.
+                            </label>
+                        </div>
+                    </div>
+
+
+                    <Button onClick={handlePayment} size="lg" className="w-full text-lg h-14 bg-accent text-accent-foreground hover:bg-accent/90 disabled:bg-accent/50" disabled={isBooking || !termsAccepted}>
                         {isBooking && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
                         {isBooking ? 'Processing...' : `Pay ${totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })} & Book`}
                     </Button>
