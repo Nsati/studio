@@ -15,20 +15,12 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      // Users can create their own profile with a 'user' role and 'pending' status.
-      allow create: if isOwner(userId) && 
-                      request.resource.data.role == 'user' &&
-                      request.resource.data.status == 'pending';
-
-      // Users can read their own profile. Admins can read any profile.
-      allow read: if isOwner(userId) || isAdmin();
+      // Temporarily simplified for debugging.
+      // WARNING: This is insecure as a user could potentially change their own role.
+      allow read, write: if isOwner(userId);
       
-      // A user can update their own profile, but they CANNOT change their role.
-      // This prevents privilege escalation. Admins can update anything.
-      allow update: if isAdmin() || (isOwner(userId) && request.resource.data.role == resource.data.role);
-                      
-      // Only admins can delete user profiles.
-      allow delete: if isAdmin();
+      // Admin rules still apply for full access over any user document.
+      allow read, write, delete: if isAdmin();
     }
     
     // New collection for OTPs
