@@ -45,7 +45,7 @@ export async function sendOtpSmsAction(phoneNumber: string, otp: string) {
       return { success: true };
     } else {
       const errorMessage =
-        response.messages[0]['error-text'] || 'Unknown Vonage error';
+        (response.messages[0] as any).errorText || 'Unknown Vonage error';
       console.error(`Error sending SMS via Vonage: ${errorMessage}`);
       throw new Error(`Failed to send SMS: ${errorMessage}`);
     }
