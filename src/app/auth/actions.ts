@@ -8,17 +8,22 @@ export async function sendOtpSmsAction(phoneNumber: string, otp: string) {
   const apiKey = process.env.VONAGE_API_KEY;
   const apiSecret = process.env.VONAGE_API_SECRET;
 
-  if (!apiKey || !apiSecret) {
-    const errorMessage =
-      'Vonage API Key or Secret is not set in .env file. Cannot send SMS.';
-    console.error(errorMessage);
-    throw new Error(errorMessage);
+  // If secret is a placeholder, log to console instead of sending SMS
+  if (!apiSecret || apiSecret === 'YOUR_VONAGE_API_SECRET') {
+    console.log('---');
+    console.log('--- VONAGE API SECRET MISSING ---');
+    console.log('--- OTP will be logged to the console for development. ---');
+    console.log(`--- Mobile Number: ${phoneNumber}`);
+    console.log(`--- Your OTP is: ${otp}`);
+    console.log('--- To send real SMS, add your Vonage API Secret to the .env file.');
+    console.log('---');
+    // Return success so the signup flow can continue
+    return { success: true };
   }
 
-  // Add a check for placeholder values
-  if (apiSecret === 'YOUR_VONAGE_API_SECRET' || !apiSecret) {
-    const errorMessage =
-      'Vonage API Secret is a placeholder. Please update it in your .env file.';
+  // If we have a real secret, proceed with sending the SMS
+  if (!apiKey) {
+    const errorMessage = 'Vonage API Key is not set in .env file. Cannot send SMS.';
     console.error(errorMessage);
     throw new Error(errorMessage);
   }
