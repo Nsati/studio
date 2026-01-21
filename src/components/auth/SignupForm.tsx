@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { useAuth, useFirestore } from '@/firebase';
 import { doc, writeBatch, setDoc } from 'firebase/firestore';
-import crypto from 'crypto';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -100,7 +99,7 @@ export function SignupForm() {
 
       toast({
         title: 'Account Created!',
-        description: "We've sent a verification code to your email.",
+        description: "We've 'sent' a verification code to your email. Check your server console.",
       });
       
       router.push(`/verify-otp?email=${encodeURIComponent(user.email!)}`);
