@@ -58,7 +58,7 @@ export function SignupForm() {
       setError('Password must be at least 6 characters long.');
       return;
     }
-    if (!/^\\d{10}$/.test(phoneNumber)) {
+    if (!/^\d{10}$/.test(phoneNumber)) {
       setError('Please enter a valid 10-digit mobile number.');
       return;
     }
