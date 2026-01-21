@@ -29,12 +29,12 @@ function VerifyOtpComponent() {
   const router = useRouter();
   const { toast } = useToast();
   const firestore = useFirestore();
-  const { user, isLoading: isUserLoading } = useUser();
+  const { user, userProfile, isLoading: isUserLoading } = useUser();
 
   const [otp, setOtp] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isResending, setIsResending] = useState(false);
-  const email = searchParams.get('email');
+  const phone = searchParams.get('phone') || userProfile?.phoneNumber;
 
   const RESEND_TIMEOUT = 60; // seconds
   const [timeLeft, setTimeLeft] = useState(RESEND_TIMEOUT);
@@ -98,11 +98,11 @@ function VerifyOtpComponent() {
   };
 
   const handleResend = async () => {
-    if (!firestore || !user || !email) return;
+    if (!firestore || !user || !phone) return;
 
     setIsResending(true);
     try {
-      await handleOtpSend(firestore, user.uid, email);
+      await handleOtpSend(firestore, user.uid, phone);
       toast({
         title: 'OTP Resent',
         description: 'A new OTP has been generated in your server console.',
@@ -128,9 +128,9 @@ function VerifyOtpComponent() {
     );
   }
 
-  if (!user || !email) {
+  if (!user || !phone) {
     // If the user isn't logged in (which they should be after signup)
-    // or email is missing, redirect them to a safe page.
+    // or phone is missing, redirect them to a safe page.
     router.replace('/login');
     return null;
   }
@@ -140,8 +140,8 @@ function VerifyOtpComponent() {
       <CardHeader className="text-center">
         <CardTitle className="font-headline text-3xl">Verify Your Account</CardTitle>
         <CardDescription>
-          A 6-digit code was sent to your email address: <br />{' '}
-          <span className="font-semibold text-foreground">{email}</span>
+          A 6-digit code was sent to your mobile number: <br />{' '}
+          <span className="font-semibold text-foreground">{phone}</span>
         </CardDescription>
         <p className="text-xs text-muted-foreground pt-2">
           (For development, the OTP is printed to your server console)

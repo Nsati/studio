@@ -28,6 +28,7 @@ export interface UserProfile {
   uid: string; // Matches Auth UID
   displayName: string;
   email: string;
+  phoneNumber?: string;
   role: 'user' | 'admin';
   status: 'pending' | 'active';
 }

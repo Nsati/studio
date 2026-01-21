@@ -55,21 +55,13 @@ export function LoginForm() {
       const userProfile = userDocSnap.data() as UserProfile;
 
       if (userProfile.status !== 'active') {
-        // Log user out and show error if not active
-        await auth.signOut();
-        setError('Your account is not active.');
+        // Account is pending, redirect to OTP verification. User remains logged in.
         toast({
-          variant: 'destructive',
           title: 'Account Pending',
-          description: 'Please verify your OTP to activate your account.',
-          action: (
-            <Button variant="secondary" size="sm" onClick={() => router.push(`/verify-otp?email=${encodeURIComponent(email)}`)}>
-              Verify OTP
-            </Button>
-          )
+          description: 'Redirecting you to complete OTP verification.',
         });
-        setIsLoading(false);
-        return;
+        router.push('/verify-otp');
+        return; // Stop further execution
       }
 
       toast({ title: 'Login successful!', description: `Welcome back, ${userProfile.displayName}!` });

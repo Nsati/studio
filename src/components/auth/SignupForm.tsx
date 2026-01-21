@@ -23,14 +23,16 @@ import { Loader2 } from 'lucide-react';
 import { OtpVerification } from '@/lib/types';
 
 
-// This function simulates sending an email by logging it to the console.
-// For a production app, you would replace this with a real email service
-// like SendGrid, Mailgun, or AWS SES.
-async function sendOtpEmail(email: string, otp: string) {
-  console.log('--- OTP VERIFICATION (SIMULATED EMAIL) ---');
-  console.log('This is NOT a real email.');
-  console.log('In a production environment, you would integrate an email service here.');
-  console.log(`> Recipient: ${email}`);
+// This function simulates sending an SMS by logging it to the console.
+// For a production app, you would replace this with a real SMS gateway service
+// like Twilio, Vonage, or AWS SNS.
+async function sendOtpSms(phoneNumber: string, otp: string) {
+  console.log('--- OTP VERIFICATION (SIMULATED SMS) ---');
+  console.log('This is NOT a real SMS.');
+  console.log(
+    'In a production environment, you would integrate an SMS service here.'
+  );
+  console.log(`> Recipient: ${phoneNumber}`);
   console.log(`> Your verification code is: ${otp}`);
   console.log('-------------------------------------------');
 }
@@ -39,14 +41,14 @@ async function sendOtpEmail(email: string, otp: string) {
 export async function handleOtpSend(
   firestore: any,
   userId: string,
-  email: string
+  phoneNumber: string
 ) {
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes expiry
   const otpRef = doc(firestore, 'otp_verification', userId);
   const otpData: OtpVerification = { otp, expiresAt };
 
-  await sendOtpEmail(email, otp);
+  await sendOtpSms(phoneNumber, otp);
   await setDoc(otpRef, otpData);
 }
 
@@ -58,6 +60,7 @@ export function SignupForm() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -67,6 +70,10 @@ export function SignupForm() {
     if (password.length < 6) {
       setError('Password must be at least 6 characters long.');
       return;
+    }
+     if (!/^\d{10}$/.test(phoneNumber)) {
+        setError('Please enter a valid 10-digit mobile number.');
+        return;
     }
     setIsLoading(true);
     setError('');
@@ -87,6 +94,7 @@ export function SignupForm() {
         uid: user.uid,
         displayName: name,
         email: user.email,
+        phoneNumber: phoneNumber,
         role: 'user',
         status: 'pending',
       });
@@ -95,14 +103,14 @@ export function SignupForm() {
       await batch.commit();
 
       // 2. Create, store, and "send" OTP
-      await handleOtpSend(firestore, user.uid, user.email!);
+      await handleOtpSend(firestore, user.uid, phoneNumber);
 
       toast({
         title: 'Account Created!',
-        description: "We've 'sent' a verification code. Please check your server console.",
+        description: "We've 'sent' an OTP to your mobile. Please check your server console.",
       });
       
-      router.push(`/verify-otp?email=${encodeURIComponent(user.email!)}`);
+      router.push(`/verify-otp?phone=${encodeURIComponent(phoneNumber)}`);
 
     } catch (error: any) {
       if (error.code === 'auth/email-already-in-use') {
@@ -136,6 +144,17 @@ export function SignupForm() {
                 placeholder="Ankit Sharma"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                required
+              />
+            </div>
+             <div className="space-y-2">
+              <Label htmlFor="phoneNumber">Mobile Number</Label>
+              <Input
+                id="phoneNumber"
+                type="tel"
+                placeholder="9876543210"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
                 required
               />
             </div>
