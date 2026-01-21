@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { useAuth, useFirestore } from '@/firebase';
 import { doc, writeBatch, setDoc } from 'firebase/firestore';
-import { Vonage } from '@vonage/server-sdk';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -22,49 +21,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { OtpVerification } from '@/lib/types';
-
-
-// This function sends a real SMS using Vonage.
-// It requires VONAGE_API_KEY and VONAGE_API_SECRET to be set in .env
-async function sendOtpSms(phoneNumber: string, otp: string) {
-  if (!process.env.VONAGE_API_KEY || !process.env.VONAGE_API_SECRET) {
-    const errorMessage = 'Vonage API Key or Secret is not set. Cannot send SMS.';
-    console.error(errorMessage);
-    throw new Error(errorMessage);
-  }
-
-  if (process.env.VONAGE_API_SECRET === 'YOUR_VONAGE_API_SECRET') {
-    const errorMessage = 'Vonage API Secret is a placeholder. Please update it in your .env file.';
-    console.error(errorMessage);
-    throw new Error(errorMessage);
-  }
-
-  const vonage = new Vonage({
-    apiKey: process.env.VONAGE_API_KEY,
-    apiSecret: process.env.VONAGE_API_SECRET,
-  });
-
-  const from = "Uttarakhand Getaways";
-  // Assuming Indian numbers, prefix with 91. A production app might need a country code input.
-  const to = `91${phoneNumber}`;
-  const text = `Your verification code for Uttarakhand Getaways is: ${otp}`;
-
-  try {
-    const response = await vonage.sms.send({ to, from, text });
-    if (response.messages[0].status === '0') {
-      console.log(`SMS sent successfully to ${to}.`);
-    } else {
-      const errorMessage = response.messages[0]['error-text'];
-      console.error(`Error sending SMS via Vonage: ${errorMessage}`);
-      throw new Error(`Failed to send SMS: ${errorMessage}`);
-    }
-  } catch (err) {
-    // This will catch errors from the Vonage SDK itself (e.g., network issues)
-    console.error("Vonage SDK error:", err);
-    throw new Error("An error occurred while trying to send the OTP SMS.");
-  }
-}
-
+import { sendOtpSmsAction } from '@/app/auth/actions';
 
 export async function handleOtpSend(
   firestore: any,
@@ -76,8 +33,10 @@ export async function handleOtpSend(
   const otpRef = doc(firestore, 'otp_verification', userId);
   const otpData: OtpVerification = { otp, expiresAt };
 
-  await sendOtpSms(phoneNumber, otp);
+  // First, save the OTP to Firestore
   await setDoc(otpRef, otpData);
+  // Then, call the server action to send the SMS
+  await sendOtpSmsAction(phoneNumber, otp);
 }
 
 export function SignupForm() {
@@ -99,9 +58,9 @@ export function SignupForm() {
       setError('Password must be at least 6 characters long.');
       return;
     }
-     if (!/^\d{10}$/.test(phoneNumber)) {
-        setError('Please enter a valid 10-digit mobile number.');
-        return;
+    if (!/^\\d{10}$/.test(phoneNumber)) {
+      setError('Please enter a valid 10-digit mobile number.');
+      return;
     }
     setIsLoading(true);
     setError('');
@@ -115,7 +74,7 @@ export function SignupForm() {
       const user = userCredential.user;
 
       const batch = writeBatch(firestore);
-      
+
       // 1. Create user profile in 'users' collection
       const userRef = doc(firestore, 'users', user.uid);
       batch.set(userRef, {
@@ -126,7 +85,7 @@ export function SignupForm() {
         role: 'user',
         status: 'pending',
       });
-      
+
       // Commit the user profile write
       await batch.commit();
 
@@ -135,11 +94,10 @@ export function SignupForm() {
 
       toast({
         title: 'Account Created!',
-        description: "We've sent an OTP to your mobile. Please check your messages.",
+        description: "We've sent an OTP to your mobile. Please verify to continue.",
       });
-      
-      router.push(`/verify-otp?phone=${encodeURIComponent(phoneNumber)}`);
 
+      router.push(`/verify-otp?phone=${encodeURIComponent(phoneNumber)}`);
     } catch (error: any) {
       if (error.code === 'auth/email-already-in-use') {
         setError('A user with this email already exists.');
@@ -175,7 +133,7 @@ export function SignupForm() {
                 required
               />
             </div>
-             <div className="space-y-2">
+            <div className="space-y-2">
               <Label htmlFor="phoneNumber">Mobile Number</Label>
               <Input
                 id="phoneNumber"
