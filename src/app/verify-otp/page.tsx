@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/button';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore, useUser } from '@/firebase';
-import { doc, getDoc, writeBatch } from 'firebase/firestore';
+import { doc, getDoc, writeBatch, deleteDoc, updateDoc } from 'firebase/firestore';
 import type { OtpVerification } from '@/lib/types';
 import { Loader2 } from 'lucide-react';
 import { handleOtpSend } from '@/components/auth/SignupForm';
@@ -65,17 +65,28 @@ function VerifyOtpComponent() {
       }
       const otpData = otpDoc.data() as OtpVerification;
 
+      // Check #1: Max attempts
+      if ((otpData.attempts || 0) >= 3) {
+        await deleteDoc(otpDocRef); // Automatically delete the OTP doc to force a resend
+        throw new Error('Too many failed attempts. Please request a new OTP.');
+      }
+
+      // Check #2: Expiry
       if ((otpData.expiresAt as any).toDate() < new Date()) {
+        await deleteDoc(otpDocRef);
         throw new Error('OTP has expired. Please request a new one.');
       }
 
+      // Check #3: OTP match
       if (otpData.otp !== otp.trim()) {
+        await updateDoc(otpDocRef, { attempts: (otpData.attempts || 0) + 1 });
         throw new Error('Invalid OTP. Please try again.');
       }
 
-      // OTP is valid, activate user and delete OTP doc
-      const userRef = doc(firestore, 'users', user.uid);
+      // If all checks pass, OTP is valid.
+      // Activate user and delete OTP doc in a batch.
       const batch = writeBatch(firestore);
+      const userRef = doc(firestore, 'users', user.uid);
       batch.update(userRef, { status: 'active' });
       batch.delete(otpDocRef);
       await batch.commit();

@@ -42,7 +42,7 @@ export async function handleOtpSend(
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes expiry
   const otpRef = doc(firestore, 'otp_verification', userId);
-  const otpData: OtpVerification = { otp, expiresAt };
+  const otpData: OtpVerification = { otp, expiresAt, attempts: 0 };
 
   // First, save the OTP to Firestore
   await setDoc(otpRef, otpData);

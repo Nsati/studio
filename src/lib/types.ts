@@ -37,6 +37,7 @@ export interface OtpVerification {
   id?: string; // Corresponds to userId
   otp: string;
   expiresAt: Date;
+  attempts?: number;
 }
 
 
