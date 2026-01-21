@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 
@@ -21,31 +21,50 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { verifyOtpAction, sendOtpAction } from '../auth/actions';
-import { useUser, useAuth } from '@/firebase';
+import { useUser } from '@/firebase';
 
 function VerifyOtpForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
-  const { user } = useUser();
-  const auth = useAuth();
-
+  const { user, isLoading: isUserLoading } = useUser();
 
   const [otp, setOtp] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isResending, setIsResending] = useState(false);
+  
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+        toast({
+            variant: 'destructive',
+            title: 'Authentication Required',
+            description: 'Please log in to verify your account.'
+        });
+        const email = searchParams.get('email');
+        const redirectPath = email ? `/login?redirect=/verify-otp?email=${email}` : '/login';
+        router.replace(redirectPath);
+    }
+  }, [user, isUserLoading, router, searchParams, toast]);
 
-  const email = searchParams.get('email');
+  if (isUserLoading || !user) {
+    return (
+        <div className="flex flex-col items-center gap-4">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-muted-foreground">Loading your session...</p>
+        </div>
+    );
+  }
+  
+  const email = user.email;
 
   if (!email) {
-    // This can happen if the user navigates here directly.
+    // This can happen if the user's email is null for some reason.
     return (
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Error</CardTitle>
           <CardDescription>
-            No email address was provided. Please start the signup process
-            again.
+            Your user account does not have an email address associated with it.
           </CardDescription>
         </CardHeader>
       </Card>
@@ -64,7 +83,7 @@ function VerifyOtpForm() {
     }
     setIsLoading(true);
 
-    const result = await verifyOtpAction({ email, otp });
+    const result = await verifyOtpAction({ userId: user.uid, otp });
 
     if (result.success) {
       toast({
@@ -83,10 +102,6 @@ function VerifyOtpForm() {
   };
   
   const handleResend = async () => {
-    if (!user || !auth) {
-        toast({ variant: 'destructive', title: 'You must be signed in to resend an OTP.'})
-        return;
-    }
     setIsResending(true);
     const result = await sendOtpAction({
         userId: user.uid,

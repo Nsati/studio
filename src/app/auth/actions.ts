@@ -75,7 +75,7 @@ export async function sendOtpAction(
 }
 
 interface VerifyOtpPayload {
-  email: string;
+  userId: string;
   otp: string;
 }
 
@@ -83,20 +83,9 @@ export async function verifyOtpAction(
   payload: VerifyOtpPayload
 ): Promise<ActionResponse> {
   const { firestore } = initializeFirebase();
-  const { email, otp } = payload;
+  const { userId, otp } = payload;
 
   try {
-    // Find user by email to get their UID
-    const usersRef = collection(firestore, 'users');
-    const q = query(usersRef, where('email', '==', email));
-    const querySnapshot = await getDocs(q);
-
-    if (querySnapshot.empty) {
-      return { success: false, error: 'User not found.' };
-    }
-    const userDoc = querySnapshot.docs[0];
-    const userId = userDoc.id;
-
     // Use a transaction to verify and activate atomically
     await runTransaction(firestore, async (transaction) => {
       const otpRef = doc(firestore, 'otp_verification', userId);
