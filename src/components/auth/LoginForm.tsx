@@ -61,16 +61,19 @@ export function LoginForm() {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Check if email is verified
-      if (!user.emailVerified) {
+      // Reload the user's profile to get the latest emailVerified status
+      await user.reload(); 
+      
+      // After reload, auth.currentUser will be updated with the latest state.
+      if (!auth.currentUser?.emailVerified) {
         setError('Please verify your email before logging in.');
-        // Sign out the user
+        // Sign out the user so they can't access any part of the app
         await signOut(auth);
         
         toast({
             variant: 'destructive',
             title: 'Email Not Verified',
-            description: 'Please check your inbox for the verification link.',
+            description: 'A verification link was sent to your email. Please check your inbox and verify.',
         });
         
         setIsLoading(false);
