@@ -91,7 +91,7 @@ export async function sendOtp(mobile: string): Promise<SendOtpResponse> {
     
     const url = new URL('https://otp.dev/api/send');
     url.searchParams.append('key', apiKey);
-    url.searchParams.append('recipient', mobile);
+    url.searchParams.append('recipient', `91${mobile}`);
     
     try {
         const response = await fetch(url.toString(), { method: 'GET' });
@@ -158,6 +158,18 @@ export async function verifyOtpAndCreateUser({ otp_id, token, signupData, _otp }
 
         try {
             const response = await fetch(url.toString(), { method: 'GET' });
+            
+            if (!response.ok) {
+                 const errorText = await response.text();
+                 // Try to parse as JSON, but fall back to text
+                 try {
+                     const errorJson = JSON.parse(errorText);
+                     throw new Error(errorJson.message || `OTP verification failed with status: ${response.status}`);
+                 } catch {
+                    throw new Error(`OTP verification failed: ${errorText}`);
+                 }
+            }
+
             const data = await response.json();
 
             if (data.status === 'ok') {
