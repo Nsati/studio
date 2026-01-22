@@ -59,21 +59,27 @@ export async function sendOtp(mobile: string): Promise<ActionResponse> {
             console.error(`Authkey.io API request failed with status ${response.status}:`, errorText);
             throw new Error('Failed to communicate with OTP service. Please try again later.');
         }
-
-        const data = await response.json();
-
-        if (data.Status === 'Success') {
-            // In a real production scenario, you would NOT return the OTP to the client.
-            // It would be stored in a secure, temporary location (e.g., a separate Firestore doc with a TTL, or a server-side session).
-            // For the purpose of this demo, we return it to the client to verify on the next step.
-            return { success: true, otp: otp };
+        
+        const contentType = response.headers.get('content-type');
+        // Check if response is JSON before parsing
+        if (contentType && contentType.includes('application/json')) {
+             const data = await response.json();
+            if (data.Status === 'Success') {
+                // In a real production scenario, you would NOT return the OTP to the client.
+                return { success: true, otp: otp };
+            } else {
+                console.error('Authkey Error:', data.Msg);
+                return { success: false, error: data.Msg || 'Failed to send OTP. Please check the credentials and mobile number.' };
+            }
         } else {
-            console.error('Authkey Error:', data.Msg);
-            return { success: false, error: data.Msg || 'Failed to send OTP. Please check the credentials and mobile number.' };
+            // Handle non-JSON responses
+            const errorText = await response.text();
+            console.error('Authkey.io returned a non-JSON response:', errorText);
+            throw new Error('An invalid response was received from the OTP service. This might be due to incorrect API credentials.');
         }
     } catch (error: any) {
         console.error('Error sending OTP:', error);
-        // This will catch the `response.json()` error if the body is not JSON, or the error thrown from !response.ok
+        // This will catch fetch errors, json parsing errors, or the errors we explicitly throw.
         return { success: false, error: error.message || 'An unexpected error occurred while sending OTP.' };
     }
 }
