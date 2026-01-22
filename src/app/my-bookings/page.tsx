@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useUser, useFirestore, useCollection, useDoc } from '@/firebase';
 import type { Booking, Hotel } from '@/lib/types';
 import {
@@ -15,12 +15,24 @@ import Link from 'next/link';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
-import { Calendar, Hotel as HotelIcon, Home, Loader2, Download, Ban } from 'lucide-react';
+import { Calendar, Hotel as HotelIcon, Home, Loader2, Download, Ban, CheckCircle, XCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { collection, doc } from 'firebase/firestore';
+import { collection, doc, runTransaction, increment } from 'firebase/firestore';
 import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+
 
 function BookingItemSkeleton() {
     return (
@@ -58,6 +70,9 @@ function BookingItemSkeleton() {
 
 function BookingItem({ booking }: { booking: Booking }) {
     const firestore = useFirestore();
+    const { user } = useUser();
+    const { toast } = useToast();
+    const [isCancelling, setIsCancelling] = useState(false);
 
     const hotelRef = useMemo(() => {
         if (!firestore) return null;
@@ -65,6 +80,45 @@ function BookingItem({ booking }: { booking: Booking }) {
     }, [firestore, booking.hotelId]);
 
     const { data: hotel, isLoading } = useDoc<Hotel>(hotelRef);
+
+    const handleCancelBooking = async () => {
+        if (!firestore || !user || !booking.id) return;
+        
+        setIsCancelling(true);
+        
+        const bookingRef = doc(firestore, 'users', user.uid, 'bookings', booking.id);
+        const roomRef = doc(firestore, 'hotels', booking.hotelId, 'rooms', booking.roomId);
+
+        try {
+            await runTransaction(firestore, async (transaction) => {
+                const bookingDoc = await transaction.get(bookingRef);
+                if (!bookingDoc.exists() || bookingDoc.data().status !== 'CONFIRMED') {
+                    throw new Error("This booking cannot be cancelled or does not exist.");
+                }
+
+                // Update booking status to CANCELLED
+                transaction.update(bookingRef, { status: 'CANCELLED' });
+
+                // Increment the available rooms count
+                transaction.update(roomRef, { availableRooms: increment(1) });
+            });
+
+            toast({
+                title: "Booking Cancelled",
+                description: "Your booking has been successfully cancelled. Any applicable refund will be processed.",
+            });
+
+        } catch (error: any) {
+            console.error("Cancellation failed:", error);
+            toast({
+                variant: "destructive",
+                title: "Cancellation Failed",
+                description: error.message || "Could not cancel the booking. Please try again.",
+            });
+        } finally {
+            setIsCancelling(false);
+        }
+    };
 
 
     if (isLoading) {
@@ -111,10 +165,18 @@ function BookingItem({ booking }: { booking: Booking }) {
                 {/* Column 2: Details */}
                 <div className="flex flex-col flex-grow justify-between p-4 sm:p-6">
                     <div>
-                        <h3 className="font-headline text-xl sm:text-2xl font-bold hover:text-primary">
-                            <Link href={`/hotels/${hotel.id}`}>{hotel.name}</Link>
-                        </h3>
-                        <p className="text-muted-foreground mb-4">{hotel.city}</p>
+                        <div className="flex justify-between items-start">
+                             <div>
+                                <h3 className="font-headline text-xl sm:text-2xl font-bold hover:text-primary">
+                                    <Link href={`/hotels/${hotel.id}`}>{hotel.name}</Link>
+                                </h3>
+                                <p className="text-muted-foreground mb-4">{hotel.city}</p>
+                             </div>
+                             <Badge variant={booking.status === 'CONFIRMED' ? 'default' : 'destructive'} className="capitalize whitespace-nowrap">
+                                {booking.status === 'CONFIRMED' ? <CheckCircle className="mr-1.5 h-4 w-4" /> : <XCircle className="mr-1.5 h-4 w-4" />}
+                                {booking.status?.toLowerCase()}
+                            </Badge>
+                        </div>
                         
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm text-muted-foreground">
                             <p><span className="font-semibold text-foreground">Check-in:</span> {format(checkInDate, 'dd MMM yyyy')}</p>
@@ -123,23 +185,40 @@ function BookingItem({ booking }: { booking: Booking }) {
                             <p><span className="font-semibold text-foreground">Guests:</span> {booking.guests}</p>
                             <p className="col-span-1 sm:col-span-2"><span className="font-semibold text-foreground">Booking ID:</span> <span className="font-mono text-xs">{booking.id}</span></p>
                             <p><span className="font-semibold text-foreground">Amount Paid:</span> <span className="font-bold text-foreground">{booking.totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}</span></p>
-                            <div className="flex items-center">
-                                <span className="font-semibold text-foreground mr-2">Payment Status:</span>
-                                <Badge variant={booking.status === 'CONFIRMED' ? 'default' : 'destructive'} className="capitalize">
-                                    {booking.status === 'CONFIRMED' ? '✅ ' : ''}
-                                    {booking.status?.toLowerCase()}
-                                </Badge>
-                            </div>
                         </div>
                     </div>
 
                     <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 mt-6">
                         <Button variant="outline" size="sm" asChild>
-                            <Link href={`/hotels/${hotel.id}`}>View Details</Link>
+                            <Link href={`/hotels/${hotel.id}`}>View Hotel</Link>
                         </Button>
-                        <Button variant="outline" size="sm"><Download className="mr-2 h-4 w-4" /> Download Invoice</Button>
+                        <Button variant="outline" size="sm" onClick={() => toast({ title: "Feature Coming Soon", description: "Invoice download will be available shortly."})}>
+                            <Download className="mr-2 h-4 w-4" /> Download Invoice
+                        </Button>
                         {booking.status === 'CONFIRMED' && (
-                            <Button variant="destructive" size="sm"><Ban className="mr-2 h-4 w-4" /> Cancel Booking</Button>
+                           <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <Button variant="destructive" size="sm" disabled={isCancelling}>
+                                        {isCancelling ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Ban className="mr-2 h-4 w-4" />}
+                                        {isCancelling ? 'Cancelling...' : 'Cancel Booking'}
+                                    </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>Are you sure you want to cancel?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            This action will cancel your booking for {hotel.name}.
+                                            Please review the hotel's cancellation policy. This action cannot be undone.
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>No, keep booking</AlertDialogCancel>
+                                        <AlertDialogAction onClick={handleCancelBooking} className="bg-destructive hover:bg-destructive/90">
+                                            Yes, cancel booking
+                                        </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
                         )}
                     </div>
                 </div>
@@ -166,6 +245,15 @@ export default function MyBookingsPage() {
   }, [firestore, user]);
 
   const { data: bookings, isLoading: areBookingsLoading } = useCollection<Booking>(bookingsQuery);
+  
+  const sortedBookings = useMemo(() => {
+    if (!bookings) return [];
+    return [...bookings].sort((a,b) => {
+        const dateA = (a.createdAt as any).toDate ? (a.createdAt as any).toDate() : new Date(a.createdAt);
+        const dateB = (b.createdAt as any).toDate ? (b.createdAt as any).toDate() : new Date(b.createdAt);
+        return dateB.getTime() - dateA.getTime();
+    });
+  }, [bookings]);
 
   const isLoading = isUserLoading || areBookingsLoading;
 
@@ -194,7 +282,7 @@ export default function MyBookingsPage() {
             </p>
         </div>
 
-        {bookings?.length === 0 ? (
+        {sortedBookings?.length === 0 ? (
             <Card className="flex flex-col items-center justify-center py-20 text-center border-2 border-dashed bg-transparent">
             <CardHeader>
                 <CardTitle className="font-headline">No Bookings Yet</CardTitle>
@@ -214,7 +302,7 @@ export default function MyBookingsPage() {
             </Card>
         ) : (
             <div className="space-y-8">
-            {bookings?.map((booking) => (
+            {sortedBookings?.map((booking) => (
                 <BookingItem key={booking.id} booking={booking} />
             ))}
             </div>

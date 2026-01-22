@@ -27,7 +27,6 @@ service cloud.firestore {
       
       // An admin can update any field in any profile.
       // A regular user can update their own profile, as long as they don't change their role.
-      // This allows them to change their name, or for the OTP flow to change their status to 'active'.
       allow update: if isAdmin() || (isOwner(userId) && request.resource.data.role == resource.data.role);
 
       // Only an admin can delete a user profile.
@@ -55,11 +54,12 @@ service cloud.firestore {
     match /hotels/{hotelId}/rooms/{roomId} {
         allow read: if true;
         allow write: if isAdmin();
-        // Allow authenticated users to update the room count, but ONLY to decrement it by 1.
-        // This is necessary for the booking transaction to succeed for non-admin users.
-        // The transaction ensures this only happens when a booking is also created.
+        // Allow authenticated users to update the room count for booking/cancellation transactions.
         allow update: if request.auth != null &&
-                      request.resource.data.availableRooms == resource.data.availableRooms - 1 &&
+                      (
+                        (request.resource.data.availableRooms == resource.data.availableRooms - 1) || // Decrement for booking
+                        (request.resource.data.availableRooms == resource.data.availableRooms + 1)    // Increment for cancellation
+                      ) &&
                       // Verify that availableRooms is the ONLY field being changed.
                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['availableRooms']);
     }
