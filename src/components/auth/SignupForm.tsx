@@ -63,7 +63,9 @@ const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address.' }),
   phoneNumber: z
     .string()
-    .regex(/^\d{10}$/, { message: 'Please enter a valid 10-digit mobile number.' }),
+    .regex(/^\d{10}$/, { message: 'Please enter a valid 10-digit mobile number.' })
+    .optional()
+    .or(z.literal('')),
   password: z
     .string()
     .min(8, { message: 'Password must be at least 8 characters.' })
@@ -98,6 +100,7 @@ export function SignupForm() {
     setServerError('');
 
     try {
+      // 1. Create user in Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         values.email,
@@ -105,27 +108,47 @@ export function SignupForm() {
       );
       const user = userCredential.user;
 
-      const batch = writeBatch(firestore);
+      // 2. Decide flow based on phone number
+      if (values.phoneNumber) {
+        // --- OTP Flow (Phone number provided) ---
+        const batch = writeBatch(firestore);
+        const userRef = doc(firestore, 'users', user.uid);
+        batch.set(userRef, {
+          uid: user.uid,
+          displayName: values.name,
+          email: user.email,
+          phoneNumber: values.phoneNumber, // Include phone number
+          role: 'user',
+          status: 'pending', // Set status to pending
+        });
+        await batch.commit();
+        
+        // Send OTP and redirect
+        await handleOtpSend(firestore, user.uid, values.phoneNumber);
+        toast({
+          title: 'Account Created!',
+          description: "We've sent an OTP to your mobile. Please verify to continue.",
+        });
+        router.push(`/verify-otp?phone=${encodeURIComponent(values.phoneNumber)}`);
 
-      const userRef = doc(firestore, 'users', user.uid);
-      batch.set(userRef, {
-        uid: user.uid,
-        displayName: values.name,
-        email: user.email,
-        phoneNumber: values.phoneNumber,
-        role: 'user',
-        status: 'pending',
-      });
+      } else {
+        // --- Email-Only Flow (No phone number) ---
+        const userRef = doc(firestore, 'users', user.uid);
+        await setDoc(userRef, {
+          uid: user.uid,
+          displayName: values.name,
+          email: user.email,
+          // No phoneNumber field
+          role: 'user',
+          status: 'active', // Set status to active
+        });
 
-      await batch.commit();
-      await handleOtpSend(firestore, user.uid, values.phoneNumber);
-
-      toast({
-        title: 'Account Created!',
-        description: "We've sent an OTP to your mobile. Please verify to continue.",
-      });
-
-      router.push(`/verify-otp?phone=${encodeURIComponent(values.phoneNumber)}`);
+        toast({
+          title: 'Account Created!',
+          description: "You can now log in with your email and password.",
+        });
+        router.push('/login');
+      }
     } catch (error: any) {
       if (error.code === 'auth/email-already-in-use') {
         form.setError('email', { message: 'A user with this email already exists.' });
@@ -133,7 +156,7 @@ export function SignupForm() {
         setServerError(error.message || 'An error occurred during signup.');
         console.error(error);
       }
-      setIsLoading(false);
+      setIsLoading(false); // Only set loading to false in case of error
     }
   };
 
@@ -164,20 +187,7 @@ export function SignupForm() {
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="phoneNumber"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Mobile Number</FormLabel>
-                    <FormControl>
-                      <Input placeholder="9876543210" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
+               <FormField
                 control={form.control}
                 name="email"
                 render={({ field }) => (
@@ -186,6 +196,22 @@ export function SignupForm() {
                     <FormControl>
                       <Input type="email" placeholder="ankit.sharma@example.com" {...field} />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="phoneNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Mobile Number (Optional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="9876543210" {...field} />
+                    </FormControl>
+                    <FormDescription className="text-xs">
+                      Add for extra security and OTP-based verification.
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
