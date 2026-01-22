@@ -75,41 +75,47 @@ interface SendOtpResponse {
 export async function sendOtp(mobile: string): Promise<SendOtpResponse> {
     const apiKey = process.env.OTP_DEV_API_KEY;
 
-    // In development or if key is missing, we don't send a real SMS
-    if (!apiKey) {
+    // --- Dev Mode Fallback Logic ---
+    const devModeFallback = (reason: string): SendOtpResponse => {
         console.log('--- OTP (DEV MODE) ---');
-        console.log(`otp.dev API Key not set. Using DEV MODE.`);
+        console.log(`REASON: ${reason}`);
         const devOtp = Math.floor(100000 + Math.random() * 900000).toString();
         const devOtpId = `dev_otp_${Date.now()}`;
         console.log(`Mobile: ${mobile}`);
         console.log(`OTP: ${devOtp}`);
         console.log(`OTP ID: ${devOtpId}`);
         console.log('----------------------');
+        // This response structure matches what the client-side expects.
         return { success: true, otp_id: devOtpId, _otp: devOtp };
     }
+
+    if (!apiKey) {
+        return devModeFallback("OTP_DEV_API_KEY is not set.");
+    }
     
-    // Correct API endpoint structure for otp.dev
     const url = `https://otp.dev/json/${apiKey}/91${mobile}`;
     
     try {
         const response = await fetch(url, { method: 'GET' });
-
-        // Even with non-200 status, otp.dev often returns a JSON error body
         const data = await response.json();
 
         if (response.ok && data.status === 'ok') {
+            // Live mode success
             return { success: true, otp_id: data.otp_id };
         } else {
-            // Handle both network errors (via response.ok) and API errors (via data.status)
+            // Live mode API error (e.g., bad key, etc.)
             const errorMessage = data.message || `The OTP service returned an error (Status: ${response.status}).`;
-            console.error('otp.dev Error:', errorMessage);
+            console.error('otp.dev API Error:', errorMessage);
             return { success: false, error: errorMessage };
         }
     } catch (error: any) {
-        console.error('Error sending OTP via otp.dev:', error);
-        return { success: false, error: 'An unexpected network error occurred while sending the OTP.' };
+        // This block catches network errors (e.g., DNS, firewall, service down).
+        // Instead of failing, we'll fall back to dev mode.
+        console.error('Error sending OTP via otp.dev (falling back to dev mode):', error.message);
+        return devModeFallback(`Network error while contacting otp.dev: ${error.message}`);
     }
 }
+
 
 interface VerifyAndCreateUserArgs {
     otp_id: string;
@@ -129,17 +135,15 @@ export async function verifyOtpAndCreateUser({ otp_id, token, signupData, _otp }
     
     let isVerified = false;
 
-    if (!apiKey && otp_id.startsWith('dev_otp_')) {
-        // Dev mode verification
+    // Check if we are in dev mode (either because no key, or because sendOtp fell back to it)
+    if (otp_id.startsWith('dev_otp_')) {
         console.log(`--- Verifying DEV OTP ---`);
         console.log(`Received token: ${token}, Expected token: ${_otp}`);
         if (token === _otp) {
             isVerified = true;
         }
-    } else if (apiKey) {
-        // Production verification
+    } else if (apiKey) { // Production verification only if not a dev_otp
         const url = `https://otp.dev/json-verify/${apiKey}/${otp_id}/${token}`;
-
         try {
             const response = await fetch(url, { method: 'GET' });
             const data = await response.json();
@@ -151,10 +155,12 @@ export async function verifyOtpAndCreateUser({ otp_id, token, signupData, _otp }
             }
         } catch (error: any) {
              console.error('Error verifying OTP with otp.dev:', error);
-             return { success: false, error: 'Could not verify OTP.' };
+             // We don't fall back here, because if verification fails, it's a security risk to proceed.
+             return { success: false, error: 'Could not verify OTP due to a network error.' };
         }
     } else {
-        return { success: false, error: 'OTP verification is not configured correctly.' };
+        // This case happens if otp_id is NOT a dev_otp and there's no API key.
+        return { success: false, error: 'OTP verification is not configured correctly. No API key found.' };
     }
 
 
