@@ -90,6 +90,7 @@ function CitiesList() {
                           data-ai-hint={cityImage.imageHint}
                           fill
                           className="object-cover transition-transform duration-300 group-hover:scale-105"
+                          unoptimized
                         />
                       )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
@@ -120,6 +121,7 @@ export default function HomePage() {
             fill
             className="object-cover"
             priority
+            unoptimized
           />
         )}
         <div className="absolute inset-0 bg-black/40" />

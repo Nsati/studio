@@ -77,6 +77,7 @@ export function HotelCard({ hotel }: HotelCardProps) {
                 data-ai-hint={imageHint}
                 fill
                 className="object-cover"
+                unoptimized
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-muted">

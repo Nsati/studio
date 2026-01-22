@@ -42,6 +42,7 @@ function TourPackageAdminCard({ tourPackage }: { tourPackage: TourPackage }) {
                         alt={tourPackage.title}
                         fill
                         className="object-cover rounded-t-lg"
+                        unoptimized
                     />
                 ) : (
                     <div className="flex h-full w-full items-center justify-center bg-muted rounded-t-lg">

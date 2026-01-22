@@ -102,6 +102,7 @@ export default function HotelPage() {
                         fill
                         className="object-cover"
                         priority={index === 0}
+                        unoptimized
                       />
                     )}
                   </div>
