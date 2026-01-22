@@ -5,7 +5,6 @@ import { type UserProfile } from '@/lib/types';
 import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
-import { headers } from 'next/headers';
 
 // This is a server-side only file.
 
@@ -54,17 +53,28 @@ export async function sendOtp(mobile: string): Promise<ActionResponse> {
 
     try {
         const response = await fetch(url.toString(), { method: 'GET' });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`Authkey.io API request failed with status ${response.status}:`, errorText);
+            throw new Error('Failed to communicate with OTP service. Please try again later.');
+        }
+
         const data = await response.json();
 
         if (data.Status === 'Success') {
-            return { success: true, otp: otp }; // Return OTP even in prod for client-side verification
+            // In a real production scenario, you would NOT return the OTP to the client.
+            // It would be stored in a secure, temporary location (e.g., a separate Firestore doc with a TTL, or a server-side session).
+            // For the purpose of this demo, we return it to the client to verify on the next step.
+            return { success: true, otp: otp };
         } else {
             console.error('Authkey Error:', data.Msg);
-            return { success: false, error: data.Msg || 'Failed to send OTP.' };
+            return { success: false, error: data.Msg || 'Failed to send OTP. Please check the credentials and mobile number.' };
         }
     } catch (error: any) {
         console.error('Error sending OTP:', error);
-        return { success: false, error: error.message || 'An unexpected error occurred.' };
+        // This will catch the `response.json()` error if the body is not JSON, or the error thrown from !response.ok
+        return { success: false, error: error.message || 'An unexpected error occurred while sending OTP.' };
     }
 }
 
@@ -87,7 +97,7 @@ export async function createUser(userData: {
         const newUserProfile: UserProfile = {
             uid: user.uid,
             displayName: name,
-            email: user.email,
+            email: email, // Use email from input directly for safety
             mobile: mobile,
             role: 'user',
             status: 'active',
