@@ -8,7 +8,7 @@ import type { Hotel } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { PlusCircle, Star, MapPin } from 'lucide-react';
+import { PlusCircle, Star, MapPin, Upload } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 function HotelGridSkeleton() {
@@ -90,12 +90,20 @@ export default function HotelsPage() {
                         Here you can view, add, and edit hotel properties.
                     </p>
                 </div>
-                 <Button asChild>
-                    <Link href="/admin/hotels/new">
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        Add New Hotel
-                    </Link>
-                </Button>
+                 <div className="flex gap-2">
+                    <Button asChild>
+                        <Link href="/admin/hotels/new">
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            Add New Hotel
+                        </Link>
+                    </Button>
+                     <Button asChild variant="outline">
+                        <Link href="/admin/hotels/bulk-add">
+                            <Upload className="mr-2 h-4 w-4" />
+                            Bulk Add
+                        </Link>
+                    </Button>
+                 </div>
             </div>
             
             {isLoading ? <HotelGridSkeleton /> : (
