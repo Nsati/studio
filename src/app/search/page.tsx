@@ -2,9 +2,9 @@ import { Suspense } from 'react';
 import { searchHotels } from './actions';
 import { SearchFilters } from './SearchFilters';
 import { HotelCard } from '@/components/hotel/HotelCard';
-import Loading from './loading';
 import { Hotel } from '@/lib/types';
-import { Card, CardContent, Skeleton } from '@/components/ui';
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface SearchPageProps {
   searchParams: { [key: string]: string | string[] | undefined };
