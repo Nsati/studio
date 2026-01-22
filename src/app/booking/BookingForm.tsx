@@ -19,7 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, Calendar, Users, BedDouble, ArrowLeft } from 'lucide-react';
+import { Loader2, Calendar, Users, BedDouble, ArrowLeft, Tag } from 'lucide-react';
 import Link from 'next/link';
 import { dummyHotels, dummyRooms } from '@/lib/dummy-data';
 import { BookingFormSkeleton } from './BookingFormSkeleton';
@@ -75,6 +75,9 @@ export function BookingForm() {
     const [customerDetails, setCustomerDetails] = useState({ name: '', email: '' });
     const [isBooking, setIsBooking] = useState(false);
     const [termsAccepted, setTermsAccepted] = useState(false);
+    const [couponCode, setCouponCode] = useState('');
+    const [discount, setDiscount] = useState(0);
+    const [couponMessage, setCouponMessage] = useState('');
 
 
     useEffect(() => {
@@ -126,7 +129,28 @@ export function BookingForm() {
     }
 
     const hotelImage = PlaceHolderImages.find((img) => img.id === hotel.images[0]);
-    const totalPrice = room.price * nights;
+    const basePrice = room.price * nights;
+    const totalPrice = basePrice - discount;
+
+    const handleApplyCoupon = () => {
+        if (couponCode.toUpperCase() === 'GET10') {
+            const discountAmount = basePrice * 0.10;
+            setDiscount(discountAmount);
+            setCouponMessage(`🎉 Coupon "GET10" applied! You saved 10%.`);
+            toast({
+                title: 'Coupon Applied!',
+                description: `You saved ${discountAmount.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}.`,
+            });
+        } else {
+            setDiscount(0);
+            setCouponMessage('Invalid coupon code.');
+            toast({
+                variant: 'destructive',
+                title: 'Invalid Coupon',
+                description: 'The coupon code you entered is not valid.',
+            });
+        }
+    };
 
     const handlePayment = async () => {
         if (!process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID) {
@@ -377,16 +401,47 @@ export function BookingForm() {
                         <CardHeader>
                             <CardTitle>Price Summary</CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-2">
+                        <CardContent className="space-y-4">
                             <div className="flex justify-between">
                                 <span>{room.price.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })} x {nights} nights</span>
-                                <span>{totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}</span>
+                                <span>{basePrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}</span>
                             </div>
                             <div className="flex justify-between text-muted-foreground text-sm">
                                 <span>Taxes &amp; Fees</span>
                                 <span>Included</span>
                             </div>
-                            <div className="border-t pt-2 mt-2 flex justify-between font-bold text-lg">
+
+                            <div className="border-t pt-4 space-y-2">
+                                <Label htmlFor="coupon" className="flex items-center gap-2 font-semibold text-base">
+                                    <Tag className="h-5 w-5 text-primary" /> Apply Discount
+                                </Label>
+                                <div className="flex items-center gap-2">
+                                    <Input
+                                        id="coupon"
+                                        placeholder="Enter coupon code"
+                                        value={couponCode}
+                                        onChange={(e) => setCouponCode(e.target.value)}
+                                        className="flex-grow"
+                                    />
+                                    <Button type="button" variant="outline" onClick={handleApplyCoupon}>
+                                        Apply
+                                    </Button>
+                                </div>
+                                {couponMessage && (
+                                    <p className={`mt-2 text-sm ${discount > 0 ? 'font-semibold text-green-600' : 'text-destructive'}`}>
+                                        {couponMessage}
+                                    </p>
+                                )}
+                            </div>
+
+                            {discount > 0 && (
+                                <div className="flex justify-between text-green-600 font-semibold border-t pt-4">
+                                    <span>Coupon Discount</span>
+                                    <span>- {discount.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}</span>
+                                </div>
+                            )}
+
+                            <div className="border-t pt-4 mt-2 flex justify-between font-bold text-lg">
                                 <span>Total Amount</span>
                                 <span>{totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}</span>
                             </div>
