@@ -1,57 +1,60 @@
 'use server';
 
-import { Vonage } from '@vonage/server-sdk';
-
-// This function sends a real SMS using Vonage.
-// It requires VONAGE_API_KEY and VONAGE_API_SECRET to be set in .env
+// This function sends a real SMS using Authkey.io.
+// It requires AUTHKEY_API_KEY and AUTHKEY_SENDER_ID to be set in .env
 export async function sendOtpSmsAction(phoneNumber: string, otp: string) {
-  const apiKey = process.env.VONAGE_API_KEY;
-  const apiSecret = process.env.VONAGE_API_SECRET;
+  const authkey = process.env.AUTHKEY_API_KEY;
+  const senderId = process.env.AUTHKEY_SENDER_ID;
 
-  // If secret is a placeholder, log to console instead of sending SMS
-  if (!apiSecret || apiSecret === 'YOUR_VONAGE_API_SECRET') {
+  // If key or sender is a placeholder/missing, log to console instead of sending SMS
+  if (!authkey || authkey === 'YOUR_AUTHKEY_API_KEY' || !senderId) {
     console.log('---');
-    console.log('--- VONAGE API SECRET MISSING ---');
+    console.log('--- AUTHKEY.IO CONFIGURATION MISSING ---');
     console.log('--- OTP will be logged to the console for development. ---');
     console.log(`--- Mobile Number: ${phoneNumber}`);
     console.log(`--- Your OTP is: ${otp}`);
-    console.log('--- To send real SMS, add your Vonage API Secret to the .env file.');
+    console.log('--- To send real SMS, add your Authkey API Key and Sender ID to the .env file.');
     console.log('---');
     // Return success so the signup flow can continue
     return { success: true };
   }
 
-  // If we have a real secret, proceed with sending the SMS
-  if (!apiKey) {
-    const errorMessage = 'Vonage API Key is not set in .env file. Cannot send SMS.';
-    console.error(errorMessage);
-    throw new Error(errorMessage);
-  }
+  const message = `Your verification code for Uttarakhand Getaways is: ${otp}`;
+  const mobile = phoneNumber;
+  const countryCode = '91'; // Assuming Indian numbers
 
-  const vonage = new Vonage({
-    apiKey: apiKey,
-    apiSecret: apiSecret,
-  });
-
-  const from = 'Uttarakhand Getaways';
-  // Assuming Indian numbers, prefix with 91. A production app might need a country code input.
-  const to = `91${phoneNumber}`;
-  const text = `Your verification code for Uttarakhand Getaways is: ${otp}`;
+  const url = new URL('https://console.authkey.io/request');
+  url.searchParams.append('authkey', authkey);
+  url.searchParams.append('mobile', mobile);
+  url.searchParams.append('country_code', countryCode);
+  url.searchParams.append('sms', message);
+  url.searchParams.append('sender', senderId);
 
   try {
-    const response = await vonage.sms.send({ to, from, text });
-    if (response.messages[0].status === '0') {
-      console.log(`SMS sent successfully to ${to}.`);
+    const response = await fetch(url.toString(), { method: 'GET' });
+    
+    // Authkey can return non-json for certain errors
+    const responseText = await response.text();
+    let body;
+    try {
+        body = JSON.parse(responseText);
+    } catch(e) {
+        // If parsing fails, use the raw text as the error message
+        throw new Error(responseText);
+    }
+
+
+    if (response.ok && body.status === 'success') {
+      console.log(`SMS sent successfully to ${mobile}.`);
+      console.log('Authkey Response:', body);
       return { success: true };
     } else {
-      const errorMessage =
-        (response.messages[0] as any).errorText || 'Unknown Vonage error';
-      console.error(`Error sending SMS via Vonage: ${errorMessage}`);
+      const errorMessage = body.message || 'Unknown Authkey.io error';
+      console.error(`Error sending SMS via Authkey.io: ${errorMessage}`);
       throw new Error(`Failed to send SMS: ${errorMessage}`);
     }
   } catch (err: any) {
-    // This will catch errors from the Vonage SDK itself (e.g., network issues)
-    console.error('Vonage SDK error:', err);
+    console.error('Authkey.io request error:', err);
     throw new Error(
       err.message || 'An error occurred while trying to send the OTP SMS.'
     );
