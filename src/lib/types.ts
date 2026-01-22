@@ -28,9 +28,9 @@ export interface UserProfile {
   uid: string; // Matches Auth UID
   displayName: string;
   email: string;
-  phoneNumber?: string;
+  mobile: string;
   role: 'user' | 'admin';
-  status: 'active';
+  status: 'pending' | 'active';
 }
 
 export interface Booking {

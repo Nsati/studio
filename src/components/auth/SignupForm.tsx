@@ -3,9 +3,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { useAuth, useFirestore } from '@/firebase';
-import { doc, setDoc } from 'firebase/firestore';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -31,22 +28,21 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import { sendOtp } from '@/app/auth/actions';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
   email: z.string().email({ message: 'Please enter a valid email address.' }),
+  mobile: z
+    .string()
+    .length(10, { message: 'Mobile number must be 10 digits.' })
+    .regex(/^\d{10}$/, { message: 'Please enter a valid 10-digit mobile number.' }),
   password: z
     .string()
     .min(8, { message: 'Password must be at least 8 characters.' })
-    .regex(/[a-z]/, { message: 'Password needs a lowercase letter.' })
-    .regex(/[A-Z]/, { message: 'Password needs an uppercase letter.' })
-    .regex(/[0-9]/, { message: 'Password needs a number.' })
-    .regex(/[^a-zA-Z0-9]/, { message: 'Password needs a special character.' }),
 });
 
 export function SignupForm() {
-  const auth = useAuth();
-  const firestore = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -57,49 +53,37 @@ export function SignupForm() {
     defaultValues: {
       name: '',
       email: '',
+      mobile: '',
       password: '',
     },
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    if (!auth || !firestore) return;
-
     setIsLoading(true);
     setServerError('');
 
     try {
-      // 1. Create user in Firebase Auth
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        values.email,
-        values.password
-      );
-      const user = userCredential.user;
+      const response = await sendOtp(values.mobile);
 
-      // 2. Create user profile in Firestore.
-      const userRef = doc(firestore, 'users', user.uid);
-      await setDoc(userRef, {
-        uid: user.uid,
-        displayName: values.name,
-        email: user.email,
-        role: 'user',
-        status: 'active', // All users are active immediately
-      });
-
-      toast({
-        title: 'Account Created!',
-        description: 'You can now log in with your email and password.',
-      });
-      router.push('/login');
-    } catch (error: any) {
-      if (error.code === 'auth/email-already-in-use') {
-        form.setError('email', {
-          message: 'A user with this email already exists.',
+      if (response.success && response.otp) {
+        // Store form data and OTP in session storage to pass to the verification page
+        sessionStorage.setItem('signup_data', JSON.stringify(values));
+        sessionStorage.setItem('signup_otp', response.otp.toString());
+        
+        toast({
+          title: 'OTP Sent!',
+          description: 'An OTP has been sent to your mobile number.',
         });
+        
+        // Redirect to the OTP verification page
+        router.push(`/verify-otp?mobile=${values.mobile}`);
+
       } else {
-        setServerError(error.message || 'An error occurred during signup.');
-        console.error(error);
+        throw new Error(response.error || 'Failed to send OTP.');
       }
+    } catch (error: any) {
+      setServerError(error.message || 'An error occurred during signup.');
+      console.error(error);
     } finally {
       setIsLoading(false);
     }
@@ -149,6 +133,22 @@ export function SignupForm() {
                   </FormItem>
                 )}
               />
+               <FormField
+                control={form.control}
+                name="mobile"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Mobile Number</FormLabel>
+                    <FormControl>
+                      <Input type="tel" placeholder="9876543210" {...field} />
+                    </FormControl>
+                     <FormDescription className="text-xs">
+                      We'll send you an OTP for verification.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="password"
@@ -159,8 +159,7 @@ export function SignupForm() {
                       <Input type="password" {...field} />
                     </FormControl>
                     <FormDescription className="text-xs">
-                      Must be 8+ characters with uppercase, lowercase, number,
-                      and special characters.
+                      Must be at least 8 characters long.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -174,10 +173,10 @@ export function SignupForm() {
               <Button
                 type="submit"
                 className="w-full"
-                disabled={isLoading || !auth}
+                disabled={isLoading}
               >
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Sign Up
+                Send OTP
               </Button>
             </form>
           </Form>

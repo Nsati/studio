@@ -19,16 +19,27 @@
           "description": "The user's email address.",
           "format": "email"
         },
+        "mobile": {
+          "type": "string",
+          "description": "The user's 10-digit mobile number."
+        },
         "role": {
           "type": "string",
           "description": "The user's role within the application (e.g., 'user', 'admin')."
+        },
+        "status": {
+            "type": "string",
+            "description": "The status of the user account.",
+            "enum": ["pending", "active"]
         }
       },
       "required": [
         "uid",
         "displayName",
         "email",
-        "role"
+        "mobile",
+        "role",
+        "status"
       ]
     },
     "City": {
