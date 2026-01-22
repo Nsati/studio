@@ -18,19 +18,17 @@ const firestore = getFirestore(app);
 // --- End of initialization ---
 
 
-interface ActionResponse {
+export interface SignupActionResponse {
     success: boolean;
     error?: string;
 }
 
-
-// This is the main user creation logic. It should only be called after OTP verification.
-async function createUser(userData: {
+export async function signupUser(userData: {
   name: string;
   email: string;
   mobile: string;
   pass: string;
-}): Promise<ActionResponse> {
+}): Promise<SignupActionResponse> {
     const { name, email, mobile, pass } = userData;
 
     try {
@@ -61,121 +59,5 @@ async function createUser(userData: {
             errorMessage = error.code.replace('auth/', '').replace(/-/g, ' ');
         }
         return { success: false, error: errorMessage };
-    }
-}
-
-interface SendOtpResponse {
-    success: boolean;
-    error?: string;
-    otp_id?: string;
-    // For dev mode
-    _otp?: string; 
-}
-
-export async function sendOtp(mobile: string): Promise<SendOtpResponse> {
-    const apiKey = process.env.OTP_DEV_API_KEY;
-
-    // --- Dev Mode Fallback Logic ---
-    const devModeFallback = (reason: string): SendOtpResponse => {
-        console.log('--- OTP (DEV MODE) ---');
-        console.log(`REASON: ${reason}`);
-        const devOtp = Math.floor(100000 + Math.random() * 900000).toString();
-        const devOtpId = `dev_otp_${Date.now()}`;
-        console.log(`Mobile: ${mobile}`);
-        console.log(`OTP: ${devOtp}`);
-        console.log(`OTP ID: ${devOtpId}`);
-        console.log('----------------------');
-        // This response structure matches what the client-side expects.
-        return { success: true, otp_id: devOtpId, _otp: devOtp };
-    }
-
-    if (!apiKey) {
-        return devModeFallback("OTP_DEV_API_KEY is not set in .env file.");
-    }
-    
-    const url = `https://otp.dev/json/${apiKey}/91${mobile}`;
-    
-    try {
-        const response = await fetch(url, { method: 'GET' });
-        
-        const responseText = await response.text();
-        let data;
-        try {
-            data = JSON.parse(responseText);
-        } catch (e) {
-            console.error("otp.dev returned a non-JSON response. This might be an HTML error page. See below:");
-            console.error(responseText);
-            return devModeFallback(`The OTP service returned an invalid response (Status: ${response.status}).`);
-        }
-
-        if (response.ok && data && data.status === 'ok') {
-            // Live mode success
-            return { success: true, otp_id: data.otp_id };
-        } else {
-            // Live mode API error (e.g., bad key, exhausted quota, etc.)
-            const errorMessage = data.message || `The OTP service returned an error (Status: ${response.status}).`;
-            console.error('otp.dev API Error:', errorMessage);
-            return { success: false, error: errorMessage };
-        }
-    } catch (error: any) {
-        // This block catches network errors (e.g., DNS, firewall, service down).
-        console.error('An unexpected network error occurred while sending the OTP:', error.message);
-        return devModeFallback(`An unexpected network error occurred while contacting otp.dev: ${error.message}`);
-    }
-}
-
-
-interface VerifyAndCreateUserArgs {
-    otp_id: string;
-    token: string;
-    signupData: {
-        name: string;
-        email: string;
-        mobile: string;
-        pass: string;
-    };
-    // For dev mode
-    _otp?: string;
-}
-
-export async function verifyOtpAndCreateUser({ otp_id, token, signupData, _otp }: VerifyAndCreateUserArgs): Promise<ActionResponse> {
-    const apiKey = process.env.OTP_DEV_API_KEY;
-    
-    let isVerified = false;
-
-    // Check if we are in dev mode (either because no key, or because sendOtp fell back to it)
-    if (otp_id.startsWith('dev_otp_')) {
-        console.log(`--- Verifying DEV OTP ---`);
-        console.log(`Received token: ${token}, Expected token: ${_otp}`);
-        if (token === _otp) {
-            isVerified = true;
-        }
-    } else if (apiKey) { // Production verification only if not a dev_otp
-        const url = `https://otp.dev/json-verify/${apiKey}/${otp_id}/${token}`;
-        try {
-            const response = await fetch(url, { method: 'GET' });
-            const data = await response.json();
-            
-            if (response.ok && data && data.status === 'ok') {
-                isVerified = true;
-            } else {
-                 return { success: false, error: data.message || 'Invalid OTP.' };
-            }
-        } catch (error: any) {
-             console.error('Error verifying OTP with otp.dev:', error);
-             // We don't fall back here, because if verification fails, it's a security risk to proceed.
-             return { success: false, error: 'Could not verify OTP due to a network error.' };
-        }
-    } else {
-        // This case happens if otp_id is NOT a dev_otp and there's no API key.
-        return { success: false, error: 'OTP verification is not configured correctly. No API key found.' };
-    }
-
-
-    if (isVerified) {
-        // If OTP is correct, proceed to create the user.
-        return await createUser(signupData);
-    } else {
-        return { success: false, error: 'Invalid OTP. Please try again.' };
     }
 }

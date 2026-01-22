@@ -28,7 +28,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
-import { sendOtp } from '@/app/auth/actions';
+import { signupUser } from '@/app/auth/actions';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
@@ -63,28 +63,21 @@ export function SignupForm() {
     setServerError('');
 
     try {
-      const response = await sendOtp(values.mobile);
+      const result = await signupUser({
+        name: values.name,
+        email: values.email,
+        mobile: values.mobile,
+        pass: values.password,
+      });
 
-      if (response.success && response.otp_id) {
-        // Store form data and OTP ID in session storage to pass to the verification page
-        sessionStorage.setItem('signup_data', JSON.stringify(values));
-        sessionStorage.setItem('otp_id', response.otp_id);
-        
-        // If in dev mode, also store the OTP itself
-        if (response._otp) {
-            sessionStorage.setItem('dev_otp', response._otp);
-        }
-        
+      if (result.success) {
         toast({
-          title: 'OTP Sent!',
-          description: 'A 6-digit code has been sent to your mobile number.',
+          title: 'Account Created!',
+          description: 'You can now log in with your credentials.',
         });
-        
-        // Redirect to the OTP verification page
-        router.push(`/verify-otp?mobile=${values.mobile}`);
-
+        router.push('/login');
       } else {
-        throw new Error(response.error || 'Failed to send OTP.');
+        throw new Error(result.error || 'Failed to create account.');
       }
     } catch (error: any) {
       setServerError(error.message || 'An error occurred during signup.');
@@ -148,7 +141,7 @@ export function SignupForm() {
                       <Input type="tel" placeholder="9876543210" {...field} />
                     </FormControl>
                      <FormDescription className="text-xs">
-                      We'll send you an OTP for verification.
+                      Your mobile number for our records.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -181,7 +174,7 @@ export function SignupForm() {
                 disabled={isLoading}
               >
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Send OTP
+                Create Account
               </Button>
             </form>
           </Form>
