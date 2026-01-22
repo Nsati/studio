@@ -1,12 +1,10 @@
 'use client';
 import { useMemo, useState } from 'react';
 import { useFirestore, useCollection } from '@/firebase';
-import { collectionGroup, doc, deleteDoc } from 'firebase/firestore';
+import { collectionGroup, doc, runTransaction, increment } from 'firebase/firestore';
 import type { Booking } from '@/lib/types';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
 
 import {
   Table,
@@ -57,25 +55,47 @@ function DeleteBookingAction({ booking }: { booking: Booking }) {
 
         setIsDeleting(true);
         const bookingRef = doc(firestore, 'users', booking.userId, 'bookings', booking.id);
+        const roomRef = doc(firestore, 'hotels', booking.hotelId, 'rooms', booking.roomId);
 
-        deleteDoc(bookingRef)
-            .then(() => {
-                toast({
-                    title: 'Booking Deleted',
-                    description: `Booking ID ${booking.id} has been successfully deleted.`,
-                });
-            })
-            .catch((serverError) => {
-                const permissionError = new FirestorePermissionError({
-                    path: bookingRef.path,
-                    operation: 'delete',
-                });
-                errorEmitter.emit('permission-error', permissionError);
-            })
-            .finally(() => {
-                setIsDeleting(false);
+        try {
+            await runTransaction(firestore, async (transaction) => {
+                const bookingDoc = await transaction.get(bookingRef);
+                if (!bookingDoc.exists()) {
+                    // Already deleted, do nothing.
+                    return;
+                }
+                
+                const bookingData = bookingDoc.data() as Booking;
+
+                // Increment room count only if booking was confirmed and not cancelled
+                if (bookingData.status === 'CONFIRMED') {
+                    const roomDoc = await transaction.get(roomRef);
+                    if (roomDoc.exists()) {
+                        transaction.update(roomRef, { availableRooms: increment(1) });
+                    }
+                }
+                
+                // Finally, delete the booking
+                transaction.delete(bookingRef);
             });
+
+            toast({
+                title: 'Booking Deleted',
+                description: `Booking ID ${booking.id} has been successfully deleted.`,
+            });
+
+        } catch (error: any) {
+            console.error("Deletion failed:", error);
+            toast({
+                variant: "destructive",
+                title: "Deletion Failed",
+                description: error.message || "Could not delete the booking. Please check Firestore rules and transaction logic.",
+            });
+        } finally {
+            setIsDeleting(false);
+        }
     };
+
 
     return (
         <AlertDialog>
@@ -88,7 +108,8 @@ function DeleteBookingAction({ booking }: { booking: Booking }) {
                 <AlertDialogHeader>
                     <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                     <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete the booking record for {booking.customerName}.
+                        This will permanently delete the booking record for {booking.customerName}.
+                        If the booking was confirmed, the room will be added back to the inventory.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
