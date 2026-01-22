@@ -1,3 +1,4 @@
+
 'use server';
 
 import { firebaseConfig } from '@/firebase/config';
@@ -94,6 +95,17 @@ export async function sendOtp(mobile: string): Promise<SendOtpResponse> {
     
     try {
         const response = await fetch(url.toString(), { method: 'GET' });
+
+        // Check if the response was successful (status code 200-299)
+        if (!response.ok) {
+            const errorBody = await response.text();
+            console.error(`otp.dev API error: Status ${response.status}`, errorBody);
+            if (response.status === 401 || response.status === 403) {
+                 return { success: false, error: 'The provided API credentials for the OTP service are invalid. Please check your API key.' };
+            }
+            return { success: false, error: `The OTP service returned an error (Status: ${response.status}). Please try again later.` };
+        }
+        
         const data = await response.json();
 
         if (data.status === 'ok') {
@@ -104,6 +116,10 @@ export async function sendOtp(mobile: string): Promise<SendOtpResponse> {
         }
     } catch (error: any) {
         console.error('Error sending OTP via otp.dev:', error);
+         if (error instanceof SyntaxError) {
+            // This specifically catches JSON parsing errors, which is the core of the "Unexpected token '<'" issue.
+            return { success: false, error: 'An invalid response was received from the OTP service. This might be due to incorrect API credentials.' };
+        }
         return { success: false, error: error.message || 'An unexpected error occurred while sending OTP.' };
     }
 }
