@@ -90,29 +90,37 @@ export async function sendOtp(mobile: string): Promise<SendOtpResponse> {
     }
 
     if (!apiKey) {
-        return devModeFallback("OTP_DEV_API_KEY is not set.");
+        return devModeFallback("OTP_DEV_API_KEY is not set in .env file.");
     }
     
     const url = `https://otp.dev/json/${apiKey}/91${mobile}`;
     
     try {
         const response = await fetch(url, { method: 'GET' });
-        const data = await response.json();
+        
+        const responseText = await response.text();
+        let data;
+        try {
+            data = JSON.parse(responseText);
+        } catch (e) {
+            console.error("otp.dev returned a non-JSON response. This might be an HTML error page. See below:");
+            console.error(responseText);
+            return devModeFallback(`The OTP service returned an invalid response (Status: ${response.status}).`);
+        }
 
-        if (response.ok && data.status === 'ok') {
+        if (response.ok && data && data.status === 'ok') {
             // Live mode success
             return { success: true, otp_id: data.otp_id };
         } else {
-            // Live mode API error (e.g., bad key, etc.)
+            // Live mode API error (e.g., bad key, exhausted quota, etc.)
             const errorMessage = data.message || `The OTP service returned an error (Status: ${response.status}).`;
             console.error('otp.dev API Error:', errorMessage);
             return { success: false, error: errorMessage };
         }
     } catch (error: any) {
         // This block catches network errors (e.g., DNS, firewall, service down).
-        // Instead of failing, we'll fall back to dev mode.
-        console.error('Error sending OTP via otp.dev (falling back to dev mode):', error.message);
-        return devModeFallback(`Network error while contacting otp.dev: ${error.message}`);
+        console.error('An unexpected network error occurred while sending the OTP:', error.message);
+        return devModeFallback(`An unexpected network error occurred while contacting otp.dev: ${error.message}`);
     }
 }
 
@@ -148,7 +156,7 @@ export async function verifyOtpAndCreateUser({ otp_id, token, signupData, _otp }
             const response = await fetch(url, { method: 'GET' });
             const data = await response.json();
             
-            if (response.ok && data.status === 'ok') {
+            if (response.ok && data && data.status === 'ok') {
                 isVerified = true;
             } else {
                  return { success: false, error: data.message || 'Invalid OTP.' };
