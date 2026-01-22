@@ -35,9 +35,10 @@ export async function sendOtp(mobile: string): Promise<ActionResponse> {
     const otp = Math.floor(100000 + Math.random() * 900000); // Generate 6-digit OTP
     const smsContent = `Your OTP for Uttarakhand Getaways is ${otp}. Do not share this with anyone.`;
 
-    // In development or if keys are missing, we don't send a real SMS
-    if (!authKey || !senderId) {
+    // In development or if keys are missing/placeholders, we don't send a real SMS
+    if (!authKey || !senderId || senderId === 'SENDERID') {
         console.log('--- OTP (DEV MODE) ---');
+        console.log(`Authkey API Key or Sender ID not set. Using DEV MODE.`);
         console.log(`Mobile: ${mobile}`);
         console.log(`OTP: ${otp}`);
         console.log('----------------------');
@@ -53,15 +54,8 @@ export async function sendOtp(mobile: string): Promise<ActionResponse> {
 
     try {
         const response = await fetch(url.toString(), { method: 'GET' });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error(`Authkey.io API request failed with status ${response.status}:`, errorText);
-            throw new Error('Failed to communicate with OTP service. Please try again later.');
-        }
         
         const contentType = response.headers.get('content-type');
-        // Check if response is JSON before parsing
         if (contentType && contentType.includes('application/json')) {
              const data = await response.json();
             if (data.Status === 'Success') {
@@ -69,17 +63,18 @@ export async function sendOtp(mobile: string): Promise<ActionResponse> {
                 return { success: true, otp: otp };
             } else {
                 console.error('Authkey Error:', data.Msg);
-                return { success: false, error: data.Msg || 'Failed to send OTP. Please check the credentials and mobile number.' };
+                return { success: false, error: `Authkey Error: ${data.Msg || 'Please check API credentials and mobile number.'}` };
             }
         } else {
-            // Handle non-JSON responses
+            // Handle non-JSON responses, which usually indicates a credential or server error from Authkey
             const errorText = await response.text();
             console.error('Authkey.io returned a non-JSON response:', errorText);
-            throw new Error('An invalid response was received from the OTP service. This might be due to incorrect API credentials.');
+            const detailedError = `An invalid response was received from the OTP service. This is often due to incorrect API credentials (Auth Key or Sender ID). Please verify them in your .env file.`;
+            return { success: false, error: detailedError };
         }
     } catch (error: any) {
         console.error('Error sending OTP:', error);
-        // This will catch fetch errors, json parsing errors, or the errors we explicitly throw.
+        // This will catch fetch errors (e.g., network issues)
         return { success: false, error: error.message || 'An unexpected error occurred while sending OTP.' };
     }
 }
