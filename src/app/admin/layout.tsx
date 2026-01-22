@@ -16,6 +16,7 @@ import {
   Tag,
   ShieldAlert,
   Menu,
+  Package,
 } from 'lucide-react';
 import { useUser } from '@/firebase';
 import { Logo } from '@/components/shared/Logo';
@@ -30,6 +31,7 @@ const navItems = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/bookings', label: 'Bookings', icon: BookOpen },
   { href: '/admin/hotels', label: 'Hotels', icon: Hotel }, // Inventory part 1
+  { href: '/admin/tour-packages', label: 'Tours', icon: Package },
   // For now, Rooms will be managed within each hotel's edit page.
   { href: '/admin/users', label: 'Customers', icon: Users2 }, // Customers / Users & Roles
   { href: '/admin/payments', label: 'Payments', icon: Receipt },

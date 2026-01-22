@@ -1,13 +1,19 @@
+'use client';
+
 import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { dummyTourPackages } from '@/lib/dummy-data';
 import { Calendar, IndianRupee, Mountain, MapPin } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
+import { useCollection, useFirestore } from '@/firebase';
+import { collection } from 'firebase/firestore';
+import type { TourPackage } from '@/lib/types';
+import { useMemo } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 
-function TourPackageCard({ tourPackage }: { tourPackage: (typeof dummyTourPackages)[0] }) {
+function TourPackageCard({ tourPackage }: { tourPackage: TourPackage }) {
   const image = PlaceHolderImages.find((img) => img.id === tourPackage.image);
   return (
     <Card className="flex flex-col overflow-hidden transition-shadow hover:shadow-lg">
@@ -59,6 +65,67 @@ function TourPackageCard({ tourPackage }: { tourPackage: (typeof dummyTourPackag
   );
 }
 
+function TourPackageCardSkeleton() {
+  return (
+    <Card className="flex flex-col overflow-hidden">
+      <Skeleton className="w-full aspect-video" />
+      <CardHeader>
+        <Skeleton className="h-6 w-3/4 mb-2" />
+        <Skeleton className="h-4 w-1/3" />
+      </CardHeader>
+      <CardContent>
+        <Skeleton className="h-4 w-1/2 mb-2" />
+        <div className="flex flex-wrap gap-1.5 mb-4">
+          <Skeleton className="h-5 w-16 rounded-full" />
+          <Skeleton className="h-5 w-20 rounded-full" />
+        </div>
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-full mt-2" />
+      </CardContent>
+      <CardFooter className="flex items-center justify-between bg-muted/50 p-4">
+        <div className="space-y-1">
+          <Skeleton className="h-3 w-16" />
+          <Skeleton className="h-6 w-24" />
+        </div>
+        <Skeleton className="h-10 w-28" />
+      </CardFooter>
+    </Card>
+  );
+}
+
+function PackagesGrid() {
+  const firestore = useFirestore();
+  const packagesQuery = useMemo(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'tourPackages');
+  }, [firestore]);
+
+  const { data: tourPackages, isLoading } = useCollection<TourPackage>(packagesQuery);
+  
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {Array.from({ length: 6 }).map((_, i) => <TourPackageCardSkeleton key={i} />)}
+      </div>
+    );
+  }
+
+  if (!tourPackages || tourPackages.length === 0) {
+    return (
+      <div className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-lg">
+          <p>No tour packages found. Please add some from the admin panel.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {tourPackages.map((pkg) => (
+        <TourPackageCard key={pkg.id} tourPackage={pkg} />
+      ))}
+    </div>
+  );
+}
 
 export default function TourPackagesPage() {
   const heroImage = PlaceHolderImages.find((img) => img.id === 'tour-packages-hero');
@@ -96,11 +163,7 @@ export default function TourPackagesPage() {
               From spiritual journeys to thrilling escapades, we have a package for every traveler.
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {dummyTourPackages.map((pkg) => (
-              <TourPackageCard key={pkg.id} tourPackage={pkg} />
-            ))}
-          </div>
+          <PackagesGrid />
         </div>
       </section>
     </div>

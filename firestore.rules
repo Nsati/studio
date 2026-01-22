@@ -82,5 +82,11 @@ service cloud.firestore {
     match /{path=**}/bookings/{bookingId} {
         allow list: if isAdmin();
     }
+
+    // Tour Packages are publicly readable. Only admins can modify them.
+    match /tourPackages/{packageId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
   }
 }
