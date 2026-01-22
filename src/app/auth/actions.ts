@@ -89,7 +89,7 @@ export async function sendOtp(mobile: string): Promise<SendOtpResponse> {
         return { success: true, otp_id: devOtpId, _otp: devOtp };
     }
     
-    const url = new URL('https://otp.dev/send');
+    const url = new URL('https://otp.dev/api/send');
     url.searchParams.append('key', apiKey);
     url.searchParams.append('recipient', mobile);
     
@@ -151,7 +151,7 @@ export async function verifyOtpAndCreateUser({ otp_id, token, signupData, _otp }
         }
     } else if (apiKey) {
         // Production verification
-        const url = new URL('https://otp.dev/verify');
+        const url = new URL('https://otp.dev/api/verify');
         url.searchParams.append('key', apiKey);
         url.searchParams.append('otp_id', otp_id);
         url.searchParams.append('token', token);
