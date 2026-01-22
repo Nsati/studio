@@ -1,4 +1,3 @@
-
 'use server';
 
 import { firebaseConfig } from '@/firebase/config';
@@ -89,38 +88,26 @@ export async function sendOtp(mobile: string): Promise<SendOtpResponse> {
         return { success: true, otp_id: devOtpId, _otp: devOtp };
     }
     
-    const url = new URL('https://otp.dev/api/send');
-    url.searchParams.append('key', apiKey);
-    url.searchParams.append('recipient', `91${mobile}`);
+    // Correct API endpoint structure for otp.dev
+    const url = `https://otp.dev/json/${apiKey}/91${mobile}`;
     
     try {
-        const response = await fetch(url.toString(), { method: 'GET' });
+        const response = await fetch(url, { method: 'GET' });
 
-        // Check if the response was successful (status code 200-299)
-        if (!response.ok) {
-            const errorBody = await response.text();
-            console.error(`otp.dev API error: Status ${response.status}`, errorBody);
-            if (response.status === 401 || response.status === 403) {
-                 return { success: false, error: 'The provided API credentials for the OTP service are invalid. Please check your API key.' };
-            }
-            return { success: false, error: `The OTP service returned an error (Status: ${response.status}). Please try again later.` };
-        }
-        
+        // Even with non-200 status, otp.dev often returns a JSON error body
         const data = await response.json();
 
-        if (data.status === 'ok') {
+        if (response.ok && data.status === 'ok') {
             return { success: true, otp_id: data.otp_id };
         } else {
-            console.error('otp.dev Error:', data.message);
-            return { success: false, error: data.message || 'Failed to send OTP.' };
+            // Handle both network errors (via response.ok) and API errors (via data.status)
+            const errorMessage = data.message || `The OTP service returned an error (Status: ${response.status}).`;
+            console.error('otp.dev Error:', errorMessage);
+            return { success: false, error: errorMessage };
         }
     } catch (error: any) {
         console.error('Error sending OTP via otp.dev:', error);
-         if (error instanceof SyntaxError) {
-            // This specifically catches JSON parsing errors, which is the core of the "Unexpected token '<'" issue.
-            return { success: false, error: 'An invalid response was received from the OTP service. This might be due to incorrect API credentials.' };
-        }
-        return { success: false, error: error.message || 'An unexpected error occurred while sending OTP.' };
+        return { success: false, error: 'An unexpected network error occurred while sending the OTP.' };
     }
 }
 
@@ -151,28 +138,13 @@ export async function verifyOtpAndCreateUser({ otp_id, token, signupData, _otp }
         }
     } else if (apiKey) {
         // Production verification
-        const url = new URL('https://otp.dev/api/verify');
-        url.searchParams.append('key', apiKey);
-        url.searchParams.append('otp_id', otp_id);
-        url.searchParams.append('token', token);
+        const url = `https://otp.dev/json-verify/${apiKey}/${otp_id}/${token}`;
 
         try {
-            const response = await fetch(url.toString(), { method: 'GET' });
-            
-            if (!response.ok) {
-                 const errorText = await response.text();
-                 // Try to parse as JSON, but fall back to text
-                 try {
-                     const errorJson = JSON.parse(errorText);
-                     throw new Error(errorJson.message || `OTP verification failed with status: ${response.status}`);
-                 } catch {
-                    throw new Error(`OTP verification failed: ${errorText}`);
-                 }
-            }
-
+            const response = await fetch(url, { method: 'GET' });
             const data = await response.json();
-
-            if (data.status === 'ok') {
+            
+            if (response.ok && data.status === 'ok') {
                 isVerified = true;
             } else {
                  return { success: false, error: data.message || 'Invalid OTP.' };
