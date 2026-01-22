@@ -61,11 +61,14 @@ const formSchema = z.object({
     .string()
     .min(2, { message: 'Name must be at least 2 characters.' }),
   email: z.string().email({ message: 'Please enter a valid email address.' }),
-  phoneNumber: z
-    .string()
-    .regex(/^\d{10}$/, { message: 'Please enter a valid 10-digit mobile number.' })
-    .optional()
-    .or(z.literal('')),
+  phoneNumber: z.string().superRefine((val, ctx) => {
+    if (val && val.length > 0 && !/^\d{10}$/.test(val)) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Please enter a valid 10-digit mobile number.",
+        });
+    }
+  }),
   password: z
     .string()
     .min(8, { message: 'Password must be at least 8 characters.' })
