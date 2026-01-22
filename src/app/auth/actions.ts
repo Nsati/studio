@@ -6,11 +6,7 @@ import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
 
-// This is a server-side only file.
-
 // --- Server-side Firebase Admin initialization ---
-// We use the client SDK here but initialized on the server.
-// In a real production app with a separate backend, you would use the Admin SDK.
 let app: FirebaseApp;
 if (!getApps().length) {
   app = initializeApp(firebaseConfig);
@@ -25,62 +21,11 @@ const firestore = getFirestore(app);
 interface ActionResponse {
     success: boolean;
     error?: string;
-    otp?: number; // Only for dev mode
 }
 
 
-export async function sendOtp(mobile: string): Promise<ActionResponse> {
-    const authKey = process.env.AUTHKEY_API_KEY;
-    const senderId = process.env.AUTHKEY_SENDER_ID;
-    const otp = Math.floor(100000 + Math.random() * 900000); // Generate 6-digit OTP
-    const smsContent = `Your OTP for Uttarakhand Getaways is ${otp}. Do not share this with anyone.`;
-
-    // In development or if keys are missing/placeholders, we don't send a real SMS
-    if (!authKey || !senderId || senderId === 'SENDERID') {
-        console.log('--- OTP (DEV MODE) ---');
-        console.log(`Authkey API Key or Sender ID not set. Using DEV MODE.`);
-        console.log(`Mobile: ${mobile}`);
-        console.log(`OTP: ${otp}`);
-        console.log('----------------------');
-        return { success: true, otp: otp }; // Return OTP for testing
-    }
-    
-    const url = new URL('https://console.authkey.io/request');
-    url.searchParams.append('authkey', authKey);
-    url.searchParams.append('mobile', mobile);
-    url.searchParams.append('country_code', '91');
-    url.searchParams.append('sms', smsContent);
-    url.searchParams.append('sender', senderId);
-
-    try {
-        const response = await fetch(url.toString(), { method: 'GET' });
-        
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-             const data = await response.json();
-            if (data.Status === 'Success') {
-                // In a real production scenario, you would NOT return the OTP to the client.
-                return { success: true, otp: otp };
-            } else {
-                console.error('Authkey Error:', data.Msg);
-                return { success: false, error: `Authkey Error: ${data.Msg || 'Please check API credentials and mobile number.'}` };
-            }
-        } else {
-            // Handle non-JSON responses, which usually indicates a credential or server error from Authkey
-            const errorText = await response.text();
-            console.error('Authkey.io returned a non-JSON response:', errorText);
-            const detailedError = `An invalid response was received from the OTP service. This is often due to incorrect API credentials (Auth Key or Sender ID). Please verify them in your .env file.`;
-            return { success: false, error: detailedError };
-        }
-    } catch (error: any) {
-        console.error('Error sending OTP:', error);
-        // This will catch fetch errors (e.g., network issues)
-        return { success: false, error: error.message || 'An unexpected error occurred while sending OTP.' };
-    }
-}
-
-
-export async function createUser(userData: {
+// This is the main user creation logic. It should only be called after OTP verification.
+async function createUser(userData: {
   name: string;
   email: string;
   mobile: string;
@@ -116,5 +61,107 @@ export async function createUser(userData: {
             errorMessage = error.code.replace('auth/', '').replace(/-/g, ' ');
         }
         return { success: false, error: errorMessage };
+    }
+}
+
+interface SendOtpResponse {
+    success: boolean;
+    error?: string;
+    otp_id?: string;
+    // For dev mode
+    _otp?: string; 
+}
+
+export async function sendOtp(mobile: string): Promise<SendOtpResponse> {
+    const apiKey = process.env.OTP_DEV_API_KEY;
+
+    // In development or if key is missing, we don't send a real SMS
+    if (!apiKey) {
+        console.log('--- OTP (DEV MODE) ---');
+        console.log(`otp.dev API Key not set. Using DEV MODE.`);
+        const devOtp = Math.floor(100000 + Math.random() * 900000).toString();
+        const devOtpId = `dev_otp_${Date.now()}`;
+        console.log(`Mobile: ${mobile}`);
+        console.log(`OTP: ${devOtp}`);
+        console.log(`OTP ID: ${devOtpId}`);
+        console.log('----------------------');
+        return { success: true, otp_id: devOtpId, _otp: devOtp };
+    }
+    
+    const url = new URL('https://otp.dev/send');
+    url.searchParams.append('key', apiKey);
+    url.searchParams.append('recipient', mobile);
+    
+    try {
+        const response = await fetch(url.toString(), { method: 'GET' });
+        const data = await response.json();
+
+        if (data.status === 'ok') {
+            return { success: true, otp_id: data.otp_id };
+        } else {
+            console.error('otp.dev Error:', data.message);
+            return { success: false, error: data.message || 'Failed to send OTP.' };
+        }
+    } catch (error: any) {
+        console.error('Error sending OTP via otp.dev:', error);
+        return { success: false, error: error.message || 'An unexpected error occurred while sending OTP.' };
+    }
+}
+
+interface VerifyAndCreateUserArgs {
+    otp_id: string;
+    token: string;
+    signupData: {
+        name: string;
+        email: string;
+        mobile: string;
+        pass: string;
+    };
+    // For dev mode
+    _otp?: string;
+}
+
+export async function verifyOtpAndCreateUser({ otp_id, token, signupData, _otp }: VerifyAndCreateUserArgs): Promise<ActionResponse> {
+    const apiKey = process.env.OTP_DEV_API_KEY;
+    
+    let isVerified = false;
+
+    if (!apiKey && otp_id.startsWith('dev_otp_')) {
+        // Dev mode verification
+        console.log(`--- Verifying DEV OTP ---`);
+        console.log(`Received token: ${token}, Expected token: ${_otp}`);
+        if (token === _otp) {
+            isVerified = true;
+        }
+    } else if (apiKey) {
+        // Production verification
+        const url = new URL('https://otp.dev/verify');
+        url.searchParams.append('key', apiKey);
+        url.searchParams.append('otp_id', otp_id);
+        url.searchParams.append('token', token);
+
+        try {
+            const response = await fetch(url.toString(), { method: 'GET' });
+            const data = await response.json();
+
+            if (data.status === 'ok') {
+                isVerified = true;
+            } else {
+                 return { success: false, error: data.message || 'Invalid OTP.' };
+            }
+        } catch (error: any) {
+             console.error('Error verifying OTP with otp.dev:', error);
+             return { success: false, error: 'Could not verify OTP.' };
+        }
+    } else {
+        return { success: false, error: 'OTP verification is not configured correctly.' };
+    }
+
+
+    if (isVerified) {
+        // If OTP is correct, proceed to create the user.
+        return await createUser(signupData);
+    } else {
+        return { success: false, error: 'Invalid OTP. Please try again.' };
     }
 }

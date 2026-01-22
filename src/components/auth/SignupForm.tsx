@@ -65,14 +65,19 @@ export function SignupForm() {
     try {
       const response = await sendOtp(values.mobile);
 
-      if (response.success && response.otp) {
-        // Store form data and OTP in session storage to pass to the verification page
+      if (response.success && response.otp_id) {
+        // Store form data and OTP ID in session storage to pass to the verification page
         sessionStorage.setItem('signup_data', JSON.stringify(values));
-        sessionStorage.setItem('signup_otp', response.otp.toString());
+        sessionStorage.setItem('otp_id', response.otp_id);
+        
+        // If in dev mode, also store the OTP itself
+        if (response._otp) {
+            sessionStorage.setItem('dev_otp', response._otp);
+        }
         
         toast({
           title: 'OTP Sent!',
-          description: 'An OTP has been sent to your mobile number.',
+          description: 'A 6-digit code has been sent to your mobile number.',
         });
         
         // Redirect to the OTP verification page

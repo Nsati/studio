@@ -3,7 +3,7 @@
 import { Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { createUser } from '@/app/auth/actions';
+import { verifyOtpAndCreateUser } from '@/app/auth/actions';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -46,44 +46,48 @@ function VerifyOtpComponent() {
         setIsLoading(true);
         setError('');
 
-        const correctOtp = sessionStorage.getItem('signup_otp');
         const signupDataString = sessionStorage.getItem('signup_data');
+        const otpId = sessionStorage.getItem('otp_id');
+        const devOtp = sessionStorage.getItem('dev_otp'); // For dev mode
 
-        if (!correctOtp || !signupDataString) {
+        if (!signupDataString || !otpId) {
             setError('Session expired. Please try signing up again.');
             setIsLoading(false);
             return;
         }
 
-        if (otp === correctOtp) {
-            try {
-                const signupData = JSON.parse(signupDataString);
-                const result = await createUser({
+        try {
+            const signupData = JSON.parse(signupDataString);
+            
+            const result = await verifyOtpAndCreateUser({
+                otp_id: otpId,
+                token: otp,
+                signupData: {
                     name: signupData.name,
                     email: signupData.email,
                     mobile: signupData.mobile,
                     pass: signupData.password,
+                },
+                _otp: devOtp || undefined,
+            });
+            
+            if (result.success) {
+                // Cleanup session storage
+                sessionStorage.removeItem('signup_data');
+                sessionStorage.removeItem('otp_id');
+                sessionStorage.removeItem('dev_otp');
+
+                toast({
+                    title: 'Account Created!',
+                    description: 'You can now log in with your credentials.',
                 });
-                
-                if (result.success) {
-                    // Cleanup session storage
-                    sessionStorage.removeItem('signup_data');
-                    sessionStorage.removeItem('signup_otp');
-
-                    toast({
-                        title: 'Account Created!',
-                        description: 'You can now log in with your credentials.',
-                    });
-                    router.push('/login');
-                } else {
-                    throw new Error(result.error || 'Failed to create account.');
-                }
-
-            } catch (e: any) {
-                setError(e.message);
+                router.push('/login');
+            } else {
+                throw new Error(result.error || 'Failed to create account.');
             }
-        } else {
-            setError('Invalid OTP. Please try again.');
+
+        } catch (e: any) {
+            setError(e.message);
         }
 
         setIsLoading(false);
