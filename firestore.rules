@@ -16,21 +16,11 @@ service cloud.firestore {
 
     match /users/{userId} {
       // On creation (signup), a user can create their own document.
-      // If phone is provided, status must be 'pending' for OTP verification.
-      // If no phone, status must be 'active'.
+      // All users are now created with status 'active'.
       allow create: if isOwner(userId) && 
                       request.resource.data.uid == userId &&
                       request.resource.data.role == 'user' &&
-                      (
-                        (
-                          request.resource.data.phoneNumber != null &&
-                          request.resource.data.status == 'pending'
-                        ) ||
-                        (
-                          request.resource.data.phoneNumber == null &&
-                          request.resource.data.status == 'active'
-                        )
-                      );
+                      request.resource.data.status == 'active';
 
 
       // A user can read their own profile. An admin can read any profile.
@@ -44,12 +34,6 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
     
-    // New collection for OTPs
-    match /otp_verification/{userId} {
-      // A user can manage their own OTP document.
-      allow read, write, delete: if isOwner(userId);
-    }
-
     // Cities are publicly readable. Only admins can modify them.
     match /cities/{cityId} {
       allow read: if true;

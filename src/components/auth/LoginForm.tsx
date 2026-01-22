@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useAuth, useFirestore, useUser } from '@/firebase';
-import { doc, getDoc } from 'firebase/firestore'; 
+import { doc, getDoc } from 'firebase/firestore';
 import type { UserProfile } from '@/lib/types';
 
 import { Button } from '@/components/ui/button';
@@ -53,16 +53,6 @@ export function LoginForm() {
       }
       
       const userProfile = userDocSnap.data() as UserProfile;
-
-      if (userProfile.status !== 'active') {
-        // Account is pending, redirect to OTP verification. User remains logged in.
-        toast({
-          title: 'Account Pending',
-          description: 'Redirecting you to complete OTP verification.',
-        });
-        router.push('/verify-otp');
-        return; // Stop further execution
-      }
 
       toast({ title: 'Login successful!', description: `Welcome back, ${userProfile.displayName}!` });
       const redirect = searchParams.get('redirect');

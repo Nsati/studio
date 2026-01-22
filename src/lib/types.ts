@@ -30,16 +30,8 @@ export interface UserProfile {
   email: string;
   phoneNumber?: string;
   role: 'user' | 'admin';
-  status: 'pending' | 'active';
+  status: 'active';
 }
-
-export interface OtpVerification {
-  id?: string; // Corresponds to userId
-  otp: string;
-  expiresAt: Date;
-  attempts?: number;
-}
-
 
 export interface Booking {
   id?: string; 
