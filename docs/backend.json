@@ -292,6 +292,50 @@
         "image",
         "description"
       ]
+    },
+    "Promotion": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Promotion",
+      "type": "object",
+      "description": "Represents a promotional offer or discount coupon.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the promotion (e.g., the coupon code)."
+        },
+        "code": {
+          "type": "string",
+          "description": "The coupon code that users will enter."
+        },
+        "description": {
+          "type": "string",
+          "description": "A short description of the promotion."
+        },
+        "discountType": {
+          "type": "string",
+          "description": "The type of discount.",
+          "enum": [
+            "percentage",
+            "fixed"
+          ]
+        },
+        "discountValue": {
+          "type": "number",
+          "description": "The value of the discount (e.g., 10 for 10% or 500 for ₹500)."
+        },
+        "isActive": {
+          "type": "boolean",
+          "description": "Whether the promotion is currently active."
+        }
+      },
+      "required": [
+        "id",
+        "code",
+        "description",
+        "discountType",
+        "discountValue",
+        "isActive"
+      ]
     }
   },
   "auth": {
@@ -402,6 +446,22 @@
             {
               "name": "packageId",
               "description": "The unique identifier of the tour package."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/promotions/{promotionId}",
+        "definition": {
+          "entityName": "Promotion",
+          "schema": {
+            "$ref": "#/backend/entities/Promotion"
+          },
+          "description": "Stores promotional codes. Publicly readable so clients can verify coupons, but only writable by admins.",
+          "params": [
+            {
+              "name": "promotionId",
+              "description": "The unique identifier of the promotion (coupon code)."
             }
           ]
         }

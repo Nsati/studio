@@ -86,5 +86,11 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isAdmin();
     }
+
+    // Promotions are publicly readable so client can check them, but only writable by admins.
+    match /promotions/{promotionId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
   }
 }

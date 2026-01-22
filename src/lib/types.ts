@@ -60,6 +60,15 @@ export interface TourPackage {
   description: string;
 }
 
+export interface Promotion {
+  id: string; // The coupon code, also used as doc ID
+  code: string;
+  description: string;
+  discountType: 'percentage' | 'fixed';
+  discountValue: number;
+  isActive: boolean;
+}
+
 
 // This mock type is no longer used for primary auth state.
 export type MockUser = {

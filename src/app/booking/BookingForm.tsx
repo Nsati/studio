@@ -8,9 +8,9 @@ import { createRazorpayOrder, verifyRazorpayPayment } from '@/app/booking/action
 import { signInAnonymously } from 'firebase/auth';
 
 
-import type { Hotel, Room, Booking } from '@/lib/types';
+import type { Hotel, Room, Booking, Promotion } from '@/lib/types';
 import { useUser, useFirestore, useDoc, useCollection, useAuth } from '@/firebase';
-import { doc, runTransaction, collection, increment } from 'firebase/firestore';
+import { doc, runTransaction, collection, increment, getDoc } from 'firebase/firestore';
 
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -132,22 +132,39 @@ export function BookingForm() {
     const basePrice = room.price * nights;
     const totalPrice = basePrice - discount;
 
-    const handleApplyCoupon = () => {
-        if (couponCode.toUpperCase() === 'GET10') {
-            const discountAmount = basePrice * 0.10;
+    const handleApplyCoupon = async () => {
+        if (!couponCode) return;
+        if (!firestore) {
+            toast({ variant: 'destructive', title: 'Database not available' });
+            return;
+        }
+
+        const couponRef = doc(firestore, 'promotions', couponCode.toUpperCase());
+        const couponSnap = await getDoc(couponRef);
+
+        if (couponSnap.exists() && couponSnap.data().isActive) {
+            const promotion = couponSnap.data() as Promotion;
+            let discountAmount = 0;
+
+            if (promotion.discountType === 'percentage') {
+                discountAmount = basePrice * (promotion.discountValue / 100);
+                setCouponMessage(`🎉 Coupon "${promotion.code}" applied! You saved ${promotion.discountValue}%.`);
+            } else { // fixed
+                discountAmount = promotion.discountValue;
+                 setCouponMessage(`🎉 Coupon "${promotion.code}" applied! You saved a flat amount.`);
+            }
             setDiscount(discountAmount);
-            setCouponMessage(`🎉 Coupon "GET10" applied! You saved 10%.`);
             toast({
                 title: 'Coupon Applied!',
                 description: `You saved ${discountAmount.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}.`,
             });
         } else {
             setDiscount(0);
-            setCouponMessage('Invalid coupon code.');
+            setCouponMessage('Invalid or expired coupon code.');
             toast({
                 variant: 'destructive',
                 title: 'Invalid Coupon',
-                description: 'The coupon code you entered is not valid.',
+                description: 'The coupon code you entered is not valid or has expired.',
             });
         }
     };
