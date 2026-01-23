@@ -24,7 +24,7 @@ service cloud.firestore {
                       'mobile' in request.resource.data;
 
       // A user can read their own profile. An admin can read any profile.
-      allow read: if isOwner(userId) || isAdmin();
+      allow get, list: if isOwner(userId) || isAdmin();
       
       // An admin can update any field in any profile.
       // A regular user can update their own profile, as long as they don't change their role or status.
@@ -36,18 +36,18 @@ service cloud.firestore {
     
     // Cities are publicly readable. Only admins can modify them.
     match /cities/{cityId} {
-      allow read: if true;
+      allow get, list: if true;
       allow write: if isAdmin();
     }
     
     // Hotels are publicly readable. Only admins can modify them.
     match /hotels/{hotelId} {
-      allow read: if true;
+      allow get, list: if true;
       allow write: if isAdmin();
     }
 
     match /hotels/{hotelId}/rooms/{roomId} {
-        allow read: if true;
+        allow get, list: if true;
         allow create, delete: if isAdmin(); // Only admins can create/delete rooms
         
         // Definitive fix for update permissions
@@ -67,7 +67,7 @@ service cloud.firestore {
 
     // Reviews are publicly readable. Authenticated users can create them for a hotel.
     match /hotels/{hotelId}/reviews/{reviewId} {
-      allow list, read: if true;
+      allow get, list: if true;
       // Allow create if user is authenticated and the review belongs to them.
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
       // Only the user who wrote it or an admin can delete/update.
@@ -77,11 +77,11 @@ service cloud.firestore {
     // Users can create, read, update, and delete their own bookings.
     // Admins can read/delete any booking for management purposes.
     match /users/{userId}/bookings/{bookingId} {
-      // User can create their own booking.
-      allow create: if isOwner(userId) && request.resource.data.userId == request.auth.uid;
+      // User can create their own booking, as long as they are authenticated and writing to their own user path.
+      allow create: if isOwner(userId);
       
       // User can read (get/list) their own bookings. Admins can read any.
-      allow read: if isOwner(userId) || isAdmin();
+      allow get, list: if isOwner(userId) || isAdmin();
       
       // User can update their own booking (e.g. to CANCELLED). Admins can update any.
       allow update: if (isOwner(userId) && resource.data.userId == request.auth.uid) || isAdmin();
@@ -98,13 +98,13 @@ service cloud.firestore {
 
     // Tour Packages are publicly readable. Only admins can modify them.
     match /tourPackages/{packageId} {
-      allow read: if true;
+      allow get, list: if true;
       allow write: if isAdmin();
     }
 
     // Promotions are publicly readable so client can check them, but only writable by admins.
     match /promotions/{promotionId} {
-      allow read: if true;
+      allow get, list: if true;
       allow write: if isAdmin();
     }
   }
