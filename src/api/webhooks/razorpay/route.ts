@@ -3,10 +3,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import getRawBody from 'raw-body';
 import { adminDb } from '@/firebase/admin';
-import { generateBookingConfirmationEmail } from '@/ai/flows/generate-booking-confirmation-email';
 import { sendEmail } from '@/services/email';
 import type { Booking, Hotel, Room } from '@/lib/types';
 import * as admin from 'firebase-admin';
+import { format } from 'date-fns';
 
 // Disable Next.js body parser to access the raw body for signature verification
 export const config = {
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
     }
 
-    console.log("STEP 2: Webhook verified successfully.");
+    console.log("STEP 2: Webhook signature verified successfully.");
 
     const event = bodyJson.event;
     const payload = bodyJson.payload;
@@ -113,31 +113,45 @@ export async function POST(req: NextRequest) {
          throw new Error("Transaction finished but booking data for email is not available.");
       }
 
-      // --- Transaction successful, now send email ---
+      // --- Transaction successful, now send email (DECOUPLED AND ROBUST) ---
       try {
         const hotelSnap = await adminDb.collection('hotels').doc(confirmedBookingData.hotelId).get();
         if (!hotelSnap.exists) throw new Error(`Hotel ${confirmedBookingData.hotelId} not found for email generation`);
         
         const hotel = hotelSnap.data() as Hotel;
 
-        console.log(`STEP 4: Attempting to generate email content for booking ${booking_id}`);
-        const emailContent = await generateBookingConfirmationEmail({
-            hotelName: hotel.name,
-            customerName: confirmedBookingData.customerName,
-            checkIn: (confirmedBookingData.checkIn as admin.firestore.Timestamp).toDate().toISOString(),
-            checkOut: (confirmedBookingData.checkOut as admin.firestore.Timestamp).toDate().toISOString(),
-            roomType: confirmedBookingData.roomType,
-            totalPrice: confirmedBookingData.totalPrice,
-            bookingId: confirmedBookingData.id!,
-        });
+        console.log(`STEP 4: Attempting to send email for booking ${booking_id}`);
         
-        console.log("Email content generated successfully.");
-        console.log(`STEP 5: Attempting to send email to ${confirmedBookingData.customerEmail}`);
+        // **RELIABLE, HARD-CODED EMAIL TEMPLATE**
+        const subject = `Your Himalayan Adventure Awaits! Booking Confirmed for ${hotel.name}`;
+        const checkInDate = (confirmedBookingData.checkIn as admin.firestore.Timestamp).toDate();
+        const checkOutDate = (confirmedBookingData.checkOut as admin.firestore.Timestamp).toDate();
+
+        const htmlBody = `
+            <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+                <h2>Booking Confirmed! 🎉</h2>
+                <p>Dear ${confirmedBookingData.customerName},</p>
+                <p>Thank you for booking with Uttarakhand Getaways. Your payment has been successful and your booking is confirmed.</p>
+                <h3>Booking Summary</h3>
+                <ul style="list-style-type: none; padding: 0;">
+                    <li><strong>Hotel:</strong> ${hotel.name}</li>
+                    <li><strong>Room:</strong> ${confirmedBookingData.roomType}</li>
+                    <li><strong>Check-in:</strong> ${format(checkInDate, 'PPP')}</li>
+                    <li><strong>Check-out:</strong> ${format(checkOutDate, 'PPP')}</li>
+                    <li><strong>Total Paid:</strong> ₹${confirmedBookingData.totalPrice.toLocaleString('en-IN')}</li>
+                    <li><strong>Booking ID:</strong> ${confirmedBookingData.id}</li>
+                </ul>
+                <p>We look forward to welcoming you to the serene beauty of Uttarakhand.</p>
+                <p>Sincerely,<br>The Team at ${hotel.name}</p>
+            </div>
+        `;
+        
+        console.log("STEP 5: Attempting to send email to:", confirmedBookingData.customerEmail);
         
         const emailResult = await sendEmail({
             to: confirmedBookingData.customerEmail,
-            subject: emailContent.subject,
-            html: emailContent.body,
+            subject: subject,
+            html: htmlBody,
         });
 
         if (emailResult.success) {
