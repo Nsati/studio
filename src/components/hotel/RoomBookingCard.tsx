@@ -56,49 +56,6 @@ export function RoomBookingCard({ hotel, rooms, isLoadingRooms }: { hotel: Hotel
   // Set time to the beginning of the day to avoid timezone issues.
   disabledBeforeDate.setHours(0, 0, 0, 0);
 
-
-  if (isLoadingRooms) {
-      return (
-          <Card className="sticky top-24">
-             <CardHeader>
-                <Skeleton className="h-8 w-3/4" />
-                <Skeleton className="h-4 w-1/2" />
-             </CardHeader>
-             <CardContent className="space-y-4">
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
-                <div className="space-y-2 pt-4">
-                  <Skeleton className="h-20 w-full" />
-                  <Skeleton className="h-20 w-full" />
-                </div>
-             </CardContent>
-          </Card>
-      )
-  }
-
-  if (!rooms || rooms.length === 0) {
-    return (
-        <Card className="sticky top-24">
-            <CardHeader>
-                <CardTitle className="font-headline text-2xl">
-                  <BedDouble className="mr-2 inline-block h-6 w-6" />
-                  Book Your Stay
-                </CardTitle>
-            </CardHeader>
-            <CardContent>
-                <Alert variant="default" className="bg-amber-50 border-amber-200">
-                    <AlertCircle className="h-4 w-4 !text-amber-600" />
-                    <AlertTitle className="text-amber-800">Booking Not Available</AlertTitle>
-                    <AlertDescription className="text-amber-700">
-                        Rooms for this hotel are not yet configured for online booking. Please check back later or add them in the admin panel.
-                    </AlertDescription>
-                </Alert>
-            </CardContent>
-        </Card>
-    );
-  }
-
-
   const handleRoomSelect = (room: Room) => {
     if (isDateRangeValid) {
         setSelectedRoom(room);
@@ -185,68 +142,84 @@ export function RoomBookingCard({ hotel, rooms, isLoadingRooms }: { hotel: Hotel
            <Input id="guests" type="number" min="1" placeholder="Number of guests" value={guests} onChange={e => setGuests(e.target.value)} />
          </div>
 
-        {!isDateRangeValid && (
-          <Alert variant="default" className="bg-blue-50 border-blue-200">
-            <AlertCircle className="h-4 w-4 !text-blue-600" />
-            <AlertTitle className="text-blue-800">Select Dates</AlertTitle>
-            <AlertDescription className="text-blue-700">
-              Please select a valid date range to see room prices.
-            </AlertDescription>
-          </Alert>
-        )}
+        { /* Section for rooms, which shows loading, no rooms message, or room list */ }
+        <div>
+          {isLoadingRooms ? (
+            <div className="space-y-2 pt-4">
+              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-20 w-full" />
+            </div>
+          ) : !rooms || rooms.length === 0 ? (
+            <Alert variant="default" className="bg-amber-50 border-amber-200">
+                <AlertCircle className="h-4 w-4 !text-amber-600" />
+                <AlertTitle className="text-amber-800">Booking Not Available</AlertTitle>
+                <AlertDescription className="text-amber-700">
+                    Rooms for this hotel are not yet configured for online booking. Please check back later.
+                </AlertDescription>
+            </Alert>
+          ) : !isDateRangeValid ? (
+            <Alert variant="default" className="bg-blue-50 border-blue-200">
+              <AlertCircle className="h-4 w-4 !text-blue-600" />
+              <AlertTitle className="text-blue-800">Select Dates</AlertTitle>
+              <AlertDescription className="text-blue-700">
+                Please select a valid date range to see room prices.
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <div className="space-y-4">
+              <h4 className="font-semibold">3. Select a Room</h4>
+              {rooms.map((room) => {
+                const isDisabled = !isDateRangeValid;
+                const isSoldOut = !isDisabled && room.availableRooms !== undefined && room.availableRooms <= 0;
+                const discountedPrice = hotel.discount ? room.price * (1 - hotel.discount / 100) : room.price;
 
-        <div className="space-y-4">
-          {isDateRangeValid && <h4 className="font-semibold">3. Select a Room</h4>}
-          {rooms?.map((room) => {
-             const isDisabled = !isDateRangeValid;
-             const isSoldOut = !isDisabled && room.availableRooms !== undefined && room.availableRooms <= 0;
-             const discountedPrice = hotel.discount ? room.price * (1 - hotel.discount / 100) : room.price;
-
-            return (
-                <Card
-                key={room.id}
-                onClick={() => !isDisabled && !isSoldOut && handleRoomSelect(room)}
-                className={cn(
-                    'p-4 transition-all relative overflow-hidden',
-                    isDisabled && 'cursor-not-allowed bg-muted/50 opacity-60',
-                    !isDisabled && !isSoldOut && 'cursor-pointer hover:bg-muted/50',
-                    isSoldOut && 'bg-muted/80 opacity-60 cursor-not-allowed',
-                    selectedRoom?.id === room.id && 'ring-2 ring-primary bg-primary/5',
-                )}
-                >
-                <div className="flex flex-col gap-4 md:flex-row md:justify-between">
-                    <div>
-                      <h4 className="font-semibold">{room.type} Room</h4>
-                      <p className="text-sm text-muted-foreground">
-                          Fits up to {room.capacity} guests
-                      </p>
+                return (
+                    <Card
+                    key={room.id}
+                    onClick={() => !isDisabled && !isSoldOut && handleRoomSelect(room)}
+                    className={cn(
+                        'p-4 transition-all relative overflow-hidden',
+                        isDisabled && 'cursor-not-allowed bg-muted/50 opacity-60',
+                        !isDisabled && !isSoldOut && 'cursor-pointer hover:bg-muted/50',
+                        isSoldOut && 'bg-muted/80 opacity-60 cursor-not-allowed',
+                        selectedRoom?.id === room.id && 'ring-2 ring-primary bg-primary/5',
+                    )}
+                    >
+                    <div className="flex flex-col gap-4 md:flex-row md:justify-between">
+                        <div>
+                          <h4 className="font-semibold">{room.type} Room</h4>
+                          <p className="text-sm text-muted-foreground">
+                              Fits up to {room.capacity} guests
+                          </p>
+                        </div>
+                        <div className="flex flex-col items-start gap-0 md:items-end">
+                          <p className="text-lg font-bold text-primary">
+                              {discountedPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}
+                              <span className="text-sm font-normal text-muted-foreground">/night</span>
+                          </p>
+                           {hotel.discount && hotel.discount > 0 && (
+                            <p className="text-xs text-muted-foreground line-through">
+                              {room.price.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}
+                            </p>
+                          )}
+                        </div>
                     </div>
-                    <div className="flex flex-col items-start gap-0 md:items-end">
-                      <p className="text-lg font-bold text-primary">
-                          {discountedPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}
-                          <span className="text-sm font-normal text-muted-foreground">/night</span>
-                      </p>
-                       {hotel.discount && hotel.discount > 0 && (
-                        <p className="text-xs text-muted-foreground line-through">
-                          {room.price.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}
-                        </p>
-                      )}
-                    </div>
-                </div>
-                 {selectedRoom?.id === room.id && room.availableRooms !== undefined && room.availableRooms <= 5 && room.availableRooms > 0 && (
-                    <Alert className="mt-3 bg-amber-50 border-amber-200 text-amber-800">
-                        <TrendingDown className="h-4 w-4 !text-amber-600" />
-                        <AlertDescription>
-                           Hurry! Only {room.availableRooms} {room.availableRooms === 1 ? 'room' : 'rooms'} of this type left.
-                        </AlertDescription>
-                    </Alert>
-                )}
-                {isSoldOut && (
-                    <Badge variant="destructive" className="absolute top-2 right-2">Sold Out</Badge>
-                )}
-                </Card>
-            )
-          })}
+                     {selectedRoom?.id === room.id && room.availableRooms !== undefined && room.availableRooms <= 5 && room.availableRooms > 0 && (
+                        <Alert className="mt-3 bg-amber-50 border-amber-200 text-amber-800">
+                            <TrendingDown className="h-4 w-4 !text-amber-600" />
+                            <AlertDescription>
+                               Hurry! Only {room.availableRooms} {room.availableRooms === 1 ? 'room' : 'rooms'} of this type left.
+                            </AlertDescription>
+                        </Alert>
+                    )}
+                    {isSoldOut && (
+                        <Badge variant="destructive" className="absolute top-2 right-2">Sold Out</Badge>
+                    )}
+                    </Card>
+                )
+              })}
+            </div>
+          )}
         </div>
 
         {selectedRoom && isDateRangeValid && (
