@@ -474,7 +474,7 @@ export function BookingForm() {
                     </Card>
 
                      <div className="items-top flex space-x-3">
-                        <Checkbox id="terms" checked={termsAccepted} onCheckedChange={(checked) => setTermsAccepted(checked as boolean)} className="mt-0.5" />
+                        <Checkbox id="terms" checked={termsAccepted} onCheckedChange={(checked) => setTermsAccepted(checked === true)} className="mt-0.5" />
                         <div className="grid gap-1.5 leading-none">
                             <label
                             htmlFor="terms"
