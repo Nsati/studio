@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
 
       // --- Transaction successful, now send email ---
       const updatedBookingSnap = await bookingRef.get();
-      const confirmedBooking = updatedBookingSnap.data()!;
+      const confirmedBooking = updatedBookingSnap.data() as Booking;
       const hotelSnap = await adminDb.collection('hotels').doc(confirmedBooking.hotelId).get();
       
       if (!hotelSnap.exists) throw new Error(`Hotel ${confirmedBooking.hotelId} not found for email generation`);

@@ -1,3 +1,4 @@
+
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import getRawBody from 'raw-body';
@@ -91,7 +92,7 @@ export async function POST(req: NextRequest) {
 
       // --- Transaction successful, now send email ---
       const updatedBookingSnap = await bookingRef.get();
-      const confirmedBooking = updatedBookingSnap.data() as Booking;
+      const confirmedBooking = updatedBookingSnap.data()! as Booking;
       const hotelSnap = await adminDb.collection('hotels').doc(confirmedBooking.hotelId).get();
       
       if (!hotelSnap.exists) throw new Error(`Hotel ${confirmedBooking.hotelId} not found for email generation`);
@@ -104,8 +105,8 @@ export async function POST(req: NextRequest) {
       const emailContent = await generateBookingConfirmationEmail({
           hotelName: hotel.name,
           customerName: confirmedBooking.customerName,
-          checkIn: new Date(confirmedBooking.checkIn).toISOString(),
-          checkOut: new Date(confirmedBooking.checkOut).toISOString(),
+          checkIn: (confirmedBooking.checkIn as admin.firestore.Timestamp).toDate().toISOString(),
+          checkOut: (confirmedBooking.checkOut as admin.firestore.Timestamp).toDate().toISOString(),
           roomType: confirmedBooking.roomType,
           totalPrice: confirmedBooking.totalPrice,
           bookingId: confirmedBooking.id!,
