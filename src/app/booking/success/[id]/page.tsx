@@ -9,7 +9,7 @@ import { generateBookingConfirmationEmail } from '@/ai/flows/generate-booking-co
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, PartyPopper } from 'lucide-react';
+import { CheckCircle, PartyPopper, UserPlus } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -51,10 +51,18 @@ export default function BookingSuccessPage() {
 
     const bookingId = params.id as string;
 
+    // For anonymous users, the UID is not immediately available, so we need a workaround.
+    // This is a simplified approach; a more robust solution might pass UID via params for guests.
+    const userIdForBooking = useMemo(() => {
+        if (user) return user.uid;
+        const guestUid = localStorage.getItem('guest_uid');
+        return guestUid;
+    },[user]);
+
     const bookingRef = useMemo(() => {
-        if (!firestore || !user || !bookingId) return null;
-        return doc(firestore, 'users', user.uid, 'bookings', bookingId);
-    }, [firestore, user, bookingId]);
+        if (!firestore || !userIdForBooking || !bookingId) return null;
+        return doc(firestore, 'users', userIdForBooking, 'bookings', bookingId);
+    }, [firestore, userIdForBooking, bookingId]);
 
     const { data: booking, isLoading: isBookingLoading } = useDoc<Booking>(bookingRef);
 
@@ -66,6 +74,8 @@ export default function BookingSuccessPage() {
     const { data: hotel, isLoading: isHotelLoading } = useDoc<Hotel>(hotelRef);
     
     useEffect(() => {
+        // Redirect to login only if loading is complete and there's no user at all.
+        // Anonymous users are also 'users', so this allows them to see this page.
         if (!isUserLoading && !user) {
             router.replace('/login');
         }
@@ -149,9 +159,27 @@ export default function BookingSuccessPage() {
                             </div>
                         </div>
 
+                         {user?.isAnonymous && (
+                            <Card className="bg-primary/5 border-primary/20">
+                                <CardHeader className="flex-row items-center gap-4 space-y-0">
+                                    <UserPlus className="h-8 w-8 text-primary" />
+                                    <div>
+                                        <CardTitle className="text-lg">Save Your Booking!</CardTitle>
+                                        <CardDescription>Create an account to view this booking anytime and manage future trips.</CardDescription>
+                                    </div>
+                                </CardHeader>
+                                <CardContent>
+                                    <Button asChild className="w-full">
+                                        <Link href="/signup">Sign Up for Free</Link>
+                                    </Button>
+                                </CardContent>
+                            </Card>
+                        )}
+
+
                          <div className="flex flex-col sm:flex-row gap-4">
                             <Button className="w-full" asChild>
-                                <Link href="/my-bookings">View All My Bookings</Link>
+                                <Link href="/my-bookings">{user?.isAnonymous ? 'Explore More Hotels' : 'View All My Bookings'}</Link>
                             </Button>
                             <Button className="w-full" variant="outline" asChild>
                                 <Link href="/">Back to Home</Link>

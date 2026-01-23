@@ -5,12 +5,9 @@ import { BedDouble, Calendar as CalendarIcon, AlertCircle } from 'lucide-react';
 import { differenceInDays, format } from 'date-fns';
 import type { DateRange } from 'react-day-picker';
 import { useRouter } from 'next/navigation';
-import { collection } from 'firebase/firestore';
 
 import type { Hotel, Room } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { useFirestore, useCollection } from '@/firebase';
-import { dummyRooms } from '@/lib/dummy-data';
 
 import {
   Card,
@@ -33,35 +30,17 @@ import { Label } from '../ui/label';
 import { Skeleton } from '../ui/skeleton';
 
 
-export function RoomBookingCard({ hotel }: { hotel: Hotel }) {
+export function RoomBookingCard({ hotel, rooms, isLoadingRooms }: { hotel: Hotel, rooms: Room[], isLoadingRooms: boolean }) {
   const [dates, setDates] = useState<DateRange | undefined>();
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [guests, setGuests] = useState('1');
   const router = useRouter();
   const { toast } = useToast();
-  const firestore = useFirestore();
-
-  const roomsQuery = useMemo(() => {
-      if (!firestore || !hotel.id) return null;
-      return collection(firestore, 'hotels', hotel.id, 'rooms');
-  }, [firestore, hotel.id]);
-
-  const { data: liveRooms, isLoading: isLoadingRooms } = useCollection<Room>(roomsQuery);
   
   const nights =
     dates?.from && dates?.to ? differenceInDays(dates.to, dates.from) : 0;
 
   const isDateRangeValid = dates?.from && dates?.to && nights > 0;
-
-  const rooms = useMemo(() => {
-    if (liveRooms && liveRooms.length > 0) {
-      return liveRooms;
-    }
-    if (!isLoadingRooms && (!liveRooms || liveRooms.length === 0)) {
-        return dummyRooms.filter(r => r.hotelId === hotel.id);
-    }
-    return [];
-  }, [liveRooms, isLoadingRooms, hotel.id]);
   
   if (isLoadingRooms) {
       return (

@@ -7,10 +7,10 @@ import React, { useMemo } from 'react';
 
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { AmenityIcon } from '@/components/hotel/AmenityIcon';
-import type { Hotel } from '@/lib/types';
-import { useDoc, useFirestore } from '@/firebase';
-import { doc } from 'firebase/firestore';
-import { dummyHotels } from '@/lib/dummy-data';
+import type { Hotel, Room } from '@/lib/types';
+import { useDoc, useFirestore, useCollection } from '@/firebase';
+import { doc, collection } from 'firebase/firestore';
+import { dummyHotels, dummyRooms } from '@/lib/dummy-data';
 
 import {
   Carousel,
@@ -37,19 +37,39 @@ export default function HotelPage() {
   
   const { data: liveHotel, isLoading } = useDoc<Hotel>(hotelRef);
   
+  const roomsQuery = useMemo(() => {
+    if (!firestore || !slug) return null;
+    return collection(firestore, 'hotels', slug, 'rooms');
+  }, [firestore, slug]);
+
+  const { data: liveRooms, isLoading: isLoadingRooms } = useCollection<Room>(roomsQuery);
+
   const hotel = useMemo(() => {
     if (isLoading) return null;
     if (liveHotel) return liveHotel;
     return dummyHotels.find(h => h.id === slug);
   }, [isLoading, liveHotel, slug]);
-  
+
+  const rooms = useMemo(() => {
+    if (liveRooms && liveRooms.length > 0) return liveRooms;
+    if (!isLoadingRooms && (!liveRooms || liveRooms.length === 0)) {
+      return dummyRooms.filter(r => r.hotelId === slug);
+    }
+    return [];
+  }, [liveRooms, isLoadingRooms, slug]);
+
+  const minPrice = useMemo(() => {
+    if (!rooms || rooms.length === 0) return 0;
+    return Math.min(...rooms.map((r) => r.price));
+  }, [rooms]);
+
   const bookingSectionRef = React.useRef<HTMLDivElement>(null);
 
   const handleScrollToBooking = () => {
     bookingSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  if (isLoading) {
+  if (isLoading || isLoadingRooms) {
     return <Loading />;
   }
 
@@ -138,8 +158,28 @@ export default function HotelPage() {
         </div>
 
         <div className="lg:col-span-1" ref={bookingSectionRef}>
-           <RoomBookingCard hotel={hotel} />
+           <RoomBookingCard hotel={hotel} rooms={rooms} isLoadingRooms={isLoadingRooms} />
         </div>
+      </div>
+      
+       {/* Sticky Footer for Mobile */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t p-3 shadow-[0_-2px_10px_rgba(0,0,0,0.1)] flex items-center justify-between gap-4">
+        <div>
+          {minPrice > 0 ? (
+             <div>
+                <p className="font-bold text-lg text-foreground">
+                  {minPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}
+                  <span className="text-sm font-normal text-muted-foreground">/night</span>
+                </p>
+                <p className="text-xs text-muted-foreground">Price for 1 adult</p>
+              </div>
+          ) : (
+             <p className="text-sm font-semibold text-muted-foreground">Booking not available</p>
+          )}
+        </div>
+        <Button onClick={handleScrollToBooking} disabled={minPrice === 0} size="lg">
+            Book Now
+        </Button>
       </div>
     </div>
   );

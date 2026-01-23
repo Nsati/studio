@@ -19,10 +19,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, Calendar, Users, BedDouble, ArrowLeft, Tag } from 'lucide-react';
+import { Loader2, Calendar, Users, BedDouble, ArrowLeft, Tag, ShieldCheck, Info, MessageSquareQuestion } from 'lucide-react';
 import Link from 'next/link';
 import { dummyHotels, dummyRooms } from '@/lib/dummy-data';
 import { BookingFormSkeleton } from './BookingFormSkeleton';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 declare global {
   interface Window {
@@ -425,7 +426,7 @@ export function BookingForm() {
                             </div>
                             <div className="flex justify-between text-muted-foreground text-sm">
                                 <span>Taxes &amp; Fees</span>
-                                <span>Included</span>
+                                <span className="font-semibold text-green-600">Included</span>
                             </div>
 
                             <div className="border-t pt-4 space-y-2">
@@ -477,11 +478,31 @@ export function BookingForm() {
                         </div>
                     </div>
 
+                     <Alert className="mt-4">
+                      <Info className="h-4 w-4" />
+                      <AlertTitle className="font-semibold">Hotel Policies</AlertTitle>
+                      <AlertDescription className="text-xs">
+                        <ul className="list-disc pl-4 mt-1 space-y-1">
+                          <li>Valid government-issued photo ID is required at check-in.</li>
+                          <li>This property is couple-friendly.</li>
+                          <li>Early check-in and late check-out are subject to availability and may be chargeable.</li>
+                        </ul>
+                      </AlertDescription>
+                    </Alert>
+
 
                     <Button onClick={handlePayment} size="lg" className="w-full text-lg h-14 bg-accent text-accent-foreground hover:bg-accent/90 disabled:bg-accent/50" disabled={isBooking || !termsAccepted}>
                         {isBooking && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
                         {isBooking ? 'Processing...' : `Pay ${totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })} & Book`}
                     </Button>
+
+                     <div className="text-center text-sm text-muted-foreground space-y-2 mt-2">
+                        <div className="flex items-center justify-center gap-2">
+                            <ShieldCheck className="h-4 w-4 text-green-600" />
+                            <span>100% Secure Payments</span>
+                        </div>
+                        <p className="text-xs flex items-center justify-center gap-2"><MessageSquareQuestion className="h-4 w-4" />Need help? Email us at <a href="mailto:support@uttarakhandgetaways.com" className="font-semibold text-primary hover:underline">support@uttarakhandgetaways.com</a></p>
+                    </div>
                 </div>
             </div>
         </div>

@@ -1,5 +1,5 @@
 import { Logo } from './Logo';
-import { Facebook, Twitter, Instagram } from 'lucide-react';
+import { Facebook, Twitter, Instagram, Mail, Phone } from 'lucide-react';
 import Link from 'next/link';
 
 const footerLinks = {
@@ -12,10 +12,6 @@ const footerLinks = {
     { label: 'About Us', href: '/about' },
     { label: 'Careers', href: '#' },
     { label: 'Blog', href: '#' },
-  ],
-  'Help & Support': [
-    { label: 'Contact Us', href: '#' },
-    { label: 'FAQ', href: '#' },
     { label: 'Terms of Service', href: '/terms' },
     { label: 'Privacy Policy', href: '/privacy' },
   ],
@@ -25,9 +21,9 @@ const footerLinks = {
 export function Footer() {
   return (
     <footer className="border-t bg-secondary/50">
-      <div className="container py-12">
-        <div className="grid grid-cols-1 gap-12 md:grid-cols-5">
-            <div className="md:col-span-2">
+      <div className="container py-12 md:py-16">
+        <div className="grid grid-cols-2 gap-12 md:grid-cols-5">
+            <div className="col-span-2">
                 <div className="flex flex-col items-start gap-4">
                     <Logo />
                     <p className="max-w-xs text-sm text-muted-foreground">
@@ -37,7 +33,7 @@ export function Footer() {
             </div>
 
             {Object.entries(footerLinks).map(([title, links]) => (
-                <div key={title}>
+                <div key={title} className="col-span-1">
                     <h3 className="font-headline text-lg font-semibold mb-4">{title}</h3>
                     <ul className="space-y-3">
                         {links.map(link => (
@@ -50,6 +46,22 @@ export function Footer() {
                     </ul>
                 </div>
             ))}
+
+            <div className="col-span-2 md:col-span-1">
+                 <h3 className="font-headline text-lg font-semibold mb-4">Support</h3>
+                 <ul className="space-y-3">
+                    <li>
+                        <a href="mailto:support@uttarakhandgetaways.com" className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary">
+                           <Mail className="h-4 w-4" /> support@uttarakhandgetaways.com
+                        </a>
+                    </li>
+                    <li>
+                        <a href="tel:+919876543210" className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary">
+                           <Phone className="h-4 w-4" /> +91-987-654-3210
+                        </a>
+                    </li>
+                 </ul>
+            </div>
         </div>
         
         <div className="mt-12 border-t pt-8 flex flex-col sm:flex-row items-center justify-between">
