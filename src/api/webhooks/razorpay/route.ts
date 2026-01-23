@@ -4,7 +4,6 @@ import crypto from 'crypto';
 import getRawBody from 'raw-body';
 import { adminDb } from '@/firebase/admin';
 import * as admin from 'firebase-admin';
-import { sendBookingConfirmationEmail } from '@/services/email';
 import type { Booking, Room } from '@/lib/types';
 
 // Disable Next.js body parser to access the raw body for signature verification
@@ -68,7 +67,7 @@ export async function POST(req: NextRequest) {
       const bookingRef = adminDb.collection('users').doc(user_id).collection('bookings').doc(booking_id);
 
       // This transaction acts as a fallback/redundancy. The primary confirmation
-      // happens on the client-side action for a faster user experience.
+      // happens on the client-side for a faster user experience.
       await adminDb.runTransaction(async (transaction) => {
         const bookingDoc = await transaction.get(bookingRef);
         if (!bookingDoc.exists) throw new Error(`Booking ${booking_id} not found.`);
@@ -101,14 +100,8 @@ export async function POST(req: NextRequest) {
           razorpayPaymentId: paymentEntity.id,
         });
       });
+      console.log(`✅ STEP 5: Webhook transaction for ${booking_id} completed.`);
 
-      // --- Transaction successful, now send email (outside transaction) ---
-      const updatedBookingSnap = await bookingRef.get();
-      const confirmedBooking = updatedBookingSnap.data()! as Booking;
-
-      console.log('✅ STEP 5: Attempting to send confirmation email.');
-      await sendBookingConfirmationEmail(confirmedBooking);
-      // The email service itself will log success or failure.
     } else {
         console.log(`ℹ️ Webhook received non-payment event: "${event}". Ignoring.`);
     }

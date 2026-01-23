@@ -5,13 +5,13 @@ import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, useRouter, notFound } from 'next/navigation';
 import Image from 'next/image';
 import { differenceInDays, format, parse } from 'date-fns';
-import { createRazorpayOrder, verifyAndFinalizePayment } from '@/app/booking/actions';
+import { createRazorpayOrder } from '@/app/booking/actions';
 import { signInAnonymously } from 'firebase/auth';
 
 
 import type { Hotel, Room, Booking, Promotion } from '@/lib/types';
 import { useUser, useFirestore, useDoc, useCollection, useAuth } from '@/firebase';
-import { doc, collection, getDoc, setDoc } from 'firebase/firestore';
+import { doc, collection, getDoc, setDoc, runTransaction, increment } from 'firebase/firestore';
 
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -291,30 +291,35 @@ export function BookingForm() {
             description: `Booking for ${hotel.name}`,
             order_id: order.id,
             handler: async (response: any) => {
-                const verificationResult = await verifyAndFinalizePayment(
-                    {
-                        razorpay_order_id: response.razorpay_order_id,
-                        razorpay_payment_id: response.razorpay_payment_id,
-                        razorpay_signature: response.razorpay_signature,
-                    },
-                    {
-                        bookingId: bookingId,
-                        userId: userIdForBooking!,
-                    }
-                );
-                
-                if (verificationResult.success) {
-                    // Payment successful, booking is now confirmed. Redirect to success page.
+                // Client-side confirmation flow
+                try {
+                    const bookingRef = doc(firestore, 'users', userIdForBooking!, 'bookings', bookingId);
+                    const roomRef = doc(firestore, 'hotels', hotel.id, 'rooms', room.id);
+
+                    await runTransaction(firestore, async (transaction) => {
+                        const roomDoc = await transaction.get(roomRef);
+                        if (!roomDoc.exists() || (roomDoc.data().availableRooms ?? 0) <= 0) {
+                            throw new Error("Sorry, this room just became unavailable.");
+                        }
+
+                        transaction.update(roomRef, { availableRooms: increment(-1) });
+                        transaction.update(bookingRef, { 
+                            status: 'CONFIRMED',
+                            razorpayPaymentId: response.razorpay_payment_id 
+                        });
+                    });
+
                     toast({
                         title: "Payment Received!",
                         description: "Your booking is confirmed. Redirecting..."
                     });
                     router.push(`/booking/success/${bookingId}`);
-                } else {
-                    toast({
+
+                } catch (error: any) {
+                     toast({
                         variant: "destructive",
                         title: "Booking Confirmation Failed",
-                        description: verificationResult.error || "Please contact support with your payment ID.",
+                        description: error.message || "Please contact support with your payment ID.",
                     });
                     setIsBooking(false);
                 }
