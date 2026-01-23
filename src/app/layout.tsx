@@ -136,7 +136,6 @@ export default function RootLayout({
         </FirebaseClientProvider>
 
         <Script src="https://checkout.razorpay.com/v1/checkout.js" />
-        <Script src="https://www.paypal.com/sdk/js?client-id=AW492_KYnpYLPxEBAb7et69CcwhpKHoDO-LAzfa1yDqSFIpu8RS1WenbsAgvbEEFpa189s6AcARUQeXZ&currency=EUR" />
       </body>
     </html>
   );
