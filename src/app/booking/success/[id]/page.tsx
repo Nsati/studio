@@ -6,12 +6,14 @@ import { doc } from 'firebase/firestore';
 import { useEffect, useMemo, useState } from 'react';
 import type { Booking, Hotel } from '@/lib/types';
 import { generateBookingConfirmationEmail } from '@/ai/flows/generate-booking-confirmation-email';
-import { generateArrivalGuide, type ArrivalAssistantOutput } from '@/ai/flows/generate-arrival-assistant';
+import { generateTripGuide, type TripAssistantOutput } from '@/ai/flows/generate-arrival-assistant';
 
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, PartyPopper, UserPlus, Bot, Map, ParkingCircle, Clock, Lightbulb, Loader2 } from 'lucide-react';
+import {
+  CheckCircle, PartyPopper, UserPlus, Bot, Map, ParkingCircle, Clock, Lightbulb, Loader2, Mountain, UtensilsCrossed, RefreshCw
+} from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -43,17 +45,17 @@ function SuccessPageSkeleton() {
   )
 }
 
-function ArrivalAssistant({ hotel, booking }: { hotel: Hotel, booking: Booking }) {
-    const [guide, setGuide] = useState<ArrivalAssistantOutput | null>(null);
-    const [isGenerating, setIsGenerating] = useState(false);
+function TripAssistant({ hotel, booking }: { hotel: Hotel, booking: Booking }) {
+    const [guide, setGuide] = useState<TripAssistantOutput | null>(null);
+    const [isGenerating, setIsGenerating] = useState(true);
     const [error, setError] = useState('');
 
-    const handleGenerateGuide = async () => {
+    const generateGuide = async () => {
         setIsGenerating(true);
         setError('');
         try {
             const checkInDate = (booking.checkIn as any).toDate ? (booking.checkIn as any).toDate() : new Date(booking.checkIn);
-            const result = await generateArrivalGuide({
+            const result = await generateTripGuide({
                 hotelName: hotel.name,
                 hotelCity: hotel.city,
                 hotelAddress: hotel.address,
@@ -62,24 +64,72 @@ function ArrivalAssistant({ hotel, booking }: { hotel: Hotel, booking: Booking }
             });
             setGuide(result);
         } catch (err) {
-            console.error("Failed to generate arrival guide:", err);
-            setError("Sorry, the assistant is currently unavailable. Please try again later.");
+            console.error("Failed to generate trip guide:", err);
+            setError("Sorry, the assistant is currently unavailable. Please try again.");
         } finally {
             setIsGenerating(false);
         }
     };
+
+    useEffect(() => {
+        generateGuide();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [hotel, booking]);
+
+    if (isGenerating) {
+        return (
+            <Card className="bg-primary/5 border-primary/20 mt-6">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-3 text-primary">
+                        <Loader2 className="h-6 w-6 animate-spin" />
+                        Generating Your Personal Trip Assistant...
+                    </CardTitle>
+                    <CardDescription>Our AI is crafting personalized tips for your trip. Please wait a moment.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4 pt-4">
+                    <Skeleton className="h-5 w-full" />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <Skeleton className="h-12 w-full" />
+                        <Skeleton className="h-12 w-full" />
+                        <Skeleton className="h-12 w-full" />
+                        <Skeleton className="h-12 w-full" />
+                    </div>
+                </CardContent>
+            </Card>
+        )
+    }
+
+    if (error) {
+        return (
+            <Card className="bg-destructive/10 border-destructive/20 mt-6 text-center">
+                <CardHeader>
+                    <CardTitle className="flex items-center justify-center gap-2">
+                        <Bot className="h-6 w-6 text-destructive" />
+                        Assistant Unavailable
+                    </CardTitle>
+                    <CardDescription className="text-destructive/80">{error}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Button onClick={generateGuide} variant="secondary">
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        Try Again
+                    </Button>
+                </CardContent>
+            </Card>
+        )
+    }
     
     if (guide) {
         return (
              <Card className="bg-primary/5 border-primary/20 mt-6">
                 <CardHeader>
                     <CardTitle className="text-xl flex items-center gap-2">
-                        <Bot className="h-6 w-6 text-primary" /> Your Smart Arrival Guide
+                        <Bot className="h-6 w-6 text-primary" /> Your Smart Trip Assistant
                     </CardTitle>
+                    <CardDescription>{guide.welcomeMessage}</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4 text-sm">
-                    <p>{guide.welcomeMessage}</p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <CardContent className="space-y-5 text-sm">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-5">
                         <div className="flex gap-3 items-start">
                             <Map className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
                             <div><strong className="block text-foreground">Navigation</strong> <a href={guide.googleMapsUrl} target="_blank" rel="noopener noreferrer" className="text-primary underline">Get Directions</a></div>
@@ -96,37 +146,21 @@ function ArrivalAssistant({ hotel, booking }: { hotel: Hotel, booking: Booking }
                             <Lightbulb className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
                             <div><strong className="block text-foreground">Local Tip</strong> {guide.localTip}</div>
                         </div>
+                         <div className="flex gap-3 items-start">
+                            <Mountain className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
+                            <div><strong className="block text-foreground">Activity Suggestion</strong> {guide.suggestedActivity}</div>
+                        </div>
+                         <div className="flex gap-3 items-start">
+                            <UtensilsCrossed className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
+                            <div><strong className="block text-foreground">Must-Try Cuisine</strong> {guide.localCuisineRecommendation}</div>
+                        </div>
                     </div>
                 </CardContent>
             </Card>
         )
     }
 
-    return (
-        <Card className="bg-primary/5 border-primary/20 mt-6 text-center">
-            <CardHeader>
-                <CardTitle className="flex items-center justify-center gap-2">
-                    <Bot className="h-6 w-6 text-primary" />
-                    Activate Smart Arrival Assistant
-                </CardTitle>
-                <CardDescription>Get personalized directions, tips, and reminders for your arrival.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                {isGenerating ? (
-                    <Button disabled className="w-full">
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Generating Your Guide...
-                    </Button>
-                ) : (
-                    <Button onClick={handleGenerateGuide} className="w-full">
-                        Generate Your Arrival Guide
-                    </Button>
-                )}
-                {error && <p className="text-destructive text-sm mt-2">{error}</p>}
-            </CardContent>
-        </Card>
-    )
-
+    return null;
 }
 
 
@@ -237,7 +271,7 @@ export default function BookingSuccessPage() {
                             </div>
                         </div>
                         
-                        <ArrivalAssistant hotel={hotel} booking={booking} />
+                        <TripAssistant hotel={hotel} booking={booking} />
 
                          {user?.isAnonymous && (
                             <Card className="bg-blue-50 border-blue-200">
