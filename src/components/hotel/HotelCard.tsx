@@ -30,6 +30,11 @@ export function HotelCard({ hotel }: HotelCardProps) {
     ? PlaceHolderImages.find((img) => img.id === hotel.images[0])?.imageHint
     : undefined;
 
+  const discountedMinPrice = hotel.minPrice && hotel.discount
+    ? hotel.minPrice * (1 - hotel.discount / 100)
+    : hotel.minPrice;
+
+
   return (
     <Link href={`/hotels/${hotel.id}`} className="group block">
       <Card className="h-full overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border-border">
@@ -48,6 +53,11 @@ export function HotelCard({ hotel }: HotelCardProps) {
                 No Image
               </div>
             )}
+             {hotel.discount && hotel.discount > 0 && (
+                <Badge className="absolute top-2 right-2 bg-accent text-accent-foreground border-accent text-sm">
+                    {hotel.discount}% OFF
+                </Badge>
+            )}
           </div>
         </CardContent>
         <CardHeader className="p-4">
@@ -62,11 +72,18 @@ export function HotelCard({ hotel }: HotelCardProps) {
         <CardFooter className="flex justify-between items-end p-4 pt-0">
           {hotel.minPrice && hotel.minPrice > 0 ? (
             <div>
-              <span className="text-xs text-muted-foreground">Starts from </span>
-              <p className="font-bold text-lg text-foreground">
-                {hotel.minPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}
-                <span className="text-sm font-normal text-muted-foreground">/night</span>
-              </p>
+              <span className="text-xs text-muted-foreground">Starts from</span>
+              <div className="flex items-baseline gap-2">
+                <p className="font-bold text-lg text-primary">
+                  {discountedMinPrice?.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}
+                </p>
+                {hotel.discount && hotel.discount > 0 && (
+                  <del className="text-sm text-muted-foreground">
+                    {hotel.minPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}
+                  </del>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground -mt-1">/night</p>
             </div>
           ) : (
             <div /> // Placeholder to keep alignment

@@ -58,6 +58,7 @@ const formSchema = z.object({
   address: z.string().optional(),
   description: z.string().min(10, 'Description must be at least 10 characters long.'),
   rating: z.coerce.number().min(1).max(5).positive(),
+  discount: z.coerce.number().min(0).max(100).optional(),
   amenities: z.array(z.string()).min(1, 'Please select at least one amenity.'),
   images: z.string().min(1, 'Please provide at least one image URL.'),
   rooms: z.array(roomSchema).min(1, 'Please add at least one room type.'),
@@ -86,6 +87,7 @@ export function EditHotelForm({ hotel, rooms: initialRooms }: EditHotelFormProps
       description: hotel.description,
       address: hotel.address || '',
       rating: hotel.rating,
+      discount: hotel.discount || 0,
       amenities: hotel.amenities,
       images: hotel.images.join('\n'),
       rooms: initialRooms,
@@ -242,7 +244,6 @@ export function EditHotelForm({ hotel, rooms: initialRooms }: EditHotelFormProps
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        {/* All the FormField components from AddHotelForm go here */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <FormField
             control={form.control}
@@ -318,19 +319,35 @@ export function EditHotelForm({ hotel, rooms: initialRooms }: EditHotelFormProps
           )}
         />
         
-        <FormField
-        control={form.control}
-        name="rating"
-        render={({ field }) => (
-            <FormItem>
-            <FormLabel>Rating</FormLabel>
-            <FormControl>
-                <Input type="number" step="0.1" min="1" max="5" {...field} />
-            </FormControl>
-            <FormMessage />
-            </FormItem>
-        )}
-        />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <FormField
+            control={form.control}
+            name="rating"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Rating</FormLabel>
+                <FormControl>
+                    <Input type="number" step="0.1" min="1" max="5" {...field} />
+                </FormControl>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+             <FormField
+                control={form.control}
+                name="discount"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Discount (%)</FormLabel>
+                    <FormControl>
+                        <Input type="number" step="1" min="0" max="100" placeholder="e.g. 15" {...field} onChange={event => field.onChange(+event.target.value)} />
+                    </FormControl>
+                    <FormDescription>Optional: Enter a discount percentage (0-100).</FormDescription>
+                    <FormMessage />
+                    </FormItem>
+                )}
+            />
+        </div>
 
         <FormField
             control={form.control}

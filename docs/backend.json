@@ -114,6 +114,10 @@
         "minPrice": {
           "type": "number",
           "description": "The minimum price per night for a room in the hotel. Denormalized for performance."
+        },
+        "discount": {
+          "type": "number",
+          "description": "A percentage discount to be applied to all rooms in this hotel."
         }
       },
       "required": [

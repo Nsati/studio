@@ -77,7 +77,7 @@ export function BookingForm() {
     const [isBooking, setIsBooking] = useState(false);
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [couponCode, setCouponCode] = useState('');
-    const [discount, setDiscount] = useState(0);
+    const [couponDiscount, setCouponDiscount] = useState(0);
     const [couponMessage, setCouponMessage] = useState('');
 
 
@@ -128,8 +128,14 @@ export function BookingForm() {
     }
 
     const hotelImage = PlaceHolderImages.find((img) => img.id === hotel.images[0]);
-    const basePrice = room.price * nights;
-    const totalPrice = basePrice - discount;
+    
+    const hotelDiscountPercent = hotel.discount || 0;
+    const originalRoomPrice = room.price;
+    const discountedRoomPrice = originalRoomPrice * (1 - hotelDiscountPercent / 100);
+    
+    const originalBasePrice = originalRoomPrice * nights;
+    const basePriceAfterHotelDiscount = discountedRoomPrice * nights;
+    const totalPrice = basePriceAfterHotelDiscount - couponDiscount;
 
     const handleApplyCoupon = async () => {
         if (!couponCode) return;
@@ -146,19 +152,20 @@ export function BookingForm() {
             let discountAmount = 0;
 
             if (promotion.discountType === 'percentage') {
-                discountAmount = basePrice * (promotion.discountValue / 100);
+                // Coupon is applied on the price after hotel discount
+                discountAmount = basePriceAfterHotelDiscount * (promotion.discountValue / 100);
                 setCouponMessage(`🎉 Coupon "${promotion.code}" applied! You saved ${promotion.discountValue}%.`);
             } else { // fixed
                 discountAmount = promotion.discountValue;
                  setCouponMessage(`🎉 Coupon "${promotion.code}" applied! You saved a flat amount.`);
             }
-            setDiscount(discountAmount);
+            setCouponDiscount(discountAmount);
             toast({
                 title: 'Coupon Applied!',
                 description: `You saved ${discountAmount.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}.`,
             });
         } else {
-            setDiscount(0);
+            setCouponDiscount(0);
             setCouponMessage('Invalid or expired coupon code.');
             toast({
                 variant: 'destructive',
@@ -447,8 +454,16 @@ export function BookingForm() {
                         <CardContent className="space-y-4">
                             <div className="flex justify-between">
                                 <span>{room.price.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })} x {nights} nights</span>
-                                <span>{basePrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}</span>
+                                <span>{originalBasePrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}</span>
                             </div>
+
+                             {hotelDiscountPercent > 0 && (
+                                <div className="flex justify-between text-green-600 font-semibold">
+                                    <span>Hotel Offer ({hotelDiscountPercent}%)</span>
+                                    <span>- {(originalBasePrice - basePriceAfterHotelDiscount).toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}</span>
+                                </div>
+                            )}
+
                             <div className="flex justify-between text-muted-foreground text-sm">
                                 <span>Taxes &amp; Fees</span>
                                 <span className="font-semibold text-green-600">Included</span>
@@ -471,16 +486,16 @@ export function BookingForm() {
                                     </Button>
                                 </div>
                                 {couponMessage && (
-                                    <p className={`mt-2 text-sm ${discount > 0 ? 'font-semibold text-green-600' : 'text-destructive'}`}>
+                                    <p className={`mt-2 text-sm ${couponDiscount > 0 ? 'font-semibold text-green-600' : 'text-destructive'}`}>
                                         {couponMessage}
                                     </p>
                                 )}
                             </div>
 
-                            {discount > 0 && (
+                            {couponDiscount > 0 && (
                                 <div className="flex justify-between text-green-600 font-semibold border-t pt-4">
                                     <span>Coupon Discount</span>
-                                    <span>- {discount.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}</span>
+                                    <span>- {couponDiscount.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}</span>
                                 </div>
                             )}
 

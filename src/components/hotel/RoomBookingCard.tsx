@@ -200,6 +200,8 @@ export function RoomBookingCard({ hotel, rooms, isLoadingRooms }: { hotel: Hotel
           {rooms?.map((room) => {
              const isDisabled = !isDateRangeValid;
              const isSoldOut = !isDisabled && room.availableRooms !== undefined && room.availableRooms <= 0;
+             const discountedPrice = hotel.discount ? room.price * (1 - hotel.discount / 100) : room.price;
+
             return (
                 <Card
                 key={room.id}
@@ -219,11 +221,16 @@ export function RoomBookingCard({ hotel, rooms, isLoadingRooms }: { hotel: Hotel
                           Fits up to {room.capacity} guests
                       </p>
                     </div>
-                    <div className="flex flex-col items-start gap-2 md:items-end">
+                    <div className="flex flex-col items-start gap-0 md:items-end">
                       <p className="text-lg font-bold text-primary">
-                          {room.price.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}
+                          {discountedPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}
                           <span className="text-sm font-normal text-muted-foreground">/night</span>
                       </p>
+                       {hotel.discount && hotel.discount > 0 && (
+                        <p className="text-xs text-muted-foreground line-through">
+                          {room.price.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}
+                        </p>
+                      )}
                     </div>
                 </div>
                  {selectedRoom?.id === room.id && room.availableRooms !== undefined && room.availableRooms <= 5 && room.availableRooms > 0 && (
@@ -246,7 +253,9 @@ export function RoomBookingCard({ hotel, rooms, isLoadingRooms }: { hotel: Hotel
           <div className='border-t pt-6 space-y-4'>
             <div className="flex justify-between items-center font-bold">
               <span>{selectedRoom.type} Room x {nights} nights</span>
-              <span>{(selectedRoom.price * nights).toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}</span>
+              <span>
+                {((hotel.discount ? selectedRoom.price * (1 - hotel.discount / 100) : selectedRoom.price) * nights).toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}
+              </span>
             </div>
             <Button
               onClick={handleBookNow}

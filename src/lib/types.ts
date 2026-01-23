@@ -8,6 +8,7 @@ export interface Hotel {
   amenities: string[];
   rating: number;
   minPrice?: number;
+  discount?: number;
 }
 
 export interface Room {

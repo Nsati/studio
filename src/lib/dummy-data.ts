@@ -19,6 +19,7 @@ export const dummyHotels: Hotel[] = [
     amenities: ['wifi', 'restaurant', 'spa', 'mountain-view', 'parking'],
     rating: 4.8,
     minPrice: 8000,
+    discount: 15,
   },
   {
     id: 'jw-marriott-mussoorie',
@@ -39,6 +40,7 @@ export const dummyHotels: Hotel[] = [
     amenities: ['wifi', 'restaurant', 'spa', 'river-view', 'yoga'],
     rating: 4.6,
     minPrice: 10000,
+    discount: 10,
   },
   {
     id: 'aahana-resort',
