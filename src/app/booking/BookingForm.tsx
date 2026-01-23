@@ -22,7 +22,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2, Calendar, Users, BedDouble, ArrowLeft, Tag, ShieldCheck, Info, MessageSquareQuestion } from 'lucide-react';
 import Link from 'next/link';
 import { dummyHotels, dummyRooms } from '@/lib/dummy-data';
-import { BookingFormSkeleton } from './BookingFormSkeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 declare global {
@@ -90,7 +89,7 @@ export function BookingForm() {
     const isLoading = isHotelLoading || areRoomsLoading;
 
     if (isLoading) {
-        return <BookingFormSkeleton />; // Use the skeleton component
+        return null; // Let the parent Suspense boundary handle the loading UI.
     }
 
     if (!hotelId || !roomId || !checkInStr || !checkOutStr) {
