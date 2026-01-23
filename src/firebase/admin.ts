@@ -1,12 +1,23 @@
 import * as admin from 'firebase-admin';
 
-// Ensure the service account is parsed correctly
-// In a Vercel/production environment, you would set GOOGLE_APPLICATION_CREDENTIALS_JSON as a single-line string.
-const serviceAccountString = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
-
 if (!admin.apps.length) {
+  const serviceAccountString = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
   if (!serviceAccountString) {
-    console.warn('Firebase Admin SDK not initialized: GOOGLE_APPLICATION_CREDENTIALS_JSON is not set.');
+    throw new Error(`
+      FATAL: FIREBASE ADMIN SDK INITIALIZATION FAILED
+      ------------------------------------------------
+      Reason: The GOOGLE_APPLICATION_CREDENTIALS_JSON environment variable is not set.
+      This variable is required for server-side Firebase operations (like webhooks and secure actions).
+      
+      To fix this:
+      1. Go to your Firebase Project Settings -> Service Accounts.
+      2. Generate a new private key and download the JSON file.
+      3. Copy the ENTIRE content of that JSON file.
+      4. Paste it as the value for GOOGLE_APPLICATION_CREDENTIALS_JSON in your .env file.
+      
+      Example .env file:
+      GOOGLE_APPLICATION_CREDENTIALS_JSON='{"type": "service_account", "project_id": "...", ...}'
+    `);
   } else {
     try {
       const serviceAccount = JSON.parse(serviceAccountString);
@@ -14,7 +25,14 @@ if (!admin.apps.length) {
         credential: admin.credential.cert(serviceAccount),
       });
     } catch (error: any) {
-      console.error('Error parsing Firebase service account JSON:', error.message);
+      throw new Error(`
+        FATAL: FIREBASE ADMIN SDK INITIALIZATION FAILED
+        ------------------------------------------------
+        Reason: Failed to parse the GOOGLE_APPLICATION_CREDENTIALS_JSON environment variable.
+        Error: ${error.message}
+        
+        Please ensure the JSON content is copied correctly and is a valid single-line JSON string.
+      `);
     }
   }
 }
