@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import getRawBody from 'raw-body';
 import { adminDb } from '@/firebase/admin';
+import { generateBookingConfirmationEmail } from '@/ai/flows/generate-booking-confirmation-email';
+import { sendEmail } from '@/services/email';
 import type { Booking, Hotel, Room } from '@/lib/types';
 import * as admin from 'firebase-admin';
 
@@ -15,6 +17,8 @@ export const config = {
 
 export async function POST(req: NextRequest) {
   const secret = process.env.RAZORPAY_WEBHOOK_SECRET || '';
+  console.log('--- Razorpay Webhook Hit ---');
+  
   if (!secret) {
     console.error('CRITICAL: RAZORPAY_WEBHOOK_SECRET is not set.');
     return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 });
@@ -22,84 +26,139 @@ export async function POST(req: NextRequest) {
 
   const signature = req.headers.get('x-razorpay-signature');
   if (!signature) {
+    console.log('Webhook Error: Signature missing.');
     return NextResponse.json({ error: 'Signature missing' }, { status: 400 });
   }
 
   try {
     const rawBody = await getRawBody(req.body!);
-    
+    const bodyJson = JSON.parse(rawBody.toString());
+    console.log("STEP 1: WEBHOOK HIT with body:", JSON.stringify(bodyJson, null, 2));
+
     const expectedSignature = crypto
       .createHmac('sha256', secret)
       .update(rawBody)
       .digest('hex');
 
     if (expectedSignature !== signature) {
+      console.error('Webhook Error: Invalid signature.');
       return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
     }
 
-    const body = JSON.parse(rawBody.toString());
-    const event = body.event;
+    console.log("STEP 2: Webhook verified successfully.");
+
+    const event = bodyJson.event;
+    const payload = bodyJson.payload;
 
     if (event === 'payment.captured') {
-        const paymentEntity = body.payload.payment.entity;
-        const notes = paymentEntity.notes;
-        const { user_id, booking_id } = notes;
+      const paymentEntity = payload.payment.entity;
+      const notes = paymentEntity.notes;
+      const { user_id, booking_id } = notes;
 
-        if (!user_id || !booking_id) {
-            console.error(`Webhook Error: Missing user_id or booking_id in payment notes for payment ${paymentEntity.id}`);
-            return NextResponse.json({ status: 'ok', message: 'Missing notes, cannot process.' });
+      if (!user_id || !booking_id) {
+        console.error(`Webhook Error: Missing user_id or booking_id in payment notes for payment ${paymentEntity.id}`);
+        return NextResponse.json({ status: 'ok', message: 'Missing notes, cannot process.' });
+      }
+
+      const bookingRef = adminDb.collection('users').doc(user_id).collection('bookings').doc(booking_id);
+
+      let confirmedBookingData: Booking | null = null;
+
+      // Use a transaction to confirm the booking and update inventory
+      await adminDb.runTransaction(async (transaction) => {
+        const bookingDoc = await transaction.get(bookingRef);
+        if (!bookingDoc.exists) {
+          throw new Error(`Booking ${booking_id} not found in DB.`);
         }
 
-        const bookingRef = adminDb.collection('users').doc(user_id).collection('bookings').doc(booking_id);
+        const booking = bookingDoc.data() as Booking;
+
+        // Idempotency: If already confirmed, do nothing further.
+        if (booking.status === 'CONFIRMED') {
+          console.log(`Webhook Info: Booking ${booking_id} is already confirmed. Skipping transaction.`);
+          confirmedBookingData = booking; // Set data for email sending
+          return;
+        }
         
-        // Use a transaction to ensure atomicity.
-        await adminDb.runTransaction(async (transaction) => {
-            const bookingDoc = await transaction.get(bookingRef);
-            if (!bookingDoc.exists) {
-                throw new Error(`Booking ${booking_id} not found.`);
-            }
-            const bookingData = bookingDoc.data() as Booking;
-            
-            // Idempotency check: if already confirmed, do nothing.
-            if (bookingData.status === 'CONFIRMED') {
-                console.log(`Webhook: Booking ${booking_id} is already confirmed. Skipping.`);
-                return;
-            }
+        console.log(`STEP 3: Booking status before update is: ${booking.status}`);
 
-            if (bookingData.status !== 'PENDING') {
-                throw new Error(`Booking status for ${booking_id} is '${bookingData.status}', not 'PENDING'.`);
-            }
-            
-            const roomRef = adminDb.collection('hotels').doc(bookingData.hotelId).collection('rooms').doc(bookingData.roomId);
-            const roomDoc = await transaction.get(roomRef);
+        const roomRef = adminDb.collection('hotels').doc(booking.hotelId).collection('rooms').doc(booking.roomId);
+        const roomDoc = await transaction.get(roomRef);
 
-            if (!roomDoc.exists) {
-                throw new Error(`Room ${bookingData.roomId} in hotel ${bookingData.hotelId} not found.`);
-            }
-            
-            const roomData = roomDoc.data() as Room;
-            if ((roomData.availableRooms ?? 0) <= 0) {
-                // In a real-world scenario, you might want to flag this for manual review/refund.
-                throw new Error(`Overbooking detected for room ${bookingData.roomId}. No inventory.`);
-            }
+        if (!roomDoc.exists) throw new Error(`Room ${booking.roomId} not found.`);
+        const room = roomDoc.data() as Room;
 
-            // Decrement room inventory
-            transaction.update(roomRef, { availableRooms: admin.firestore.FieldValue.increment(-1) });
-            
-            // Update booking status to CONFIRMED
-            transaction.update(bookingRef, {
-                status: 'CONFIRMED',
-                razorpayPaymentId: paymentEntity.id,
-            });
+        if ((room.availableRooms ?? 0) <= 0) {
+          throw new Error(`Overbooking detected for room ${booking.roomId}! No available rooms.`);
+        }
+
+        // Atomically update both documents
+        transaction.update(roomRef, { availableRooms: admin.firestore.FieldValue.increment(-1) });
+        transaction.update(bookingRef, {
+          status: 'CONFIRMED',
+          razorpayPaymentId: paymentEntity.id,
+        });
+
+        // Prepare data for email sending
+        confirmedBookingData = {
+          ...booking,
+          status: 'CONFIRMED',
+          razorpayPaymentId: paymentEntity.id,
+        };
+      });
+
+      console.log(`STEP 3: Booking status for ${booking_id} is now CONFIRMED in DB.`);
+
+      if (!confirmedBookingData) {
+         throw new Error("Transaction finished but booking data for email is not available.");
+      }
+
+      // --- Transaction successful, now send email ---
+      try {
+        const hotelSnap = await adminDb.collection('hotels').doc(confirmedBookingData.hotelId).get();
+        if (!hotelSnap.exists) throw new Error(`Hotel ${confirmedBookingData.hotelId} not found for email generation`);
+        
+        const hotel = hotelSnap.data() as Hotel;
+
+        console.log(`STEP 4: Attempting to generate email content for booking ${booking_id}`);
+        const emailContent = await generateBookingConfirmationEmail({
+            hotelName: hotel.name,
+            customerName: confirmedBookingData.customerName,
+            checkIn: (confirmedBookingData.checkIn as admin.firestore.Timestamp).toDate().toISOString(),
+            checkOut: (confirmedBookingData.checkOut as admin.firestore.Timestamp).toDate().toISOString(),
+            roomType: confirmedBookingData.roomType,
+            totalPrice: confirmedBookingData.totalPrice,
+            bookingId: confirmedBookingData.id!,
         });
         
-        console.log(`Webhook: Successfully confirmed booking ${booking_id}.`);
+        console.log("Email content generated successfully.");
+        console.log(`STEP 5: Attempting to send email to ${confirmedBookingData.customerEmail}`);
+        
+        const emailResult = await sendEmail({
+            to: confirmedBookingData.customerEmail,
+            subject: emailContent.subject,
+            html: emailContent.body,
+        });
+
+        if (emailResult.success) {
+            console.log(`STEP 5: Email sent successfully! Message ID: ${emailResult.data?.id}`);
+        } else {
+            console.error(`STEP 5: Failed to send email. Error: ${emailResult.error}`);
+            // Do not throw an error here, the booking is already confirmed.
+        }
+
+      } catch (emailError: any) {
+          console.error(`Webhook Warning: Booking ${booking_id} confirmed, but failed to send email. Error: ${emailError.message}`);
+          // We don't re-throw the error because the critical part (booking confirmation) is done.
+      }
     }
 
+    console.log('--- Webhook Processed Successfully ---');
     return NextResponse.json({ status: 'received' });
 
   } catch (error: any) {
-    console.error('Error processing Razorpay webhook:', error.message);
+    console.error('FATAL: Error processing Razorpay webhook:', error.message);
+    // Return 500 to indicate an internal error. Razorpay will retry.
     return NextResponse.json({ error: 'Webhook handler failed' }, { status: 500 });
   }
 }
