@@ -135,7 +135,11 @@ export default function RootLayout({
           <Toaster />
         </FirebaseClientProvider>
 
-        <Script src="https://checkout.razorpay.com/v1/checkout.js" />
+        <Script
+          id="razorpay-checkout-js"
+          src="https://checkout.razorpay.com/v1/checkout.js"
+          strategy="beforeInteractive"
+        />
       </body>
     </html>
   );
