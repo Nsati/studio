@@ -1,8 +1,11 @@
 
 'use server';
 
-const Razorpay = require('razorpay');
+import Razorpay from 'razorpay';
 import crypto from 'crypto';
+import { adminDb } from '@/firebase/admin';
+import * as admin from 'firebase-admin';
+import type { Booking, Room } from '@/lib/types';
 
 interface CreateOrderResponse {
   success: boolean;
@@ -69,11 +72,17 @@ interface VerifyPaymentResponse {
   error?: string;
 }
 
-export async function verifyRazorpayPayment(data: {
-  razorpay_order_id: string;
-  razorpay_payment_id: string;
-  razorpay_signature: string;
-}): Promise<VerifyPaymentResponse> {
+export async function verifyAndFinalizePayment(
+  data: {
+    razorpay_order_id: string;
+    razorpay_payment_id: string;
+    razorpay_signature: string;
+  },
+  context: {
+    bookingId: string;
+    userId: string;
+  }
+): Promise<VerifyPaymentResponse> {
   const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = data;
   const key_secret = process.env.RAZORPAY_KEY_SECRET;
 
@@ -89,10 +98,68 @@ export async function verifyRazorpayPayment(data: {
     .update(body.toString())
     .digest('hex');
 
-  if (expectedSignature === razorpay_signature) {
-    return { success: true };
-  } else {
+  if (expectedSignature !== razorpay_signature) {
     console.warn('Payment verification failed: Signatures do not match.');
     return { success: false, error: 'Payment verification failed.' };
+  }
+
+  // Signature is valid, now finalize the booking in a transaction.
+  try {
+    const bookingRef = adminDb
+      .collection('users')
+      .doc(context.userId)
+      .collection('bookings')
+      .doc(context.bookingId);
+
+    await adminDb.runTransaction(async (transaction) => {
+      const bookingDoc = await transaction.get(bookingRef);
+      if (!bookingDoc.exists) {
+        throw new Error(`Booking ${context.bookingId} not found in DB.`);
+      }
+
+      const booking = bookingDoc.data() as Booking;
+
+      // Idempotency: If already confirmed, do nothing.
+      if (booking.status === 'CONFIRMED') {
+        console.log(`Client-flow: Booking ${context.bookingId} is already confirmed. Skipping.`);
+        return;
+      }
+
+      const roomRef = adminDb
+        .collection('hotels')
+        .doc(booking.hotelId)
+        .collection('rooms')
+        .doc(booking.roomId);
+      const roomDoc = await transaction.get(roomRef);
+
+      if (!roomDoc.exists) {
+        throw new Error(`Room ${booking.roomId} not found.`);
+      }
+      const room = roomDoc.data() as Room;
+
+      if ((room.availableRooms ?? 0) <= 0) {
+        throw new Error(
+          `Overbooking detected for room ${booking.roomId}! No available rooms.`
+        );
+      }
+
+      // Atomically update both documents
+      transaction.update(roomRef, {
+        availableRooms: admin.firestore.FieldValue.increment(-1),
+      });
+      transaction.update(bookingRef, {
+        status: 'CONFIRMED',
+        razorpayPaymentId: razorpay_payment_id,
+      });
+    });
+
+    console.log(`Client-flow: Booking ${context.bookingId} confirmed successfully.`);
+    return { success: true };
+  } catch (error: any) {
+    console.error('FATAL: Error finalizing booking from client-flow:', error.message);
+    return {
+      success: false,
+      error: 'Could not confirm your booking. Please contact support.',
+    };
   }
 }

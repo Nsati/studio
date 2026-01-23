@@ -5,7 +5,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, useRouter, notFound } from 'next/navigation';
 import Image from 'next/image';
 import { differenceInDays, format, parse } from 'date-fns';
-import { createRazorpayOrder, verifyRazorpayPayment } from '@/app/booking/actions';
+import { createRazorpayOrder, verifyAndFinalizePayment } from '@/app/booking/actions';
 import { signInAnonymously } from 'firebase/auth';
 
 
@@ -291,25 +291,30 @@ export function BookingForm() {
             description: `Booking for ${hotel.name}`,
             order_id: order.id,
             handler: async (response: any) => {
-                const verificationResult = await verifyRazorpayPayment({
-                    razorpay_order_id: response.razorpay_order_id,
-                    razorpay_payment_id: response.razorpay_payment_id,
-                    razorpay_signature: response.razorpay_signature,
-                });
+                const verificationResult = await verifyAndFinalizePayment(
+                    {
+                        razorpay_order_id: response.razorpay_order_id,
+                        razorpay_payment_id: response.razorpay_payment_id,
+                        razorpay_signature: response.razorpay_signature,
+                    },
+                    {
+                        bookingId: bookingId,
+                        userId: userIdForBooking!,
+                    }
+                );
                 
                 if (verificationResult.success) {
-                    // Payment successful on client. Redirect to success page.
-                    // The webhook will handle the final booking confirmation.
+                    // Payment successful, booking is now confirmed. Redirect to success page.
                     toast({
                         title: "Payment Received!",
-                        description: "Finalizing your booking. Please wait..."
+                        description: "Your booking is confirmed. Redirecting..."
                     });
                     router.push(`/booking/success/${bookingId}`);
                 } else {
                     toast({
                         variant: "destructive",
-                        title: "Payment Verification Failed",
-                        description: "Please contact support with your payment ID.",
+                        title: "Booking Confirmation Failed",
+                        description: verificationResult.error || "Please contact support with your payment ID.",
                     });
                     setIsBooking(false);
                 }
