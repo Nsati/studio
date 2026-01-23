@@ -19,7 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, Calendar, Users, BedDouble, ArrowLeft, Tag, ShieldCheck, Info, MessageSquareQuestion } from 'lucide-react';
+import { Loader2, Calendar, Users, BedDouble, ArrowLeft, Tag, ShieldCheck, Info, HelpCircle } from 'lucide-react';
 import Link from 'next/link';
 import { dummyHotels, dummyRooms } from '@/lib/dummy-data';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -170,6 +170,24 @@ export function BookingForm() {
     };
 
     const handlePayment = async () => {
+        if (typeof window.Razorpay === 'undefined') {
+            toast({
+                variant: "destructive",
+                title: "Payment Gateway Error",
+                description: "Could not connect to the payment service. Please check your ad-blocker or refresh the page.",
+            });
+            return;
+        }
+
+        if (totalPrice < 1) {
+            toast({
+                variant: 'destructive',
+                title: 'Invalid Amount',
+                description: 'Total amount must be at least ₹1 to proceed with payment.',
+            });
+            return;
+        }
+
         if (!process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID) {
             toast({
                 variant: 'destructive',
@@ -329,7 +347,7 @@ export function BookingForm() {
                 email: customerDetails.email,
             },
             theme: {
-                color: "#0b57d0", // MMT blue
+                color: "#388E3C", 
             },
             modal: {
                 ondismiss: () => {
@@ -509,7 +527,7 @@ export function BookingForm() {
                             <ShieldCheck className="h-4 w-4 text-green-600" />
                             <span>100% Secure Payments</span>
                         </div>
-                        <p className="text-xs flex items-center justify-center gap-2"><MessageSquareQuestion className="h-4 w-4" />Need help? Email us at <a href="mailto:support@uttarakhandgetaways.com" className="font-semibold text-primary hover:underline">support@uttarakhandgetaways.com</a></p>
+                        <p className="text-xs flex items-center justify-center gap-2"><HelpCircle className="h-4 w-4" />Need help? Email us at <a href="mailto:support@uttarakhandgetaways.com" className="font-semibold text-primary hover:underline">support@uttarakhandgetaways.com</a></p>
                     </div>
                 </div>
             </div>
