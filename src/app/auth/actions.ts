@@ -1,22 +1,8 @@
+
 'use server';
 
-import { firebaseConfig } from '@/firebase/config';
-import { type UserProfile } from '@/lib/types';
-import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
-import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
-import { getFirestore, doc, setDoc } from 'firebase/firestore';
-
-// --- Server-side Firebase Admin initialization ---
-let app: FirebaseApp;
-if (!getApps().length) {
-  app = initializeApp(firebaseConfig);
-} else {
-  app = getApp();
-}
-const auth = getAuth(app);
-const firestore = getFirestore(app);
-// --- End of initialization ---
-
+import { adminAuth, adminDb } from '@/firebase/admin';
+import type { UserProfile } from '@/lib/types';
 
 export interface SignupActionResponse {
     success: boolean;
@@ -31,29 +17,43 @@ export async function signupUser(userData: {
 }): Promise<SignupActionResponse> {
     const { name, email, mobile, pass } = userData;
 
+    if (!adminAuth || !adminDb) {
+        const errorMessage = 'Firebase Admin SDK is not initialized. User creation cannot proceed.';
+        console.error(errorMessage);
+        return { success: false, error: 'Server configuration error. Please contact support.' };
+    }
+
+    // Use local constants for type safety
+    const auth = adminAuth;
+    const db = adminDb;
+
     try {
-        // 1. Create user in Firebase Auth
-        const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
-        const user = userCredential.user;
+        // 1. Create user in Firebase Auth using Admin SDK
+        const userRecord = await auth.createUser({
+            email: email,
+            password: pass,
+            displayName: name,
+            phoneNumber: `+91${mobile}` // E.164 format
+        });
 
         // 2. Create user profile in Firestore.
-        const userRef = doc(firestore, 'users', user.uid);
+        const userRef = db.collection('users').doc(userRecord.uid);
         const newUserProfile: UserProfile = {
-            uid: user.uid,
+            uid: userRecord.uid,
             displayName: name,
-            email: email, // Use email from input directly for safety
+            email: email,
             mobile: mobile,
             role: 'user',
             status: 'active',
         };
-        await setDoc(userRef, newUserProfile);
+        await userRef.set(newUserProfile);
         
         return { success: true };
 
     } catch (error: any) {
         console.error("Error creating user:", error);
         let errorMessage = 'An unexpected error occurred during signup.';
-        if (error.code === 'auth/email-already-in-use') {
+        if (error.code === 'auth/email-already-exists') {
             errorMessage = 'This email is already registered. Please log in.';
         } else if (error.code) {
             errorMessage = error.code.replace('auth/', '').replace(/-/g, ' ');

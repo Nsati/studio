@@ -1,21 +1,9 @@
+
 'use server';
 
-import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
-import { getFirestore, collection, getDocs, query, where, collectionGroup } from 'firebase/firestore';
-import { firebaseConfig } from '@/firebase/config';
+import { adminDb } from '@/firebase/admin';
 import type { Hotel, Room, Booking } from '@/lib/types';
 import { parseISO } from 'date-fns';
-
-// --- Server-side Firebase initialization ---
-let app: FirebaseApp;
-if (!getApps().length) {
-  app = initializeApp(firebaseConfig);
-} else {
-  app = getApp();
-}
-const firestore = getFirestore(app);
-// --- End of initialization ---
-
 
 interface SearchParams {
     city?: string | null;
@@ -27,12 +15,20 @@ interface SearchParams {
 export async function searchHotels(params: SearchParams): Promise<Hotel[]> {
     const { city, checkIn, checkOut, guests } = params;
 
-    // 1. Fetch base hotels
-    let hotelsQuery = query(collection(firestore, 'hotels'));
-    if (city && city !== 'All') {
-        hotelsQuery = query(hotelsQuery, where('city', '==', city));
+    if (!adminDb) {
+        console.error("searchHotels failed: Firebase Admin SDK is not initialized.");
+        // Return empty array to avoid crashing the page.
+        return [];
     }
-    const hotelsSnapshot = await getDocs(hotelsQuery);
+    
+    const db = adminDb; // Use a local constant for type safety
+
+    // 1. Fetch base hotels
+    let hotelsQuery: FirebaseFirestore.Query<FirebaseFirestore.DocumentData> = db.collection('hotels');
+    if (city && city !== 'All') {
+        hotelsQuery = hotelsQuery.where('city', '==', city);
+    }
+    const hotelsSnapshot = await hotelsQuery.get();
     if (hotelsSnapshot.empty) return [];
     
     const allHotels = hotelsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Hotel[];
@@ -50,18 +46,19 @@ export async function searchHotels(params: SearchParams): Promise<Hotel[]> {
     const numGuests = guests ? parseInt(guests, 10) : 1;
 
     // 2. Fetch all bookings that could possibly conflict
-    const bookingsQuery = query(
-        collectionGroup(firestore, 'bookings'),
-        where('hotelId', 'in', hotelIds),
-        where('status', '==', 'CONFIRMED'),
-        where('checkOut', '>', searchCheckIn)
-    );
-    const bookingsSnapshot = await getDocs(bookingsQuery);
+    // NOTE: The 'in' operator is limited to 30 items in Node SDK. A production system would need to chunk this.
+    const bookingsQuery = db.collectionGroup('bookings')
+        .where('hotelId', 'in', hotelIds)
+        .where('status', '==', 'CONFIRMED')
+        .where('checkOut', '>', searchCheckIn);
+        
+    const bookingsSnapshot = await bookingsQuery.get();
     const allBookings = bookingsSnapshot.docs.map(doc => doc.data()) as Booking[];
     
     // Filter bookings that conflict with the search date range
     const conflictingBookings = allBookings.filter(booking => {
-        const bookingCheckIn = (booking.checkIn as any).toDate ? (booking.checkIn as any).toDate() : new Date(booking.checkIn);
+        // Firestore timestamps need to be converted to JS Dates
+        const bookingCheckIn = (booking.checkIn as any).toDate();
         // Overlap condition: (StartA < EndB) and (EndA > StartB)
         // We already did (EndA > StartB) in the query, now we do (StartA < EndB)
         return bookingCheckIn < searchCheckOut;
@@ -70,7 +67,7 @@ export async function searchHotels(params: SearchParams): Promise<Hotel[]> {
     // 3. Fetch all rooms for the queried hotels
     const roomsByHotel: Record<string, Room[]> = {};
     await Promise.all(allHotels.map(async (hotel) => {
-        const roomsSnapshot = await getDocs(collection(firestore, 'hotels', hotel.id, 'rooms'));
+        const roomsSnapshot = await db.collection('hotels').doc(hotel.id).collection('rooms').get();
         roomsByHotel[hotel.id] = roomsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Room[];
     }));
     
