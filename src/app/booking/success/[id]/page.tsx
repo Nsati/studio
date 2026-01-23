@@ -5,10 +5,8 @@ import { useUser, useFirestore, useDoc } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { useEffect, useMemo, useState } from 'react';
 import type { Booking, Hotel } from '@/lib/types';
-import { generateBookingConfirmationEmail } from '@/ai/flows/generate-booking-confirmation-email';
 import { generateTripGuide, type TripAssistantOutput } from '@/ai/flows/generate-arrival-assistant';
 
-import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -169,14 +167,11 @@ export default function BookingSuccessPage() {
     const router = useRouter();
     const { user, isLoading: isUserLoading } = useUser();
     const firestore = useFirestore();
-    const { toast } = useToast();
 
     const bookingId = params.id as string;
 
-    const userIdForBooking = useMemo(() => {
-        if (user) return user.uid;
-        return null;
-    },[user]);
+    // Use a memoized user ID to prevent re-renders, but it might be null initially
+    const userIdForBooking = useMemo(() => user?.uid, [user]);
 
     const bookingRef = useMemo(() => {
         if (!firestore || !userIdForBooking || !bookingId) return null;
@@ -198,33 +193,36 @@ export default function BookingSuccessPage() {
         }
     }, [user, isUserLoading, router]);
     
-    useEffect(() => {
-        if (booking && hotel) {
-            generateBookingConfirmationEmail({
-                hotelName: hotel.name,
-                customerName: booking.customerName,
-                checkIn: (booking.checkIn as any).toDate ? (booking.checkIn as any).toDate().toISOString() : new Date(booking.checkIn).toISOString(),
-                checkOut: (booking.checkOut as any).toDate ? (booking.checkOut as any).toDate().toISOString() : new Date(booking.checkOut).toISOString(),
-                roomType: booking.roomType,
-                totalPrice: booking.totalPrice,
-                bookingId: booking.id!,
-            }).then(email => {
-                console.log("---- BOOKING CONFIRMATION EMAIL (DEV ONLY) ----");
-                console.log("SUBJECT:", email.subject);
-                console.log("BODY:", email.body);
-            }).catch(err => {
-                console.error("Failed to generate confirmation email:", err);
-            });
-        }
-    }, [booking, hotel]);
-    
     const isLoading = isUserLoading || isBookingLoading || isHotelLoading;
 
     if (isLoading) {
         return <SuccessPageSkeleton />
     }
 
-    if (!booking || !hotel) {
+    // This state handles when payment is confirmed but webhook hasn't updated the DB yet
+    if (booking && booking.status === 'PENDING') {
+      return (
+        <div className="bg-muted/40 min-h-[calc(100vh-4rem)] flex items-center">
+            <div className="container mx-auto max-w-lg py-12 px-4 md:px-6">
+                <Card className="text-center">
+                    <CardHeader className="items-center">
+                        <Loader2 className="h-12 w-12 text-primary animate-spin" />
+                        <CardTitle className="text-3xl font-headline mt-4">Processing Your Booking</CardTitle>
+                        <CardDescription>
+                            Your payment was successful! We are now confirming your booking with the hotel. This may take a moment.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                         <p className="text-sm text-muted-foreground">Please do not refresh or close this page.</p>
+                    </CardContent>
+                </Card>
+            </div>
+        </div>
+      );
+    }
+    
+    // This state handles the final success view
+    if (!booking || !hotel || booking.status !== 'CONFIRMED') {
         return notFound();
     }
 
@@ -239,7 +237,7 @@ export default function BookingSuccessPage() {
                         <PartyPopper className="h-12 w-12 text-primary" />
                         <CardTitle className="text-3xl font-headline mt-4">Booking Confirmed!</CardTitle>
                         <CardDescription className="max-w-md">
-                           Your Himalayan adventure awaits, {booking.customerName}. Get ready for an unforgettable experience.
+                           Your Himalayan adventure awaits, {booking.customerName}. A confirmation email has been sent.
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="p-6 space-y-6">
@@ -299,8 +297,6 @@ export default function BookingSuccessPage() {
                                 <Link href="/">Back to Home</Link>
                             </Button>
                         </div>
-
-                        <p className="text-xs text-muted-foreground text-center">A confirmation email has been generated and logged to the server console for development purposes.</p>
                     </CardContent>
                 </Card>
             </div>

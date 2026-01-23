@@ -5,13 +5,13 @@ import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, useRouter, notFound } from 'next/navigation';
 import Image from 'next/image';
 import { differenceInDays, format, parse } from 'date-fns';
-import { createRazorpayOrder, verifyRazorpayPayment } from '@/app/booking/actions';
+import { createPendingBooking, createRazorpayOrder, verifyRazorpayPayment } from '@/app/booking/actions';
 import { signInAnonymously } from 'firebase/auth';
 
 
 import type { Hotel, Room, Booking, Promotion } from '@/lib/types';
 import { useUser, useFirestore, useDoc, useCollection, useAuth } from '@/firebase';
-import { doc, runTransaction, collection, increment, getDoc } from 'firebase/firestore';
+import { doc, collection, getDoc } from 'firebase/firestore';
 
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -176,35 +176,23 @@ export function BookingForm() {
     };
 
     const handlePayment = async () => {
+        // --- Initial validations ---
         if (typeof window.Razorpay === 'undefined') {
             toast({
                 variant: "destructive",
                 title: "Payment Gateway Error",
-                description: "Could not connect to the payment service. Please check your ad-blocker or refresh the page.",
+                description: "Could not connect to the payment service. Please refresh.",
             });
             return;
         }
-
         if (totalPrice < 1) {
             toast({
                 variant: 'destructive',
                 title: 'Invalid Amount',
-                description: 'Total amount must be at least ₹1 to proceed with payment.',
+                description: 'Total amount must be at least ₹1.',
             });
             return;
         }
-
-        if (!process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID) {
-            toast({
-                variant: 'destructive',
-                title: 'Payment Gateway Not Configured',
-                description: 'The payment gateway is not set up correctly. Please contact support.',
-            });
-            console.error("CRITICAL: NEXT_PUBLIC_RAZORPAY_KEY_ID environment variable is not set.");
-            setIsBooking(false);
-            return;
-        }
-
         if (!customerDetails.name || !customerDetails.email) {
             toast({
                 variant: 'destructive',
@@ -213,16 +201,14 @@ export function BookingForm() {
             });
             return;
         }
-
         if (!firestore) {
             toast({ variant: 'destructive', title: 'Database not available' });
             return;
         }
-        
         setIsBooking(true);
 
+        // --- Get or create a user for the booking ---
         let userIdForBooking = user?.uid;
-
         if (!userIdForBooking) {
             if (!auth) {
                  toast({ variant: 'destructive', title: 'Authentication service not available' });
@@ -234,35 +220,50 @@ export function BookingForm() {
                 userIdForBooking = userCredential.user.uid;
                 toast({
                     title: 'Booking as Guest',
-                    description: 'Your booking will be saved temporarily. Create an account to view it anytime.',
+                    description: 'Your booking will be saved temporarily.',
                 });
             } catch (error) {
                 console.error("Anonymous sign-in failed:", error);
                 toast({
                     variant: 'destructive',
                     title: 'Guest Checkout Failed',
-                    description: 'Could not proceed with the booking. Please try again.',
+                    description: 'Could not proceed. Please try again.',
                 });
                 setIsBooking(false);
                 return;
             }
         }
 
+        // --- Step 1: Create a PENDING booking in Firestore ---
+        const pendingBookingResult = await createPendingBooking({
+            hotel, room, checkIn, checkOut, guests, totalPrice, customerDetails, userId: userIdForBooking
+        });
 
-        const orderResponse = await createRazorpayOrder(totalPrice);
+        if (!pendingBookingResult.success || !pendingBookingResult.bookingId) {
+            toast({ variant: 'destructive', title: 'Booking Error', description: pendingBookingResult.error });
+            setIsBooking(false);
+            return;
+        }
+        const bookingId = pendingBookingResult.bookingId;
 
-        if (!orderResponse.success || !orderResponse.order || !orderResponse.keyId) {
+        // --- Step 2: Create Razorpay order with booking context ---
+        const orderResponse = await createRazorpayOrder(totalPrice, {
+            booking_id: bookingId,
+            user_id: userIdForBooking
+        });
+
+        if (!orderResponse.success || !orderResponse.order) {
             toast({
                 variant: 'destructive',
                 title: 'Payment Error',
-                description: orderResponse.error || 'Could not initiate payment. Please check server logs.',
+                description: orderResponse.error || 'Could not initiate payment.',
             });
             setIsBooking(false);
             return;
         }
-
         const { order, keyId } = orderResponse;
-
+        
+        // --- Step 3: Open Razorpay Checkout ---
         const options = {
             key: keyId,
             amount: order.amount,
@@ -278,72 +279,18 @@ export function BookingForm() {
                 });
                 
                 if (verificationResult.success) {
-                    const newBookingId = `booking_${Date.now()}`;
-                    try {
-                      await runTransaction(firestore, async (transaction) => {
-                        const roomRef = doc(firestore, 'hotels', hotel.id, 'rooms', room.id);
-                        const roomDoc = await transaction.get(roomRef);
-
-                        if (!roomDoc.exists() || (roomDoc.data().availableRooms || 0) <= 0) {
-                            throw new Error("This room just got sold out!");
-                        }
-                        
-                        transaction.update(roomRef, { availableRooms: increment(-1) });
-
-                        const bookingRef = doc(firestore, 'users', userIdForBooking!, 'bookings', newBookingId);
-                        
-                        const bookingData: Booking = {
-                            id: newBookingId,
-                            hotelId: hotel.id,
-                            userId: userIdForBooking!,
-                            roomId: room.id,
-                            roomType: room.type,
-                            checkIn: checkIn,
-                            checkOut: checkOut,
-                            guests: parseInt(guests),
-                            totalPrice: totalPrice,
-                            customerName: customerDetails.name,
-                            customerEmail: customerDetails.email,
-                            status: 'CONFIRMED',
-                            createdAt: new Date(),
-                            razorpayPaymentId: response.razorpay_payment_id,
-                        };
-                        transaction.set(bookingRef, bookingData);
-                      });
-                      
-                      // If transaction completes successfully, we get here.
-                      toast({
-                        title: "Booking Confirmed!",
-                        description: "Your payment was successful. You'll be redirected shortly."
-                      });
-                      router.push(`/booking/success/${newBookingId}`);
-
-                    } catch (e: any) {
-                         console.error("Error writing booking to firestore: ", e);
-                         if (e.message === 'This room just got sold out!') {
-                             toast({
-                                variant: "destructive",
-                                title: "Room Sold Out",
-                                description: "Unfortunately, the last room was just booked. Your payment was not processed. Redirecting you back.",
-                                duration: 5000,
-                            });
-                            // Redirect user back to hotel page to select another room
-                            router.push(`/hotels/${hotel.id}`);
-                         } else {
-                            toast({
-                                variant: "destructive",
-                                title: "Booking Failed",
-                                description: "Your payment was successful, but we couldn't save your booking. Please contact support.",
-                            });
-                         }
-                        setIsBooking(false);
-                    }
-
+                    // Payment successful on client. Redirect to success page.
+                    // The webhook will handle the final booking confirmation.
+                    toast({
+                        title: "Payment Received!",
+                        description: "Finalizing your booking. Please wait..."
+                    });
+                    router.push(`/booking/success/${bookingId}`);
                 } else {
                     toast({
                         variant: "destructive",
                         title: "Payment Verification Failed",
-                        description: "Your payment could not be verified. Please contact support.",
+                        description: "Please contact support with your payment ID.",
                     });
                     setIsBooking(false);
                 }
@@ -358,6 +305,7 @@ export function BookingForm() {
             modal: {
                 ondismiss: () => {
                     setIsBooking(false);
+                    // In a real app, a cron job would clean up PENDING bookings.
                     toast({
                         variant: 'destructive',
                         title: 'Payment Cancelled',
@@ -375,7 +323,7 @@ export function BookingForm() {
             toast({
                 variant: "destructive",
                 title: "Payment Error",
-                description: "Failed to open payment gateway. Please refresh and try again.",
+                description: "Failed to open payment gateway. Please refresh.",
             });
             setIsBooking(false);
         }
