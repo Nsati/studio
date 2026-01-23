@@ -291,15 +291,14 @@ export function BookingForm() {
             description: `Booking for ${hotel.name}`,
             order_id: order.id,
             handler: async (response: any) => {
-                // Client-side confirmation flow
                 try {
                     const bookingRef = doc(firestore, 'users', userIdForBooking!, 'bookings', bookingId);
                     const roomRef = doc(firestore, 'hotels', hotel.id, 'rooms', room.id);
 
-                    await runTransaction(firestore, async (transaction) => {
+                    const transactionResult = await runTransaction(firestore, async (transaction) => {
                         const roomDoc = await transaction.get(roomRef);
                         if (!roomDoc.exists() || (roomDoc.data().availableRooms ?? 0) <= 0) {
-                            throw new Error("Sorry, this room just became unavailable.");
+                            return { success: false, error: "Sorry, this room just became unavailable." };
                         }
 
                         transaction.update(roomRef, { availableRooms: increment(-1) });
@@ -307,13 +306,18 @@ export function BookingForm() {
                             status: 'CONFIRMED',
                             razorpayPaymentId: response.razorpay_payment_id 
                         });
+                        return { success: true };
                     });
 
-                    toast({
-                        title: "Payment Received!",
-                        description: "Your booking is confirmed. Redirecting..."
-                    });
-                    router.push(`/booking/success/${bookingId}`);
+                    if (transactionResult?.success) {
+                        toast({
+                            title: "Payment Received!",
+                            description: "Your booking is confirmed. Redirecting..."
+                        });
+                        router.push(`/booking/success/${bookingId}`);
+                    } else {
+                        throw new Error(transactionResult?.error || "Booking confirmation failed after payment.");
+                    }
 
                 } catch (error: any) {
                      toast({
