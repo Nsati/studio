@@ -1,7 +1,3 @@
-'use server';
-import { config } from 'dotenv';
-config();
-
-import '@/ai/flows/generate-booking-confirmation-email.ts';
-import '@/ai/flows/generate-arrival-assistant.ts';
-import '@/ai/flows/summarize-reviews.ts';
+// This file is intentionally left empty.
+// It was previously causing server instability by eagerly loading all Genkit flows.
+// Flows are now loaded on-demand by the components and API routes that use them.
