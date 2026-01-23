@@ -16,33 +16,6 @@ import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
-function SuccessPageSkeleton() {
-  return (
-    <div className="container mx-auto max-w-2xl py-12 px-4 md:px-6">
-      <Card>
-        <CardHeader className="items-center text-center">
-            <Skeleton className="h-12 w-12 rounded-full" />
-            <Skeleton className="h-8 w-48 mt-4" />
-            <Skeleton className="h-5 w-64 mt-2" />
-        </CardHeader>
-        <CardContent className="space-y-6">
-            <div className="space-y-2 rounded-lg border p-4">
-                <Skeleton className="h-6 w-1/2" />
-                <Skeleton className="h-4 w-1/3" />
-                <Skeleton className="h-4 w-1/4" />
-            </div>
-            <div className="space-y-2 rounded-lg border p-4">
-                <Skeleton className="h-5 w-full" />
-                <Skeleton className="h-5 w-full" />
-                <Skeleton className="h-5 w-2/3" />
-            </div>
-            <Skeleton className="h-10 w-full" />
-        </CardContent>
-      </Card>
-    </div>
-  )
-}
-
 function TripAssistant({ hotel, booking }: { hotel: Hotel, booking: Booking }) {
     const [guide, setGuide] = useState<TripAssistantOutput | null>(null);
     const [isGenerating, setIsGenerating] = useState(true);
@@ -168,14 +141,17 @@ export default function BookingSuccessPage() {
     const firestore = useFirestore();
 
     const bookingId = params.id as string;
-
+    
+    // Guest checkout may result in an anonymous user. We need their UID.
     const userIdForBooking = useMemo(() => user?.uid, [user]);
 
+    // This reference is now stable and will trigger useDoc only when the user/bookingId changes.
     const bookingRef = useMemo(() => {
         if (!firestore || !userIdForBooking || !bookingId) return null;
         return doc(firestore, 'users', userIdForBooking, 'bookings', bookingId);
     }, [firestore, userIdForBooking, bookingId]);
 
+    // useDoc is a real-time listener. It will automatically update when the booking status changes.
     const { data: booking, isLoading: isBookingLoading } = useDoc<Booking>(bookingRef);
 
     const hotelRef = useMemo(() => {
@@ -185,16 +161,18 @@ export default function BookingSuccessPage() {
     
     const { data: hotel, isLoading: isHotelLoading } = useDoc<Hotel>(hotelRef);
     
+    // Redirect to login if user is not authenticated after loading.
     useEffect(() => {
         if (!isUserLoading && !user) {
             router.replace('/login');
         }
     }, [user, isUserLoading, router]);
     
+    // This combines all loading states into one.
     const isLoading = isUserLoading || isBookingLoading || isHotelLoading;
 
-    // Show processing UI if data is still loading or if the booking is still pending.
-    // The useDoc hook will automatically trigger a re-render when the status changes.
+    // The key change: The "Processing" state is now tied to the real-time hook's loading state
+    // AND the booking status itself. It will show this screen until the status is no longer 'PENDING'.
     if (isLoading || (booking && booking.status === 'PENDING')) {
         return (
             <div className="bg-muted/40 min-h-[calc(100vh-4rem)] flex items-center">
@@ -202,9 +180,9 @@ export default function BookingSuccessPage() {
                     <Card className="text-center">
                         <CardHeader className="items-center">
                             <Loader2 className="h-12 w-12 text-primary animate-spin" />
-                            <CardTitle className="text-3xl font-headline mt-4">Processing Your Booking</CardTitle>
+                            <CardTitle className="text-3xl font-headline mt-4">Confirming Your Booking</CardTitle>
                             <CardDescription>
-                                Your payment was successful! We are now confirming your booking with the hotel. This may take a moment.
+                                Your payment was successful! We are finalizing your booking with the hotel. This may take a moment.
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
@@ -216,12 +194,12 @@ export default function BookingSuccessPage() {
         );
     }
     
-    // Once the booking is confirmed, show the success view.
-    // If the booking or hotel doesn't exist, or status is not CONFIRMED, show not found.
+    // If loading is complete AND the booking is still not found or not confirmed, show an error.
     if (!booking || !hotel || booking.status !== 'CONFIRMED') {
         return notFound();
     }
 
+    // --- Success UI ---
     const checkInDate = (booking.checkIn as any).toDate ? (booking.checkIn as any).toDate() : new Date(booking.checkIn);
     const checkOutDate = (booking.checkOut as any).toDate ? (booking.checkOut as any).toDate() : new Date(booking.checkOut);
 
@@ -233,7 +211,7 @@ export default function BookingSuccessPage() {
                         <PartyPopper className="h-12 w-12 text-primary" />
                         <CardTitle className="text-3xl font-headline mt-4">Booking Confirmed!</CardTitle>
                         <CardDescription className="max-w-md">
-                           Your Himalayan adventure awaits, {booking.customerName}. A confirmation email has been sent.
+                           Your Himalayan adventure awaits, {booking.customerName}. A confirmation email should arrive shortly.
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="p-6 space-y-6">

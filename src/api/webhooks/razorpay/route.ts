@@ -4,7 +4,7 @@ import getRawBody from 'raw-body';
 import { adminDb } from '@/firebase/admin';
 import * as admin from 'firebase-admin';
 import { sendBookingConfirmationEmail } from '@/services/email';
-import type { Booking } from '@/lib/types';
+import type { Booking, Room } from '@/lib/types';
 
 // Disable Next.js body parser to access the raw body for signature verification
 export const config = {
@@ -65,24 +65,39 @@ export async function POST(req: NextRequest) {
 
       const bookingRef = adminDb.collection('users').doc(user_id).collection('bookings').doc(booking_id);
 
+      // This transaction acts as a fallback/redundancy. The primary confirmation
+      // happens on the client-side action for a faster user experience.
       await adminDb.runTransaction(async (transaction) => {
         const bookingDoc = await transaction.get(bookingRef);
         if (!bookingDoc.exists) throw new Error(`Booking ${booking_id} not found.`);
 
         const booking = bookingDoc.data() as Booking;
 
+        // Idempotency check: If already confirmed (likely by client-flow), do nothing.
         if (booking.status === 'CONFIRMED') {
           console.log(`✅ STEP 4: Idempotency check pass. Booking ${booking_id} is already confirmed.`);
           return; // Exit transaction successfully
         }
         
-        // This is a fallback. The main confirmation happens on the client-side action.
-        // But if that fails, the webhook ensures the booking is confirmed.
+        console.log(`ℹ️ STEP 4: [Webhook Fallback] Booking ${booking_id} was PENDING. Confirming now...`);
+
+        // If it reaches here, the client-flow failed. The webhook will now save the day.
+        const roomRef = adminDb.collection('hotels').doc(booking.hotelId).collection('rooms').doc(booking.roomId);
+        const roomDoc = await transaction.get(roomRef);
+
+        if (!roomDoc.exists) throw new Error(`Room ${booking.roomId} not found.`);
+        const room = roomDoc.data() as Room;
+
+        if ((room.availableRooms ?? 0) <= 0) {
+          throw new Error(`Overbooking detected for room ${booking.roomId}! No available rooms.`);
+        }
+        
+        // Atomically update both documents
+        transaction.update(roomRef, { availableRooms: admin.firestore.FieldValue.increment(-1) });
         transaction.update(bookingRef, {
           status: 'CONFIRMED',
           razorpayPaymentId: paymentEntity.id,
         });
-        console.log(`✅ STEP 4: [Webhook Fallback] Booking status updated to CONFIRMED for ${booking_id}.`);
       });
 
       // --- Transaction successful, now send email (outside transaction) ---
@@ -90,14 +105,8 @@ export async function POST(req: NextRequest) {
       const confirmedBooking = updatedBookingSnap.data()! as Booking;
 
       console.log('✅ STEP 5: Attempting to send confirmation email.');
-      try {
-        await sendBookingConfirmationEmail(confirmedBooking);
-        console.log(`✅ STEP 6: Email successfully sent to ${confirmedBooking.customerEmail}.`);
-      } catch (emailError: any) {
-        console.error(`❌ STEP 6: FAILED to send email for booking ${booking_id}. Error: ${emailError.message}`);
-        // IMPORTANT: Do not throw an error here. The booking is confirmed.
-        // Email failure should not cause the webhook to fail.
-      }
+      await sendBookingConfirmationEmail(confirmedBooking);
+      // The email service itself will log success or failure.
     } else {
         console.log(`ℹ️ Webhook received non-payment event: "${event}". Ignoring.`);
     }
@@ -106,6 +115,7 @@ export async function POST(req: NextRequest) {
 
   } catch (error: any) {
     console.error('❌ Webhook handler failed:', error.message);
+    // Return 500 to indicate an internal error. Razorpay will retry.
     return NextResponse.json({ error: 'Webhook handler failed' }, { status: 500 });
   }
 }

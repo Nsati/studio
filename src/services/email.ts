@@ -6,19 +6,26 @@ import { adminDb } from '@/firebase/admin';
 import type { Hotel } from '@/lib/types';
 import { format } from 'date-fns';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-const fromEmail = process.env.FROM_EMAIL || 'onboarding@resend.dev';
+const resendApiKey = process.env.RESEND_API_KEY;
+const fromEmail = "Uttarakhand Getaways <onboarding@resend.dev>";
 
 export async function sendBookingConfirmationEmail(booking: Booking) {
     if (!adminDb) {
-        console.error("Cannot send email: Firebase Admin SDK not initialized.");
+        console.error("❌ Email Service Error: Firebase Admin SDK not initialized. Cannot send email.");
+        return; // Fail gracefully
+    }
+
+    if (!resendApiKey) {
+        console.warn("⚠️ Email Service Warning: RESEND_API_KEY is not set. Email not sent.");
+        // Log to console instead for development
+        console.log("--- DEV-ONLY: SIMULATED EMAIL ---");
+        console.log(`To: ${booking.customerEmail}`);
+        console.log(`Subject: Booking Confirmed for booking ID ${booking.id}`);
+        console.log("---------------------------------");
         return;
     }
 
-    if (!process.env.RESEND_API_KEY) {
-        console.error("Cannot send email: RESEND_API_KEY is not set.");
-        return;
-    }
+    const resend = new Resend(resendApiKey);
 
     try {
         const hotelSnap = await adminDb.collection('hotels').doc(booking.hotelId).get();
@@ -52,15 +59,17 @@ export async function sendBookingConfirmationEmail(booking: Booking) {
         `;
 
         await resend.emails.send({
-            from: `Uttarakhand Getaways <${fromEmail}>`,
+            from: fromEmail,
             to: booking.customerEmail,
             subject: subject,
             html: body,
         });
+        
+        console.log(`✅ Email successfully sent to ${booking.customerEmail} for booking ${booking.id}.`);
 
     } catch (error) {
-        console.error(`Failed to send confirmation email for booking ${booking.id}:`, error);
-        // Re-throw the error so the caller (webhook) can log it
-        throw error;
+        console.error(`❌ FAILED to send confirmation email for booking ${booking.id}:`, error);
+        // Do not re-throw error. The booking is confirmed, email is secondary.
+        // The error is logged for debugging.
     }
 }
