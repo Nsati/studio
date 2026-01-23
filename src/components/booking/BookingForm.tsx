@@ -8,9 +8,9 @@ import { createRazorpayOrder, verifyRazorpayPayment } from '@/app/booking/action
 import { signInAnonymously } from 'firebase/auth';
 
 
-import type { Hotel, Room, Booking } from '@/lib/types';
+import type { Hotel, Room, Booking, Promotion } from '@/lib/types';
 import { useUser, useFirestore, useDoc, useCollection, useAuth } from '@/firebase';
-import { doc, runTransaction, collection, increment } from 'firebase/firestore';
+import { doc, runTransaction, collection, increment, getDoc } from 'firebase/firestore';
 
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -19,9 +19,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, Calendar, Users, BedDouble, ArrowLeft } from 'lucide-react';
+import { Loader2, Calendar, Users, BedDouble, ArrowLeft, Tag, ShieldCheck, Info, MessageSquareQuestion } from 'lucide-react';
 import Link from 'next/link';
 import { dummyHotels, dummyRooms } from '@/lib/dummy-data';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 declare global {
   interface Window {
@@ -74,6 +75,9 @@ export function BookingForm() {
     const [customerDetails, setCustomerDetails] = useState({ name: '', email: '' });
     const [isBooking, setIsBooking] = useState(false);
     const [termsAccepted, setTermsAccepted] = useState(false);
+    const [couponCode, setCouponCode] = useState('');
+    const [discount, setDiscount] = useState(0);
+    const [couponMessage, setCouponMessage] = useState('');
 
 
     useEffect(() => {
@@ -85,7 +89,7 @@ export function BookingForm() {
     const isLoading = isHotelLoading || areRoomsLoading;
 
     if (isLoading) {
-        return <div>Loading...</div>; // This will be handled by Suspense fallback
+        return null; // Let the parent Suspense boundary handle the loading UI.
     }
 
     if (!hotelId || !roomId || !checkInStr || !checkOutStr) {
@@ -125,7 +129,45 @@ export function BookingForm() {
     }
 
     const hotelImage = PlaceHolderImages.find((img) => img.id === hotel.images[0]);
-    const totalPrice = room.price * nights;
+    const basePrice = room.price * nights;
+    const totalPrice = basePrice - discount;
+
+    const handleApplyCoupon = async () => {
+        if (!couponCode) return;
+        if (!firestore) {
+            toast({ variant: 'destructive', title: 'Database not available' });
+            return;
+        }
+
+        const couponRef = doc(firestore, 'promotions', couponCode.toUpperCase());
+        const couponSnap = await getDoc(couponRef);
+
+        if (couponSnap.exists() && couponSnap.data().isActive) {
+            const promotion = couponSnap.data() as Promotion;
+            let discountAmount = 0;
+
+            if (promotion.discountType === 'percentage') {
+                discountAmount = basePrice * (promotion.discountValue / 100);
+                setCouponMessage(`🎉 Coupon "${promotion.code}" applied! You saved ${promotion.discountValue}%.`);
+            } else { // fixed
+                discountAmount = promotion.discountValue;
+                 setCouponMessage(`🎉 Coupon "${promotion.code}" applied! You saved a flat amount.`);
+            }
+            setDiscount(discountAmount);
+            toast({
+                title: 'Coupon Applied!',
+                description: `You saved ${discountAmount.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}.`,
+            });
+        } else {
+            setDiscount(0);
+            setCouponMessage('Invalid or expired coupon code.');
+            toast({
+                variant: 'destructive',
+                title: 'Invalid Coupon',
+                description: 'The coupon code you entered is not valid or has expired.',
+            });
+        }
+    };
 
     const handlePayment = async () => {
         if (!process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID) {
@@ -254,13 +296,22 @@ export function BookingForm() {
 
                     } catch (e: any) {
                          console.error("Error writing booking to firestore: ", e);
-                         toast({
-                            variant: "destructive",
-                            title: "Booking Failed",
-                            description: e.message === 'This room just got sold out!'
-                                ? e.message
-                                : "Your payment was successful, but we couldn't save your booking. Please contact support.",
-                        });
+                         if (e.message === 'This room just got sold out!') {
+                             toast({
+                                variant: "destructive",
+                                title: "Room Sold Out",
+                                description: "Unfortunately, the last room was just booked. Your payment was not processed. Redirecting you back.",
+                                duration: 5000,
+                            });
+                            // Redirect user back to hotel page to select another room
+                            router.push(`/hotels/${hotel.id}`);
+                         } else {
+                            toast({
+                                variant: "destructive",
+                                title: "Booking Failed",
+                                description: "Your payment was successful, but we couldn't save your booking. Please contact support.",
+                            });
+                         }
                         setIsBooking(false);
                     }
 
@@ -323,7 +374,7 @@ export function BookingForm() {
                         <CardContent>
                             {hotelImage && (
                                 <div className="relative w-full aspect-video overflow-hidden rounded-lg mb-4">
-                                    <Image src={hotelImage.imageUrl} alt={hotel.name} data-ai-hint={hotelImage.imageHint} fill className="object-cover" />
+                                    <Image src={hotelImage.imageUrl} alt={hotel.name} data-ai-hint={hotelImage.imageHint} fill className="object-cover" unoptimized />
                                 </div>
                             )}
                             <div className="space-y-3">
@@ -376,16 +427,47 @@ export function BookingForm() {
                         <CardHeader>
                             <CardTitle>Price Summary</CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-2">
+                        <CardContent className="space-y-4">
                             <div className="flex justify-between">
                                 <span>{room.price.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })} x {nights} nights</span>
-                                <span>{totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}</span>
+                                <span>{basePrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}</span>
                             </div>
                             <div className="flex justify-between text-muted-foreground text-sm">
                                 <span>Taxes &amp; Fees</span>
-                                <span>Included</span>
+                                <span className="font-semibold text-green-600">Included</span>
                             </div>
-                            <div className="border-t pt-2 mt-2 flex justify-between font-bold text-lg">
+
+                            <div className="border-t pt-4 space-y-2">
+                                <Label htmlFor="coupon" className="flex items-center gap-2 font-semibold text-base">
+                                    <Tag className="h-5 w-5 text-primary" /> Apply Discount
+                                </Label>
+                                <div className="flex items-center gap-2">
+                                    <Input
+                                        id="coupon"
+                                        placeholder="Enter coupon code"
+                                        value={couponCode}
+                                        onChange={(e) => setCouponCode(e.target.value)}
+                                        className="flex-grow"
+                                    />
+                                    <Button type="button" variant="outline" onClick={handleApplyCoupon}>
+                                        Apply
+                                    </Button>
+                                </div>
+                                {couponMessage && (
+                                    <p className={`mt-2 text-sm ${discount > 0 ? 'font-semibold text-green-600' : 'text-destructive'}`}>
+                                        {couponMessage}
+                                    </p>
+                                )}
+                            </div>
+
+                            {discount > 0 && (
+                                <div className="flex justify-between text-green-600 font-semibold border-t pt-4">
+                                    <span>Coupon Discount</span>
+                                    <span>- {discount.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}</span>
+                                </div>
+                            )}
+
+                            <div className="border-t pt-4 mt-2 flex justify-between font-bold text-lg">
                                 <span>Total Amount</span>
                                 <span>{totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}</span>
                             </div>
@@ -404,11 +486,31 @@ export function BookingForm() {
                         </div>
                     </div>
 
+                     <Alert className="mt-4">
+                      <Info className="h-4 w-4" />
+                      <AlertTitle className="font-semibold">Hotel Policies</AlertTitle>
+                      <AlertDescription className="text-xs">
+                        <ul className="list-disc pl-4 mt-1 space-y-1">
+                          <li>Valid government-issued photo ID is required at check-in.</li>
+                          <li>This property is couple-friendly.</li>
+                          <li>Early check-in and late check-out are subject to availability and may be chargeable.</li>
+                        </ul>
+                      </AlertDescription>
+                    </Alert>
+
 
                     <Button onClick={handlePayment} size="lg" className="w-full text-lg h-14 bg-accent text-accent-foreground hover:bg-accent/90 disabled:bg-accent/50" disabled={isBooking || !termsAccepted}>
                         {isBooking && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
                         {isBooking ? 'Processing...' : `Pay ${totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })} & Book`}
                     </Button>
+
+                     <div className="text-center text-sm text-muted-foreground space-y-2 mt-2">
+                        <div className="flex items-center justify-center gap-2">
+                            <ShieldCheck className="h-4 w-4 text-green-600" />
+                            <span>100% Secure Payments</span>
+                        </div>
+                        <p className="text-xs flex items-center justify-center gap-2"><MessageSquareQuestion className="h-4 w-4" />Need help? Email us at <a href="mailto:support@uttarakhandgetaways.com" className="font-semibold text-primary hover:underline">support@uttarakhandgetaways.com</a></p>
+                    </div>
                 </div>
             </div>
         </div>
