@@ -83,6 +83,11 @@ export async function verifyAndFinalizePayment(
     userId: string;
   }
 ): Promise<VerifyPaymentResponse> {
+  if (!adminDb) {
+    console.error("❌ Payment Finalization Error: Firebase Admin SDK not initialized. Cannot confirm booking.");
+    return { success: false, error: 'Server payment finalization is not configured.' };
+  }
+
   const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = data;
   const key_secret = process.env.RAZORPAY_KEY_SECRET;
 
