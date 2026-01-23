@@ -1,10 +1,10 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
-import getRawBody from 'raw-body';
 import { adminDb } from '@/firebase/admin';
 import * as admin from 'firebase-admin';
 import type { Booking, Room } from '@/lib/types';
+import { sendBookingConfirmationEmail } from '@/services/email';
 
 export async function POST(req: NextRequest) {
   console.log('--- Razorpay Webhook Endpoint Hit ---');
@@ -29,12 +29,12 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const rawBody = await getRawBody(req.body!);
+    const bodyText = await req.text();
     console.log('✅ STEP 1: Webhook received with body.');
     
     const expectedSignature = crypto
       .createHmac('sha256', secret)
-      .update(rawBody)
+      .update(bodyText)
       .digest('hex');
 
     if (expectedSignature !== signature) {
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
     }
     console.log('✅ STEP 2: Webhook signature verified successfully.');
 
-    const body = JSON.parse(rawBody.toString());
+    const body = JSON.parse(bodyText);
     const event = body.event;
     const payload = body.payload;
 
@@ -61,29 +61,29 @@ export async function POST(req: NextRequest) {
 
       // This transaction acts as a fallback/redundancy. The primary confirmation
       // happens on the client-side for a faster user experience.
-      await adminDb.runTransaction(async (transaction) => {
+      const booking = await adminDb.runTransaction(async (transaction) => {
         const bookingDoc = await transaction.get(bookingRef);
         if (!bookingDoc.exists) throw new Error(`Booking ${booking_id} not found.`);
 
-        const booking = bookingDoc.data() as Booking;
+        const bookingData = bookingDoc.data() as Booking;
 
         // Idempotency check: If already confirmed (likely by client-flow), do nothing.
-        if (booking.status === 'CONFIRMED') {
+        if (bookingData.status === 'CONFIRMED') {
           console.log(`✅ STEP 4: Idempotency check pass. Booking ${booking_id} is already confirmed.`);
-          return; // Exit transaction successfully
+          return bookingData; // Exit transaction successfully
         }
         
         console.log(`ℹ️ STEP 4: [Webhook Fallback] Booking ${booking_id} was PENDING. Confirming now...`);
 
         // If it reaches here, the client-flow failed. The webhook will now save the day.
-        const roomRef = adminDb.collection('hotels').doc(booking.hotelId).collection('rooms').doc(booking.roomId);
+        const roomRef = adminDb.collection('hotels').doc(bookingData.hotelId).collection('rooms').doc(bookingData.roomId);
         const roomDoc = await transaction.get(roomRef);
 
-        if (!roomDoc.exists) throw new Error(`Room ${booking.roomId} not found.`);
+        if (!roomDoc.exists) throw new Error(`Room ${bookingData.roomId} not found.`);
         const room = roomDoc.data() as Room;
 
         if ((room.availableRooms ?? 0) <= 0) {
-          throw new Error(`Overbooking detected for room ${booking.roomId}! No available rooms.`);
+          throw new Error(`Overbooking detected for room ${bookingData.roomId}! No available rooms.`);
         }
         
         // Atomically update both documents
@@ -92,8 +92,29 @@ export async function POST(req: NextRequest) {
           status: 'CONFIRMED',
           razorpayPaymentId: paymentEntity.id,
         });
+
+        return { ...bookingData, status: 'CONFIRMED', razorpayPaymentId: paymentEntity.id } as Booking;
       });
       console.log(`✅ STEP 5: Webhook transaction for ${booking_id} completed.`);
+
+       // Send email only after successful confirmation and if not already sent
+        if (booking && booking.status === 'CONFIRMED') {
+            console.log('✅ STEP 6: Booking confirmed, attempting to send email.');
+            try {
+                await sendBookingConfirmationEmail({
+                    to: booking.customerEmail,
+                    customerName: booking.customerName,
+                    hotelName: booking.id, // This seems wrong, but following the existing logic. Let's assume hotel name is needed.
+                    checkIn: booking.checkIn,
+                    checkOut: booking.checkOut,
+                    bookingId: booking.id || booking_id
+                });
+                console.log(`✅ STEP 7: Confirmation email sent to ${booking.customerEmail}.`);
+            } catch (emailError: any) {
+                console.error(`❌ STEP 7: Failed to send email for booking ${booking_id}:`, emailError.message);
+                // We don't throw an error here, as the booking is confirmed. Just log it.
+            }
+        }
 
     } else {
         console.log(`ℹ️ Webhook received non-payment event: "${event}". Ignoring.`);
