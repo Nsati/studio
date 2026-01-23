@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { BedDouble, Calendar as CalendarIcon, AlertCircle } from 'lucide-react';
-import { differenceInDays, format } from 'date-fns';
+import { BedDouble, Calendar as CalendarIcon, AlertCircle, TrendingDown } from 'lucide-react';
+import { differenceInDays, format, add } from 'date-fns';
 import type { DateRange } from 'react-day-picker';
 import { useRouter } from 'next/navigation';
 
@@ -28,6 +28,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Skeleton } from '../ui/skeleton';
+import { Badge } from '../ui/badge';
 
 
 export function RoomBookingCard({ hotel, rooms, isLoadingRooms }: { hotel: Hotel, rooms: Room[], isLoadingRooms: boolean }) {
@@ -42,6 +43,19 @@ export function RoomBookingCard({ hotel, rooms, isLoadingRooms }: { hotel: Hotel
 
   const isDateRangeValid = dates?.from && dates?.to && nights > 0;
   
+  const today = new Date();
+  const cutOffHour = 14; // 2 PM
+  const isPastCutOff = today.getHours() >= cutOffHour;
+  
+  const disabledBeforeDate = new Date(today);
+  if (isPastCutOff) {
+    // If it's past cut-off, disable today, so tomorrow is the first available day.
+    disabledBeforeDate.setDate(today.getDate() + 1);
+  }
+  // Set time to the beginning of the day to avoid timezone issues.
+  disabledBeforeDate.setHours(0, 0, 0, 0);
+
+
   if (isLoadingRooms) {
       return (
           <Card className="sticky top-24">
@@ -157,10 +171,11 @@ export function RoomBookingCard({ hotel, rooms, isLoadingRooms }: { hotel: Hotel
                 selected={dates}
                 onSelect={setDates}
                 numberOfMonths={2}
-                disabled={{ before: new Date() }}
+                disabled={{ before: disabledBeforeDate }}
               />
             </PopoverContent>
           </Popover>
+           {isPastCutOff && <p className="text-xs text-muted-foreground mt-2">Note: Same-day bookings are not available after {cutOffHour}:00.</p>}
         </div>
 
          <div>
@@ -183,13 +198,16 @@ export function RoomBookingCard({ hotel, rooms, isLoadingRooms }: { hotel: Hotel
           {isDateRangeValid && <h4 className="font-semibold">3. Select a Room</h4>}
           {rooms?.map((room) => {
              const isDisabled = !isDateRangeValid;
+             const isSoldOut = !isDisabled && room.availableRooms !== undefined && room.availableRooms <= 0;
             return (
                 <Card
                 key={room.id}
-                onClick={() => !isDisabled && handleRoomSelect(room)}
+                onClick={() => !isDisabled && !isSoldOut && handleRoomSelect(room)}
                 className={cn(
-                    'p-4 transition-all',
-                    isDisabled ? 'cursor-not-allowed bg-muted/50 opacity-60' : 'cursor-pointer hover:bg-muted/50',
+                    'p-4 transition-all relative overflow-hidden',
+                    isDisabled && 'cursor-not-allowed bg-muted/50 opacity-60',
+                    !isDisabled && !isSoldOut && 'cursor-pointer hover:bg-muted/50',
+                    isSoldOut && 'bg-muted/80 opacity-60 cursor-not-allowed',
                     selectedRoom?.id === room.id && 'ring-2 ring-primary bg-primary/5',
                 )}
                 >
@@ -207,6 +225,17 @@ export function RoomBookingCard({ hotel, rooms, isLoadingRooms }: { hotel: Hotel
                       </p>
                     </div>
                 </div>
+                 {selectedRoom?.id === room.id && room.availableRooms !== undefined && room.availableRooms <= 5 && room.availableRooms > 0 && (
+                    <Alert className="mt-3 bg-amber-50 border-amber-200 text-amber-800">
+                        <TrendingDown className="h-4 w-4 !text-amber-600" />
+                        <AlertDescription>
+                           Hurry! Only {room.availableRooms} {room.availableRooms === 1 ? 'room' : 'rooms'} of this type left.
+                        </AlertDescription>
+                    </Alert>
+                )}
+                {isSoldOut && (
+                    <Badge variant="destructive" className="absolute top-2 right-2">Sold Out</Badge>
+                )}
                 </Card>
             )
           })}

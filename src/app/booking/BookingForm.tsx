@@ -297,13 +297,22 @@ export function BookingForm() {
 
                     } catch (e: any) {
                          console.error("Error writing booking to firestore: ", e);
-                         toast({
-                            variant: "destructive",
-                            title: "Booking Failed",
-                            description: e.message === 'This room just got sold out!'
-                                ? e.message
-                                : "Your payment was successful, but we couldn't save your booking. Please contact support.",
-                        });
+                         if (e.message === 'This room just got sold out!') {
+                             toast({
+                                variant: "destructive",
+                                title: "Room Sold Out",
+                                description: "Unfortunately, the last room was just booked. Your payment was not processed. Redirecting you back.",
+                                duration: 5000,
+                            });
+                            // Redirect user back to hotel page to select another room
+                            router.push(`/hotels/${hotel.id}`);
+                         } else {
+                            toast({
+                                variant: "destructive",
+                                title: "Booking Failed",
+                                description: "Your payment was successful, but we couldn't save your booking. Please contact support.",
+                            });
+                         }
                         setIsBooking(false);
                     }
 

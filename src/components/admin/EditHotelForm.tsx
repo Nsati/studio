@@ -461,12 +461,15 @@ https://images.unsplash.com/photo-2..."
                      <FormField
                     control={form.control}
                     name={`rooms.${index}.totalRooms`}
-                    render={({ field }) => (
+                    render={({ field: formField }) => (
                         <FormItem>
                         <FormLabel>Total Units</FormLabel>
                         <FormControl>
-                            <Input type="number" placeholder="e.g. 10" {...field} />
+                            <Input type="number" placeholder="e.g. 10" {...formField} />
                         </FormControl>
+                         <FormDescription className="text-xs">
+                           Inventory: {initialRooms.find(r => r.id === field.id)?.availableRooms ?? form.watch(`rooms.${index}.totalRooms`)} / {form.watch(`rooms.${index}.totalRooms`)}
+                        </FormDescription>
                         <FormMessage />
                         </FormItem>
                     )}
