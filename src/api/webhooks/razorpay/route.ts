@@ -54,6 +54,8 @@ export async function POST(req: NextRequest) {
       }
 
       const bookingRef = adminDb.collection('users').doc(user_id).collection('bookings').doc(booking_id);
+      let bookingForEmail: Booking | null = null;
+
 
       // Use a transaction to confirm the booking and update inventory
       await adminDb.runTransaction(async (transaction) => {
@@ -64,8 +66,8 @@ export async function POST(req: NextRequest) {
 
         // Idempotency: If already confirmed, do nothing further.
         if (booking.status === 'CONFIRMED') {
-          console.log(`Webhook: Booking ${booking_id} is already confirmed.`);
-          return; // Exit transaction successfully
+          console.log(`Webhook: Booking ${booking_id} is already confirmed. No action taken.`);
+          return; // Exit transaction successfully, email will not be sent.
         }
         if (booking.status !== 'PENDING') {
           throw new Error(`Booking ${booking_id} status is ${booking.status}, not PENDING.`);
@@ -88,36 +90,43 @@ export async function POST(req: NextRequest) {
           status: 'CONFIRMED',
           razorpayPaymentId: paymentEntity.id,
         });
+        
+        // Pass the original booking data out of the transaction to be used for the email
+        bookingForEmail = booking;
       });
 
-      // --- Transaction successful, now send email ---
-      const updatedBookingSnap = await bookingRef.get();
-      const confirmedBooking = updatedBookingSnap.data() as Booking;
-      const hotelSnap = await adminDb.collection('hotels').doc(confirmedBooking.hotelId).get();
-      
-      if (!hotelSnap.exists) throw new Error(`Hotel ${confirmedBooking.hotelId} not found for email generation`);
-      
-      const hotel = hotelSnap.data() as Hotel;
+      // --- Transaction successful, now send email if a booking was newly confirmed ---
+      if (bookingForEmail) {
+        const confirmedBooking = bookingForEmail;
+        const hotelSnap = await adminDb.collection('hotels').doc(confirmedBooking.hotelId).get();
+        
+        if (!hotelSnap.exists) throw new Error(`Hotel ${confirmedBooking.hotelId} not found for email generation`);
+        
+        const hotel = hotelSnap.data() as Hotel;
 
-      console.log(`Webhook: Generating email for confirmed booking ${booking_id}`);
+        console.log(`Webhook: Generating email for confirmed booking ${booking_id}`);
 
-      // Use Genkit flow to generate email content
-      const emailContent = await generateBookingConfirmationEmail({
-          hotelName: hotel.name,
-          customerName: confirmedBooking.customerName,
-          checkIn: (confirmedBooking.checkIn as admin.firestore.Timestamp).toDate().toISOString(),
-          checkOut: (confirmedBooking.checkOut as admin.firestore.Timestamp).toDate().toISOString(),
-          roomType: confirmedBooking.roomType,
-          totalPrice: confirmedBooking.totalPrice,
-          bookingId: confirmedBooking.id!,
-      });
-      
-      // In a real app, you would use an email service like Nodemailer, SendGrid, or Resend here.
-      console.log('--- PRODUCTION-READY BOOKING CONFIRMATION EMAIL (FROM WEBHOOK) ---');
-      console.log('TO:', confirmedBooking.customerEmail);
-      console.log('SUBJECT:', emailContent.subject);
-      // console.log('BODY:', emailContent.body); // Keep console clean
-      console.log('-----------------------------------------------------------------');
+        const checkInDate = (confirmedBooking.checkIn as admin.firestore.Timestamp).toDate();
+        const checkOutDate = (confirmedBooking.checkOut as admin.firestore.Timestamp).toDate();
+
+        // Use Genkit flow to generate email content
+        const emailContent = await generateBookingConfirmationEmail({
+            hotelName: hotel.name,
+            customerName: confirmedBooking.customerName,
+            checkIn: checkInDate.toISOString(),
+            checkOut: checkOutDate.toISOString(),
+            roomType: confirmedBooking.roomType,
+            totalPrice: confirmedBooking.totalPrice,
+            bookingId: booking_id,
+        });
+        
+        // In a real app, you would use an email service like Nodemailer, SendGrid, or Resend here.
+        console.log('--- PRODUCTION-READY BOOKING CONFIRMATION EMAIL (FROM WEBHOOK) ---');
+        console.log('TO:', confirmedBooking.customerEmail);
+        console.log('SUBJECT:', emailContent.subject);
+        // console.log('BODY:', emailContent.body); // Keep console clean
+        console.log('-----------------------------------------------------------------');
+      }
     }
 
     return NextResponse.json({ status: 'received' });
