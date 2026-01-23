@@ -1,10 +1,14 @@
 import { Suspense } from 'react';
+import Link from 'next/link';
 import { searchHotels } from './actions';
 import { SearchFilters } from './SearchFilters';
 import { HotelCard } from '@/components/hotel/HotelCard';
 import { Hotel } from '@/lib/types';
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from '@/components/ui/button';
+import { SearchX } from 'lucide-react';
+
 
 interface SearchPageProps {
   searchParams: { [key: string]: string | string[] | undefined };
@@ -62,10 +66,14 @@ async function Results({ searchParams }: SearchPageProps) {
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 py-24 text-center">
-          <h3 className="font-headline text-2xl font-bold">No Results Found</h3>
-          <p className="mt-2 text-muted-foreground">
-            Try adjusting your search filters. Availability is checked for the selected dates.
+          <SearchX className="h-16 w-16 text-muted-foreground/50 mb-4" />
+          <h3 className="font-headline text-2xl font-bold">No Stays Found</h3>
+          <p className="mt-2 max-w-md text-muted-foreground">
+            We couldn't find any properties matching your search. Try adjusting your dates, changing your location, or removing some filters.
           </p>
+          <Button variant="outline" className="mt-6" asChild>
+            <Link href="/search">Clear Filters & View All</Link>
+          </Button>
         </div>
       )}
     </div>

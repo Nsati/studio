@@ -60,7 +60,9 @@ export default function HotelPage() {
 
   const minPrice = useMemo(() => {
     if (!rooms || rooms.length === 0) return 0;
-    return Math.min(...rooms.map((r) => r.price));
+    const availableRooms = rooms.filter(r => (r.availableRooms ?? r.totalRooms) > 0);
+    if (availableRooms.length === 0) return 0;
+    return Math.min(...availableRooms.map((r) => r.price));
   }, [rooms]);
 
   const bookingSectionRef = React.useRef<HTMLDivElement>(null);
