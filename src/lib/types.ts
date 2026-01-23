@@ -71,6 +71,17 @@ export interface Promotion {
   isActive: boolean;
 }
 
+export interface Review {
+  id: string;
+  hotelId: string;
+  userId: string;
+  authorName: string;
+  rating: number; // 1 to 5
+  title: string;
+  text: string;
+  createdAt: Date;
+}
+
 
 // This mock type is no longer used for primary auth state.
 export type MockUser = {

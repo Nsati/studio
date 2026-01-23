@@ -1,4 +1,4 @@
-import { Hotel, Room, City, TourPackage } from './types';
+import { Hotel, Room, City, TourPackage, Review } from './types';
 
 export const dummyCities: City[] = [
   { id: 'nainital', name: 'Nainital', image: 'city-nainital' },
@@ -18,6 +18,7 @@ export const dummyHotels: Hotel[] = [
     images: ['hotel-1-1', 'hotel-1-2', 'hotel-1-3'],
     amenities: ['wifi', 'restaurant', 'spa', 'mountain-view', 'parking'],
     rating: 4.8,
+    minPrice: 8000,
   },
   {
     id: 'jw-marriott-mussoorie',
@@ -27,6 +28,7 @@ export const dummyHotels: Hotel[] = [
     images: ['hotel-5-1', 'hotel-5-2'],
     amenities: ['wifi', 'restaurant', 'pool', 'spa', 'gym', 'bar'],
     rating: 4.9,
+    minPrice: 25000,
   },
   {
     id: 'aloha-on-the-ganges',
@@ -36,6 +38,7 @@ export const dummyHotels: Hotel[] = [
     images: ['hotel-10-1'],
     amenities: ['wifi', 'restaurant', 'spa', 'river-view', 'yoga'],
     rating: 4.6,
+    minPrice: 10000,
   },
   {
     id: 'aahana-resort',
@@ -45,6 +48,7 @@ export const dummyHotels: Hotel[] = [
     images: ['hotel-20-1', 'hotel-20-2'],
     amenities: ['wifi', 'restaurant', 'pool', 'spa', 'safari'],
     rating: 4.7,
+    minPrice: 18000,
   },
     {
     id: 'shervani-hilltop',
@@ -54,6 +58,7 @@ export const dummyHotels: Hotel[] = [
     images: ['hotel-2-1', 'hotel-2-2'],
     amenities: ['wifi', 'restaurant', 'garden', 'parking', 'bar'],
     rating: 4.4,
+    minPrice: 7000,
   },
   {
     id: 'the-savoy',
@@ -63,6 +68,7 @@ export const dummyHotels: Hotel[] = [
     images: ['hotel-7-1'],
     amenities: ['wifi', 'restaurant', 'bar', 'heritage', 'spa', 'gym'],
     rating: 4.5,
+    minPrice: 16000,
   },
 ];
 
@@ -144,4 +150,48 @@ export const dummyTourPackages: TourPackage[] = [
     image: 'tour-nainital-corbett-2',
     description: 'Experience the best of both worlds - the serene lakes of Nainital and the thrilling wildlife of Jim Corbett National Park.'
   }
+];
+
+export const dummyReviews: Review[] = [
+  // Reviews for The Naini Retreat
+  {
+    id: 'review-1',
+    hotelId: 'the-naini-retreat',
+    userId: 'user-123',
+    authorName: 'Ravi Verma',
+    rating: 5,
+    title: 'An unforgettable stay!',
+    text: 'The view of Naini Lake from our room was breathtaking. The staff was incredibly courteous and the colonial charm of the hotel is well-preserved. The food at their restaurant was also delicious. Highly recommended for a luxurious getaway.',
+    createdAt: new Date('2024-05-15'),
+  },
+  {
+    id: 'review-2',
+    hotelId: 'the-naini-retreat',
+    userId: 'user-456',
+    authorName: 'Priya Mehta',
+    rating: 4,
+    title: 'Beautiful property, slightly slow service',
+    text: 'A truly stunning hotel with heritage vibes. The gardens are beautiful to walk in. Our only issue was that the room service was a bit slow during peak hours. Otherwise, a fantastic experience. The spa was very relaxing.',
+    createdAt: new Date('2024-05-10'),
+  },
+  {
+    id: 'review-3',
+    hotelId: 'the-naini-retreat',
+    userId: 'user-789',
+    authorName: 'Amit Desai',
+    rating: 5,
+    title: 'Perfect location and royal treatment',
+    text: 'The location is perfect, away from the crowded Mall Road but still accessible. We felt like royalty. The live music in the evening was a great touch. Parking was also convenient which is a big plus in Nainital.',
+    createdAt: new Date('2024-04-28'),
+  },
+  {
+    id: 'review-4',
+    hotelId: 'the-naini-retreat',
+    userId: 'user-101',
+    authorName: 'Sneha Rao',
+    rating: 3,
+    title: 'Good but could be better for the price',
+    text: 'The hotel is beautiful, no doubt. But for the price we paid, I expected more. The WiFi was spotty in our room and the bathroom could use a modern touch. The view is what you pay for.',
+    createdAt: new Date('2024-04-20'),
+  },
 ];

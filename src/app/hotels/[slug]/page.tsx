@@ -7,10 +7,10 @@ import React, { useMemo } from 'react';
 
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { AmenityIcon } from '@/components/hotel/AmenityIcon';
-import type { Hotel, Room } from '@/lib/types';
+import type { Hotel, Room, Review } from '@/lib/types';
 import { useDoc, useFirestore, useCollection } from '@/firebase';
 import { doc, collection } from 'firebase/firestore';
-import { dummyHotels, dummyRooms } from '@/lib/dummy-data';
+import { dummyHotels, dummyRooms, dummyReviews } from '@/lib/dummy-data';
 
 import {
   Carousel,
@@ -23,6 +23,7 @@ import { Separator } from '@/components/ui/separator';
 import { RoomBookingCard } from '@/components/hotel/RoomBookingCard';
 import { Button } from '@/components/ui/button';
 import Loading from './loading';
+import { HotelReviewSummary } from '@/components/hotel/HotelReviewSummary';
 
 
 export default function HotelPage() {
@@ -44,6 +45,13 @@ export default function HotelPage() {
 
   const { data: liveRooms, isLoading: isLoadingRooms } = useCollection<Room>(roomsQuery);
 
+  const reviewsQuery = useMemo(() => {
+    if (!firestore || !slug) return null;
+    return collection(firestore, 'hotels', slug, 'reviews');
+  }, [firestore, slug]);
+
+  const { data: liveReviews, isLoading: isLoadingReviews } = useCollection<Review>(reviewsQuery);
+
   const hotel = useMemo(() => {
     if (isLoading) return null;
     if (liveHotel) return liveHotel;
@@ -58,6 +66,14 @@ export default function HotelPage() {
     return [];
   }, [liveRooms, isLoadingRooms, slug]);
 
+  const reviews = useMemo(() => {
+    if (liveReviews && liveReviews.length > 0) return liveReviews;
+    if (!isLoadingReviews && (!liveReviews || liveReviews.length === 0)) {
+        return dummyReviews.filter(r => r.hotelId === slug);
+    }
+    return [];
+  }, [liveReviews, isLoadingReviews, slug]);
+
   const minPrice = useMemo(() => {
     if (!rooms || rooms.length === 0) return 0;
     const availableRooms = rooms.filter(r => (r.availableRooms ?? r.totalRooms) > 0);
@@ -71,7 +87,7 @@ export default function HotelPage() {
     bookingSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  if (isLoading || isLoadingRooms) {
+  if (isLoading || isLoadingRooms || isLoadingReviews) {
     return <Loading />;
   }
 
@@ -137,13 +153,13 @@ export default function HotelPage() {
       </section>
 
       <div className="grid grid-cols-1 gap-12 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <section className="mb-8">
+        <div className="lg:col-span-2 space-y-8">
+          <section>
             <h2 className="font-headline text-3xl font-bold mb-4">About this hotel</h2>
             <p className="text-foreground/80 leading-relaxed">{hotel.description}</p>
           </section>
 
-          <Separator className="my-8" />
+          <Separator />
 
           <section>
             <h2 className="font-headline text-3xl font-bold mb-6">Amenities</h2>
@@ -155,6 +171,12 @@ export default function HotelPage() {
                 </div>
               ))}
             </div>
+          </section>
+
+          <Separator />
+
+          <section>
+             <HotelReviewSummary reviews={reviews} hotelName={hotel.name} />
           </section>
         </div>
 

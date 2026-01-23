@@ -59,6 +59,15 @@ service cloud.firestore {
                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['availableRooms']);
     }
 
+    // Reviews are publicly readable. Authenticated users can create them for a hotel.
+    match /hotels/{hotelId}/reviews/{reviewId} {
+      allow list, read: if true;
+      // Allow create if user is authenticated and the review belongs to them.
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      // Only the user who wrote it or an admin can delete/update.
+      allow update, delete: if (request.auth != null && resource.data.userId == request.auth.uid) || isAdmin();
+    }
+
     // Users can create, read, update, and delete their own bookings.
     // Admins can read/delete any booking for management purposes.
     match /users/{userId}/bookings/{bookingId} {
