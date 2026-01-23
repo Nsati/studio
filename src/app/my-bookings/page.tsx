@@ -154,7 +154,6 @@ function BookingItem({ booking }: { booking: Booking }) {
                             data-ai-hint={hotelImage.imageHint}
                             fill
                             className="object-cover"
-                            unoptimized
                         />
                     ) : (
                         <div className="flex h-full w-full items-center justify-center bg-muted">

@@ -86,9 +86,7 @@ export function BookingForm() {
         }
     }, [userProfile]);
 
-    const isLoading = isHotelLoading || areRoomsLoading;
-
-    if (isLoading) {
+    if (isHotelLoading || areRoomsLoading) {
         return null; // Let the parent Suspense boundary handle the loading UI.
     }
 
@@ -392,7 +390,7 @@ export function BookingForm() {
                         <CardContent>
                             {hotelImage && (
                                 <div className="relative w-full aspect-video overflow-hidden rounded-lg mb-4">
-                                    <Image src={hotelImage.imageUrl} alt={hotel.name} data-ai-hint={hotelImage.imageHint} fill className="object-cover" unoptimized />
+                                    <Image src={hotelImage.imageUrl} alt={hotel.name} data-ai-hint={hotelImage.imageHint} fill className="object-cover" />
                                 </div>
                             )}
                             <div className="space-y-3">

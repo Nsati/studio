@@ -53,7 +53,8 @@ export async function searchHotels(params: SearchParams): Promise<Hotel[]> {
     const bookingsQuery = query(
         collectionGroup(firestore, 'bookings'),
         where('hotelId', 'in', hotelIds),
-        where('status', '==', 'CONFIRMED')
+        where('status', '==', 'CONFIRMED'),
+        where('checkOut', '>', searchCheckIn)
     );
     const bookingsSnapshot = await getDocs(bookingsQuery);
     const allBookings = bookingsSnapshot.docs.map(doc => doc.data()) as Booking[];
@@ -61,9 +62,9 @@ export async function searchHotels(params: SearchParams): Promise<Hotel[]> {
     // Filter bookings that conflict with the search date range
     const conflictingBookings = allBookings.filter(booking => {
         const bookingCheckIn = (booking.checkIn as any).toDate ? (booking.checkIn as any).toDate() : new Date(booking.checkIn);
-        const bookingCheckOut = (booking.checkOut as any).toDate ? (booking.checkOut as any).toDate() : new Date(booking.checkOut);
         // Overlap condition: (StartA < EndB) and (EndA > StartB)
-        return bookingCheckIn < searchCheckOut && bookingCheckOut > searchCheckIn;
+        // We already did (EndA > StartB) in the query, now we do (StartA < EndB)
+        return bookingCheckIn < searchCheckOut;
     });
 
     // 3. Fetch all rooms for the queried hotels

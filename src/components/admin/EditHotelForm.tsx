@@ -138,6 +138,8 @@ export function EditHotelForm({ hotel, rooms: initialRooms }: EditHotelFormProps
     setIsLoading(true);
     const hotelId = hotel.id;
     const batch = writeBatch(firestore);
+    
+    const minPrice = values.rooms.length > 0 ? Math.min(...values.rooms.map(r => r.price)) : 0;
 
     // Update hotel document
     const hotelRef = doc(firestore, 'hotels', hotelId);
@@ -145,6 +147,7 @@ export function EditHotelForm({ hotel, rooms: initialRooms }: EditHotelFormProps
     batch.update(hotelRef, {
         ...hotelData,
         images: imageUrls,
+        minPrice: minPrice,
     });
 
     // Handle room updates and additions

@@ -1,5 +1,6 @@
 'use client';
 import { useMemo } from 'react';
+import dynamic from 'next/dynamic';
 import {
   Card,
   CardContent,
@@ -7,14 +8,20 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Hotel, Users2, BookOpen, IndianRupee, AlertTriangle, Activity } from 'lucide-react';
+import { Hotel, Users2, BookOpen, IndianRupee } from 'lucide-react';
 import { useCollection, useFirestore } from '@/firebase';
-import { collection, collectionGroup, query, where, Timestamp } from 'firebase/firestore';
+import { collection, collectionGroup } from 'firebase/firestore';
 import type { Booking, Hotel as HotelType, UserProfile } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from "recharts"
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 
+const BookingChart = dynamic(() => import('@/components/admin/BookingChart'), {
+  ssr: false,
+  loading: () => <Card><CardHeader><Skeleton className="h-6 w-3/4" /></CardHeader><CardContent><Skeleton className="h-[200px] w-full" /></CardContent></Card>,
+});
+
+const RecentBookings = dynamic(() => import('@/components/admin/RecentBookings'), {
+  loading: () => <Card><CardHeader><Skeleton className="h-6 w-3/4" /></CardHeader><CardContent className="space-y-4"><Skeleton className="h-10 w-full" /><Skeleton className="h-10 w-full" /></CardContent></Card>,
+});
 
 function StatCard({ title, value, icon: Icon, description, isLoading }: any) {
     return (
@@ -35,84 +42,6 @@ function StatCard({ title, value, icon: Icon, description, isLoading }: any) {
                     <p className="text-xs text-muted-foreground">{description}</p>
                   </>
                 )}
-            </CardContent>
-        </Card>
-    )
-}
-
-function RecentBookings({ bookings }: { bookings: Booking[] | null }) {
-    return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Recent Bookings</CardTitle>
-            </CardHeader>
-            <CardContent>
-                 <div className="space-y-4">
-                    {bookings && bookings.slice(0, 5).map((booking) => (
-                        <div key={booking.id} className="flex items-center">
-                            <div className="ml-4 space-y-1">
-                                <p className="text-sm font-medium leading-none">{booking.customerName}</p>
-                                <p className="text-sm text-muted-foreground">{booking.customerEmail}</p>
-                            </div>
-                            <div className="ml-auto font-medium">{booking.totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}</div>
-                        </div>
-                    ))}
-                    {(!bookings || bookings.length === 0) && (
-                        <p className="text-sm text-muted-foreground">No recent bookings.</p>
-                    )}
-                </div>
-            </CardContent>
-        </Card>
-    )
-}
-
-function BookingChart({ bookings }: { bookings: Booking[] | null }) {
-    const chartData = useMemo(() => {
-        if (!bookings) return [];
-        const data: { [key: string]: { date: string; total: number } } = {};
-        
-        bookings.forEach(booking => {
-            const date = (booking.createdAt as any).toDate ? (booking.createdAt as any).toDate() : new Date(booking.createdAt);
-            const day = date.toISOString().split('T')[0];
-            if (!data[day]) {
-                data[day] = { date: day, total: 0 };
-            }
-            data[day].total += booking.totalPrice;
-        });
-
-        return Object.values(data).sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    }, [bookings]);
-
-    const chartConfig = {
-      total: {
-        label: "Revenue",
-        color: "hsl(var(--primary))",
-      },
-    }
-
-    return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Revenue Overview</CardTitle>
-                <CardDescription>Daily revenue from bookings.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <ChartContainer config={chartConfig} className="h-[200px] w-full">
-                    <BarChart accessibilityLayer data={chartData}>
-                        <XAxis
-                        dataKey="date"
-                        tickLine={false}
-                        axisLine={false}
-                        tickMargin={8}
-                        tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric'})}
-                        />
-                        <ChartTooltip
-                            cursor={false}
-                            content={<ChartTooltipContent indicator="dot" />}
-                        />
-                        <Bar dataKey="total" fill="var(--color-total)" radius={4} />
-                    </BarChart>
-                </ChartContainer>
             </CardContent>
         </Card>
     )

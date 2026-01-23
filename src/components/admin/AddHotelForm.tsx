@@ -115,12 +115,15 @@ export function AddHotelForm() {
     const hotelId = slugify(values.name, { lower: true, strict: true });
     const batch = writeBatch(firestore);
 
+    const minPrice = values.rooms.length > 0 ? Math.min(...values.rooms.map(r => r.price)) : 0;
+
     const hotelRef = doc(firestore, 'hotels', hotelId);
     const { rooms, images, ...hotelData } = values;
     batch.set(hotelRef, {
         id: hotelId,
         ...hotelData,
         images: imageUrls,
+        minPrice: minPrice,
     });
 
     for (const room of rooms) {

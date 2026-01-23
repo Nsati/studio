@@ -25,7 +25,6 @@ function TourPackageCard({ tourPackage }: { tourPackage: TourPackage }) {
             data-ai-hint={image.imageHint}
             fill
             className="object-cover"
-            unoptimized
           />
         )}
       </div>
@@ -143,7 +142,6 @@ export default function TourPackagesPage() {
             fill
             className="object-cover"
             priority
-            unoptimized
           />
         )}
         <div className="absolute inset-0 bg-black/50" />

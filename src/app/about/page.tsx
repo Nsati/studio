@@ -63,7 +63,6 @@ export default function AboutPage() {
             fill
             className="object-cover"
             priority
-            unoptimized
           />
         )}
         <div className="absolute inset-0 bg-black/50" />
@@ -128,7 +127,6 @@ export default function AboutPage() {
                           data-ai-hint={memberImage.imageHint}
                           fill
                           className="object-cover"
-                          unoptimized
                         />
                       )}
                     </div>

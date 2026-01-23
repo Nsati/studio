@@ -110,6 +110,10 @@
         "rating": {
           "type": "number",
           "description": "The hotel's rating."
+        },
+        "minPrice": {
+          "type": "number",
+          "description": "The minimum price per night for a room in the hotel. Denormalized for performance."
         }
       },
       "required": [

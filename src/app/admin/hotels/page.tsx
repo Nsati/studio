@@ -44,7 +44,6 @@ function HotelAdminCard({ hotel }: { hotel: Hotel }) {
                         alt={hotel.name}
                         fill
                         className="object-cover rounded-t-lg"
-                        unoptimized
                     />
                 ) : (
                     <div className="flex h-full w-full items-center justify-center bg-muted rounded-t-lg">

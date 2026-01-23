@@ -7,6 +7,7 @@ export interface Hotel {
   images: string[];
   amenities: string[];
   rating: number;
+  minPrice?: number;
 }
 
 export interface Room {
