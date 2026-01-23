@@ -197,26 +197,6 @@ export function BookingForm() {
         
         setIsBooking(true);
 
-        if (totalPrice < 1) {
-            toast({
-                variant: 'destructive',
-                title: 'Invalid Amount',
-                description: 'The total amount must be at least ₹1 to proceed.',
-            });
-            setIsBooking(false);
-            return;
-        }
-
-        if (!window.Razorpay) {
-            toast({
-                variant: 'destructive',
-                title: 'Payment Gateway Error',
-                description: 'Payment gateway did not load. Please check your ad-blocker and refresh.',
-            });
-            setIsBooking(false);
-            return;
-        }
-
         let userIdForBooking = user?.uid;
 
         if (!userIdForBooking) {
