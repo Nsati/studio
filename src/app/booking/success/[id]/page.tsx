@@ -2,7 +2,7 @@
 
 import { useParams, useRouter, notFound } from 'next/navigation';
 import { useUser, useFirestore, useDoc } from '@/firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc } from 'firebase/firestore';
 import { useEffect, useMemo, useState } from 'react';
 import type { Booking, Hotel } from '@/lib/types';
 import { generateTripGuide, type TripAssistantOutput } from '@/ai/flows/generate-arrival-assistant';
@@ -161,58 +161,6 @@ function TripAssistant({ hotel, booking }: { hotel: Hotel, booking: Booking }) {
     return null;
 }
 
-function ProcessingBooking({ bookingRef }: { bookingRef: any }) {
-    const router = useRouter();
-
-    useEffect(() => {
-        if (!bookingRef) return;
-        
-        // Poll every 2.5 seconds to check the booking status
-        const intervalId = setInterval(async () => {
-            try {
-                const bookingSnap = await getDoc(bookingRef);
-                if (bookingSnap.exists() && bookingSnap.data().status === 'CONFIRMED') {
-                    // Status confirmed, refresh the page to show the success view.
-                    clearInterval(intervalId);
-                    router.refresh();
-                }
-            } catch (error) {
-                console.error("Error polling for booking status:", error);
-            }
-        }, 2500);
-
-        // Stop polling after 1 minute to avoid infinite loops and unnecessary reads
-        const timeoutId = setTimeout(() => {
-            clearInterval(intervalId);
-        }, 60000);
-
-        return () => {
-            clearInterval(intervalId);
-            clearTimeout(timeoutId);
-        };
-
-    }, [bookingRef, router]);
-
-    return (
-        <div className="bg-muted/40 min-h-[calc(100vh-4rem)] flex items-center">
-            <div className="container mx-auto max-w-lg py-12 px-4 md:px-6">
-                <Card className="text-center">
-                    <CardHeader className="items-center">
-                        <Loader2 className="h-12 w-12 text-primary animate-spin" />
-                        <CardTitle className="text-3xl font-headline mt-4">Processing Your Booking</CardTitle>
-                        <CardDescription>
-                            Your payment was successful! We are now confirming your booking with the hotel. This may take a moment.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                         <p className="text-sm text-muted-foreground">Please do not refresh or close this page.</p>
-                    </CardContent>
-                </Card>
-            </div>
-        </div>
-    );
-}
-
 export default function BookingSuccessPage() {
     const params = useParams();
     const router = useRouter();
@@ -245,16 +193,31 @@ export default function BookingSuccessPage() {
     
     const isLoading = isUserLoading || isBookingLoading || isHotelLoading;
 
-    if (isLoading) {
-        return <SuccessPageSkeleton />;
-    }
-
-    // This state handles when payment is confirmed but webhook hasn't updated the DB yet
-    if (booking && booking.status === 'PENDING') {
-      return <ProcessingBooking bookingRef={bookingRef} />;
+    // Show processing UI if data is still loading or if the booking is still pending.
+    // The useDoc hook will automatically trigger a re-render when the status changes.
+    if (isLoading || (booking && booking.status === 'PENDING')) {
+        return (
+            <div className="bg-muted/40 min-h-[calc(100vh-4rem)] flex items-center">
+                <div className="container mx-auto max-w-lg py-12 px-4 md:px-6">
+                    <Card className="text-center">
+                        <CardHeader className="items-center">
+                            <Loader2 className="h-12 w-12 text-primary animate-spin" />
+                            <CardTitle className="text-3xl font-headline mt-4">Processing Your Booking</CardTitle>
+                            <CardDescription>
+                                Your payment was successful! We are now confirming your booking with the hotel. This may take a moment.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                             <p className="text-sm text-muted-foreground">Please do not refresh or close this page.</p>
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
+        );
     }
     
-    // This state handles the final success view
+    // Once the booking is confirmed, show the success view.
+    // If the booking or hotel doesn't exist, or status is not CONFIRMED, show not found.
     if (!booking || !hotel || booking.status !== 'CONFIRMED') {
         return notFound();
     }
