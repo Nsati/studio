@@ -49,15 +49,20 @@ service cloud.firestore {
     match /hotels/{hotelId}/rooms/{roomId} {
         allow read: if true;
         allow create, delete: if isAdmin(); // Only admins can create/delete rooms
-        allow update: if isAdmin() || // Admins can update any field
-                       ( // Or, an authenticated user can update ONLY the room count for booking/cancellation
-                         request.auth != null &&
-                         (
-                           request.resource.data.availableRooms == resource.data.availableRooms - 1 ||
-                           request.resource.data.availableRooms == resource.data.availableRooms + 1
-                         ) &&
-                         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['availableRooms'])
-                       );
+        
+        // Definitive fix for update permissions
+        allow update: if 
+            // Case 1: An admin can update any field.
+            isAdmin() || 
+            // Case 2: A non-admin user can ONLY modify the available room count by 1.
+            (
+              request.auth != null && 
+              // The update must ONLY affect the 'availableRooms' field.
+              request.resource.data.diff(resource.data).affectedKeys().hasOnly(['availableRooms']) &&
+              // The change must be an increment or decrement by exactly 1.
+              (request.resource.data.availableRooms == resource.data.availableRooms + 1 ||
+               request.resource.data.availableRooms == resource.data.availableRooms - 1)
+            );
     }
 
     // Reviews are publicly readable. Authenticated users can create them for a hotel.
