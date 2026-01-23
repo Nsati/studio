@@ -141,6 +141,7 @@ function BookingItem({ booking }: { booking: Booking }) {
 
     const checkInDate = (booking.checkIn as any).toDate ? (booking.checkIn as any).toDate() : new Date(booking.checkIn);
     const checkOutDate = (booking.checkOut as any).toDate ? (booking.checkOut as any).toDate() : new Date(booking.checkOut);
+    const isCancelled = booking.status === 'CANCELLED';
 
     return (
         <Card key={booking.id} className="overflow-hidden shadow-md transition-shadow hover:shadow-lg">
@@ -185,9 +186,6 @@ function BookingItem({ booking }: { booking: Booking }) {
                             <p><span className="font-semibold text-foreground">Guests:</span> {booking.guests}</p>
                             <p className="col-span-1 sm:col-span-2"><span className="font-semibold text-foreground">Booking ID:</span> <span className="font-mono text-xs">{booking.id}</span></p>
                             <p><span className="font-semibold text-foreground">Amount Paid:</span> <span className="font-bold text-foreground">{booking.totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}</span></p>
-                             <p className="text-xs text-muted-foreground col-span-1 sm:col-span-2 pt-2">
-                                Standard cancellation policy applies. Free cancellation is generally available up to 24 hours before check-in.
-                            </p>
                         </div>
                     </div>
 
@@ -198,7 +196,7 @@ function BookingItem({ booking }: { booking: Booking }) {
                         <Button variant="outline" size="sm" onClick={() => toast({ title: "Feature Coming Soon", description: "Invoice download will be available shortly."})}>
                             <Download className="mr-2 h-4 w-4" /> Download Invoice
                         </Button>
-                        {booking.status === 'CONFIRMED' && (
+                        {!isCancelled && (
                            <AlertDialog>
                                 <AlertDialogTrigger asChild>
                                     <Button variant="destructive" size="sm" disabled={isCancelling}>
@@ -210,8 +208,8 @@ function BookingItem({ booking }: { booking: Booking }) {
                                     <AlertDialogHeader>
                                         <AlertDialogTitle>Are you sure you want to cancel?</AlertDialogTitle>
                                         <AlertDialogDescription>
-                                            This will permanently cancel your booking for {hotel.name}. Please review the hotel's cancellation policy. 
-                                            Generally, refunds for cancellations made up to 24 hours before check-in are processed within 5-7 business days. 
+                                            This will permanently cancel your booking for {hotel.name}. 
+                                            Generally, refunds for cancellations are processed within 5-7 business days. 
                                             This action cannot be undone.
                                         </AlertDialogDescription>
                                     </AlertDialogHeader>

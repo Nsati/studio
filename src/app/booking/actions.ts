@@ -21,7 +21,7 @@ export async function createRazorpayOrder(
     const keySecret = process.env.RAZORPAY_KEY_SECRET;
 
     if (!keyId || !keySecret) {
-        console.error('Razorpay keys are not configured in environment variables.');
+        console.error('CRITICAL: Razorpay keys are not configured in environment variables. Check your .env file.');
         return { success: false, error: 'Payment gateway is not configured on the server. Please contact support.' };
     }
 
@@ -68,8 +68,8 @@ export async function verifyRazorpayPayment(data: {
   const key_secret = process.env.RAZORPAY_KEY_SECRET;
 
   if (!key_secret) {
-    console.error('RAZORPAY_KEY_SECRET is not set.');
-    return { success: false, error: 'Server configuration error.' };
+    console.error('CRITICAL: RAZORPAY_KEY_SECRET is not set in .env file.');
+    return { success: false, error: 'Server payment configuration error.' };
   }
 
   const body = razorpay_order_id + '|' + razorpay_payment_id;

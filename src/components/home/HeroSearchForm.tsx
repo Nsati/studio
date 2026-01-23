@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { collection } from 'firebase/firestore';
+import type { DateRange } from 'react-day-picker';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -29,7 +30,6 @@ import {
 } from 'lucide-react';
 import type { City } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import type { DateRange } from 'react-day-picker';
 import { dummyCities } from '@/lib/dummy-data';
 import { useCollection, useFirestore } from '@/firebase';
 

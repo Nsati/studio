@@ -1,7 +1,7 @@
 'use client';
 import { useMemo, useState } from 'react';
 import { useFirestore, useCollection } from '@/firebase';
-import { collectionGroup, doc, runTransaction, increment } from 'firebase/firestore';
+import { collectionGroup, doc, runTransaction, increment, updateDoc } from 'firebase/firestore';
 import type { Booking } from '@/lib/types';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -29,7 +29,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { Loader2, Trash2 } from 'lucide-react';
+import { Loader2, Ban } from 'lucide-react';
 
 function BookingRowSkeleton() {
     return (
@@ -40,20 +40,20 @@ function BookingRowSkeleton() {
             <TableCell><Skeleton className="h-4 w-24" /></TableCell>
             <TableCell><Skeleton className="h-4 w-16" /></TableCell>
             <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-            <TableCell className="text-right"><Skeleton className="h-9 w-9" /></TableCell>
+            <TableCell className="text-right"><Skeleton className="h-9 w-24" /></TableCell>
         </TableRow>
     )
 }
 
-function DeleteBookingAction({ booking }: { booking: Booking }) {
+function CancelBookingAction({ booking }: { booking: Booking }) {
     const firestore = useFirestore();
     const { toast } = useToast();
-    const [isDeleting, setIsDeleting] = useState(false);
+    const [isCancelling, setIsCancelling] = useState(false);
 
-    const handleDelete = async () => {
+    const handleCancel = async () => {
         if (!firestore || !booking.id) return;
 
-        setIsDeleting(true);
+        setIsCancelling(true);
         const bookingRef = doc(firestore, 'users', booking.userId, 'bookings', booking.id);
         const roomRef = doc(firestore, 'hotels', booking.hotelId, 'rooms', booking.roomId);
 
@@ -61,13 +61,22 @@ function DeleteBookingAction({ booking }: { booking: Booking }) {
             await runTransaction(firestore, async (transaction) => {
                 const bookingDoc = await transaction.get(bookingRef);
                 if (!bookingDoc.exists()) {
-                    // Already deleted, do nothing.
-                    return;
+                    throw new Error("Booking does not exist.");
                 }
                 
                 const bookingData = bookingDoc.data() as Booking;
 
-                // Increment room count only if booking was confirmed and not cancelled
+                if (bookingData.status === 'CANCELLED') {
+                    // Already cancelled, do nothing.
+                    toast({
+                        variant: "destructive",
+                        title: "Already Cancelled",
+                        description: "This booking has already been cancelled.",
+                    });
+                    return;
+                }
+                
+                // Increment room count only if booking was confirmed
                 if (bookingData.status === 'CONFIRMED') {
                     const roomDoc = await transaction.get(roomRef);
                     if (roomDoc.exists()) {
@@ -75,47 +84,50 @@ function DeleteBookingAction({ booking }: { booking: Booking }) {
                     }
                 }
                 
-                // Finally, delete the booking
-                transaction.delete(bookingRef);
+                // Finally, update the booking status
+                transaction.update(bookingRef, { status: 'CANCELLED' });
             });
 
             toast({
-                title: 'Booking Deleted',
-                description: `Booking ID ${booking.id} has been successfully deleted.`,
+                title: 'Booking Cancelled',
+                description: `Booking ID ${booking.id} has been successfully cancelled.`,
             });
 
         } catch (error: any) {
-            console.error("Deletion failed:", error);
+            console.error("Cancellation failed:", error);
             toast({
                 variant: "destructive",
-                title: "Deletion Failed",
-                description: error.message || "Could not delete the booking. Please check Firestore rules and transaction logic.",
+                title: "Cancellation Failed",
+                description: error.message || "Could not cancel the booking. Please check Firestore rules and transaction logic.",
             });
         } finally {
-            setIsDeleting(false);
+            setIsCancelling(false);
         }
     };
 
+    const isCancelled = booking.status === 'CANCELLED';
 
     return (
         <AlertDialog>
             <AlertDialogTrigger asChild>
-                <Button variant="ghost" size="icon" disabled={isDeleting} aria-label="Delete booking">
-                    {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4 text-destructive" />}
+                <Button variant="outline" size="sm" disabled={isCancelling || isCancelled}>
+                    {isCancelling ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Ban className="h-4 w-4 mr-2" />}
+                    {isCancelled ? 'Cancelled' : 'Cancel'}
                 </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
                 <AlertDialogHeader>
                     <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                     <AlertDialogDescription>
-                        This will permanently delete the booking record for {booking.customerName}.
+                        This will cancel the booking for {booking.customerName}.
                         If the booking was confirmed, the room will be added back to the inventory.
+                        Generally, refunds are processed within 5-7 business days. This action cannot be undone.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
-                        {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Yes, delete booking'}
+                    <AlertDialogCancel>Close</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleCancel} className="bg-destructive hover:bg-destructive/90">
+                        {isCancelling ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Yes, cancel booking'}
                     </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
@@ -198,7 +210,7 @@ export default function BookingsPage() {
                                     {booking.totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
                                 </TableCell>
                                 <TableCell className="text-right">
-                                    <DeleteBookingAction booking={booking} />
+                                    <CancelBookingAction booking={booking} />
                                 </TableCell>
                             </TableRow>
                         )
