@@ -6,6 +6,7 @@ import { adminDb } from '@/firebase/admin';
 import { generateBookingConfirmationEmail } from '@/ai/flows/generate-booking-confirmation-email';
 import type { Booking, Hotel, Room } from '@/lib/types';
 import * as admin from 'firebase-admin';
+import { sendEmail } from '@/services/email';
 
 // Disable Next.js body parser to access the raw body for signature verification
 export const config = {
@@ -52,6 +53,9 @@ export async function POST(req: NextRequest) {
         }
 
         const bookingRef = adminDb.collection('users').doc(user_id).collection('bookings').doc(booking_id);
+        
+        let confirmedBookingDetails: Booking | null = null;
+        let hotelDetails: Hotel | null = null;
 
         await adminDb.runTransaction(async (transaction) => {
             const bookingDoc = await transaction.get(bookingRef);
@@ -86,43 +90,52 @@ export async function POST(req: NextRequest) {
                 status: 'CONFIRMED',
                 razorpayPaymentId: paymentEntity.id,
             });
+            
+            // Set data for email sending after transaction
+            const hotelDoc = await transaction.get(adminDb.collection('hotels').doc(bookingData.hotelId));
+            if (hotelDoc.exists()) {
+                hotelDetails = hotelDoc.data() as Hotel;
+            }
+            
+            confirmedBookingDetails = {
+                ...bookingData,
+                status: 'CONFIRMED',
+                razorpayPaymentId: paymentEntity.id,
+            };
         });
 
         // --- Post-Transaction: Send Confirmation Email (Non-critical) ---
-        try {
-            const confirmedBookingSnap = await bookingRef.get();
-            if (!confirmedBookingSnap.exists) {
-                throw new Error("Could not find the just-confirmed booking to send email.");
+        if (confirmedBookingDetails && hotelDetails) {
+            try {
+                console.log(`Webhook: Generating email for confirmed booking ${booking_id}`);
+
+                const emailContent = await generateBookingConfirmationEmail({
+                    hotelName: hotelDetails.name,
+                    customerName: confirmedBookingDetails.customerName,
+                    checkIn: (confirmedBookingDetails.checkIn as admin.firestore.Timestamp).toDate().toISOString(),
+                    checkOut: (confirmedBookingDetails.checkOut as admin.firestore.Timestamp).toDate().toISOString(),
+                    roomType: confirmedBookingDetails.roomType,
+                    totalPrice: confirmedBookingDetails.totalPrice,
+                    bookingId: booking_id,
+                });
+                
+                console.log(`Webhook: Sending booking confirmation email to ${confirmedBookingDetails.customerEmail}`);
+
+                await sendEmail({
+                    to: confirmedBookingDetails.customerEmail,
+                    subject: emailContent.subject,
+                    html: emailContent.body,
+                });
+                
+                console.log(`Webhook: Successfully sent email for booking ${booking_id}.`);
+
+            } catch (emailError: any) {
+                console.error(`[Non-critical] Failed to send confirmation email for booking ${booking_id}:`, emailError.message);
             }
-            
-            const bookingDetails = confirmedBookingSnap.data() as Booking;
-            const hotelSnap = await adminDb.collection('hotels').doc(bookingDetails.hotelId).get();
-            
-            if (!hotelSnap.exists) {
-                throw new Error(`Hotel ${bookingDetails.hotelId} not found for email generation.`);
-            }
-            
-            const hotel = hotelSnap.data() as Hotel;
-
-            console.log(`Webhook: Generating email for confirmed booking ${booking_id}`);
-
-            const emailContent = await generateBookingConfirmationEmail({
-                hotelName: hotel.name,
-                customerName: bookingDetails.customerName,
-                checkIn: (bookingDetails.checkIn as admin.firestore.Timestamp).toDate().toISOString(),
-                checkOut: (bookingDetails.checkOut as admin.firestore.Timestamp).toDate().toISOString(),
-                roomType: bookingDetails.roomType,
-                totalPrice: bookingDetails.totalPrice,
-                bookingId: booking_id,
-            });
-            
-            console.log('--- PRODUCTION-READY BOOKING CONFIRMATION EMAIL (SIMULATED) ---');
-            console.log('TO:', bookingDetails.customerEmail);
-            console.log('SUBJECT:', emailContent.subject);
-            console.log('-----------------------------------------------------------------');
-
-        } catch (emailError: any) {
-            console.error(`[Non-critical] Failed to send confirmation email for booking ${booking_id}:`, emailError.message);
+        } else if (!confirmedBookingDetails) {
+            console.log(`Webhook: Booking ${booking_id} was already confirmed. No email sent.`);
+        } else {
+             console.error(`[Non-critical] Could not send email for ${booking_id} because hotel details were not found.`);
         }
     }
 
