@@ -5,13 +5,13 @@ import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, useRouter, notFound } from 'next/navigation';
 import Image from 'next/image';
 import { differenceInDays, format, parse } from 'date-fns';
-import { createPendingBooking, createRazorpayOrder, verifyRazorpayPayment } from '@/app/booking/actions';
+import { createRazorpayOrder, verifyRazorpayPayment } from '@/app/booking/actions';
 import { signInAnonymously } from 'firebase/auth';
 
 
 import type { Hotel, Room, Booking, Promotion } from '@/lib/types';
 import { useUser, useFirestore, useDoc, useCollection, useAuth } from '@/firebase';
-import { doc, collection, getDoc } from 'firebase/firestore';
+import { doc, collection, getDoc, setDoc } from 'firebase/firestore';
 
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -234,17 +234,36 @@ export function BookingForm() {
             }
         }
 
-        // --- Step 1: Create a PENDING booking in Firestore ---
-        const pendingBookingResult = await createPendingBooking({
-            hotel, room, checkIn, checkOut, guests, totalPrice, customerDetails, userId: userIdForBooking
-        });
+        // --- Step 1: Create a PENDING booking in Firestore (Client-side) ---
+        const newBookingId = `booking_${Date.now()}`;
+        let bookingId: string;
+        try {
+            if (!userIdForBooking) throw new Error("User not authenticated.");
+            const bookingRef = doc(firestore, 'users', userIdForBooking, 'bookings', newBookingId);
 
-        if (!pendingBookingResult.success || !pendingBookingResult.bookingId) {
-            toast({ variant: 'destructive', title: 'Booking Error', description: pendingBookingResult.error });
+            const bookingData: Booking = {
+              id: newBookingId,
+              hotelId: hotel.id,
+              userId: userIdForBooking,
+              roomId: room.id,
+              roomType: room.type,
+              checkIn: checkIn,
+              checkOut: checkOut,
+              guests: parseInt(guests),
+              totalPrice: totalPrice,
+              customerName: customerDetails.name,
+              customerEmail: customerDetails.email,
+              status: 'PENDING', // Set status to PENDING
+              createdAt: new Date(),
+            };
+            await setDoc(bookingRef, bookingData);
+            bookingId = newBookingId;
+        } catch (e: any) {
+            console.error('Error creating pending booking:', e);
+            toast({ variant: 'destructive', title: 'Booking Error', description: 'Could not initialize booking.' });
             setIsBooking(false);
             return;
         }
-        const bookingId = pendingBookingResult.bookingId;
 
         // --- Step 2: Create Razorpay order with booking context ---
         const orderResponse = await createRazorpayOrder(totalPrice, {

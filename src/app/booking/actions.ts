@@ -1,23 +1,8 @@
-'use server';
 
-import { firebaseConfig } from '@/firebase/config';
-import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
-import { getFirestore, doc, setDoc } from 'firebase/firestore';
-import type { Booking, Hotel, Room } from '@/lib/types';
+'use server';
 
 const Razorpay = require('razorpay');
 import crypto from 'crypto';
-
-// --- Server-side CLIENT SDK initialization for server actions ---
-// We use this for actions directly called from the client to respect security rules.
-let app: FirebaseApp;
-if (!getApps().length) {
-  app = initializeApp(firebaseConfig);
-} else {
-  app = getApp();
-}
-const firestore = getFirestore(app);
-// ---
 
 interface CreateOrderResponse {
   success: boolean;
@@ -109,53 +94,5 @@ export async function verifyRazorpayPayment(data: {
   } else {
     console.warn('Payment verification failed: Signatures do not match.');
     return { success: false, error: 'Payment verification failed.' };
-  }
-}
-
-export async function createPendingBooking(bookingDetails: {
-  hotel: Hotel;
-  room: Room;
-  checkIn: Date;
-  checkOut: Date;
-  guests: string;
-  totalPrice: number;
-  customerDetails: { name: string; email: string };
-  userId: string;
-}): Promise<{ success: boolean; bookingId?: string; error?: string }> {
-  const {
-    hotel,
-    room,
-    checkIn,
-    checkOut,
-    guests,
-    totalPrice,
-    customerDetails,
-    userId,
-  } = bookingDetails;
-  const newBookingId = `booking_${Date.now()}`;
-
-  try {
-    const bookingRef = doc(firestore, 'users', userId, 'bookings', newBookingId);
-
-    const bookingData: Booking = {
-      id: newBookingId,
-      hotelId: hotel.id,
-      userId: userId,
-      roomId: room.id,
-      roomType: room.type,
-      checkIn: checkIn,
-      checkOut: checkOut,
-      guests: parseInt(guests),
-      totalPrice: totalPrice,
-      customerName: customerDetails.name,
-      customerEmail: customerDetails.email,
-      status: 'PENDING', // Set status to PENDING
-      createdAt: new Date(),
-    };
-    await setDoc(bookingRef, bookingData);
-    return { success: true, bookingId: newBookingId };
-  } catch (e: any) {
-    console.error('Error creating pending booking:', e);
-    return { success: false, error: 'Could not initialize booking.' };
   }
 }
