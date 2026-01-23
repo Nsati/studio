@@ -2,7 +2,6 @@
 import { Resend } from 'resend';
 
 const resendApiKey = process.env.RESEND_API_KEY;
-const fromEmail = process.env.FROM_EMAIL;
 
 interface EmailPayload {
     to: string;
@@ -11,8 +10,8 @@ interface EmailPayload {
 }
 
 export async function sendEmail(payload: EmailPayload) {
-    if (!resendApiKey || !fromEmail) {
-        console.error("Email service is not configured. Missing RESEND_API_KEY or FROM_EMAIL.");
+    if (!resendApiKey) {
+        console.error("Email service is not configured. Missing RESEND_API_KEY.");
         return { success: false, error: "Email service not configured on the server." };
     }
 
@@ -20,7 +19,9 @@ export async function sendEmail(payload: EmailPayload) {
 
     try {
         const { data, error } = await resend.emails.send({
-            from: `Uttarakhand Getaways <${fromEmail}>`,
+            // Using Resend's verified test domain to ensure email delivery during development.
+            // In production, you would replace this with your own verified domain.
+            from: `Uttarakhand Getaways <onboarding@resend.dev>`,
             to: payload.to,
             subject: payload.subject,
             html: payload.html,
