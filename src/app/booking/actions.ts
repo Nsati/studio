@@ -6,6 +6,7 @@ import crypto from 'crypto';
 import { adminDb } from '@/firebase/admin';
 import * as admin from 'firebase-admin';
 import type { Booking, Room } from '@/lib/types';
+import { sendBookingConfirmationEmail } from '@/services/email';
 
 interface CreateOrderResponse {
   success: boolean;
@@ -84,8 +85,9 @@ export async function verifyAndFinalizePayment(
   }
 ): Promise<VerifyPaymentResponse> {
   if (!adminDb) {
-    console.error("❌ Payment Finalization Error: Firebase Admin SDK not initialized. Cannot confirm booking.");
-    return { success: false, error: 'Server payment finalization is not configured.' };
+    const configError = `Server configuration error: Firebase Admin SDK is not initialized. This is required for secure server operations like payment verification. Please check the server logs for a 'FATAL' or 'WARNING' message with instructions on how to set the 'GOOGLE_APPLICATION_CREDENTIALS_JSON' environment variable.`;
+    console.error("❌ Payment Finalization Error:", configError);
+    return { success: false, error: configError };
   }
 
   const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = data;
@@ -158,7 +160,16 @@ export async function verifyAndFinalizePayment(
       });
     });
 
-    console.log(`Client-flow: Booking ${context.bookingId} confirmed successfully.`);
+    console.log(`✅ Client-flow: Booking ${context.bookingId} confirmed successfully.`);
+    
+    // Send email asynchronously after confirming booking, no need to await.
+    // This ensures the UI is not blocked. Webhook will also try to send it as a backup.
+    const confirmedBookingSnap = await bookingRef.get();
+    if(confirmedBookingSnap.exists()) {
+        sendBookingConfirmationEmail(confirmedBookingSnap.data() as Booking);
+    }
+
+
     return { success: true };
   } catch (error: any) {
     console.error('FATAL: Error finalizing booking from client-flow:', error.message);

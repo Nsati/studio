@@ -1,3 +1,4 @@
+
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import getRawBody from 'raw-body';
@@ -17,9 +18,10 @@ export async function POST(req: NextRequest) {
   console.log('--- Razorpay Webhook Endpoint Hit ---');
 
   if (!adminDb) {
-    console.error('❌ STEP 0: FATAL - Firebase Admin SDK is not initialized. Webhook cannot proceed.');
+    const configError = 'FATAL - Firebase Admin SDK is not initialized. Webhook cannot proceed. Please check server logs for instructions on setting GOOGLE_APPLICATION_CREDENTIALS_JSON.';
+    console.error('❌ STEP 0:', configError);
     // Return 500 so Razorpay might retry later if the admin config is fixed.
-    return NextResponse.json({ error: 'Server not configured for Firebase Admin' }, { status: 500 });
+    return NextResponse.json({ error: configError }, { status: 500 });
   }
   
   const secret = process.env.RAZORPAY_WEBHOOK_SECRET || '';
