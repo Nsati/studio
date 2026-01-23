@@ -3,13 +3,15 @@
 import { useParams, useRouter, notFound } from 'next/navigation';
 import { useUser, useFirestore, useDoc } from '@/firebase';
 import { doc } from 'firebase/firestore';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { Booking, Hotel } from '@/lib/types';
 import { generateBookingConfirmationEmail } from '@/ai/flows/generate-booking-confirmation-email';
+import { generateArrivalGuide, type ArrivalAssistantOutput } from '@/ai/flows/generate-arrival-assistant';
+
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, PartyPopper, UserPlus } from 'lucide-react';
+import { CheckCircle, PartyPopper, UserPlus, Bot, Map, ParkingCircle, Clock, Lightbulb, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -41,6 +43,92 @@ function SuccessPageSkeleton() {
   )
 }
 
+function ArrivalAssistant({ hotel, booking }: { hotel: Hotel, booking: Booking }) {
+    const [guide, setGuide] = useState<ArrivalAssistantOutput | null>(null);
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [error, setError] = useState('');
+
+    const handleGenerateGuide = async () => {
+        setIsGenerating(true);
+        setError('');
+        try {
+            const checkInDate = (booking.checkIn as any).toDate ? (booking.checkIn as any).toDate() : new Date(booking.checkIn);
+            const result = await generateArrivalGuide({
+                hotelName: hotel.name,
+                hotelCity: hotel.city,
+                hotelAddress: hotel.address,
+                customerName: booking.customerName,
+                checkInDate: format(checkInDate, 'PPPP'),
+            });
+            setGuide(result);
+        } catch (err) {
+            console.error("Failed to generate arrival guide:", err);
+            setError("Sorry, the assistant is currently unavailable. Please try again later.");
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+    
+    if (guide) {
+        return (
+             <Card className="bg-primary/5 border-primary/20 mt-6">
+                <CardHeader>
+                    <CardTitle className="text-xl flex items-center gap-2">
+                        <Bot className="h-6 w-6 text-primary" /> Your Smart Arrival Guide
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4 text-sm">
+                    <p>{guide.welcomeMessage}</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="flex gap-3 items-start">
+                            <Map className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
+                            <div><strong className="block text-foreground">Navigation</strong> <a href={guide.googleMapsUrl} target="_blank" rel="noopener noreferrer" className="text-primary underline">Get Directions</a></div>
+                        </div>
+                        <div className="flex gap-3 items-start">
+                            <ParkingCircle className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
+                            <div><strong className="block text-foreground">Parking</strong> {guide.parkingInfo}</div>
+                        </div>
+                         <div className="flex gap-3 items-start">
+                            <Clock className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
+                            <div><strong className="block text-foreground">Check-in</strong> {guide.checkInReminder}</div>
+                        </div>
+                         <div className="flex gap-3 items-start">
+                            <Lightbulb className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
+                            <div><strong className="block text-foreground">Local Tip</strong> {guide.localTip}</div>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+        )
+    }
+
+    return (
+        <Card className="bg-primary/5 border-primary/20 mt-6 text-center">
+            <CardHeader>
+                <CardTitle className="flex items-center justify-center gap-2">
+                    <Bot className="h-6 w-6 text-primary" />
+                    Activate Smart Arrival Assistant
+                </CardTitle>
+                <CardDescription>Get personalized directions, tips, and reminders for your arrival.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                {isGenerating ? (
+                    <Button disabled className="w-full">
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Generating Your Guide...
+                    </Button>
+                ) : (
+                    <Button onClick={handleGenerateGuide} className="w-full">
+                        Generate Your Arrival Guide
+                    </Button>
+                )}
+                {error && <p className="text-destructive text-sm mt-2">{error}</p>}
+            </CardContent>
+        </Card>
+    )
+
+}
+
 
 export default function BookingSuccessPage() {
     const params = useParams();
@@ -51,12 +139,9 @@ export default function BookingSuccessPage() {
 
     const bookingId = params.id as string;
 
-    // For anonymous users, the UID is not immediately available, so we need a workaround.
-    // This is a simplified approach; a more robust solution might pass UID via params for guests.
     const userIdForBooking = useMemo(() => {
         if (user) return user.uid;
-        const guestUid = localStorage.getItem('guest_uid');
-        return guestUid;
+        return null;
     },[user]);
 
     const bookingRef = useMemo(() => {
@@ -74,8 +159,6 @@ export default function BookingSuccessPage() {
     const { data: hotel, isLoading: isHotelLoading } = useDoc<Hotel>(hotelRef);
     
     useEffect(() => {
-        // Redirect to login only if loading is complete and there's no user at all.
-        // Anonymous users are also 'users', so this allows them to see this page.
         if (!isUserLoading && !user) {
             router.replace('/login');
         }
@@ -92,19 +175,14 @@ export default function BookingSuccessPage() {
                 totalPrice: booking.totalPrice,
                 bookingId: booking.id!,
             }).then(email => {
-                console.log("---- BOOKING CONFIRMATION EMAIL ----");
+                console.log("---- BOOKING CONFIRMATION EMAIL (DEV ONLY) ----");
                 console.log("SUBJECT:", email.subject);
                 console.log("BODY:", email.body);
-                console.log("---- In production, this would be sent via an email service. ----");
-                toast({
-                    title: "Confirmation Email Generated",
-                    description: "Check server console for email content (dev only).",
-                });
             }).catch(err => {
                 console.error("Failed to generate confirmation email:", err);
             });
         }
-    }, [booking, hotel, toast]);
+    }, [booking, hotel]);
     
     const isLoading = isUserLoading || isBookingLoading || isHotelLoading;
 
@@ -158,18 +236,20 @@ export default function BookingSuccessPage() {
                                 <span className="font-semibold text-green-600 flex items-center gap-1"><CheckCircle className="h-4 w-4"/> Confirmed</span>
                             </div>
                         </div>
+                        
+                        <ArrivalAssistant hotel={hotel} booking={booking} />
 
                          {user?.isAnonymous && (
-                            <Card className="bg-primary/5 border-primary/20">
+                            <Card className="bg-blue-50 border-blue-200">
                                 <CardHeader className="flex-row items-center gap-4 space-y-0">
-                                    <UserPlus className="h-8 w-8 text-primary" />
+                                    <UserPlus className="h-8 w-8 text-blue-600" />
                                     <div>
-                                        <CardTitle className="text-lg">Save Your Booking!</CardTitle>
-                                        <CardDescription>Create an account to view this booking anytime and manage future trips.</CardDescription>
+                                        <CardTitle className="text-lg text-blue-900">Save Your Booking!</CardTitle>
+                                        <CardDescription className="text-blue-800">Create an account to view this booking anytime and manage future trips.</CardDescription>
                                     </div>
                                 </CardHeader>
                                 <CardContent>
-                                    <Button asChild className="w-full">
+                                    <Button asChild className="w-full bg-blue-600 hover:bg-blue-700">
                                         <Link href="/signup">Sign Up for Free</Link>
                                     </Button>
                                 </CardContent>
@@ -186,7 +266,7 @@ export default function BookingSuccessPage() {
                             </Button>
                         </div>
 
-                        <p className="text-xs text-muted-foreground text-center">A confirmation email has been generated. In a real app, this would be sent to {booking.customerEmail}.</p>
+                        <p className="text-xs text-muted-foreground text-center">A confirmation email has been generated and logged to the server console for development purposes.</p>
                     </CardContent>
                 </Card>
             </div>

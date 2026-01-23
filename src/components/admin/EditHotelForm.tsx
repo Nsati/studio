@@ -55,6 +55,7 @@ const roomSchema = z.object({
 const formSchema = z.object({
   name: z.string().min(3, 'Hotel name must be at least 3 characters long.'),
   city: z.string().min(1, 'Please select a city.'),
+  address: z.string().optional(),
   description: z.string().min(10, 'Description must be at least 10 characters long.'),
   rating: z.coerce.number().min(1).max(5).positive(),
   amenities: z.array(z.string()).min(1, 'Please select at least one amenity.'),
@@ -83,6 +84,7 @@ export function EditHotelForm({ hotel, rooms: initialRooms }: EditHotelFormProps
       name: hotel.name,
       city: hotel.city,
       description: hotel.description,
+      address: hotel.address || '',
       rating: hotel.rating,
       amenities: hotel.amenities,
       images: hotel.images.join('\n'),
@@ -289,6 +291,25 @@ export function EditHotelForm({ hotel, rooms: initialRooms }: EditHotelFormProps
                   {...field}
                 />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="address"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Full Address</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="e.g. Mall Road, Near High Court, Nainital, Uttarakhand 263001"
+                  className="resize-y"
+                  {...field}
+                />
+              </FormControl>
+              <FormDescription>Used by the AI Arrival Assistant to provide directions.</FormDescription>
               <FormMessage />
             </FormItem>
           )}

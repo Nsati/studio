@@ -89,6 +89,10 @@
           "type": "string",
           "description": "A description of the hotel."
         },
+        "address": {
+            "type": "string",
+            "description": "The full street address of the hotel."
+        },
         "images": {
           "type": "array",
           "description": "An array of image URLs for the hotel.",

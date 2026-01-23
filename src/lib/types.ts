@@ -3,6 +3,7 @@ export interface Hotel {
   name: string;
   city: string;
   description: string;
+  address?: string;
   images: string[];
   amenities: string[];
   rating: number;

@@ -49,6 +49,7 @@ const roomSchema = z.object({
 const formSchema = z.object({
   name: z.string().min(3, 'Hotel name must be at least 3 characters long.'),
   city: z.string().min(1, 'Please select a city.'),
+  address: z.string().optional(),
   description: z.string().min(10, 'Description must be at least 10 characters long.'),
   rating: z.coerce.number().min(1).max(5).positive(),
   amenities: z.array(z.string()).min(1, 'Please select at least one amenity.'),
@@ -68,6 +69,7 @@ export function AddHotelForm() {
       name: '',
       city: '',
       description: '',
+      address: '',
       rating: 4.5,
       amenities: [],
       images: '',
@@ -214,6 +216,25 @@ export function AddHotelForm() {
         />
         
         <FormField
+          control={form.control}
+          name="address"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Full Address</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="e.g. Mall Road, Near High Court, Nainital, Uttarakhand 263001"
+                  className="resize-y"
+                  {...field}
+                />
+              </FormControl>
+              <FormDescription>Used by the AI Arrival Assistant to provide directions.</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
         control={form.control}
         name="rating"
         render={({ field }) => (
@@ -325,7 +346,7 @@ https://images.unsplash.com/photo-2..."
             <Card key={field.id} className="p-4">
                 <CardHeader className="flex flex-row items-center justify-between p-0 pb-4">
                      <h4 className="font-semibold">Room Type {index + 1}</h4>
-                     <Button type="button" variant="ghost" size="icon" onClick={() => removeRoom(index)}>
+                     <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
                         <Trash2 className="h-4 w-4 text-destructive" />
                      </Button>
                 </CardHeader>
