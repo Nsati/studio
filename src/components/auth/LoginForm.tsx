@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { useAuth, useFirestore } from '@/firebase';
+import { useAuth, useFirestore } from '@/firebase/provider';
 import { doc, getDoc } from 'firebase/firestore';
 import type { UserProfile } from '@/lib/types';
 
