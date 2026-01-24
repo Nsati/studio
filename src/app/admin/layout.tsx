@@ -75,8 +75,9 @@ function AdminAuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (user && (userProfile?.role ?? '').toLowerCase() === 'admin') {
-    // If the user is an admin, show the admin layout.
+  // If the user is an admin, show the admin layout.
+  // This check is now case-insensitive and safe, matching the useEffect logic.
+  if (user && userProfile && userProfile.role?.toLowerCase() === 'admin') {
     return <>{children}</>;
   }
 
