@@ -22,9 +22,13 @@ export async function signupUser(userData: {
         return { success: false, error: 'Server configuration error. Please contact support.' };
     }
 
+    // Use local constants for type safety
+    const auth = adminAuth;
+    const db = adminDb;
+
     try {
         // 1. Create user in Firebase Auth using Admin SDK
-        const userRecord = await adminAuth.createUser({
+        const userRecord = await auth.createUser({
             email: email,
             password: pass,
             displayName: name,
@@ -32,7 +36,7 @@ export async function signupUser(userData: {
         });
 
         // 2. Create user profile in Firestore.
-        const userRef = adminDb.collection('users').doc(userRecord.uid);
+        const userRef = db.collection('users').doc(userRecord.uid);
         const newUserProfile: UserProfile = {
             uid: userRecord.uid,
             displayName: name,

@@ -1,3 +1,4 @@
+'use server';
 
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
@@ -15,7 +16,8 @@ export async function POST(req: NextRequest) {
     // Return 500 so Razorpay might retry later if the admin config is fixed.
     return NextResponse.json({ error: configError }, { status: 500 });
   }
-  
+  const db = adminDb; // Use a local constant for type safety
+
   const secret = process.env.RAZORPAY_WEBHOOK_SECRET || '';
   if (!secret) {
     console.error('❌ STEP 0: FATAL - RAZORPAY_WEBHOOK_SECRET is not set.');
@@ -57,11 +59,11 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ status: 'ok', message: 'Missing notes, but acknowledged.' });
       }
 
-      const bookingRef = adminDb.collection('users').doc(user_id).collection('bookings').doc(booking_id);
+      const bookingRef = db.collection('users').doc(user_id).collection('bookings').doc(booking_id);
 
       // This transaction acts as a fallback/redundancy.
       // It confirms the booking if the client-side flow failed.
-      const confirmedBooking = await adminDb.runTransaction(async (transaction) => {
+      const confirmedBooking = await db.runTransaction(async (transaction) => {
         const bookingDoc = await transaction.get(bookingRef);
         if (!bookingDoc.exists) {
             console.error(`❌ Transaction Error: Booking ${booking_id} not found.`);
@@ -78,7 +80,7 @@ export async function POST(req: NextRequest) {
         
         console.log(`ℹ️ STEP 4: [Webhook Fallback] Booking ${booking_id} was PENDING. Confirming now...`);
 
-        const roomRef = adminDb.collection('hotels').doc(bookingData.hotelId).collection('rooms').doc(bookingData.roomId);
+        const roomRef = db.collection('hotels').doc(bookingData.hotelId).collection('rooms').doc(bookingData.roomId);
         const roomDoc = await transaction.get(roomRef);
 
         if (!roomDoc.exists) {
@@ -108,7 +110,7 @@ export async function POST(req: NextRequest) {
 
         // STEP 6: Send confirmation email
         try {
-            const hotelDoc = await adminDb.collection('hotels').doc(confirmedBooking.hotelId).get();
+            const hotelDoc = await db.collection('hotels').doc(confirmedBooking.hotelId).get();
             if (!hotelDoc.exists) throw new Error(`Hotel ${confirmedBooking.hotelId} not found.`);
             
             const hotelName = (hotelDoc.data() as Hotel).name;

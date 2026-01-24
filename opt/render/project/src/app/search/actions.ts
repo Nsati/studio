@@ -19,9 +19,11 @@ export async function searchHotels(params: SearchParams): Promise<Hotel[]> {
         // Return empty array to avoid crashing the page.
         return [];
     }
+    
+    const db = adminDb; // Use a local constant for type safety
 
     // 1. Fetch base hotels
-    let hotelsQuery: FirebaseFirestore.Query<FirebaseFirestore.DocumentData> = adminDb.collection('hotels');
+    let hotelsQuery: FirebaseFirestore.Query<FirebaseFirestore.DocumentData> = db.collection('hotels');
     if (city && city !== 'All') {
         hotelsQuery = hotelsQuery.where('city', '==', city);
     }
@@ -44,7 +46,7 @@ export async function searchHotels(params: SearchParams): Promise<Hotel[]> {
 
     // 2. Fetch all bookings that could possibly conflict
     // NOTE: The 'in' operator is limited to 30 items in Node SDK. A production system would need to chunk this.
-    const bookingsQuery = adminDb.collectionGroup('bookings')
+    const bookingsQuery = db.collectionGroup('bookings')
         .where('hotelId', 'in', hotelIds)
         .where('status', '==', 'CONFIRMED')
         .where('checkOut', '>', searchCheckIn);
@@ -64,7 +66,7 @@ export async function searchHotels(params: SearchParams): Promise<Hotel[]> {
     // 3. Fetch all rooms for the queried hotels
     const roomsByHotel: Record<string, Room[]> = {};
     await Promise.all(allHotels.map(async (hotel) => {
-        const roomsSnapshot = await adminDb.collection('hotels').doc(hotel.id).collection('rooms').get();
+        const roomsSnapshot = await db.collection('hotels').doc(hotel.id).collection('rooms').get();
         roomsByHotel[hotel.id] = roomsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Room[];
     }));
     
