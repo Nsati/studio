@@ -1,10 +1,10 @@
+// This file has been simplified to prevent circular dependency build errors.
+// Components and hooks should import directly from their source files
+// (e.g., '@/firebase/auth/use-user') instead of from this central file.
+
 // Export the client provider for use in the root layout
 export { FirebaseClientProvider } from './client-provider';
 
-// Export the context hooks for use in components
+// Export the base context hooks for convenience. These are safe to export as
+// they only depend on the provider and don't create loops.
 export { useFirebaseApp, useFirestore, useAuth } from './provider';
-
-// Export the custom hooks that build on top of the context hooks
-export { useUser } from './auth/use-user';
-export { useCollection } from './firestore/use-collection';
-export { useDoc } from './firestore/use-doc';

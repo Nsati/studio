@@ -1,23 +1,24 @@
 'use client';
 
-// IMPORTANT: These imports must be here.
-// They register the Auth and Firestore services with the Firebase app instance.
-// This file is the root client-side entry point for Firebase, and because
-// Next.js renders Client Components on the server first (for SSR), these
-// imports will run in that server context, ensuring the services are available
-// when initializeFirebase() is called during the SSR pass.
+import { initializeFirebaseApp } from './init';
+import { FirebaseProvider } from './provider';
+
+// IMPORTANT: These imports must be here for their side-effects of registering
+// the respective services. They are essential for Next.js SSR to work correctly.
 import 'firebase/auth';
 import 'firebase/firestore';
 
-import { initializeFirebase } from './init';
-import { FirebaseProvider } from './provider';
+import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
 
 export function FirebaseClientProvider({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { firebaseApp, firestore, auth } = initializeFirebase();
+  const firebaseApp = initializeFirebaseApp();
+  const auth = getAuth(firebaseApp);
+  const firestore = getFirestore(firebaseApp);
 
   return (
     <FirebaseProvider
