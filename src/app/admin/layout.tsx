@@ -92,6 +92,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
 
   return (
+    <AdminAuthGuard>
       <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
         <aside className="hidden border-r bg-background md:block">
           <div className="flex h-full max-h-screen flex-col gap-2">
@@ -177,5 +178,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
            <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">{children}</main>
         </div>
       </div>
+    </AdminAuthGuard>
   );
 }
