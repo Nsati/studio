@@ -1,3 +1,4 @@
+
 /**
  * Core Philosophy:
  * This ruleset enforces a security model with three distinct access levels:
@@ -29,6 +30,7 @@
  *   their immutability on update, ensuring relational integrity without costly `get` calls.
  * - Safe Defaults: Destructive operations (`update`, `delete`) always verify that
  *   a document exists before allowing the operation to proceed. User account
+
  *   deletion via the API is disabled by default.
  */
 rules_version = '2';
@@ -173,16 +175,11 @@ service cloud.firestore {
      * @description Manages admin role grants. The existence of a document in this collection
      *              makes a user an admin. Only existing admins can add or remove other admins.
      * @path        /roles_admin/{userId}
-     * @allow       (create) An existing admin grants admin rights to 'user_xyz'.
-     * @deny        (list) A non-admin user tries to see who all the admins are.
-     * @principle   Secures role management by restricting write access to current role-holders.
-     */
-    match /roles_admin/{userId} {
-      allow get: if isAdmin();
-      allow list: if isAdmin();
-      allow create: if isAdmin();
-      allow update: if isAdmin() && isExistingDoc();
-      allow delete: if isAdmin() && isExistingDoc();
+     * @allow       (get) if isAdmin();
+     * @allow list: if isAdmin();
+     * @allow create: if isAdmin();
+     * @allow update: if isAdmin() && isExistingDoc();
+     * @allow delete: if isAdmin() && isExistingDoc();
     }
   }
 }
