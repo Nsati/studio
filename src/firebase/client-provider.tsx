@@ -5,11 +5,12 @@ import type { FirebaseApp } from 'firebase/app';
 import type { Auth } from 'firebase/auth';
 import type { Firestore } from 'firebase/firestore';
 
-import { initializeApp, getApps, getApp } from 'firebase/app';
 // These imports are for their side-effects, which register the services.
 // They must be here to ensure services are available on the client.
 import 'firebase/auth';
 import 'firebase/firestore';
+
+import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
@@ -35,17 +36,15 @@ export function FirebaseClientProvider({
     }
   }, []);
 
-  if (!services) {
-    // On the server, and on the first client render, 'services' will be null.
-    // This prevents any child components from trying to use Firebase services
-    // before they are ready, which is crucial for SSR.
-    return null;
-  }
-
-  // Once the useEffect has run, 'services' is populated, and we can render
-  // the actual provider with the services.
+  // Always render the Provider.
+  // When services are null (during SSR), the context value will be `undefined`.
+  // The hooks are designed to handle this undefined state gracefully.
   return (
-    <FirebaseProvider firebaseApp={services.app} firestore={services.firestore} auth={services.auth}>
+    <FirebaseProvider 
+      firebaseApp={services?.app} 
+      firestore={services?.firestore} 
+      auth={services?.auth}
+    >
       {children}
     </FirebaseProvider>
   );

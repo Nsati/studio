@@ -17,31 +17,35 @@ const FirebaseContext = createContext<FirebaseContextType | undefined>(
 
 export function FirebaseProvider({
   children,
-  ...services
-}: { children: ReactNode } & FirebaseContextType) {
+  firebaseApp,
+  firestore,
+  auth
+}: { children: ReactNode } & Partial<FirebaseContextType>) {
+  
+  const value = firebaseApp && auth && firestore 
+    ? { firebaseApp, auth, firestore } 
+    : undefined;
+
   return (
-    <FirebaseContext.Provider value={services}>
+    <FirebaseContext.Provider value={value}>
       {children}
     </FirebaseContext.Provider>
   );
 }
 
-function useFirebase(): FirebaseContextType {
+function useFirebase(): FirebaseContextType | undefined {
   const context = useContext(FirebaseContext);
-  if (context === undefined) {
-    throw new Error('useFirebase must be used within a FirebaseProvider');
-  }
   return context;
 }
 
-export function useFirebaseApp(): FirebaseApp {
-  return useFirebase().firebaseApp;
+export function useFirebaseApp(): FirebaseApp | undefined {
+  return useFirebase()?.firebaseApp;
 }
 
-export function useFirestore(): Firestore {
-  return useFirebase().firestore;
+export function useFirestore(): Firestore | undefined {
+  return useFirebase()?.firestore;
 }
 
-export function useAuth(): Auth {
-  return useFirebase().auth;
+export function useAuth(): Auth | undefined {
+  return useFirebase()?.auth;
 }
