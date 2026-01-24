@@ -1,9 +1,4 @@
-
 'use client';
-
-// This guard MUST be the first import. It throws an error if this file is
-// ever imported into a Server Component.
-import './server-block';
 
 import React, {
   createContext,
