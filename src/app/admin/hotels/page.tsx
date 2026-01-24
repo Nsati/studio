@@ -1,8 +1,8 @@
+
 'use client';
-import { useMemo } from 'react';
+import { useMemoFirebase, useFirestore, useCollection } from '@/firebase';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useFirestore, useCollection } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import type { Hotel } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -74,7 +74,7 @@ function HotelAdminCard({ hotel }: { hotel: Hotel }) {
 export default function HotelsPage() {
     const firestore = useFirestore();
 
-    const hotelsQuery = useMemo(() => {
+    const hotelsQuery = useMemoFirebase(() => {
         if (!firestore) return null;
         return collection(firestore, 'hotels');
     }, [firestore]);

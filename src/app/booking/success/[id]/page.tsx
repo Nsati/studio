@@ -1,7 +1,8 @@
+
 'use client';
 
 import { useParams, useRouter, notFound } from 'next/navigation';
-import { useFirestore, useUser, useDoc } from '@/firebase';
+import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { useEffect, useMemo, useState } from 'react';
 import type { Booking, Hotel } from '@/lib/types';
@@ -146,7 +147,7 @@ export default function BookingSuccessPage() {
     const userIdForBooking = useMemo(() => user?.uid, [user]);
 
     // This reference is now stable and will trigger useDoc only when the user/bookingId changes.
-    const bookingRef = useMemo(() => {
+    const bookingRef = useMemoFirebase(() => {
         if (!firestore || !userIdForBooking || !bookingId) return null;
         return doc(firestore, 'users', userIdForBooking, 'bookings', bookingId);
     }, [firestore, userIdForBooking, bookingId]);
@@ -154,7 +155,7 @@ export default function BookingSuccessPage() {
     // useDoc is a real-time listener. It will automatically update when the booking status changes.
     const { data: booking, isLoading: isBookingLoading } = useDoc<Booking>(bookingRef);
 
-    const hotelRef = useMemo(() => {
+    const hotelRef = useMemoFirebase(() => {
         if (!firestore || !booking) return null;
         return doc(firestore, 'hotels', booking.hotelId);
     }, [firestore, booking]);

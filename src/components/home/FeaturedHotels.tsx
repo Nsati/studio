@@ -1,6 +1,7 @@
+
 'use client';
 import { useMemo } from 'react';
-import { useFirestore, useCollection } from '@/firebase';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, limit } from 'firebase/firestore';
 import type { Hotel } from '@/lib/types';
 import { HotelCard } from '@/components/hotel/HotelCard';
@@ -11,7 +12,7 @@ import { dummyHotels } from '@/lib/dummy-data';
 export function FeaturedHotels() {
   const firestore = useFirestore();
 
-  const hotelsQuery = useMemo(() => {
+  const hotelsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return query(collection(firestore, 'hotels'), limit(4));
   }, [firestore]);

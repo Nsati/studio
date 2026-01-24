@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -31,14 +32,14 @@ import {
 import type { City } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { dummyCities } from '@/lib/dummy-data';
-import { useFirestore, useCollection } from '@/firebase';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export function HeroSearchForm() {
   const router = useRouter();
   
   const firestore = useFirestore();
-  const citiesQuery = useMemo(() => {
+  const citiesQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return collection(firestore, 'cities');
   }, [firestore]);

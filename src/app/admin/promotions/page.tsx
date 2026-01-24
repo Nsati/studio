@@ -1,6 +1,7 @@
+
 'use client';
-import { useState, useMemo } from 'react';
-import { useFirestore, useCollection } from '@/firebase';
+import { useState } from 'react';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, doc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import type { Promotion } from '@/lib/types';
 import { useForm } from 'react-hook-form';
@@ -229,7 +230,7 @@ function PromotionsTable({ promotions, onEdit, onDelete }: { promotions: Promoti
 export default function PromotionsPage() {
     const firestore = useFirestore();
     const { toast } = useToast();
-    const promotionsQuery = useMemo(() => {
+    const promotionsQuery = useMemoFirebase(() => {
         if (!firestore) return null;
         return collection(firestore, 'promotions');
     }, [firestore]);
