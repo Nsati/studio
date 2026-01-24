@@ -35,6 +35,12 @@ export function FirebaseProvider({
 
 function useFirebase(): FirebaseContextType | undefined {
   const context = useContext(FirebaseContext);
+  if (context === undefined) {
+    // During SSR or before the client-side useEffect runs, the context will be undefined.
+    // This is expected. We should not throw an error here.
+    // The consumer hooks (useAuth, useFirestore) will handle the undefined value.
+    return undefined;
+  }
   return context;
 }
 
