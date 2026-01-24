@@ -1,12 +1,4 @@
-
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
-
-// Explicitly import the modules for their side-effects, which can help with
-// bundlers and tree-shaking in certain environments like Next.js SSR.
-// These MUST be before the function imports like getAuth or getFirestore.
-import 'firebase/auth';
-import 'firebase/firestore';
-
 import { getAuth, type Auth } from 'firebase/auth';
 import { getFirestore, type Firestore } from 'firebase/firestore';
 
@@ -18,14 +10,10 @@ type FirebaseServices = {
   auth: Auth;
 };
 
-// Use a singleton pattern to ensure initialization only happens once.
-let firebaseServices: FirebaseServices | null = null;
-
+// This function is designed to work in both client and server environments.
+// On the server, it might be called multiple times for different requests,
+// so we use getApps() to prevent re-initializing the app.
 export function initializeFirebase(): FirebaseServices {
-  if (firebaseServices) {
-    return firebaseServices;
-  }
-
   if (!firebaseConfig.apiKey) {
     throw new Error(
       'Firebase config is not set. Please add the config to firebase/config.ts'
@@ -37,10 +25,11 @@ export function initializeFirebase(): FirebaseServices {
     ? initializeApp(firebaseConfig)
     : apps[0];
 
+  // The getAuth() and getFirestore() calls will now succeed because the
+  // necessary services are registered via side-effect imports in the
+  // FirebaseClientProvider component, which is the entry point.
   const auth = getAuth(firebaseApp);
   const firestore = getFirestore(firebaseApp);
 
-  firebaseServices = { firebaseApp, firestore, auth };
-
-  return firebaseServices;
+  return { firebaseApp, firestore, auth };
 }
