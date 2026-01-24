@@ -1,5 +1,4 @@
-import { Logo } from './Logo';
-import { Facebook, Twitter, Instagram, Mail, Phone } from 'lucide-react';
+import { Facebook, Twitter, Instagram, Mail, Phone, Hotel } from 'lucide-react';
 import Link from 'next/link';
 
 const footerLinks = {
@@ -25,7 +24,12 @@ export function Footer() {
         <div className="grid grid-cols-2 gap-12 md:grid-cols-5">
             <div className="col-span-2">
                 <div className="flex flex-col items-start gap-4">
-                    <Logo />
+                    <Link href="/" className="flex items-center gap-2">
+                        <Hotel className="h-7 w-7 text-primary" />
+                        <span className="font-headline text-2xl font-bold text-foreground">
+                            Uttarakhand Getaways
+                        </span>
+                    </Link>
                     <p className="max-w-xs text-sm text-muted-foreground">
                     Your gateway to the serene beauty of the Himalayas. Book your unforgettable stay with us.
                     </p>

@@ -62,7 +62,7 @@ export function HeroSearchForm() {
     const params = new URLSearchParams();
     if (city && city !== 'All') params.set('city', city);
     if (dates?.from) params.set('checkIn', format(dates.from, 'yyyy-MM-dd'));
-    if (dates?.to) params.set('checkout', format(dates.to, 'yyyy-MM-dd'));
+    if (dates?.to) params.set('checkOut', format(dates.to, 'yyyy-MM-dd'));
     if (guests) params.set('guests', guests);
 
     router.push(`/search?${params.toString()}`);

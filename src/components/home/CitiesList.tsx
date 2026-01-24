@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -6,9 +5,42 @@ import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
 import { dummyCities } from '@/lib/dummy-data';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { useMemo } from 'react';
+import { collection } from 'firebase/firestore';
+import { useFirestore, useCollection } from '@/firebase/client/provider';
+import type { City } from '@/lib/types';
+import { Skeleton } from '../ui/skeleton';
 
 export function CitiesList() {
-    const cities = dummyCities;
+    const firestore = useFirestore();
+
+    const citiesQuery = useMemo(() => {
+        if (!firestore) return null;
+        return collection(firestore, 'cities');
+    }, [firestore]);
+
+    const { data: citiesFromDB, isLoading } = useCollection<City>(citiesQuery);
+
+    const cities = useMemo(() => {
+        if (citiesFromDB && citiesFromDB.length > 0) {
+          return citiesFromDB.sort((a,b) => a.name.localeCompare(b.name));
+        }
+        // If firestore is empty, fall back to dummy cities
+        if (!isLoading && (!citiesFromDB || citiesFromDB.length === 0)) {
+            return dummyCities.sort((a,b) => a.name.localeCompare(b.name));
+        }
+        return [];
+      }, [citiesFromDB, isLoading]);
+
+    if (isLoading) {
+      return (
+        <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+             <Skeleton key={i} className="w-full aspect-[4/3] rounded-lg" />
+          ))}
+        </div>
+      )
+    }
 
     return (
         <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">

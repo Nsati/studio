@@ -1,3 +1,4 @@
+
 'use client';
 import { useMemo, useState } from 'react';
 import { useFirestore, useCollection, useUser } from '@/firebase/client/provider';
@@ -21,8 +22,6 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
 
 function UserRowSkeleton() {
     return (
@@ -56,24 +55,22 @@ function RoleSelector({ user }: { user: UserProfile }) {
         setIsUpdating(true);
         const userRef = doc(firestore, 'users', user.uid);
         
-        updateDoc(userRef, { role: newRole })
-            .then(() => {
-                toast({
-                    title: 'Role Updated',
-                    description: `${user.displayName || user.email}'s role has been changed to ${newRole}.`
-                });
-            })
-            .catch((serverError) => {
-                const permissionError = new FirestorePermissionError({
-                    path: userRef.path,
-                    operation: 'update',
-                    requestResourceData: { role: newRole },
-                });
-                errorEmitter.emit('permission-error', permissionError);
-            })
-            .finally(() => {
-                setIsUpdating(false);
+        try {
+            await updateDoc(userRef, { role: newRole });
+            toast({
+                title: 'Role Updated',
+                description: `${user.displayName || user.email}'s role has been changed to ${newRole}.`
             });
+        } catch(error: any) {
+             console.error("Error updating role:", error);
+             toast({
+                variant: 'destructive',
+                title: 'Update Failed',
+                description: error.message || 'Could not update role. Check Firestore rules.',
+            });
+        } finally {
+            setIsUpdating(false);
+        }
     };
 
     return (

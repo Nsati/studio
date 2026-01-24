@@ -1,3 +1,4 @@
+
 'use client';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -9,9 +10,6 @@ import { useToast } from '@/hooks/use-toast';
 import slugify from 'slugify';
 import { useState } from 'react';
 import type { Hotel, Room } from '@/lib/types';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
-
 
 import {
   Form,
@@ -108,7 +106,7 @@ export function EditHotelForm({ hotel, rooms: initialRooms }: EditHotelFormProps
     removeRoom(index);
   }
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!firestore) {
         toast({ variant: 'destructive', title: 'Firestore not available' });
         return;
@@ -183,26 +181,24 @@ export function EditHotelForm({ hotel, rooms: initialRooms }: EditHotelFormProps
         batch.delete(roomRef);
     }
     
-    batch.commit()
-      .then(() => {
+    try {
+        await batch.commit();
         toast({
             title: 'Hotel Updated!',
             description: `${values.name} and its rooms have been successfully updated.`,
         });
         router.push('/admin/hotels');
         router.refresh();
-      })
-      .catch((serverError) => {
-        const permissionError = new FirestorePermissionError({
-          path: hotelRef.path,
-          operation: 'update',
-          requestResourceData: {...values, images: imageUrls },
+      } catch (error: any) {
+        console.error("Error updating hotel:", error);
+        toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: error.message || 'Could not update hotel. Check Firestore rules.',
         });
-        errorEmitter.emit('permission-error', permissionError);
-      })
-      .finally(() => {
+      } finally {
         setIsLoading(false);
-      });
+      }
   }
 
   const handleDeleteHotel = async () => {
@@ -222,23 +218,24 @@ export function EditHotelForm({ hotel, rooms: initialRooms }: EditHotelFormProps
     const hotelRef = doc(firestore, 'hotels', hotel.id);
     batch.delete(hotelRef);
 
-    await batch.commit()
-        .then(() => {
-            toast({
-                title: 'Hotel Deleted',
-                description: `${hotel.name} has been removed from the platform.`,
-            });
-            router.push('/admin/hotels');
-            router.refresh();
-        })
-        .catch((serverError) => {
-            const permissionError = new FirestorePermissionError({
-                path: hotelRef.path,
-                operation: 'delete',
-            });
-            errorEmitter.emit('permission-error', permissionError);
-            setIsDeleting(false);
+    try {
+        await batch.commit();
+        toast({
+            title: 'Hotel Deleted',
+            description: `${hotel.name} has been removed from the platform.`,
         });
+        router.push('/admin/hotels');
+        router.refresh();
+    } catch (error: any) {
+        console.error("Error deleting hotel:", error);
+        toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: error.message || 'Could not delete hotel. Check Firestore rules.',
+        });
+    } finally {
+        setIsDeleting(false);
+    }
   };
 
   return (

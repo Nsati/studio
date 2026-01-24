@@ -1,3 +1,4 @@
+
 'use client';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -8,8 +9,6 @@ import { useFirestore } from '@/firebase/client/provider';
 import { useToast } from '@/hooks/use-toast';
 import slugify from 'slugify';
 import { useState } from 'react';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
 
 import {
   Form,
@@ -84,7 +83,7 @@ export function AddHotelForm() {
     name: 'rooms',
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!firestore) {
         toast({ variant: 'destructive', title: 'Firestore not available' });
         return;
@@ -139,26 +138,24 @@ export function AddHotelForm() {
         });
     }
 
-    batch.commit()
-      .then(() => {
+    try {
+        await batch.commit();
         toast({
             title: 'Hotel Added!',
             description: `${values.name} and its rooms have been successfully added.`,
         });
         router.push('/admin/hotels');
         router.refresh();
-      })
-      .catch((serverError) => {
-        const permissionError = new FirestorePermissionError({
-          path: hotelRef.path,
-          operation: 'create',
-          requestResourceData: {...values, images: imageUrls },
+      } catch (error: any) {
+        console.error("Error adding hotel:", error);
+        toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: error.message || 'Could not add the hotel. Check your Firestore rules.',
         });
-        errorEmitter.emit('permission-error', permissionError);
-      })
-      .finally(() => {
+      } finally {
         setIsLoading(false);
-      });
+      }
   }
 
   return (

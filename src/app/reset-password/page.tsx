@@ -1,3 +1,5 @@
+'use client';
+
 import { ResetPasswordForm } from '@/components/auth/ResetPasswordForm';
 import { Suspense } from 'react';
 

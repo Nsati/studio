@@ -5,7 +5,6 @@ import { Footer } from '@/components/shared/Footer';
 import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
 import { FirebaseClientProvider } from '@/firebase/client/provider';
-import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 import Script from 'next/script';
 
 export const metadata: Metadata = {
@@ -34,7 +33,6 @@ export default function RootLayout({
       </head>
       <body className={cn('font-body antialiased')}>
         <FirebaseClientProvider>
-          <FirebaseErrorListener />
           <div className="flex min-h-screen flex-col">
             <Header />
             <main className="flex-grow">{children}</main>

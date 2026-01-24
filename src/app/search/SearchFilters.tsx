@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
-import { useFirestore, useCollection } from '@/firebase/client/provider';
 import { collection } from 'firebase/firestore';
+import { useFirestore, useCollection } from '@/firebase/client/provider';
 
 import type { City } from '@/lib/types';
 import { dummyCities } from '@/lib/dummy-data';
@@ -27,7 +27,7 @@ export function SearchFilters() {
     if (!firestore) return null;
     return collection(firestore, 'cities');
   }, [firestore]);
-
+  
   const { data: citiesFromDB, isLoading: isLoadingCities } = useCollection<City>(citiesQuery);
 
   const cities = useMemo(() => {

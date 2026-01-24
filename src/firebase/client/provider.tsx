@@ -1,3 +1,4 @@
+
 'use client';
 
 // This guard MUST be the first import. It throws an error if this file is
@@ -26,8 +27,6 @@ import {
 } from 'firebase/firestore';
 
 import { firebaseConfig } from '../config';
-import { errorEmitter } from '../error-emitter';
-import { FirestorePermissionError } from '../errors';
 import type { UserProfile } from '@/lib/types';
 
 
@@ -119,13 +118,9 @@ export function useCollection<T>(query: Query<DocumentData> | null) {
         setData(docs);
         setIsLoading(false);
       },
-      async serverError => {
-        const permissionError = new FirestorePermissionError({
-            path: (query as any)._query.path.segments.join('/'),
-            operation: 'list',
-        });
-        errorEmitter.emit('permission-error', permissionError);
-        setError(permissionError);
+      serverError => {
+        console.error("useCollection error:", serverError);
+        setError(serverError);
         setIsLoading(false);
       }
     );
@@ -160,13 +155,9 @@ export function useDoc<T>(ref: DocumentReference<DocumentData> | null) {
         }
         setIsLoading(false);
       },
-      async serverError => {
-        const permissionError = new FirestorePermissionError({
-            path: ref.path,
-            operation: 'get',
-        });
-        errorEmitter.emit('permission-error', permissionError);
-        setError(permissionError);
+      serverError => {
+        console.error("useDoc error:", serverError);
+        setError(serverError);
         setIsLoading(false);
       }
     );
