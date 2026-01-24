@@ -11,6 +11,7 @@ import {
 import { Hotel, Users2, BookOpen, IndianRupee } from 'lucide-react';
 import { useFirestore } from '@/firebase/provider';
 import { useCollection } from '@/firebase/firestore/use-collection';
+import { useMemoFirebase } from '@/firebase/firestore/use-memo-firebase';
 import { collection, collectionGroup } from 'firebase/firestore';
 import type { Booking, Hotel as HotelType, UserProfile } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -51,17 +52,17 @@ function StatCard({ title, value, icon: Icon, description, isLoading }: any) {
 export default function AdminDashboard() {
     const firestore = useFirestore();
 
-    const bookingsQuery = useMemo(() => {
+    const bookingsQuery = useMemoFirebase(() => {
         if (!firestore) return null;
         return collectionGroup(firestore, 'bookings');
     }, [firestore]);
 
-    const hotelsQuery = useMemo(() => {
+    const hotelsQuery = useMemoFirebase(() => {
         if (!firestore) return null;
         return collection(firestore, 'hotels');
     }, [firestore]);
     
-    const usersQuery = useMemo(() => {
+    const usersQuery = useMemoFirebase(() => {
         if (!firestore) return null;
         return collection(firestore, 'users');
     }, [firestore]);

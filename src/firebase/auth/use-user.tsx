@@ -7,6 +7,7 @@ import type { User } from 'firebase/auth';
 import type { UserProfile } from '@/lib/types';
 import { useAuth, useFirestore } from '../provider';
 import { useDoc } from '../firestore/use-doc';
+import { useMemoFirebase } from '../firestore/use-memo-firebase';
 
 export function useUser() {
   const auth = useAuth();
@@ -28,7 +29,7 @@ export function useUser() {
     return () => unsubscribe();
   }, [auth]);
 
-  const userProfileRef = useMemo(() => {
+  const userProfileRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return doc(firestore, 'users', user.uid);
   }, [firestore, user]);

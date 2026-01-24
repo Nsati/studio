@@ -14,6 +14,11 @@ export function useDoc<T>(ref: DocumentReference<DocumentData> | null) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
+  // Validation to ensure the reference is memoized using useMemoFirebase
+  if (ref && !(ref as any).__memo) {
+    throw new Error(ref + ' was not properly memoized using useMemoFirebase');
+  }
+
   useEffect(() => {
     if (!ref) {
       setData(null);

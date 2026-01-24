@@ -11,6 +11,7 @@ import type { Hotel, Room, Review } from '@/lib/types';
 import { useFirestore } from '@/firebase/provider';
 import { useDoc } from '@/firebase/firestore/use-doc';
 import { useCollection } from '@/firebase/firestore/use-collection';
+import { useMemoFirebase } from '@/firebase/firestore/use-memo-firebase';
 import { doc, collection } from 'firebase/firestore';
 import { dummyHotels, dummyRooms, dummyReviews } from '@/lib/dummy-data';
 
@@ -33,21 +34,21 @@ export default function HotelPage() {
   const slug = params.slug as string;
   const firestore = useFirestore();
   
-  const hotelRef = useMemo(() => {
+  const hotelRef = useMemoFirebase(() => {
     if (!firestore || !slug) return null;
     return doc(firestore, 'hotels', slug);
   }, [firestore, slug]);
   
   const { data: liveHotel, isLoading } = useDoc<Hotel>(hotelRef);
   
-  const roomsQuery = useMemo(() => {
+  const roomsQuery = useMemoFirebase(() => {
     if (!firestore || !slug) return null;
     return collection(firestore, 'hotels', slug, 'rooms');
   }, [firestore, slug]);
 
   const { data: liveRooms, isLoading: isLoadingRooms } = useCollection<Room>(roomsQuery);
 
-  const reviewsQuery = useMemo(() => {
+  const reviewsQuery = useMemoFirebase(() => {
     if (!firestore || !slug) return null;
     return collection(firestore, 'hotels', slug, 'reviews');
   }, [firestore, slug]);

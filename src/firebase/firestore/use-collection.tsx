@@ -14,6 +14,11 @@ export function useCollection<T>(query: Query<DocumentData> | null) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
+  // Validation to ensure the query is memoized using useMemoFirebase
+  if (query && !(query as any).__memo) {
+    throw new Error(query + ' was not properly memoized using useMemoFirebase');
+  }
+
   useEffect(() => {
     if (!query) {
       setData(null);

@@ -14,6 +14,7 @@ import { useFirestore, useAuth } from '@/firebase/provider';
 import { useUser } from '@/firebase/auth/use-user';
 import { useDoc } from '@/firebase/firestore/use-doc';
 import { useCollection } from '@/firebase/firestore/use-collection';
+import { useMemoFirebase } from '@/firebase/firestore/use-memo-firebase';
 import { doc, collection, getDoc, setDoc, runTransaction, increment } from 'firebase/firestore';
 
 import { useToast } from '@/hooks/use-toast';
@@ -48,7 +49,7 @@ export function BookingForm() {
     const checkOutStr = searchParams.get('checkOut');
     const guests = searchParams.get('guests') || '1';
     
-    const hotelRef = useMemo(() => {
+    const hotelRef = useMemoFirebase(() => {
         if (!firestore || !hotelId) return null;
         return doc(firestore, 'hotels', hotelId);
     }, [firestore, hotelId]);
@@ -61,7 +62,7 @@ export function BookingForm() {
         return dummyHotels.find(h => h.id === hotelId);
     }, [isHotelLoading, liveHotel, hotelId]);
 
-    const roomsQuery = useMemo(() => {
+    const roomsQuery = useMemoFirebase(() => {
         if (!firestore || !hotelId) return null;
         return collection(firestore, 'hotels', hotelId, 'rooms');
     }, [firestore, hotelId]);

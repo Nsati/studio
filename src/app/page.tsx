@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useMemo } from 'react';
 import { useFirestore } from '@/firebase/provider';
 import { useCollection } from '@/firebase/firestore/use-collection';
+import { useMemoFirebase } from '@/firebase/firestore/use-memo-firebase';
 import { collection, query, limit } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -19,7 +20,7 @@ import { dummyCities, dummyHotels } from '@/lib/dummy-data';
 function FeaturedHotels() {
   const firestore = useFirestore();
 
-  const hotelsQuery = useMemo(() => {
+  const hotelsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return query(collection(firestore, 'hotels'), limit(4));
   }, [firestore]);

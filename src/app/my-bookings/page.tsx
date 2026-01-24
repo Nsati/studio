@@ -5,6 +5,7 @@ import { useFirestore } from '@/firebase/provider';
 import { useUser } from '@/firebase/auth/use-user';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { useDoc } from '@/firebase/firestore/use-doc';
+import { useMemoFirebase } from '@/firebase/firestore/use-memo-firebase';
 import type { Booking, Hotel } from '@/lib/types';
 import {
   Card,
@@ -77,7 +78,7 @@ function BookingItem({ booking }: { booking: Booking }) {
     const { toast } = useToast();
     const [isCancelling, setIsCancelling] = useState(false);
 
-    const hotelRef = useMemo(() => {
+    const hotelRef = useMemoFirebase(() => {
         if (!firestore) return null;
         return doc(firestore, 'hotels', booking.hotelId);
     }, [firestore, booking.hotelId]);
@@ -244,7 +245,7 @@ export default function MyBookingsPage() {
     }
   }, [user, isUserLoading, router]);
   
-  const bookingsQuery = useMemo(() => {
+  const bookingsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return collection(firestore, 'users', user.uid, 'bookings');
   }, [firestore, user]);
