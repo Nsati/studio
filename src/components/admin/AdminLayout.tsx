@@ -97,12 +97,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <aside className="hidden border-r bg-background md:block">
           <div className="flex h-full max-h-screen flex-col gap-2">
             <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
-                <Link href="/" className="flex items-center gap-2">
-                    <Hotel className="h-7 w-7 text-primary" />
-                    <span className="font-headline text-xl font-bold text-foreground">
-                        Admin Panel
-                    </span>
-                </Link>
+              <Link href="/admin" className="flex items-center gap-2 font-semibold">
+                <Hotel className="h-6 w-6 text-primary" />
+                <span className="font-headline text-xl font-bold">Admin Panel</span>
+              </Link>
             </div>
             <div className="flex-1">
               <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
@@ -147,11 +145,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <SheetContent side="left" className="flex flex-col">
                   <nav className="grid gap-2 text-lg font-medium">
                     <div className="mb-4">
-                       <Link href="/" className="flex items-center gap-2">
-                            <Hotel className="h-7 w-7 text-primary" />
-                            <span className="font-headline text-2xl font-bold text-foreground">
-                                Uttarakhand Getaways
-                            </span>
+                       <Link href="/admin" className="flex items-center gap-2 font-semibold">
+                            <Hotel className="h-6 w-6 text-primary" />
+                            <span className="font-headline text-xl font-bold">Admin Panel</span>
                         </Link>
                     </div>
                     {navItems.map((item) => (
