@@ -1,4 +1,3 @@
-
 'use client';
 import { AddHotelForm } from '@/components/admin/AddHotelForm';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';

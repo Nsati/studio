@@ -30,10 +30,6 @@ import { errorEmitter } from '../error-emitter';
 import { FirestorePermissionError } from '../errors';
 import type { UserProfile } from '@/lib/types';
 
-// These imports are for their side-effects and must be present for the services to work.
-import 'firebase/auth';
-import 'firebase/firestore';
-
 
 // --- Context Shape and Creation ---
 
