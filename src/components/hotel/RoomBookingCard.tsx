@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { BedDouble, Calendar as CalendarIcon, AlertCircle, TrendingDown } from 'lucide-react';
 import { differenceInDays, format, add } from 'date-fns';
 import type { DateRange } from 'react-day-picker';
@@ -39,23 +39,33 @@ export function RoomBookingCard({ hotel, rooms, isLoadingRooms }: { hotel: Hotel
   const router = useRouter();
   const { toast } = useToast();
   
+  const [clientDateState, setClientDateState] = useState<{
+    disabledBeforeDate: Date;
+    isPastCutOff: boolean;
+  } | null>(null);
+
+  useEffect(() => {
+    // This effect runs only on the client, after hydration, to prevent mismatch errors.
+    const today = new Date();
+    const cutOffHour = 14; // 2 PM
+    const isPastCutOff = today.getHours() >= cutOffHour;
+    
+    const disabledBeforeDate = new Date(today);
+    if (isPastCutOff) {
+      // If it's past cut-off, disable today, so tomorrow is the first available day.
+      disabledBeforeDate.setDate(today.getDate() + 1);
+    }
+    // Set time to the beginning of the day to avoid timezone issues.
+    disabledBeforeDate.setHours(0, 0, 0, 0);
+
+    setClientDateState({ disabledBeforeDate, isPastCutOff });
+  }, []); // Empty dependency array ensures it runs once on mount.
+
   const nights =
     dates?.from && dates?.to ? differenceInDays(dates.to, dates.from) : 0;
 
   const isDateRangeValid = dates?.from && dates?.to && nights > 0;
   
-  const today = new Date();
-  const cutOffHour = 14; // 2 PM
-  const isPastCutOff = today.getHours() >= cutOffHour;
-  
-  const disabledBeforeDate = new Date(today);
-  if (isPastCutOff) {
-    // If it's past cut-off, disable today, so tomorrow is the first available day.
-    disabledBeforeDate.setDate(today.getDate() + 1);
-  }
-  // Set time to the beginning of the day to avoid timezone issues.
-  disabledBeforeDate.setHours(0, 0, 0, 0);
-
   const handleRoomSelect = (room: Room) => {
     if (isDateRangeValid) {
         setSelectedRoom(room);
@@ -105,6 +115,7 @@ export function RoomBookingCard({ hotel, rooms, isLoadingRooms }: { hotel: Hotel
                   'w-full justify-start text-left font-normal',
                   !dates && 'text-muted-foreground'
                 )}
+                 disabled={!clientDateState}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
                 {dates?.from ? (
@@ -117,7 +128,7 @@ export function RoomBookingCard({ hotel, rooms, isLoadingRooms }: { hotel: Hotel
                     format(dates.from, 'LLL dd, y')
                   )
                 ) : (
-                  <span>Pick check-in & check-out dates</span>
+                   <span>{clientDateState ? 'Pick check-in & check-out dates' : 'Loading...'}</span>
                 )}
               </Button>
             </PopoverTrigger>
@@ -129,11 +140,11 @@ export function RoomBookingCard({ hotel, rooms, isLoadingRooms }: { hotel: Hotel
                 selected={dates}
                 onSelect={setDates}
                 numberOfMonths={2}
-                disabled={{ before: disabledBeforeDate }}
+                disabled={!clientDateState ? { before: new Date() } : { before: clientDateState.disabledBeforeDate }}
               />
             </PopoverContent>
           </Popover>
-           {isPastCutOff && <p className="text-xs text-muted-foreground mt-2">Note: Same-day bookings are not available after {cutOffHour}:00.</p>}
+           {clientDateState?.isPastCutOff && <p className="text-xs text-muted-foreground mt-2">Note: Same-day bookings are not available after 14:00.</p>}
         </div>
 
          <div>

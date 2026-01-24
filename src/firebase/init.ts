@@ -1,5 +1,12 @@
 
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
+
+// Explicitly import the modules for their side-effects, which can help with
+// bundlers and tree-shaking in certain environments like Next.js SSR.
+// These MUST be before the function imports like getAuth or getFirestore.
+import 'firebase/auth';
+import 'firebase/firestore';
+
 import { getAuth, type Auth } from 'firebase/auth';
 import { getFirestore, type Firestore } from 'firebase/firestore';
 
