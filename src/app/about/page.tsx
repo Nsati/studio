@@ -61,6 +61,7 @@ export default function AboutPage() {
             alt={heroImage.description}
             data-ai-hint={heroImage.imageHint}
             fill
+            sizes="100vw"
             className="object-cover"
             priority
           />
@@ -126,6 +127,7 @@ export default function AboutPage() {
                           alt={member.name}
                           data-ai-hint={memberImage.imageHint}
                           fill
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                           className="object-cover"
                         />
                       )}

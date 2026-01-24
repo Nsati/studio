@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar, IndianRupee, Mountain, MapPin } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
-import { useFirestore, useCollection } from '@/firebase';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import type { TourPackage } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -25,6 +25,7 @@ function TourPackageCard({ tourPackage }: { tourPackage: TourPackage }) {
             alt={tourPackage.title}
             data-ai-hint={image.imageHint}
             fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
             className="object-cover"
           />
         )}
@@ -96,7 +97,7 @@ function TourPackageCardSkeleton() {
 
 function PackagesGrid() {
   const firestore = useFirestore();
-  const packagesQuery = useMemo(() => {
+  const packagesQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return collection(firestore, 'tourPackages');
   }, [firestore]);
@@ -141,6 +142,7 @@ export default function TourPackagesPage() {
             alt={heroImage.description}
             data-ai-hint={heroImage.imageHint}
             fill
+            sizes="100vw"
             className="object-cover"
             priority
           />

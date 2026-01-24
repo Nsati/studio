@@ -1,7 +1,7 @@
 
 'use client';
 import { useMemo } from 'react';
-import { useFirestore, useCollection } from '@/firebase';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import Link from 'next/link';
 import Image from 'next/image';
 import { collection } from 'firebase/firestore';
@@ -42,6 +42,7 @@ function TourPackageAdminCard({ tourPackage }: { tourPackage: TourPackage }) {
                         src={imageUrl}
                         alt={tourPackage.title}
                         fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
                         className="object-cover rounded-t-lg"
                         unoptimized
                     />
@@ -70,7 +71,7 @@ function TourPackageAdminCard({ tourPackage }: { tourPackage: TourPackage }) {
 export default function TourPackagesAdminPage() {
     const firestore = useFirestore();
 
-    const packagesQuery = useMemo(() => {
+    const packagesQuery = useMemoFirebase(() => {
         if (!firestore) return null;
         return collection(firestore, 'tourPackages');
     }, [firestore]);

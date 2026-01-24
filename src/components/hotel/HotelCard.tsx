@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -46,6 +47,7 @@ export function HotelCard({ hotel }: HotelCardProps) {
                 alt={hotel.name}
                 data-ai-hint={imageHint}
                 fill
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                 className="object-cover"
               />
             ) : (

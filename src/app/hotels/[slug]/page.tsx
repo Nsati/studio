@@ -9,7 +9,7 @@ import React, { useMemo } from 'react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { AmenityIcon } from '@/components/hotel/AmenityIcon';
 import type { Hotel, Room, Review } from '@/lib/types';
-import { useFirestore, useDoc, useCollection } from '@/firebase';
+import { useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
 import { doc, collection } from 'firebase/firestore';
 import { dummyHotels, dummyRooms, dummyReviews } from '@/lib/dummy-data';
 
@@ -32,21 +32,21 @@ export default function HotelPage() {
   const slug = params.slug as string;
   const firestore = useFirestore();
   
-  const hotelRef = useMemo(() => {
+  const hotelRef = useMemoFirebase(() => {
     if (!firestore || !slug) return null;
     return doc(firestore, 'hotels', slug);
   }, [firestore, slug]);
   
   const { data: liveHotel, isLoading } = useDoc<Hotel>(hotelRef);
   
-  const roomsQuery = useMemo(() => {
+  const roomsQuery = useMemoFirebase(() => {
     if (!firestore || !slug) return null;
     return collection(firestore, 'hotels', slug, 'rooms');
   }, [firestore, slug]);
 
   const { data: liveRooms, isLoading: isLoadingRooms } = useCollection<Room>(roomsQuery);
 
-  const reviewsQuery = useMemo(() => {
+  const reviewsQuery = useMemoFirebase(() => {
     if (!firestore || !slug) return null;
     return collection(firestore, 'hotels', slug, 'reviews');
   }, [firestore, slug]);
@@ -56,24 +56,24 @@ export default function HotelPage() {
   const hotel = useMemo(() => {
     if (isLoading) return null;
     if (liveHotel) return liveHotel;
-    return dummyHotels.find(h => h.id === slug);
-  }, [isLoading, liveHotel, slug]);
+    return null; // Don't fall back to dummy data
+  }, [isLoading, liveHotel]);
 
   const rooms = useMemo(() => {
     if (liveRooms && liveRooms.length > 0) return liveRooms;
-    if (!isLoadingRooms && (!liveRooms || liveRooms.length === 0)) {
+    if (!isLoadingRooms && !liveHotel) { // Only fallback if hotel itself doesn't exist
       return dummyRooms.filter(r => r.hotelId === slug);
     }
     return [];
-  }, [liveRooms, isLoadingRooms, slug]);
+  }, [liveRooms, isLoadingRooms, slug, liveHotel]);
 
   const reviews = useMemo(() => {
     if (liveReviews && liveReviews.length > 0) return liveReviews;
-    if (!isLoadingReviews && (!liveReviews || liveReviews.length === 0)) {
+    if (!isLoadingReviews && !liveHotel) {
         return dummyReviews.filter(r => r.hotelId === slug);
     }
     return [];
-  }, [liveReviews, isLoadingReviews, slug]);
+  }, [liveReviews, isLoadingReviews, slug, liveHotel]);
 
   const minPrice = useMemo(() => {
     if (!rooms || rooms.length === 0) return 0;
@@ -139,6 +139,7 @@ export default function HotelPage() {
                         alt={imgData?.description || hotel.name}
                         data-ai-hint={imgData?.imageHint}
                         fill
+                        sizes="100vw"
                         className="object-cover"
                         priority={index === 0}
                       />

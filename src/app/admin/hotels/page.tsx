@@ -1,7 +1,7 @@
 
 'use client';
 import { useMemo } from 'react';
-import { useFirestore, useCollection } from '@/firebase';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import Link from 'next/link';
 import Image from 'next/image';
 import { collection } from 'firebase/firestore';
@@ -44,6 +44,7 @@ function HotelAdminCard({ hotel }: { hotel: Hotel }) {
                         src={imageUrl}
                         alt={hotel.name}
                         fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
                         className="object-cover rounded-t-lg"
                     />
                 ) : (
@@ -75,7 +76,7 @@ function HotelAdminCard({ hotel }: { hotel: Hotel }) {
 export default function HotelsPage() {
     const firestore = useFirestore();
 
-    const hotelsQuery = useMemo(() => {
+    const hotelsQuery = useMemoFirebase(() => {
         if (!firestore) return null;
         return collection(firestore, 'hotels');
     }, [firestore]);

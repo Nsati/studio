@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -9,7 +10,7 @@ import { signInAnonymously } from 'firebase/auth';
 
 
 import type { Hotel, Room, Booking, Promotion } from '@/lib/types';
-import { useFirestore, useAuth, useUser, useDoc, useCollection } from '@/firebase';
+import { useFirestore, useAuth, useUser, useDoc, useCollection, useMemoFirebase } from '@/firebase';
 import { doc, collection, getDoc, setDoc, runTransaction, increment } from 'firebase/firestore';
 
 import { useToast } from '@/hooks/use-toast';
@@ -44,7 +45,7 @@ export function BookingForm() {
     const checkOutStr = searchParams.get('checkOut');
     const guests = searchParams.get('guests') || '1';
     
-    const hotelRef = useMemo(() => {
+    const hotelRef = useMemoFirebase(() => {
         if (!firestore || !hotelId) return null;
         return doc(firestore, 'hotels', hotelId);
     }, [firestore, hotelId]);
@@ -57,7 +58,7 @@ export function BookingForm() {
         return dummyHotels.find(h => h.id === hotelId);
     }, [isHotelLoading, liveHotel, hotelId]);
 
-    const roomsQuery = useMemo(() => {
+    const roomsQuery = useMemoFirebase(() => {
         if (!firestore || !hotelId) return null;
         return collection(firestore, 'hotels', hotelId, 'rooms');
     }, [firestore, hotelId]);
@@ -66,10 +67,11 @@ export function BookingForm() {
 
     const room = useMemo(() => {
         if (areRoomsLoading) return null;
+        if (!liveHotel) return null; // Wait for hotel to load to prevent showing dummy data
         const liveRoom = liveRooms?.find(r => r.id === roomId);
         if (liveRoom) return liveRoom;
-        return dummyRooms.find(r => r.id === roomId && r.hotelId === hotelId);
-    }, [areRoomsLoading, liveRooms, roomId, hotelId]);
+        return null; // Don't fall back to dummy data if live hotel exists but room doesn't
+    }, [areRoomsLoading, liveRooms, liveHotel, roomId]);
 
 
     const [customerDetails, setCustomerDetails] = useState({ name: '', email: '' });
@@ -90,14 +92,10 @@ export function BookingForm() {
         return null; // Let the parent Suspense boundary handle the loading UI.
     }
 
-    if (!hotelId || !roomId || !checkInStr || !checkOutStr) {
+    if (!hotelId || !roomId || !checkInStr || !checkOutStr || !hotel || !room) {
         return notFound();
     }
     
-    if (!hotel || !room) {
-        return notFound();
-    }
-
     const checkIn = parse(checkInStr, 'yyyy-MM-dd', new Date());
     const checkOut = parse(checkOutStr, 'yyyy-MM-dd', new Date());
     const nights = differenceInDays(checkOut, checkIn);
@@ -270,15 +268,12 @@ export function BookingForm() {
             description: `Booking for ${hotel.name}`,
             order_id: order.id,
             handler: (response: any) => {
-                // The payment was successful. We don't need to do anything here on the client
-                // except redirect to the success page. The webhook will handle the actual
-                // booking confirmation and inventory update. The success page is designed
-                // to wait for this webhook confirmation.
+                // The payment was successful. We just need to redirect. The webhook
+                // will handle inventory and confirmation.
                 toast({
                     title: "Payment Received!",
                     description: "Finalizing your confirmation..."
                 });
-                // The bookingId was created before opening Razorpay and passed in notes.
                 router.push(`/booking/success/${bookingId}`);
             },
             prefill: {
@@ -332,7 +327,7 @@ export function BookingForm() {
                         <CardContent>
                             {hotelImage && (
                                 <div className="relative w-full aspect-video overflow-hidden rounded-lg mb-4">
-                                    <Image src={hotelImage.imageUrl} alt={hotel.name} data-ai-hint={hotelImage.imageHint} fill className="object-cover" />
+                                    <Image src={hotelImage.imageUrl} alt={hotel.name} data-ai-hint={hotelImage.imageHint} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" />
                                 </div>
                             )}
                             <div className="space-y-3">

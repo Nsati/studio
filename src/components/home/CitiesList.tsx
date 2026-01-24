@@ -8,14 +8,14 @@ import { dummyCities } from '@/lib/dummy-data';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useMemo } from 'react';
 import { collection } from 'firebase/firestore';
-import { useFirestore, useCollection } from '@/firebase';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import type { City } from '@/lib/types';
 import { Skeleton } from '../ui/skeleton';
 
 export function CitiesList() {
     const firestore = useFirestore();
 
-    const citiesQuery = useMemo(() => {
+    const citiesQuery = useMemoFirebase(() => {
         if (!firestore) return null;
         return collection(firestore, 'cities');
     }, [firestore]);
@@ -23,17 +23,15 @@ export function CitiesList() {
     const { data: citiesFromDB, isLoading } = useCollection<City>(citiesQuery);
 
     const cities = useMemo(() => {
+        const sortedDummy = [...dummyCities].sort((a,b) => a.name.localeCompare(b.name));
+        if (isLoading) return sortedDummy.slice(0,3); // Show something during load
         if (citiesFromDB && citiesFromDB.length > 0) {
           return citiesFromDB.sort((a,b) => a.name.localeCompare(b.name));
         }
-        // If firestore is empty, fall back to dummy cities
-        if (!isLoading && (!citiesFromDB || citiesFromDB.length === 0)) {
-            return dummyCities.sort((a,b) => a.name.localeCompare(b.name));
-        }
-        return [];
+        return sortedDummy;
       }, [citiesFromDB, isLoading]);
 
-    if (isLoading) {
+    if (isLoading && !citiesFromDB) {
       return (
         <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 3 }).map((_, i) => (
@@ -60,6 +58,7 @@ export function CitiesList() {
                           alt={city.name}
                           data-ai-hint={cityImage.imageHint}
                           fill
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                           className="object-cover transition-transform duration-300 group-hover:scale-105"
                         />
                       )}
