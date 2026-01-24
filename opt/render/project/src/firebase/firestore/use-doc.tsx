@@ -9,7 +9,6 @@ import {
 import { errorEmitter } from '../error-emitter';
 import { FirestorePermissionError } from '../errors';
 import { useFirestore } from '@/firebase/client/provider';
-import '@/firebase/client/server-block';
 
 export function useDoc<T>(ref: DocumentReference<DocumentData> | null) {
   const [data, setData] = useState<T | null>(null);

@@ -1,20 +1,17 @@
 'use client';
 
-import './server-block'; // Import server guard
-
 import React, {
   createContext,
-  useContext,
   useState,
   useEffect,
   type ReactNode,
+  useContext,
 } from 'react';
 import type { FirebaseApp } from 'firebase/app';
 import type { Auth } from 'firebase/auth';
 import type { Firestore } from 'firebase/firestore';
 
-// These imports are for their side-effects, which register the services.
-// They must be here to ensure services are available on the client.
+// These imports are for their side-effects. They must be here.
 import 'firebase/auth';
 import 'firebase/firestore';
 
@@ -24,29 +21,16 @@ import { getFirestore } from 'firebase/firestore';
 import { firebaseConfig } from '../config';
 
 // Define the context shape
-interface FirebaseContextType {
-  firebaseApp: FirebaseApp;
-  auth: Auth;
-  firestore: Firestore;
+export interface FirebaseContextType {
+  firebaseApp?: FirebaseApp;
+  auth?: Auth;
+  firestore?: Firestore;
 }
 
 // Create the context
-const FirebaseContext = createContext<FirebaseContextType | undefined>(
+export const FirebaseContext = createContext<FirebaseContextType | undefined>(
   undefined
 );
-
-// Define the provider component
-function FirebaseProvider({
-  children,
-  value,
-}: {
-  children: ReactNode;
-  value: FirebaseContextType | undefined;
-}) {
-  return (
-    <FirebaseContext.Provider value={value}>{children}</FirebaseContext.Provider>
-  );
-}
 
 // The main client provider that initializes and manages Firebase services
 export function FirebaseClientProvider({ children }: { children: ReactNode }) {
@@ -55,7 +39,6 @@ export function FirebaseClientProvider({ children }: { children: ReactNode }) {
   );
 
   useEffect(() => {
-    // This hook runs ONLY on the client, after the initial render.
     if (firebaseConfig.apiKey) {
       const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
       const auth = getAuth(app);
@@ -64,16 +47,20 @@ export function FirebaseClientProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  return <FirebaseProvider value={services}>{children}</FirebaseProvider>;
+  return (
+    <FirebaseContext.Provider value={services}>
+      {children}
+    </FirebaseContext.Provider>
+  );
 }
 
-// Custom hook to access the full context value.
-// It's server-safe: returns `undefined` during SSR instead of crashing.
+// Custom hooks to access the services, safe for use in any client component.
 function useFirebase(): FirebaseContextType | undefined {
-  return useContext(FirebaseContext);
+  const context = useContext(FirebaseContext);
+  // No error throwing here. This is safe for SSR.
+  return context;
 }
 
-// Custom hooks for specific services, safe for use in any client component.
 export function useFirebaseApp(): FirebaseApp | undefined {
   return useFirebase()?.firebaseApp;
 }
