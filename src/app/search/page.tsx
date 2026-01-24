@@ -80,14 +80,14 @@ async function Results({
   );
 }
 
-// Define the page props to satisfy Next.js page constraints and prevent build errors.
-type SearchPageProps = {
-  searchParams?: {
-    [key: string]: string | string[] | undefined;
-  };
-};
+// Using inline props for the page component to avoid type conflicts with Next.js internals.
+export default function SearchPage({
+  searchParams,
+}: {
+  searchParams?: { [key: string]: string | string[] | undefined };
+}) {
+  const currentSearchParams = searchParams || {};
 
-export default function SearchPage({ searchParams = {} }: SearchPageProps) {
   return (
     <div className="container mx-auto max-w-7xl py-8 px-4 md:px-6">
       <div className="flex flex-col gap-8 lg:flex-row">
@@ -96,8 +96,8 @@ export default function SearchPage({ searchParams = {} }: SearchPageProps) {
         
         {/* Results is a Server Component, wrapped in Suspense for streaming. */}
         {/* The key is crucial to re-trigger Suspense when search params change. */}
-        <Suspense key={JSON.stringify(searchParams)} fallback={<ResultsSkeleton />}>
-          <Results searchParams={searchParams} />
+        <Suspense key={JSON.stringify(currentSearchParams)} fallback={<ResultsSkeleton />}>
+          <Results searchParams={currentSearchParams} />
         </Suspense>
       </div>
     </div>
