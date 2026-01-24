@@ -80,15 +80,11 @@ async function Results({
   );
 }
 
-// Define the prop types for the page component explicitly.
-// This is the recommended, robust way to handle page props in Next.js 14.
-type SearchPageProps = {
-  searchParams?: {
-    [key: string]: string | string[] | undefined;
-  };
-};
-
-export default function SearchPage({ searchParams }: SearchPageProps) {
+export default function SearchPage({
+  searchParams,
+}: {
+  searchParams?: { [key: string]: string | string[] | undefined };
+}) {
   const currentSearchParams = searchParams || {};
 
   return (
