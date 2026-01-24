@@ -50,8 +50,8 @@ function AdminAuthGuard({ children }: { children: React.ReactNode }) {
     if (!user) {
       // Not logged in, redirect to login page for authentication.
       router.replace('/login?redirect=/admin');
-    } else if (!userProfile || userProfile.role !== 'admin') {
-      // Logged in but not an admin (or profile is missing), redirect to home page.
+    } else if (!userProfile || !userProfile.role || userProfile.role.toLowerCase() !== 'admin') {
+      // Logged in but not an admin (or profile/role is missing), redirect to home page.
       router.replace('/');
     }
   }, [user, userProfile, isLoading, router]);
@@ -68,7 +68,7 @@ function AdminAuthGuard({ children }: { children: React.ReactNode }) {
   }
   
   // If we have a user and they are an admin, show the content.
-  if (user && userProfile && userProfile.role === 'admin') {
+  if (user && userProfile && userProfile.role && userProfile.role.toLowerCase() === 'admin') {
       return <>{children}</>;
   }
   
