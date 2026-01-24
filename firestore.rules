@@ -5,21 +5,22 @@ service cloud.firestore {
 
     // Helper function to check for admin role from the user's profile
     function isAdmin() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      // Use exists() to prevent errors on non-existent user profile documents
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
-    // Users can read their own profile, admins can read any.
-    // Users can create their own profile.
-    // Users can update their own profile, admins can update any.
+    // Users can read and update their own profile. Admins can read/update any.
+    // Any authenticated user can create their own profile.
     match /users/{userId} {
       allow read, update: if request.auth.uid == userId || isAdmin();
       allow create: if request.auth.uid == userId;
     }
 
-    // Bookings can be created, read, and updated by the user who owns them.
-    // Admins can read any booking.
+    // Bookings can be created, read, updated, and deleted by the user who owns them.
+    // Admins can also do anything.
     match /users/{userId}/bookings/{bookingId} {
-      allow read, update, create: if request.auth.uid == userId || isAdmin();
+      allow read, update, create, delete: if request.auth.uid == userId || isAdmin();
     }
     
     // Hotels, Rooms, Cities, Tour Packages, Promotions, and Reviews should be publicly readable.
@@ -38,8 +39,9 @@ service cloud.firestore {
       allow read: if true;
       // Allow any authenticated user to create a review.
       allow create: if request.auth != null;
-      // Only admins can update/delete reviews.
-      allow update, delete: if isAdmin();
+      // Allow user to edit/delete their own review, or admin to do so.
+      // This assumes the review document has a 'userId' field.
+      allow update, delete: if isAdmin() || (request.auth != null && resource.data.userId == request.auth.uid);
     }
 
     match /cities/{cityId} {
