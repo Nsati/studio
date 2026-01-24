@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams, useRouter, notFound } from 'next/navigation';
-import { useFirestore } from '@/firebase';
+import { useFirestore } from '@/firebase/provider';
 import { useUser } from '@/firebase/auth/use-user';
 import { useDoc } from '@/firebase/firestore/use-doc';
 import { doc } from 'firebase/firestore';

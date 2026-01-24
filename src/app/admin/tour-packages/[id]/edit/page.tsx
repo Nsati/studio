@@ -1,7 +1,7 @@
 'use client';
 import { useMemo } from 'react';
 import { useParams, notFound } from 'next/navigation';
-import { useFirestore } from '@/firebase';
+import { useFirestore } from '@/firebase/provider';
 import { useDoc } from '@/firebase/firestore/use-doc';
 import { doc } from 'firebase/firestore';
 import type { TourPackage } from '@/lib/types';

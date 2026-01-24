@@ -31,7 +31,7 @@ import {
 import type { City } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { dummyCities } from '@/lib/dummy-data';
-import { useFirestore } from '@/firebase';
+import { useFirestore } from '@/firebase/provider';
 import { useCollection } from '@/firebase/firestore/use-collection';
 
 export function HeroSearchForm() {

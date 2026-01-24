@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { Logo } from './Logo';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@/firebase';
+import { useAuth } from '@/firebase/provider';
 import { useUser } from '@/firebase/auth/use-user';
 import { signOut } from 'firebase/auth';
 
