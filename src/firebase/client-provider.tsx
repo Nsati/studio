@@ -6,12 +6,15 @@ import type { Auth } from 'firebase/auth';
 import type { Firestore } from 'firebase/firestore';
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth }from 'firebase/auth';
+// These imports are for their side-effects, which register the services.
+// They must be here to ensure services are available on the client.
+import 'firebase/auth';
+import 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 import { firebaseConfig } from './config';
 import { FirebaseProvider } from './provider';
-
 
 // This is the provider component that will wrap the app
 export function FirebaseClientProvider({
@@ -34,8 +37,8 @@ export function FirebaseClientProvider({
 
   if (!services) {
     // On the server, and on the first client render, 'services' will be null.
-    // So we render nothing (or a loader). This prevents any child components
-    // from trying to use Firebase services before they are ready.
+    // This prevents any child components from trying to use Firebase services
+    // before they are ready, which is crucial for SSR.
     return null;
   }
 
