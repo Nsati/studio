@@ -11,7 +11,6 @@ import { AmenityIcon } from '@/components/hotel/AmenityIcon';
 import type { Hotel, Room, Review } from '@/lib/types';
 import { useFirestore, useDoc, useCollection } from '@/firebase';
 import { doc, collection } from 'firebase/firestore';
-import { dummyHotels, dummyRooms, dummyReviews } from '@/lib/dummy-data';
 
 import {
   Carousel,
@@ -37,43 +36,21 @@ export default function HotelPage() {
     return doc(firestore, 'hotels', slug);
   }, [firestore, slug]);
   
-  const { data: liveHotel, isLoading } = useDoc<Hotel>(hotelRef);
+  const { data: hotel, isLoading } = useDoc<Hotel>(hotelRef);
   
   const roomsQuery = useMemo(() => {
     if (!firestore || !slug) return null;
     return collection(firestore, 'hotels', slug, 'rooms');
   }, [firestore, slug]);
 
-  const { data: liveRooms, isLoading: isLoadingRooms } = useCollection<Room>(roomsQuery);
+  const { data: rooms, isLoading: isLoadingRooms } = useCollection<Room>(roomsQuery);
 
   const reviewsQuery = useMemo(() => {
     if (!firestore || !slug) return null;
     return collection(firestore, 'hotels', slug, 'reviews');
   }, [firestore, slug]);
 
-  const { data: liveReviews, isLoading: isLoadingReviews } = useCollection<Review>(reviewsQuery);
-
-  const hotel = useMemo(() => {
-    if (isLoading) return null;
-    if (liveHotel) return liveHotel;
-    return null; // Don't fall back to dummy data
-  }, [isLoading, liveHotel]);
-
-  const rooms = useMemo(() => {
-    if (liveRooms && liveRooms.length > 0) return liveRooms;
-    if (!isLoadingRooms && !liveHotel) { // Only fallback if hotel itself doesn't exist
-      return dummyRooms.filter(r => r.hotelId === slug);
-    }
-    return [];
-  }, [liveRooms, isLoadingRooms, slug, liveHotel]);
-
-  const reviews = useMemo(() => {
-    if (liveReviews && liveReviews.length > 0) return liveReviews;
-    if (!isLoadingReviews && !liveHotel) {
-        return dummyReviews.filter(r => r.hotelId === slug);
-    }
-    return [];
-  }, [liveReviews, isLoadingReviews, slug, liveHotel]);
+  const { data: reviews, isLoading: isLoadingReviews } = useCollection<Review>(reviewsQuery);
 
   const minPrice = useMemo(() => {
     if (!rooms || rooms.length === 0) return 0;
@@ -92,7 +69,7 @@ export default function HotelPage() {
     return <Loading />;
   }
 
-  if (!hotel) {
+  if (!hotel || !rooms || !reviews) {
     notFound();
   }
 

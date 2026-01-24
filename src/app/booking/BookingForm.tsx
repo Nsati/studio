@@ -11,7 +11,7 @@ import { signInAnonymously } from 'firebase/auth';
 
 import type { Hotel, Room, Booking, Promotion } from '@/lib/types';
 import { useFirestore, useAuth, useUser, useDoc, useCollection } from '@/firebase';
-import { doc, collection, getDoc, setDoc, runTransaction, increment } from 'firebase/firestore';
+import { doc, collection, getDoc, setDoc } from 'firebase/firestore';
 
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -22,7 +22,6 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2, Calendar, Users, BedDouble, ArrowLeft, Tag, ShieldCheck, Info, HelpCircle } from 'lucide-react';
 import Link from 'next/link';
-import { dummyHotels, dummyRooms } from '@/lib/dummy-data';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 declare global {
@@ -50,28 +49,19 @@ export function BookingForm() {
         return doc(firestore, 'hotels', hotelId);
     }, [firestore, hotelId]);
 
-    const { data: liveHotel, isLoading: isHotelLoading } = useDoc<Hotel>(hotelRef);
+    const { data: hotel, isLoading: isHotelLoading } = useDoc<Hotel>(hotelRef);
     
-    const hotel = useMemo(() => {
-        if (isHotelLoading) return null;
-        if (liveHotel) return liveHotel;
-        return dummyHotels.find(h => h.id === hotelId);
-    }, [isHotelLoading, liveHotel, hotelId]);
-
     const roomsQuery = useMemo(() => {
         if (!firestore || !hotelId) return null;
         return collection(firestore, 'hotels', hotelId, 'rooms');
     }, [firestore, hotelId]);
     
-    const { data: liveRooms, isLoading: areRoomsLoading } = useCollection<Room>(roomsQuery);
+    const { data: rooms, isLoading: areRoomsLoading } = useCollection<Room>(roomsQuery);
 
     const room = useMemo(() => {
-        if (areRoomsLoading) return null;
-        if (!liveHotel) return null; // Wait for hotel to load to prevent showing dummy data
-        const liveRoom = liveRooms?.find(r => r.id === roomId);
-        if (liveRoom) return liveRoom;
-        return null; // Don't fall back to dummy data if live hotel exists but room doesn't
-    }, [areRoomsLoading, liveRooms, liveHotel, roomId]);
+        if (areRoomsLoading || !rooms) return null;
+        return rooms.find(r => r.id === roomId);
+    }, [areRoomsLoading, rooms, roomId]);
 
 
     const [customerDetails, setCustomerDetails] = useState({ name: '', email: '' });
@@ -91,7 +81,7 @@ export function BookingForm() {
     if (isHotelLoading || areRoomsLoading) {
         return null; // Let the parent Suspense boundary handle the loading UI.
     }
-
+    
     if (!hotelId || !roomId || !checkInStr || !checkOutStr || !hotel || !room) {
         return notFound();
     }
@@ -267,7 +257,7 @@ export function BookingForm() {
             name: "Uttarakhand Getaways",
             description: `Booking for ${hotel.name}`,
             order_id: order.id,
-            handler: (response: any) => {
+            handler: () => {
                 // The payment was successful. We just need to redirect. The webhook
                 // will handle inventory and confirmation.
                 toast({

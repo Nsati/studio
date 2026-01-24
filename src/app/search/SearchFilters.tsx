@@ -43,14 +43,14 @@ export function SearchFilters() {
   const pathname = usePathname();
 
   const [city, setCity] = useState(searchParams.get('city') || 'All');
-  const [checkin, setCheckin] = useState(searchParams.get('checkin') || '');
-  const [checkout, setCheckout] = useState(searchParams.get('checkout') || '');
+  const [checkin, setCheckin] = useState(searchParams.get('checkIn') || '');
+  const [checkout, setCheckout] = useState(searchParams.get('checkOut') || '');
   const [guests, setGuests] = useState(searchParams.get('guests') || '1');
   
   useEffect(() => {
     setCity(searchParams.get('city') || 'All');
-    setCheckin(searchParams.get('checkin') || '');
-    setCheckout(searchParams.get('checkout') || '');
+    setCheckin(searchParams.get('checkIn') || '');
+    setCheckout(searchParams.get('checkOut') || '');
     setGuests(searchParams.get('guests') || '1');
   }, [searchParams]);
 
@@ -66,7 +66,7 @@ export function SearchFilters() {
   
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    router.push(`${pathname}?${createQueryString({ city: city === 'All' ? null : city, checkin, checkout, guests })}`);
+    router.push(`${pathname}?${createQueryString({ city: city === 'All' ? null : city, checkIn: checkin, checkOut: checkout, guests })}`);
   }
 
   return (

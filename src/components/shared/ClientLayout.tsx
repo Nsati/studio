@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import { Header } from '@/components/shared/Header';
 import { Footer } from '@/components/shared/Footer';
 import { Toaster } from '@/components/ui/toaster';
+import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
 const DynamicFirebaseProvider = dynamic(
   () => import('@/firebase/client-provider').then((mod) => mod.FirebaseClientProvider),
@@ -22,6 +23,7 @@ const DynamicFirebaseProvider = dynamic(
 export function ClientLayout({ children }: { children: React.ReactNode }) {
   return (
     <DynamicFirebaseProvider>
+      <FirebaseErrorListener />
       <div className="flex min-h-screen flex-col">
         <Header />
         <main className="flex-grow">{children}</main>
