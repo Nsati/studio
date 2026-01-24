@@ -4,6 +4,10 @@ import { useState, useEffect } from 'react';
 import type { Auth } from 'firebase/auth';
 import type { Firestore } from 'firebase/firestore';
 
+// These imports are for their side-effects, which register the services.
+import 'firebase/auth';
+import 'firebase/firestore';
+
 // We import the functions directly
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
