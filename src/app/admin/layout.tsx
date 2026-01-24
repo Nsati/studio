@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect } from 'react';
@@ -20,19 +21,17 @@ import {
 } from 'lucide-react';
 import { useUser } from '@/firebase';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 
-// Based on the user's document for a production-ready admin panel.
 const navItems = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/bookings', label: 'Bookings', icon: BookOpen },
-  { href: '/admin/hotels', label: 'Hotels', icon: Hotel }, // Inventory part 1
+  { href: '/admin/hotels', label: 'Hotels', icon: Hotel },
   { href: '/admin/tour-packages', label: 'Tours', icon: Package },
-  // For now, Rooms will be managed within each hotel's edit page.
-  { href: '/admin/users', label: 'Customers', icon: Users2 }, // Customers / Users & Roles
+  { href: '/admin/users', label: 'Customers', icon: Users2 },
   { href: '/admin/payments', label: 'Payments', icon: Receipt },
   { href: '/admin/promotions', label: 'Promotions', icon: Tag },
   { href: '/admin/reports', label: 'Reports', icon: BarChart },
@@ -44,27 +43,14 @@ function AdminAuthGuard({ children }: { children: React.ReactNode }) {
   const { user, userProfile, isLoading } = useUser();
   const router = useRouter();
 
-  // This effect handles the redirection logic.
   useEffect(() => {
-    // Don't do anything while loading.
-    if (isLoading) {
-      return;
-    }
-    
-    // If loading is done, check auth state.
+    if (isLoading) return;
     if (!user) {
-      // User is not logged in.
       router.replace('/login?redirect=/admin');
-    } else if ((userProfile?.role ?? '').toLowerCase() !== 'admin') {
-      // User is logged in, but is not an admin.
-      // This safer check prevents crashes if userProfile or role is missing/null/undefined.
-      router.replace('/');
     }
-  }, [user, userProfile, isLoading, router]);
+  }, [user, isLoading, router]);
 
-  // This block determines what UI to show based on the current state.
   if (isLoading) {
-    // Show a loading skeleton while we verify credentials.
     return (
       <div className="flex h-screen w-full items-center justify-center bg-muted/40">
         <div className="flex items-center gap-4 text-lg">
@@ -75,27 +61,59 @@ function AdminAuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // If the user is an admin, show the admin layout.
-  // This check is now case-insensitive and safe, matching the useEffect logic.
   if (user && userProfile && userProfile.role?.toLowerCase() === 'admin') {
     return <>{children}</>;
   }
 
-  // If the user is not loading and not an admin, they are denied access.
-  // Show an access denied message while the useEffect above handles the redirect.
+  if (user && !isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-background p-4">
+        <Card className="max-w-lg border-destructive">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 font-headline text-2xl text-destructive">
+              <ShieldAlert className="h-6 w-6" />
+              Admin Access Denied
+            </CardTitle>
+            <CardDescription>
+              Your account does not have administrator privileges.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              This can happen if your user profile in the database is missing the correct role. The application is configured to automatically assign the 'admin' role to the very first user who signs up.
+            </p>
+            <div>
+              <h4 className="font-semibold text-foreground">How to Fix This:</h4>
+              <ol className="list-decimal list-inside text-sm text-muted-foreground space-y-2 mt-2">
+                <li>Go to your Firebase project console.</li>
+                <li>Navigate to the <code className="font-mono bg-muted p-1 rounded">Firestore Database</code> section.</li>
+                <li>In the <code className="font-mono bg-muted p-1 rounded">users</code> collection, find the document with your user ID ({user.uid}).</li>
+                <li>Add or edit the <code className="font-mono bg-muted p-1 rounded">role</code> field and set its value to the string <code className="font-mono bg-muted p-1 rounded">"admin"</code>.</li>
+                <li>Refresh this page.</li>
+              </ol>
+            </div>
+          </CardContent>
+          <CardFooter className="flex justify-between">
+            <Button asChild variant="outline">
+              <Link href="/">Back to Home</Link>
+            </Button>
+            <Button asChild>
+              <a href={`https://console.firebase.google.com/project/${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}/firestore/data/~2Fusers~2F${user.uid}`} target="_blank" rel="noopener noreferrer">
+                Open Your User Document
+              </a>
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex h-screen items-center justify-center bg-muted/40 p-4">
-      <Alert variant="destructive" className="max-w-lg">
-        <ShieldAlert className="h-4 w-4" />
-        <AlertTitle>Access Denied</AlertTitle>
-        <AlertDescription>
-          You do not have the required permissions to view this page. Redirecting...
-        </AlertDescription>
-      </Alert>
+    <div className="flex h-screen w-full items-center justify-center bg-muted/40">
+      <p>Redirecting to login...</p>
     </div>
   );
 }
-
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
