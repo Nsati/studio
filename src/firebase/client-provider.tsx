@@ -2,43 +2,52 @@
 
 import React, { useState, useEffect, type ReactNode } from 'react';
 import { FirebaseProvider } from '@/firebase/provider';
-import { initializeFirebase } from '@/firebase';
-import { FirebaseApp } from 'firebase/app';
-import { Auth } from 'firebase/auth';
-import { Firestore } from 'firebase/firestore';
+import { firebaseConfig } from '@/firebase/config';
+import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
+import { getAuth, type Auth } from 'firebase/auth';
+import { getFirestore, type Firestore } from 'firebase/firestore';
 
 interface FirebaseClientProviderProps {
   children: ReactNode;
 }
 
 interface FirebaseServices {
-    firebaseApp: FirebaseApp;
-    auth: Auth;
-    firestore: Firestore;
+  firebaseApp: FirebaseApp;
+  auth: Auth;
+  firestore: Firestore;
 }
 
 export function FirebaseClientProvider({ children }: FirebaseClientProviderProps) {
-  const [firebaseServices, setFirebaseServices] = useState<FirebaseServices | null>(null);
+  const [services, setServices] = useState<FirebaseServices | null>(null);
 
   useEffect(() => {
-    // This effect runs only on the client, after the component has mounted.
-    // This ensures Firebase is not initialized during Server-Side Rendering.
-    const services = initializeFirebase();
-    setFirebaseServices(services);
-  }, []); // The empty dependency array ensures this runs only once.
+    // This effect runs only once on the client after mounting
+    try {
+        const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+        const auth = getAuth(app);
+        const firestore = getFirestore(app);
+        setServices({ firebaseApp: app, auth, firestore });
+    } catch (error) {
+        console.error("Firebase initialization failed:", error);
+        // In a real app, you might want to show a more user-friendly error UI
+    }
+  }, []); // Empty dependency array ensures this runs once on the client
 
-  // While Firebase is initializing on the client, we render null.
-  // This prevents children from rendering and trying to use a null Firebase context, which would throw errors.
-  // The page will appear to "flash" in, which is acceptable for fixing this critical error.
-  if (!firebaseServices) {
-    return null;
+  if (!services) {
+    // While services are being initialized (and during SSR), show a loader.
+    // This prevents child components from trying to use Firebase before it's ready.
+    return (
+        <div className="flex h-screen w-full items-center justify-center bg-background">
+            <p>Connecting to services...</p>
+        </div>
+    );
   }
 
   return (
     <FirebaseProvider
-      firebaseApp={firebaseServices.firebaseApp}
-      auth={firebaseServices.auth}
-      firestore={firebaseServices.firestore}
+      firebaseApp={services.firebaseApp}
+      auth={services.auth}
+      firestore={services.firestore}
     >
       {children}
     </FirebaseProvider>
