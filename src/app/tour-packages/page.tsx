@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar, IndianRupee, Mountain, MapPin } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirestore, useCollection } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import type { TourPackage } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -97,7 +97,7 @@ function TourPackageCardSkeleton() {
 
 function PackagesGrid() {
   const firestore = useFirestore();
-  const packagesQuery = useMemoFirebase(() => {
+  const packagesQuery = useMemo(() => {
     if (!firestore) return null;
     return collection(firestore, 'tourPackages');
   }, [firestore]);

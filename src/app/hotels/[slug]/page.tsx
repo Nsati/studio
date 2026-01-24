@@ -9,7 +9,7 @@ import React, { useMemo } from 'react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { AmenityIcon } from '@/components/hotel/AmenityIcon';
 import type { Hotel, Room, Review } from '@/lib/types';
-import { useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirestore, useDoc, useCollection } from '@/firebase';
 import { doc, collection } from 'firebase/firestore';
 import { dummyHotels, dummyRooms, dummyReviews } from '@/lib/dummy-data';
 
@@ -32,21 +32,21 @@ export default function HotelPage() {
   const slug = params.slug as string;
   const firestore = useFirestore();
   
-  const hotelRef = useMemoFirebase(() => {
+  const hotelRef = useMemo(() => {
     if (!firestore || !slug) return null;
     return doc(firestore, 'hotels', slug);
   }, [firestore, slug]);
   
   const { data: liveHotel, isLoading } = useDoc<Hotel>(hotelRef);
   
-  const roomsQuery = useMemoFirebase(() => {
+  const roomsQuery = useMemo(() => {
     if (!firestore || !slug) return null;
     return collection(firestore, 'hotels', slug, 'rooms');
   }, [firestore, slug]);
 
   const { data: liveRooms, isLoading: isLoadingRooms } = useCollection<Room>(roomsQuery);
 
-  const reviewsQuery = useMemoFirebase(() => {
+  const reviewsQuery = useMemo(() => {
     if (!firestore || !slug) return null;
     return collection(firestore, 'hotels', slug, 'reviews');
   }, [firestore, slug]);
