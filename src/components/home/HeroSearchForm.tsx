@@ -31,7 +31,8 @@ import {
 import type { City } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { dummyCities } from '@/lib/dummy-data';
-import { useCollection, useFirestore } from '@/firebase';
+import { useFirestore } from '@/firebase';
+import { useCollection } from '@/firebase/firestore/use-collection';
 
 export function HeroSearchForm() {
   const router = useRouter();

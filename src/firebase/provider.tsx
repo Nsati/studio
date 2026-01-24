@@ -45,6 +45,3 @@ export function useFirestore(): Firestore {
 export function useAuth(): Auth {
   return useFirebase().auth;
 }
-
-// Client-only provider. In Next.js, this is the one you'll likely use.
-export { FirebaseClientProvider } from './client-provider';
