@@ -44,46 +44,54 @@ function AdminAuthGuard({ children }: { children: React.ReactNode }) {
   const { user, userProfile, isLoading } = useUser();
   const router = useRouter();
 
+  // This effect handles the redirection logic.
   useEffect(() => {
-    if (isLoading) return; // Wait until loading is done
-
+    // Don't do anything while loading.
+    if (isLoading) {
+      return;
+    }
+    
+    // If loading is done, check auth state.
     if (!user) {
-      // Not logged in, redirect to login page for authentication.
+      // User is not logged in.
       router.replace('/login?redirect=/admin');
-    } else if (!userProfile || !userProfile.role || userProfile.role.toLowerCase() !== 'admin') {
-      // Logged in but not an admin (or profile/role is missing), redirect to home page.
+    } else if (userProfile?.role?.toLowerCase() !== 'admin') {
+      // User is logged in, but is not an admin.
+      // The optional chaining (?.) prevents crashes if userProfile or role is missing.
       router.replace('/');
     }
   }, [user, userProfile, isLoading, router]);
 
+  // This block determines what UI to show based on the current state.
   if (isLoading) {
+    // Show a loading skeleton while we verify credentials.
     return (
-        <div className="flex h-screen w-full items-center justify-center bg-muted/40">
-            <div className="flex items-center gap-4 text-lg">
-                <Skeleton className="h-12 w-12 rounded-full" />
-                <p>Verifying credentials...</p>
-            </div>
+      <div className="flex h-screen w-full items-center justify-center bg-muted/40">
+        <div className="flex items-center gap-4 text-lg">
+          <Skeleton className="h-12 w-12 rounded-full" />
+          <p>Verifying credentials...</p>
         </div>
+      </div>
     );
   }
-  
-  // If we have a user and they are an admin, show the content.
-  if (user && userProfile && userProfile.role && userProfile.role.toLowerCase() === 'admin') {
-      return <>{children}</>;
+
+  if (user && userProfile?.role?.toLowerCase() === 'admin') {
+    // If the user is an admin, show the admin layout.
+    return <>{children}</>;
   }
-  
-  // If we reach here, the user is not an admin or not logged in.
-  // Show an access denied message while the useEffect redirect kicks in.
+
+  // If the user is not loading and not an admin, they are denied access.
+  // Show an access denied message while the useEffect above handles the redirect.
   return (
-      <div className="flex h-screen items-center justify-center bg-muted/40 p-4">
-            <Alert variant="destructive" className="max-w-lg">
-                <ShieldAlert className="h-4 w-4" />
-                <AlertTitle>Access Denied</AlertTitle>
-                <AlertDescription>
-                   You do not have the required permissions to view this page. Redirecting...
-                </AlertDescription>
-            </Alert>
-        </div>
+    <div className="flex h-screen items-center justify-center bg-muted/40 p-4">
+      <Alert variant="destructive" className="max-w-lg">
+        <ShieldAlert className="h-4 w-4" />
+        <AlertTitle>Access Denied</AlertTitle>
+        <AlertDescription>
+          You do not have the required permissions to view this page. Redirecting...
+        </AlertDescription>
+      </Alert>
+    </div>
   );
 }
 
