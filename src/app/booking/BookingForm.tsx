@@ -96,27 +96,7 @@ export function BookingForm() {
     }
     
     if (!hotel || !room) {
-        return (
-            <div className="container mx-auto max-w-lg py-12 px-4 md:px-6 text-center">
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-destructive">Booking Details Not Found</CardTitle>
-                        <CardDescription>
-                            We couldn't find the hotel or room you're trying to book. The link
-                            may be outdated or incorrect.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-sm text-muted-foreground mb-4">
-                            Please go back and try selecting the hotel and room again.
-                        </p>
-                        <Button asChild>
-                            <Link href="/search">Explore Hotels</Link>
-                        </Button>
-                    </CardContent>
-                </Card>
-            </div>
-        );
+        return notFound();
     }
 
     const checkIn = parse(checkInStr, 'yyyy-MM-dd', new Date());
