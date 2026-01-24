@@ -1,10 +1,9 @@
-
 import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
 import { firebaseConfig } from './config';
 
 let firebaseApp: FirebaseApp;
 
-// Check if a Firebase app has already been initialized.
+// This prevents re-initialization during hot-reloads in development and on the server.
 if (!getApps().length) {
   if (!firebaseConfig.apiKey) {
     throw new Error(

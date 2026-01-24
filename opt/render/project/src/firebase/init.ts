@@ -1,4 +1,18 @@
+import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
+import { firebaseConfig } from './config';
 
-// This file acts as a proxy to the definitive implementation in `src/firebase/init.ts`.
-// This prevents module resolution conflicts during the build process.
-export * from '@/firebase/init';
+let firebaseApp: FirebaseApp;
+
+// This prevents re-initialization during hot-reloads in development and on the server.
+if (!getApps().length) {
+  if (!firebaseConfig.apiKey) {
+    throw new Error(
+      'Firebase config is not set. Please add the config to firebase/config.ts'
+    );
+  }
+  firebaseApp = initializeApp(firebaseConfig);
+} else {
+  firebaseApp = getApp();
+}
+
+export { firebaseApp };

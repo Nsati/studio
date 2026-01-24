@@ -1,2 +1,10 @@
-// This file acts as a proxy to the definitive implementation in `src/firebase/index.ts`.
-export * from '@/firebase/index';
+// This file has been simplified to prevent circular dependency build errors.
+// Components and hooks should import directly from their source files
+// (e.g., '@/firebase/auth/use-user') instead of from this central file.
+
+// Export the client provider for use in the root layout
+export { FirebaseClientProvider } from './client-provider';
+
+// Export the base context hooks for convenience. These are safe to export as
+// they only depend on the provider and don't create loops.
+export { useFirebaseApp, useFirestore, useAuth } from './provider';
