@@ -136,6 +136,22 @@ service cloud.firestore {
     //-------------------------------------------------------------------------
 
     /**
+     * @description Manages city listings. City data is public for everyone to read.
+     *              Only administrators can create, update, or delete city entries.
+     * @path        /cities/{cityId}
+     * @allow       (list) Any anonymous user lists the cities for the search form.
+     * @deny        (create) A regular authenticated user tries to add a new city.
+     * @principle   Implements a "Public Read with Admin-Only Writes" pattern for site content.
+     */
+    match /cities/{cityId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isAdmin();
+      allow update: if isAdmin() && isExistingDoc();
+      allow delete: if isAdmin() && isExistingDoc();
+    }
+
+    /**
      * @description Manages hotel listings. Hotel data is public for everyone to read.
      *              However, only administrators can create, update, or delete hotel entries.
      * @path        /hotels/{hotelId}
