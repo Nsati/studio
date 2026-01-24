@@ -1,8 +1,6 @@
 'use client';
 import { useMemo, useState } from 'react';
-import { useFirestore } from '@/firebase/client/provider';
-import { useCollection } from '@/firebase/firestore/use-collection';
-import { useUser } from '@/firebase/auth/use-user';
+import { useFirestore, useCollection, useUser } from '@/firebase/client/provider';
 import { collection, doc, updateDoc } from 'firebase/firestore';
 import type { UserProfile } from '@/lib/types';
 import {

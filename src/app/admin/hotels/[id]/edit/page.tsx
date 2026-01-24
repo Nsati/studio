@@ -1,9 +1,7 @@
 'use client';
 import { useMemo } from 'react';
 import { useParams, notFound } from 'next/navigation';
-import { useFirestore } from '@/firebase/client/provider';
-import { useDoc } from '@/firebase/firestore/use-doc';
-import { useCollection } from '@/firebase/firestore/use-collection';
+import { useFirestore, useDoc, useCollection } from '@/firebase/client/provider';
 import { doc, collection } from 'firebase/firestore';
 import type { Hotel, Room } from '@/lib/types';
 import { EditHotelForm } from '@/components/admin/EditHotelForm';

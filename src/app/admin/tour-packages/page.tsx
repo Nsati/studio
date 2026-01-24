@@ -2,8 +2,7 @@
 import { useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useFirestore } from '@/firebase/client/provider';
-import { useCollection } from '@/firebase/firestore/use-collection';
+import { useFirestore, useCollection } from '@/firebase/client/provider';
 import { collection } from 'firebase/firestore';
 import type { TourPackage } from '@/lib/types';
 import { Button } from '@/components/ui/button';

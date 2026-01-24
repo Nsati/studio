@@ -18,7 +18,7 @@ import {
   Menu,
   Package,
 } from 'lucide-react';
-import { useUser } from '@/firebase/auth/use-user';
+import { useUser } from '@/firebase/client/provider';
 import { Logo } from '@/components/shared/Logo';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';

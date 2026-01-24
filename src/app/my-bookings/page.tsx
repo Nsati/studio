@@ -1,10 +1,7 @@
 'use client';
 
 import React, { useMemo, useState, useEffect } from 'react';
-import { useFirestore } from '@/firebase/client/provider';
-import { useUser } from '@/firebase/auth/use-user';
-import { useCollection } from '@/firebase/firestore/use-collection';
-import { useDoc } from '@/firebase/firestore/use-doc';
+import { useFirestore, useUser, useCollection, useDoc } from '@/firebase/client/provider';
 import type { Booking, Hotel } from '@/lib/types';
 import {
   Card,

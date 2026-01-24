@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -10,10 +9,7 @@ import { signInAnonymously } from 'firebase/auth';
 
 
 import type { Hotel, Room, Booking, Promotion } from '@/lib/types';
-import { useFirestore, useAuth } from '@/firebase/client/provider';
-import { useUser } from '@/firebase/auth/use-user';
-import { useDoc } from '@/firebase/firestore/use-doc';
-import { useCollection } from '@/firebase/firestore/use-collection';
+import { useFirestore, useAuth, useUser, useDoc, useCollection } from '@/firebase/client/provider';
 import { doc, collection, getDoc, setDoc, runTransaction, increment } from 'firebase/firestore';
 
 import { useToast } from '@/hooks/use-toast';

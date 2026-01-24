@@ -9,8 +9,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Hotel, Users2, BookOpen, IndianRupee } from 'lucide-react';
-import { useFirestore } from '@/firebase/client/provider';
-import { useCollection } from '@/firebase/firestore/use-collection';
+import { useFirestore, useCollection } from '@/firebase/client/provider';
 import { collection, collectionGroup } from 'firebase/firestore';
 import type { Booking, Hotel as HotelType, UserProfile } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';

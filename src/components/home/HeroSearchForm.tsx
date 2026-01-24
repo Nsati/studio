@@ -31,8 +31,7 @@ import {
 import type { City } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { dummyCities } from '@/lib/dummy-data';
-import { useFirestore } from '@/firebase/client/provider';
-import { useCollection } from '@/firebase/firestore/use-collection';
+import { useFirestore, useCollection } from '@/firebase/client/provider';
 
 export function HeroSearchForm() {
   const router = useRouter();
@@ -48,8 +47,8 @@ export function HeroSearchForm() {
   const cities = useMemo(() => {
     const sortedCities = (citiesFromDB || []).sort((a, b) => a.name.localeCompare(b.name));
     
-    if (sortedCities.length > 0) return sortedCities;
-    if (!isLoadingCities) return dummyCities; 
+    if (sortedCities.length > 0) return sortedCities; 
+    if (!isLoadingCities) return dummyCities;
     return [];
   }, [citiesFromDB, isLoadingCities]);
 
