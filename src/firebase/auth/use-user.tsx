@@ -5,7 +5,7 @@ import { doc } from 'firebase/firestore';
 import type { User } from 'firebase/auth';
 
 import type { UserProfile } from '@/lib/types';
-import { useAuth, useFirestore } from '../provider';
+import { useAuth, useFirestore } from '@/firebase/client/provider';
 import { useDoc } from '../firestore/use-doc';
 
 export function useUser() {
@@ -13,11 +13,12 @@ export function useUser() {
   const firestore = useFirestore();
   const [user, setUser] = useState<User | null>(null);
   // START with isLoading: true. This is the key to preventing hydration errors.
+  // The server will render this as loading, and the client's first render will match.
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // If the auth service isn't ready, don't do anything. The `isLoading`
-    // state will remain `true`, which is correct for SSR and initial client render.
+    // If the auth service isn't ready yet (during SSR or initial client load),
+    // do nothing. The `isLoading` state will remain `true`.
     if (!auth) {
       return;
     }
@@ -35,6 +36,7 @@ export function useUser() {
   }, [auth]); // Rerun this effect if the auth object itself changes
 
   const userProfileRef = useMemo(() => {
+    // Wait for firestore and user to be available.
     if (!firestore || !user) return null;
     return doc(firestore, 'users', user.uid);
   }, [firestore, user]);
@@ -45,7 +47,7 @@ export function useUser() {
     user,
     userProfile,
     // The overall loading state is true if either the auth state is loading,
-    // or if we have a user but are still loading their profile.
-    isLoading: isLoading || (user && isLoadingProfile),
+    // or if we have a user but are still loading their profile from Firestore.
+    isLoading: isLoading || (!!user && isLoadingProfile),
   };
 }

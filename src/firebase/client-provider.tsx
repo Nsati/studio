@@ -17,33 +17,32 @@ import { getFirestore } from 'firebase/firestore';
 import { firebaseConfig } from './config';
 import { FirebaseProvider } from './provider';
 
+interface FirebaseServices {
+    firebaseApp: FirebaseApp;
+    auth: Auth;
+    firestore: Firestore;
+}
+
 // This is the provider component that will wrap the app
 export function FirebaseClientProvider({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [services, setServices] = useState<{ app: FirebaseApp, auth: Auth; firestore: Firestore } | null>(null);
+  const [services, setServices] = useState<FirebaseServices | undefined>(undefined);
 
   useEffect(() => {
     // This hook only runs ONCE on the client, after the initial render.
-    // This is the safest place to initialize client-side libraries.
     if (firebaseConfig.apiKey) {
         const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
         const auth = getAuth(app);
         const firestore = getFirestore(app);
-        setServices({ app, auth, firestore });
+        setServices({ firebaseApp: app, auth, firestore });
     }
   }, []);
 
-  // During SSR and the initial client render, `services` will be null.
-  // The `FirebaseProvider` will receive `undefined` for its props.
   return (
-    <FirebaseProvider 
-      firebaseApp={services?.app} 
-      firestore={services?.firestore} 
-      auth={services?.auth}
-    >
+    <FirebaseProvider value={services}>
       {children}
     </FirebaseProvider>
   );

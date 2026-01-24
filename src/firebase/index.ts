@@ -1,10 +1,9 @@
-// This file has been simplified to prevent circular dependency build errors.
-// Components and hooks should import directly from their source files
-// (e.g., '@/firebase/auth/use-user') instead of from this central file.
+// This file is the main entry point for Firebase-related modules.
+// It should ONLY export modules that are safe for BOTH server and client environments.
 
-// Export the client provider for use in the root layout
-export { FirebaseClientProvider } from './client-provider';
+// Export the server-side admin SDK. This is safe because it's only
+// initialized and used in server-only environments (API routes, Server Actions).
+export { adminDb, adminAuth } from './admin';
 
-// Export the base context hooks for convenience. These are safe to export as
-// they only depend on the provider and don't create loops.
-export { useFirebaseApp, useFirestore, useAuth } from './provider';
+// DO NOT export client-side modules from here.
+// Client components should import directly from `@/firebase/client/provider`.

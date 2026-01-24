@@ -8,7 +8,7 @@ import React, { useMemo } from 'react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { AmenityIcon } from '@/components/hotel/AmenityIcon';
 import type { Hotel, Room, Review } from '@/lib/types';
-import { useFirestore } from '@/firebase/provider';
+import { useFirestore } from '@/firebase/client/provider';
 import { useDoc } from '@/firebase/firestore/use-doc';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { doc, collection } from 'firebase/firestore';

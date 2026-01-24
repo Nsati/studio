@@ -4,7 +4,7 @@ import { Header } from '@/components/shared/Header';
 import { Footer } from '@/components/shared/Footer';
 import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
-import { FirebaseClientProvider } from '@/firebase/client-provider';
+import { FirebaseClientProvider } from '@/firebase/client/provider';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 import Script from 'next/script';
 

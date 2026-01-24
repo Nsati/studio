@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useAuth } from '@/firebase/provider';
+import { useAuth } from '@/firebase/client/provider';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import Link from 'next/link';
 

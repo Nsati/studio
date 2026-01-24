@@ -3,7 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 import { useMemo } from 'react';
-import { useFirestore } from '@/firebase/provider';
+import { useFirestore } from '@/firebase/client/provider';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { collection, query, limit } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';

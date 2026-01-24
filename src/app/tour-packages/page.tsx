@@ -8,7 +8,7 @@ import { Calendar, IndianRupee, Mountain, MapPin } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { useFirestore } from '@/firebase/provider';
+import { useFirestore } from '@/firebase/client/provider';
 import { collection } from 'firebase/firestore';
 import type { TourPackage } from '@/lib/types';
 import { useMemo } from 'react';

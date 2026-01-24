@@ -10,7 +10,7 @@ import { signInAnonymously } from 'firebase/auth';
 
 
 import type { Hotel, Room, Booking, Promotion } from '@/lib/types';
-import { useFirestore, useAuth } from '@/firebase/provider';
+import { useFirestore, useAuth } from '@/firebase/client/provider';
 import { useUser } from '@/firebase/auth/use-user';
 import { useDoc } from '@/firebase/firestore/use-doc';
 import { useCollection } from '@/firebase/firestore/use-collection';

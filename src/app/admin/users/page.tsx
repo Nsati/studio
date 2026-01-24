@@ -1,6 +1,6 @@
 'use client';
 import { useMemo, useState } from 'react';
-import { useFirestore } from '@/firebase/provider';
+import { useFirestore } from '@/firebase/client/provider';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { useUser } from '@/firebase/auth/use-user';
 import { collection, doc, updateDoc } from 'firebase/firestore';

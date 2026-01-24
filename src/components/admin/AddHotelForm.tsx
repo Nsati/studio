@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useRouter } from 'next/navigation';
 import { doc, writeBatch } from 'firebase/firestore';
-import { useFirestore } from '@/firebase/provider';
+import { useFirestore } from '@/firebase/client/provider';
 import { useToast } from '@/hooks/use-toast';
 import slugify from 'slugify';
 import { useState } from 'react';
@@ -368,7 +368,7 @@ https://images.unsplash.com/photo-2..."
             <Card key={field.id} className="p-4">
                 <CardHeader className="flex flex-row items-center justify-between p-0 pb-4">
                      <h4 className="font-semibold">Room Type {index + 1}</h4>
-                     <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
+                     <Button type="button" variant="ghost" size="icon" onClick={() => removeRoom(index)}>
                         <Trash2 className="h-4 w-4 text-destructive" />
                      </Button>
                 </CardHeader>

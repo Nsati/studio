@@ -31,7 +31,7 @@ import {
 import type { City } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { dummyCities } from '@/lib/dummy-data';
-import { useFirestore } from '@/firebase/provider';
+import { useFirestore } from '@/firebase/client/provider';
 import { useCollection } from '@/firebase/firestore/use-collection';
 
 export function HeroSearchForm() {
@@ -62,7 +62,7 @@ export function HeroSearchForm() {
     e.preventDefault();
     const params = new URLSearchParams();
     if (city && city !== 'All') params.set('city', city);
-    if (dates?.from) params.set('checkin', format(dates.from, 'yyyy-MM-dd'));
+    if (dates?.from) params.set('checkIn', format(dates.from, 'yyyy-MM-dd'));
     if (dates?.to) params.set('checkout', format(dates.to, 'yyyy-MM-dd'));
     if (guests) params.set('guests', guests);
 
