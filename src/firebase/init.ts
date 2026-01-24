@@ -16,10 +16,4 @@ if (!getApps().length) {
   firebaseApp = getApp();
 }
 
-// This function is now deprecated but kept for compatibility.
-export function initializeFirebaseApp(): FirebaseApp {
-  return firebaseApp;
-}
-
 export { firebaseApp };
-
