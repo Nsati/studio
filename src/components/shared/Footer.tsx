@@ -1,3 +1,5 @@
+'use client';
+
 import { Facebook, Twitter, Instagram, Mail, Phone, Hotel } from 'lucide-react';
 import Link from 'next/link';
 

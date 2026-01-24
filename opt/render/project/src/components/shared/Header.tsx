@@ -3,9 +3,8 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, UserCircle, LogIn } from 'lucide-react';
+import { Menu, UserCircle, LogIn, Hotel } from 'lucide-react';
 import Link from 'next/link';
-import { Logo } from './Logo';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { signOut } from 'firebase/auth';
@@ -44,7 +43,12 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
       <div className="container flex h-16 max-w-7xl items-center justify-between">
-        <Logo />
+        <Link href="/" className="flex items-center gap-2">
+          <Hotel className="h-7 w-7 text-primary" />
+          <span className="font-headline text-2xl font-bold text-foreground">
+            Uttarakhand Getaways
+          </span>
+        </Link>
 
         <nav className="hidden items-center gap-6 md:flex">
           {navLinks.map((link) => (
@@ -107,7 +111,12 @@ export function Header() {
             </SheetTrigger>
             <SheetContent side="left" className="w-[300px]">
               <div className="p-4">
-                <Logo />
+                <Link href="/" className="flex items-center gap-2">
+                    <Hotel className="h-7 w-7 text-primary" />
+                    <span className="font-headline text-2xl font-bold text-foreground">
+                        Uttarakhand Getaways
+                    </span>
+                </Link>
                 <div className="mt-10 flex flex-col gap-y-4">
                   {navLinks.map((link) => (
                     <Link
