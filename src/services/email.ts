@@ -4,7 +4,14 @@
 import { Resend } from 'resend';
 import { format } from 'date-fns';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+let resendInstance: Resend | null = null;
+
+function getResend() {
+    if (!resendInstance) {
+        resendInstance = new Resend(process.env.RESEND_API_KEY || 're_placeholder');
+    }
+    return resendInstance;
+}
 
 interface EmailParams {
     to: string;
@@ -26,6 +33,7 @@ export async function sendBookingConfirmationEmail(params: EmailParams) {
     const fromAddress = 'Uttarakhand Getaways <onboarding@resend.dev>';
 
     try {
+        const resend = getResend();
         const { data, error } = await resend.emails.send({
             from: fromAddress,
             to: [to],
