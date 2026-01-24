@@ -1,7 +1,7 @@
 
 'use client';
 import { useMemo, useState } from 'react';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirestore, useCollection } from '@/firebase';
 import { collectionGroup, doc, runTransaction, increment, updateDoc } from 'firebase/firestore';
 import type { Booking } from '@/lib/types';
 import { format } from 'date-fns';
@@ -139,7 +139,7 @@ function CancelBookingAction({ booking }: { booking: Booking }) {
 export default function BookingsPage() {
     const firestore = useFirestore();
 
-    const bookingsQuery = useMemoFirebase(() => {
+    const bookingsQuery = useMemo(() => {
         if (!firestore) return null;
         // This is a collection group query. It fetches documents from all 'bookings'
         // subcollections across the entire database.

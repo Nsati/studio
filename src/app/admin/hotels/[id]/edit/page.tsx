@@ -1,7 +1,8 @@
 
 'use client';
-import { useMemoFirebase, useFirestore, useDoc, useCollection } from '@/firebase';
+import { useMemo } from 'react';
 import { useParams, notFound } from 'next/navigation';
+import { useFirestore, useDoc, useCollection } from '@/firebase';
 import { doc, collection } from 'firebase/firestore';
 import type { Hotel, Room } from '@/lib/types';
 import { EditHotelForm } from '@/components/admin/EditHotelForm';
@@ -43,12 +44,12 @@ export default function EditHotelPage() {
     const hotelId = params.id as string;
     const firestore = useFirestore();
 
-    const hotelRef = useMemoFirebase(() => {
+    const hotelRef = useMemo(() => {
         if (!firestore || !hotelId) return null;
         return doc(firestore, 'hotels', hotelId);
     }, [firestore, hotelId]);
 
-    const roomsQuery = useMemoFirebase(() => {
+    const roomsQuery = useMemo(() => {
         if (!firestore || !hotelId) return null;
         return collection(firestore, 'hotels', hotelId, 'rooms');
     }, [firestore, hotelId]);

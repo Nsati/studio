@@ -4,7 +4,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { collection } from 'firebase/firestore';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirestore, useCollection } from '@/firebase';
 
 import type { City } from '@/lib/types';
 import { dummyCities } from '@/lib/dummy-data';
@@ -24,7 +24,7 @@ import { Search } from 'lucide-react';
 
 export function SearchFilters() {
   const firestore = useFirestore();
-  const citiesQuery = useMemoFirebase(() => {
+  const citiesQuery = useMemo(() => {
     if (!firestore) return null;
     return collection(firestore, 'cities');
   }, [firestore]);

@@ -8,14 +8,14 @@ import { dummyCities } from '@/lib/dummy-data';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useMemo } from 'react';
 import { collection } from 'firebase/firestore';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirestore, useCollection } from '@/firebase';
 import type { City } from '@/lib/types';
 import { Skeleton } from '../ui/skeleton';
 
 export function CitiesList() {
     const firestore = useFirestore();
 
-    const citiesQuery = useMemoFirebase(() => {
+    const citiesQuery = useMemo(() => {
         if (!firestore) return null;
         return collection(firestore, 'cities');
     }, [firestore]);

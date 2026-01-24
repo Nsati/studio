@@ -1,6 +1,7 @@
 
 'use client';
-import { useMemoFirebase, useFirestore, useCollection } from '@/firebase';
+import { useMemo } from 'react';
+import { useFirestore, useCollection } from '@/firebase';
 import Link from 'next/link';
 import Image from 'next/image';
 import { collection } from 'firebase/firestore';
@@ -69,7 +70,7 @@ function TourPackageAdminCard({ tourPackage }: { tourPackage: TourPackage }) {
 export default function TourPackagesAdminPage() {
     const firestore = useFirestore();
 
-    const packagesQuery = useMemoFirebase(() => {
+    const packagesQuery = useMemo(() => {
         if (!firestore) return null;
         return collection(firestore, 'tourPackages');
     }, [firestore]);

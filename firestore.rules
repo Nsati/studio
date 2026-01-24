@@ -128,19 +128,6 @@ service cloud.firestore {
     //-------------------------------------------------------------------------
 
     /**
-     * @description Manages city listings. City data is public for everyone to read.
-     *              Only administrators can create, update, or delete city entries.
-     * @path        /cities/{cityId}
-     */
-    match /cities/{cityId} {
-      allow get: if true;
-      allow list: if true;
-      allow create: if isAdmin();
-      allow update: if isAdmin() && isExistingDoc();
-      allow delete: if isAdmin() && isExistingDoc();
-    }
-
-    /**
      * @description Manages hotel listings. Hotel data is public for everyone to read.
      *              However, only administrators can create, update, or delete hotel entries.
      * @path        /hotels/{hotelId}
@@ -164,19 +151,6 @@ service cloud.firestore {
         allow update: if isAdmin() && isExistingDoc() && request.resource.data.hotelId == resource.data.hotelId;
         allow delete: if isAdmin() && isExistingDoc();
       }
-    }
-
-    /**
-     * @description Manages tour package listings. Tour package data is public for everyone to read.
-     *              Only administrators can create, update, or delete tour package entries.
-     * @path        /tourPackages/{packageId}
-     */
-    match /tourPackages/{packageId} {
-      allow get: if true;
-      allow list: if true;
-      allow create: if isAdmin();
-      allow update: if isAdmin() && isExistingDoc();
-      allow delete: if isAdmin() && isExistingDoc();
     }
 
     //-------------------------------------------------------------------------

@@ -1,31 +1,6 @@
 
 {
   "entities": {
-    "City": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "City",
-      "type": "object",
-      "description": "Represents a city in Uttarakhand available for hotel bookings.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the city, usually a slug."
-        },
-        "name": {
-          "type": "string",
-          "description": "The name of the city."
-        },
-        "image": {
-          "type": "string",
-          "description": "An identifier for the placeholder image for the city."
-        }
-      },
-      "required": [
-        "id",
-        "name",
-        "image"
-      ]
-    },
     "User": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "User",
@@ -195,54 +170,6 @@
         "status",
         "expiresAt"
       ]
-    },
-    "TourPackage": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "TourPackage",
-      "type": "object",
-      "description": "Represents a tour package available in Uttarakhand.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the tour package, usually a slug."
-        },
-        "title": {
-          "type": "string",
-          "description": "The title of the tour package."
-        },
-        "duration": {
-          "type": "string",
-          "description": "The duration of the tour (e.g., '6 Nights / 7 Days')."
-        },
-        "destinations": {
-          "type": "array",
-          "description": "An array of destination names covered in the tour.",
-          "items": {
-            "type": "string"
-          }
-        },
-        "price": {
-          "type": "number",
-          "description": "The starting price for the tour package."
-        },
-        "image": {
-          "type": "string",
-          "description": "An identifier for the placeholder image for the tour package."
-        },
-        "description": {
-          "type": "string",
-          "description": "A short description of the tour package."
-        }
-      },
-      "required": [
-        "id",
-        "title",
-        "duration",
-        "destinations",
-        "price",
-        "image",
-        "description"
-      ]
     }
   },
   "auth": {
@@ -265,22 +192,6 @@
             {
               "name": "userId",
               "description": "The unique identifier of the user."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/cities/{cityId}",
-        "definition": {
-          "entityName": "City",
-          "schema": {
-            "$ref": "#/backend/entities/City"
-          },
-          "description": "Stores the list of cities available for booking.",
-          "params": [
-            {
-              "name": "cityId",
-              "description": "The unique identifier of the city."
             }
           ]
         }
@@ -353,22 +264,6 @@
             {
               "name": "userId",
               "description": "The unique identifier of the user (admin)."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/tourPackages/{packageId}",
-        "definition": {
-          "entityName": "TourPackage",
-          "schema": {
-            "$ref": "#/backend/entities/TourPackage"
-          },
-          "description": "Stores tour package details.",
-          "params": [
-            {
-              "name": "packageId",
-              "description": "The unique identifier of the tour package."
             }
           ]
         }

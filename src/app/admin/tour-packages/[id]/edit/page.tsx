@@ -1,6 +1,7 @@
 
 'use client';
-import { useMemoFirebase, useFirestore, useDoc } from '@/firebase';
+import { useMemo } from 'react';
+import { useFirestore, useDoc } from '@/firebase';
 import { useParams, notFound } from 'next/navigation';
 import { doc } from 'firebase/firestore';
 import type { TourPackage } from '@/lib/types';
@@ -35,7 +36,7 @@ export default function EditTourPackagePage() {
     const packageId = params.id as string;
     const firestore = useFirestore();
 
-    const packageRef = useMemoFirebase(() => {
+    const packageRef = useMemo(() => {
         if (!firestore || !packageId) return null;
         return doc(firestore, 'tourPackages', packageId);
     }, [firestore, packageId]);

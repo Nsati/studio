@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useMemo, useState, useEffect } from 'react';
-import { useFirestore, useUser, useCollection, useDoc, useMemoFirebase } from '@/firebase';
+import { useFirestore, useUser, useCollection, useDoc } from '@/firebase';
 import type { Booking, Hotel } from '@/lib/types';
 import {
   Card,
@@ -75,7 +75,7 @@ function BookingItem({ booking }: { booking: Booking }) {
     const { toast } = useToast();
     const [isCancelling, setIsCancelling] = useState(false);
 
-    const hotelRef = useMemoFirebase(() => {
+    const hotelRef = useMemo(() => {
         if (!firestore) return null;
         return doc(firestore, 'hotels', booking.hotelId);
     }, [firestore, booking.hotelId]);
@@ -242,7 +242,7 @@ export default function MyBookingsPage() {
     }
   }, [user, isUserLoading, router]);
   
-  const bookingsQuery = useMemoFirebase(() => {
+  const bookingsQuery = useMemo(() => {
     if (!firestore || !user) return null;
     return collection(firestore, 'users', user.uid, 'bookings');
   }, [firestore, user]);
