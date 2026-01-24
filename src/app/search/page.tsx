@@ -1,3 +1,4 @@
+
 import { Suspense } from 'react';
 import Link from 'next/link';
 import { searchHotels } from './actions';
@@ -79,12 +80,14 @@ async function Results({
   );
 }
 
+// Define the page props to satisfy Next.js page constraints and prevent build errors.
+type SearchPageProps = {
+  searchParams?: {
+    [key: string]: string | string[] | undefined;
+  };
+};
 
-export default function SearchPage({
-  searchParams,
-}: {
-  searchParams: { [key: string]: string | string[] | undefined };
-}) {
+export default function SearchPage({ searchParams = {} }: SearchPageProps) {
   return (
     <div className="container mx-auto max-w-7xl py-8 px-4 md:px-6">
       <div className="flex flex-col gap-8 lg:flex-row">
@@ -92,7 +95,8 @@ export default function SearchPage({
         <SearchFilters />
         
         {/* Results is a Server Component, wrapped in Suspense for streaming. */}
-        <Suspense fallback={<ResultsSkeleton />}>
+        {/* The key is crucial to re-trigger Suspense when search params change. */}
+        <Suspense key={JSON.stringify(searchParams)} fallback={<ResultsSkeleton />}>
           <Results searchParams={searchParams} />
         </Suspense>
       </div>
