@@ -80,12 +80,15 @@ async function Results({
   );
 }
 
-// Using inline props for the page component to avoid type conflicts with Next.js internals.
-export default function SearchPage({
-  searchParams,
-}: {
-  searchParams?: { [key: string]: string | string[] | undefined };
-}) {
+// Define the prop types for the page component explicitly.
+// This is the recommended, robust way to handle page props in Next.js 14.
+type SearchPageProps = {
+  searchParams?: {
+    [key: string]: string | string[] | undefined;
+  };
+};
+
+export default function SearchPage({ searchParams }: SearchPageProps) {
   const currentSearchParams = searchParams || {};
 
   return (
