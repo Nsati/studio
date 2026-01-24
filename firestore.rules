@@ -1,0 +1,111 @@
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper function to check for admin role
+    function isAdmin() {
+      return request.auth != null &&
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    match /users/{userId} {
+      // On creation (signup), a user document can be created with 'active' status.
+      // This happens via a server action after OTP verification.
+      allow create: if request.auth.uid == userId && 
+                      request.resource.data.uid == userId &&
+                      request.resource.data.role == 'user' &&
+                      request.resource.data.status == 'active' &&
+                      'mobile' in request.resource.data;
+
+      // A user can read their own profile. An admin can read any profile.
+      allow get, list: if isOwner(userId) || isAdmin();
+      
+      // An admin can update any field in any profile.
+      // A regular user can update their own profile, as long as they don't change their role or status.
+      allow update: if isAdmin() || (isOwner(userId) && request.resource.data.role == resource.data.role && request.resource.data.status == resource.data.status);
+
+      // Only an admin can delete a user profile.
+      allow delete: if isAdmin();
+    }
+    
+    // Cities are publicly readable. Only admins can modify them.
+    match /cities/{cityId} {
+      allow get, list: if true;
+      allow write: if isAdmin();
+    }
+    
+    // Hotels are publicly readable. Only admins can modify them.
+    match /hotels/{hotelId} {
+      allow get, list: if true;
+      allow write: if isAdmin();
+    }
+
+    match /hotels/{hotelId}/rooms/{roomId} {
+        allow get, list: if true;
+        allow create, delete: if isAdmin(); // Only admins can create/delete rooms
+        
+        // Definitive fix for update permissions
+        allow update: if 
+            // Case 1: An admin can update any field.
+            isAdmin() || 
+            // Case 2: A non-admin user can ONLY modify the available room count by 1.
+            (
+              request.auth != null && 
+              // The update must ONLY affect the 'availableRooms' field.
+              request.resource.data.diff(resource.data).affectedKeys().hasOnly(['availableRooms']) &&
+              // The change must be an increment or decrement by exactly 1.
+              (request.resource.data.availableRooms == resource.data.availableRooms + 1 ||
+               request.resource.data.availableRooms == resource.data.availableRooms - 1)
+            );
+    }
+
+    // Reviews are publicly readable. Authenticated users can create them for a hotel.
+    match /hotels/{hotelId}/reviews/{reviewId} {
+      allow get, list: if true;
+      // Allow create if user is authenticated and the review belongs to them.
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      // Only the user who wrote it or an admin can delete/update.
+      allow update, delete: if (request.auth != null && resource.data.userId == request.auth.uid) || isAdmin();
+    }
+
+    // Users can create, read, update, and delete their own bookings.
+    // Admins can read/delete any booking for management purposes.
+    match /users/{userId}/bookings/{bookingId} {
+      // User can create their own booking, as long as they are authenticated and writing to their own user path.
+      allow create: if isOwner(userId);
+      
+      // User can read (get/list) their own bookings. Admins can read any.
+      allow get, list: if isOwner(userId) || isAdmin();
+      
+      // User can update their own booking (e.g. to CANCELLED). Admins can update any.
+      allow update: if (isOwner(userId) && resource.data.userId == request.auth.uid) || isAdmin();
+
+      // User can delete their own booking. Admin can delete any booking.
+      allow delete: if (isOwner(userId) && resource.data.userId == request.auth.uid) || isAdmin();
+    }
+    
+    // Collection group query for admin booking list.
+    // Use `list` to cover the collection group query.
+    match /{path=**}/bookings/{bookingId} {
+        allow list: if isAdmin();
+    }
+
+    // Tour Packages are publicly readable. Only admins can modify them.
+    match /tourPackages/{packageId} {
+      allow get, list: if true;
+      allow write: if isAdmin();
+    }
+
+    // Promotions are publicly readable so client can check them, but only writable by admins.
+    match /promotions/{promotionId} {
+      allow get, list: if true;
+      allow write: if isAdmin();
+    }
+  }
+}
