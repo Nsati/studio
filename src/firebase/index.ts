@@ -1,3 +1,4 @@
+
 // This file has been simplified to prevent circular dependency build errors.
 // Components and hooks should import directly from their source files
 // (e.g., '@/firebase/auth/use-user') instead of from this central file.
