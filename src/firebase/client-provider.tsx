@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import type { FirebaseApp } from 'firebase/app';
 import type { Auth } from 'firebase/auth';
 import type { Firestore } from 'firebase/firestore';
@@ -36,9 +36,8 @@ export function FirebaseClientProvider({
     }
   }, []);
 
-  // Always render the Provider.
-  // When services are null (during SSR), the context value will be `undefined`.
-  // The hooks are designed to handle this undefined state gracefully.
+  // During SSR and the initial client render, `services` will be null.
+  // The `FirebaseProvider` will receive `undefined` for its props.
   return (
     <FirebaseProvider 
       firebaseApp={services?.app} 

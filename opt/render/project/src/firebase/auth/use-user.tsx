@@ -12,22 +12,27 @@ export function useUser() {
   const auth = useAuth();
   const firestore = useFirestore();
   const [user, setUser] = useState<User | null>(null);
+  // START with isLoading: true. This is the key to preventing hydration errors.
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // If the auth service isn't ready, don't do anything. The `isLoading`
+    // state will remain `true`, which is correct for SSR and initial client render.
     if (!auth) {
-      // Auth service is not yet available. This is expected on initial render.
-      // We remain in a loading state until the auth object is provided.
       return;
     }
 
+    // Auth service IS ready. Set up the listener.
     const unsubscribe = auth.onAuthStateChanged(user => {
       setUser(user);
+      // Once we get the first response from onAuthStateChanged, we know the
+      // auth state is determined. Now we can set loading to false.
       setIsLoading(false);
     });
 
+    // Cleanup subscription on unmount
     return () => unsubscribe();
-  }, [auth]);
+  }, [auth]); // Rerun this effect if the auth object itself changes
 
   const userProfileRef = useMemo(() => {
     if (!firestore || !user) return null;
@@ -39,6 +44,8 @@ export function useUser() {
   return {
     user,
     userProfile,
+    // The overall loading state is true if either the auth state is loading,
+    // or if we have a user but are still loading their profile.
     isLoading: isLoading || (user && isLoadingProfile),
   };
 }
