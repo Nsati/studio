@@ -10,6 +10,7 @@ import { useFirestore, useCollection } from '@/firebase';
 import type { City } from '@/lib/types';
 import { Skeleton } from '../ui/skeleton';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { dummyCities } from '@/lib/dummy-data';
 
 export function CitiesList() {
     const firestore = useFirestore();
@@ -19,12 +20,17 @@ export function CitiesList() {
         return collection(firestore, 'cities');
     }, [firestore]);
 
-    const { data: cities, isLoading } = useCollection<City>(citiesQuery);
+    const { data: citiesFromDB, isLoading } = useCollection<City>(citiesQuery);
 
-    const sortedCities = useMemo(() => {
-        if (!cities) return [];
-        return [...cities].sort((a,b) => a.name.localeCompare(b.name));
-      }, [cities]);
+    const cities = useMemo(() => {
+        if (citiesFromDB && citiesFromDB.length > 0) {
+            return citiesFromDB.sort((a,b) => a.name.localeCompare(b.name));
+        }
+        if (!isLoading && (!citiesFromDB || citiesFromDB.length === 0)) {
+            return dummyCities;
+        }
+        return [];
+      }, [citiesFromDB, isLoading]);
 
     if (isLoading) {
       return (
@@ -38,7 +44,7 @@ export function CitiesList() {
 
     return (
         <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {sortedCities?.map((city) => {
+          {cities?.map((city) => {
             const cityImage = PlaceHolderImages.find(
               (img) => img.id === city.image
             );

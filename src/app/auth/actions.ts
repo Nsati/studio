@@ -28,6 +28,11 @@ export async function signupUser(userData: {
     const db = adminDb;
 
     try {
+        // Check if this is the first user to make them an admin
+        const usersCollection = db.collection('users');
+        const snapshot = await usersCollection.limit(1).get();
+        const isFirstUser = snapshot.empty;
+
         // 1. Create user in Firebase Auth using Admin SDK
         const userRecord = await auth.createUser({
             email: email,
@@ -43,7 +48,7 @@ export async function signupUser(userData: {
             displayName: name,
             email: email,
             mobile: mobile,
-            role: 'user',
+            role: isFirstUser ? 'admin' : 'user', // Set role based on whether they are the first user
             status: 'active',
         };
         await userRef.set(newUserProfile);

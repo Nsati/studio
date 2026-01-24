@@ -7,6 +7,7 @@ import type { Hotel } from '@/lib/types';
 import { HotelCard } from '@/components/hotel/HotelCard';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { dummyHotels } from '@/lib/dummy-data';
 
 export function FeaturedHotels() {
   const firestore = useFirestore();
@@ -16,7 +17,18 @@ export function FeaturedHotels() {
     return query(collection(firestore, 'hotels'), limit(4));
   }, [firestore]);
 
-  const { data: featuredHotels, isLoading } = useCollection<Hotel>(hotelsQuery);
+  const { data: liveHotels, isLoading } = useCollection<Hotel>(hotelsQuery);
+
+  const featuredHotels = useMemo(() => {
+    if (liveHotels && liveHotels.length > 0) {
+      return liveHotels;
+    }
+    // If firestore is empty, fall back to first 4 dummy hotels
+    if (!isLoading && (!liveHotels || liveHotels.length === 0)) {
+        return dummyHotels.slice(0, 4);
+    }
+    return [];
+  }, [liveHotels, isLoading]);
 
   if (isLoading) {
     return (
