@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Suspense, useState, useEffect } from 'react';
@@ -12,7 +11,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from '@/components/ui/button';
 import { SearchX } from 'lucide-react';
-import { dummyHotels } from '@/lib/dummy-data';
 
 
 function ResultsSkeleton() {
@@ -86,22 +84,12 @@ function SearchPageComponent() {
   const checkOut = searchParams.get('checkOut');
   const guests = searchParams.get('guests');
 
-  // Check if any search filter is actively applied
-  const hasSearchParams = !!(city || checkIn || checkOut || guests);
-
   useEffect(() => {
     const fetchData = async () => {
         setIsLoading(true);
         try {
             const result = await searchHotels({ city, checkIn, checkOut, guests });
-            
-            // If no results from DB AND no filters are applied, use dummy data as a fallback.
-            if (result.length === 0 && !hasSearchParams) {
-              setHotels(dummyHotels);
-            } else {
-              setHotels(result);
-            }
-
+            setHotels(result);
         } catch (error) {
             console.error("Failed to search hotels:", error);
             setHotels([]);
@@ -110,7 +98,7 @@ function SearchPageComponent() {
         }
     };
     fetchData();
-  }, [city, checkIn, checkOut, guests, hasSearchParams]);
+  }, [city, checkIn, checkOut, guests]);
 
   return (
     <div className="container mx-auto max-w-7xl py-8 px-4 md:px-6">
