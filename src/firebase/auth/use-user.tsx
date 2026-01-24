@@ -1,10 +1,12 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { useAuth, useFirestore, useDoc } from '@/firebase';
-import type { User } from 'firebase/auth';
-import type { UserProfile } from '@/lib/types';
 import { doc } from 'firebase/firestore';
+import type { User } from 'firebase/auth';
+
+import type { UserProfile } from '@/lib/types';
+import { useAuth, useFirestore } from '../provider';
+import { useDoc } from '../firestore/use-doc';
 
 export function useUser() {
   const auth = useAuth();
