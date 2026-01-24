@@ -10,16 +10,15 @@
  *    privileged access for managing public content across the application.
  *
  * Data Structure:
- * The data is organized into top-level collections for public content (`hotels`)
+ * The data is organized into top-level collections for public content (`hotels`, `cities`)
  * and user data (`users`). User-specific subcollections like `bookings` are nested
  * under the corresponding user document (`/users/{userId}/bookings/{bookingId}`),
  * creating a clear, ownership-based hierarchy.
  *
  * Key Security Decisions:
- * - Admin-Only Management: The `Hotel` and `Room` entities lack an 'ownerId'.
- *   Therefore, all write operations (create, update, delete) on the `/hotels`
- *   collection and its subcollections are restricted to users designated as
- *   administrators via the `/roles_admin` collection.
+ * - Admin-Only Management: The `Hotel`, `Room`, and `City` entities lack an 'ownerId'.
+ *   Therefore, all write operations (create, update, delete) on these public collections
+ *   are restricted to users designated as administrators via the `/roles_admin` collection.
  * - No User Listing: To protect user privacy, listing documents in the top-level
  *   `/users` collection is explicitly disallowed.
  * - Path-Based Ownership: All data under `/users/{userId}` is secured by rules
@@ -30,7 +29,6 @@
  *   their immutability on update, ensuring relational integrity without costly `get` calls.
  * - Safe Defaults: Destructive operations (`update`, `delete`) always verify that
  *   a document exists before allowing the operation to proceed. User account
-
  *   deletion via the API is disabled by default.
  */
 rules_version = '2';
@@ -103,9 +101,6 @@ service cloud.firestore {
      * @description Manages user profile documents. A user can create and update their
      *              own profile, but cannot read others' profiles or delete their own.
      * @path        /users/{userId}
-     * @allow       (create) A new user signs up: auth.uid = 'user_abc', path = '/users/user_abc'.
-     * @deny        (get) A user tries to read another's profile: auth.uid = 'user_abc', path = '/users/user_xyz'.
-     * @principle   Restricts access to a user's own data tree and prevents user enumeration.
      */
     match /users/{userId} {
       allow get: if isOwner(userId);
@@ -119,9 +114,6 @@ service cloud.firestore {
      * @description Secures user bookings. A user has full control over their own bookings
      *              but cannot access bookings belonging to other users.
      * @path        /users/{userId}/bookings/{bookingId}
-     * @allow       (create) A user creates a booking for themselves: auth.uid = 'user_abc', path = '/users/user_abc/bookings/...'.
-     * @deny        (list) A user tries to list another user's bookings: auth.uid = 'user_abc', path = '/users/user_xyz/bookings'.
-     * @principle   Enforces document ownership for all operations within a user-specific subcollection.
      */
     match /users/{userId}/bookings/{bookingId} {
       allow get: if isOwner(userId);
@@ -139,9 +131,6 @@ service cloud.firestore {
      * @description Manages city listings. City data is public for everyone to read.
      *              Only administrators can create, update, or delete city entries.
      * @path        /cities/{cityId}
-     * @allow       (list) Any anonymous user lists the cities for the search form.
-     * @deny        (create) A regular authenticated user tries to add a new city.
-     * @principle   Implements a "Public Read with Admin-Only Writes" pattern for site content.
      */
     match /cities/{cityId} {
       allow get: if true;
@@ -155,9 +144,6 @@ service cloud.firestore {
      * @description Manages hotel listings. Hotel data is public for everyone to read.
      *              However, only administrators can create, update, or delete hotel entries.
      * @path        /hotels/{hotelId}
-     * @allow       (get) Any anonymous user reads a hotel's details.
-     * @deny        (create) A regular authenticated user tries to add a new hotel.
-     * @principle   Implements a "Public Read with Admin-Only Writes" pattern for site content.
      */
     match /hotels/{hotelId} {
       allow get: if true;
@@ -170,9 +156,6 @@ service cloud.firestore {
        * @description Manages rooms within a hotel. Room data is public.
        *              Only administrators can manage room entries.
        * @path        /hotels/{hotelId}/rooms/{roomId}
-       * @allow       (list) Any user lists the rooms for a given hotel.
-       * @deny        (update) A non-admin user tries to change a room's price.
-       * @principle   Extends the parent collection's "Public Read, Admin Write" model to a subcollection.
        */
       match /rooms/{roomId} {
         allow get: if true;
@@ -191,11 +174,13 @@ service cloud.firestore {
      * @description Manages admin role grants. The existence of a document in this collection
      *              makes a user an admin. Only existing admins can add or remove other admins.
      * @path        /roles_admin/{userId}
-     * @allow       (get) if isAdmin();
-     * @allow list: if isAdmin();
-     * @allow create: if isAdmin();
-     * @allow update: if isAdmin() && isExistingDoc();
-     * @allow delete: if isAdmin() && isExistingDoc();
+     */
+    match /roles_admin/{userId} {
+      allow get: if isAdmin();
+      allow list: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin() && isExistingDoc();
+      allow delete: if isAdmin() && isExistingDoc();
     }
   }
 }
