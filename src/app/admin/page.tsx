@@ -1,4 +1,3 @@
-
 'use client';
 import { useMemo } from 'react';
 import dynamic from 'next/dynamic';
@@ -10,7 +9,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Hotel, Users2, BookOpen, IndianRupee } from 'lucide-react';
-import { useFirestore, useCollection } from '@/firebase';
+import { useFirestore, useCollection, useUser } from '@/firebase';
 import { collection, collectionGroup } from 'firebase/firestore';
 import type { Booking, Hotel as HotelType, UserProfile } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -23,6 +22,28 @@ const BookingChart = dynamic(() => import('@/components/admin/BookingChart'), {
 const RecentBookings = dynamic(() => import('@/components/admin/RecentBookings'), {
   loading: () => <Card><CardHeader><Skeleton className="h-6 w-3/4" /></CardHeader><CardContent className="space-y-4"><Skeleton className="h-10 w-full" /><Skeleton className="h-10 w-full" /></CardContent></Card>,
 });
+
+
+// New component for debugging
+function DebugInfoCard() {
+    const { user, userProfile, isLoading, error } = useUser();
+    return (
+        <Card className="bg-destructive/10 border-destructive/20">
+            <CardHeader>
+                <CardTitle>Admin Debug Info</CardTitle>
+                <CardDescription>This card shows the current user state for debugging purposes. Please remove it once the issue is resolved.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2 font-mono text-xs">
+                <p><strong>isLoading:</strong> {JSON.stringify(isLoading)}</p>
+                <p><strong>Error:</strong> {JSON.stringify(error?.message || null)}</p>
+                <p><strong>User UID:</strong> {user?.uid || 'null'}</p>
+                <p><strong>User Email:</strong> {user?.email || 'null'}</p>
+                <p><strong>User Profile from DB:</strong></p>
+                <pre className="p-2 bg-background rounded text-wrap">{JSON.stringify(userProfile, null, 2) || 'null'}</pre>
+            </CardContent>
+        </Card>
+    )
+}
 
 function StatCard({ title, value, icon: Icon, description, isLoading }: any) {
     return (
@@ -101,6 +122,8 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-6">
       <h1 className="font-headline text-3xl font-bold">Admin Dashboard</h1>
+
+      <DebugInfoCard />
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard title="Total Revenue" value={totalRevenue.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })} icon={IndianRupee} description="All-time revenue" isLoading={isLoadingBookings} />
