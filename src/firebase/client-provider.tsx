@@ -4,9 +4,15 @@ import { useState, useEffect } from 'react';
 import type { Auth } from 'firebase/auth';
 import type { Firestore } from 'firebase/firestore';
 
+// We import the functions directly
+import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
+
+// We import the initialized app
 import { firebaseApp } from './init';
 import { FirebaseProvider } from './provider';
 
+// This is the provider component that will wrap the app
 export function FirebaseClientProvider({
   children,
 }: {
@@ -15,28 +21,27 @@ export function FirebaseClientProvider({
   const [services, setServices] = useState<{ auth: Auth; firestore: Firestore } | null>(null);
 
   useEffect(() => {
-    // This hook only runs on the client, after the initial server render.
-    const initialize = async () => {
-        // Import services here for their side-effects
-        const { getAuth } = await import('firebase/auth');
-        const { getFirestore } = await import('firebase/firestore');
+    // This hook only runs ONCE on the client, after the initial render.
+    // This is the safest place to initialize client-side libraries.
+    
+    // We get the instances of the services here.
+    const auth = getAuth(firebaseApp);
+    const firestore = getFirestore(firebaseApp);
+    
+    // We set them in the state.
+    setServices({ auth, firestore });
 
-        setServices({
-            auth: getAuth(firebaseApp),
-            firestore: getFirestore(firebaseApp),
-        });
-    };
-
-    initialize();
-  }, []);
+  }, []); // The empty dependency array ensures this runs only once.
 
   if (!services) {
-    // While services are initializing, you can show a loader or nothing.
-    // Returning null prevents children from rendering and trying to access Firebase.
-    // For a better UX, you could return a full-page loader skeleton.
+    // On the server, and on the first client render, 'services' will be null.
+    // So we render nothing (or a loader). This prevents any child components
+    // from trying to use Firebase services before they are ready.
     return null;
   }
 
+  // Once the useEffect has run, 'services' is populated, and we can render
+  // the actual provider with the services.
   return (
     <FirebaseProvider firebaseApp={firebaseApp} firestore={services.firestore} auth={services.auth}>
       {children}
