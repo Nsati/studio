@@ -166,6 +166,19 @@ service cloud.firestore {
       }
     }
 
+    /**
+     * @description Manages tour package listings. Tour package data is public for everyone to read.
+     *              Only administrators can create, update, or delete tour package entries.
+     * @path        /tourPackages/{packageId}
+     */
+    match /tourPackages/{packageId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isAdmin();
+      allow update: if isAdmin() && isExistingDoc();
+      allow delete: if isAdmin() && isExistingDoc();
+    }
+
     //-------------------------------------------------------------------------
     // Administrative Roles
     //-------------------------------------------------------------------------

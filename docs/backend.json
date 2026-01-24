@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "City": {
@@ -194,6 +195,54 @@
         "status",
         "expiresAt"
       ]
+    },
+    "TourPackage": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "TourPackage",
+      "type": "object",
+      "description": "Represents a tour package available in Uttarakhand.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the tour package, usually a slug."
+        },
+        "title": {
+          "type": "string",
+          "description": "The title of the tour package."
+        },
+        "duration": {
+          "type": "string",
+          "description": "The duration of the tour (e.g., '6 Nights / 7 Days')."
+        },
+        "destinations": {
+          "type": "array",
+          "description": "An array of destination names covered in the tour.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "price": {
+          "type": "number",
+          "description": "The starting price for the tour package."
+        },
+        "image": {
+          "type": "string",
+          "description": "An identifier for the placeholder image for the tour package."
+        },
+        "description": {
+          "type": "string",
+          "description": "A short description of the tour package."
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "duration",
+        "destinations",
+        "price",
+        "image",
+        "description"
+      ]
     }
   },
   "auth": {
@@ -304,6 +353,22 @@
             {
               "name": "userId",
               "description": "The unique identifier of the user (admin)."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/tourPackages/{packageId}",
+        "definition": {
+          "entityName": "TourPackage",
+          "schema": {
+            "$ref": "#/backend/entities/TourPackage"
+          },
+          "description": "Stores tour package details.",
+          "params": [
+            {
+              "name": "packageId",
+              "description": "The unique identifier of the tour package."
             }
           ]
         }
