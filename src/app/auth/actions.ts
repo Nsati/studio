@@ -1,4 +1,3 @@
-
 'use server';
 
 import { adminAuth, adminDb } from '@/firebase/admin';
@@ -18,9 +17,9 @@ export async function signupUser(userData: {
     const { name, email, mobile, pass } = userData;
 
     if (!adminAuth || !adminDb) {
-        const errorMessage = 'Firebase Admin SDK is not initialized. User creation cannot proceed.';
-        console.error(errorMessage);
-        return { success: false, error: 'Server configuration error. Please contact support.' };
+        const errorMessage = 'Server configuration error: Firebase Admin SDK is not initialized. Please ensure the `GOOGLE_APPLICATION_CREDENTIALS_JSON` environment variable is correctly set on the server.';
+        console.error('Signup failed:', errorMessage);
+        return { success: false, error: errorMessage };
     }
 
     // Use local constants for type safety
@@ -55,8 +54,11 @@ export async function signupUser(userData: {
         let errorMessage = 'An unexpected error occurred during signup.';
         if (error.code === 'auth/email-already-exists') {
             errorMessage = 'This email is already registered. Please log in.';
+        } else if (error.message) {
+            // Use the more descriptive message from Firebase if available
+            errorMessage = error.message;
         } else if (error.code) {
-            errorMessage = error.code.replace('auth/', '').replace(/-/g, ' ');
+             errorMessage = error.code.replace('auth/', '').replace(/-/g, ' ');
         }
         return { success: false, error: errorMessage };
     }
