@@ -29,18 +29,12 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
         setServices({ firebaseApp: app, auth, firestore });
     } catch (error) {
         console.error("Firebase initialization failed:", error);
-        // In a real app, you might want to show a more user-friendly error UI
     }
   }, []); // Empty dependency array ensures this runs once on the client
 
   if (!services) {
-    // While services are being initialized (and during SSR), show a loader.
-    // This prevents child components from trying to use Firebase before it's ready.
-    return (
-        <div className="flex h-screen w-full items-center justify-center bg-background">
-            <p>Connecting to services...</p>
-        </div>
-    );
+    // Return null while loading. The parent dynamic import now handles the loading UI.
+    return null;
   }
 
   return (
