@@ -368,7 +368,7 @@ https://images.unsplash.com/photo-2..."
             <Card key={field.id} className="p-4">
                 <CardHeader className="flex flex-row items-center justify-between p-0 pb-4">
                      <h4 className="font-semibold">Room Type {index + 1}</h4>
-                     <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
+                     <Button type="button" variant="ghost" size="icon" onClick={() => removeRoom(index)}>
                         <Trash2 className="h-4 w-4 text-destructive" />
                      </Button>
                 </CardHeader>

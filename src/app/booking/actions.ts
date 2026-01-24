@@ -51,7 +51,7 @@ export async function createRazorpayOrder(
       success: true,
       order: {
         id: order.id,
-        amount: order.amount,
+        amount: typeof order.amount === 'string' ? parseInt(order.amount, 10) : order.amount,
         currency: order.currency,
       },
       keyId: keyId,
