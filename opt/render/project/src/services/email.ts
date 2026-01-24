@@ -3,7 +3,6 @@
 
 import { Resend } from 'resend';
 import { format } from 'date-fns';
-import type { Booking, Hotel } from '@/lib/types';
 
 // Initialize Resend with the API key from environment variables.
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;

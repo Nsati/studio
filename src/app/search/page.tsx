@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Suspense, useState, useEffect } from 'react';
@@ -85,10 +86,19 @@ function SearchPageComponent() {
   const guests = searchParams.get('guests');
 
   useEffect(() => {
-    setIsLoading(true);
-    searchHotels({ city, checkIn, checkOut, guests })
-      .then(setHotels)
-      .finally(() => setIsLoading(false));
+    const fetchData = async () => {
+        setIsLoading(true);
+        try {
+            const result = await searchHotels({ city, checkIn, checkOut, guests });
+            setHotels(result);
+        } catch (error) {
+            console.error("Failed to search hotels:", error);
+            setHotels([]);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    fetchData();
   }, [city, checkIn, checkOut, guests]);
 
   return (
