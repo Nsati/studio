@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect } from 'react';
@@ -18,7 +19,7 @@ import {
   Menu,
   Package,
 } from 'lucide-react';
-import { useUser } from '@/firebase/client/provider';
+import { useUser } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';

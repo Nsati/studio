@@ -1,6 +1,6 @@
 'use client';
 import { useMemo, useState } from 'react';
-import { useFirestore, useCollection } from '@/firebase/client/provider';
+import { useFirestore, useCollection } from '@/firebase';
 import { collectionGroup, doc, runTransaction, increment, updateDoc } from 'firebase/firestore';
 import type { Booking } from '@/lib/types';
 import { format } from 'date-fns';

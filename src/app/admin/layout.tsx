@@ -18,7 +18,7 @@ import {
   Menu,
   Package,
 } from 'lucide-react';
-import { useUser } from '@/firebase/client/provider';
+import { useUser } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -145,10 +145,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <SheetContent side="left" className="flex flex-col">
                   <nav className="grid gap-2 text-lg font-medium">
                     <div className="mb-4">
-                      <Link href="/admin" className="flex items-center gap-2 font-semibold">
-                          <Hotel className="h-6 w-6 text-primary" />
-                          <span className="font-headline text-xl font-bold">Admin Panel</span>
-                      </Link>
+                       <Link href="/admin" className="flex items-center gap-2 font-semibold">
+                            <Hotel className="h-6 w-6 text-primary" />
+                            <span className="font-headline text-xl font-bold">Admin Panel</span>
+                        </Link>
                     </div>
                     {navItems.map((item) => (
                       <Link

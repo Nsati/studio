@@ -9,7 +9,7 @@ import { signInAnonymously } from 'firebase/auth';
 
 
 import type { Hotel, Room, Booking, Promotion } from '@/lib/types';
-import { useFirestore, useAuth, useUser, useDoc, useCollection } from '@/firebase/client/provider';
+import { useFirestore, useAuth, useUser, useDoc, useCollection } from '@/firebase';
 import { doc, collection, getDoc, setDoc, runTransaction, increment } from 'firebase/firestore';
 
 import { useToast } from '@/hooks/use-toast';

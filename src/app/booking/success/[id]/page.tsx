@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams, useRouter, notFound } from 'next/navigation';
-import { useFirestore, useUser, useDoc } from '@/firebase/client/provider';
+import { useFirestore, useUser, useDoc } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { useEffect, useMemo, useState } from 'react';
 import type { Booking, Hotel } from '@/lib/types';

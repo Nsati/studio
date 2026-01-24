@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { signOut } from 'firebase/auth';
-import { useAuth, useUser } from '@/firebase/client/provider';
+import { useAuth, useUser } from '@/firebase';
 
 import {
   DropdownMenu,

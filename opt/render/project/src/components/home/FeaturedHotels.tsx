@@ -1,7 +1,7 @@
 
 'use client';
 import { useMemo } from 'react';
-import { useFirestore, useCollection } from '@/firebase/client/provider';
+import { useFirestore, useCollection } from '@/firebase';
 import { collection, query, limit } from 'firebase/firestore';
 import type { Hotel } from '@/lib/types';
 import { HotelCard } from '@/components/hotel/HotelCard';

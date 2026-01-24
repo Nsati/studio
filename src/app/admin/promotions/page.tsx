@@ -1,6 +1,6 @@
 'use client';
 import { useState, useMemo } from 'react';
-import { useFirestore, useCollection } from '@/firebase/client/provider';
+import { useFirestore, useCollection } from '@/firebase';
 import { collection, doc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import type { Promotion } from '@/lib/types';
 import { useForm } from 'react-hook-form';

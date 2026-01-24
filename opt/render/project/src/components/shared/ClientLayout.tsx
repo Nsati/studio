@@ -1,6 +1,6 @@
 'use client';
 
-import { FirebaseClientProvider } from '@/firebase/client/provider';
+import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { Header } from '@/components/shared/Header';
 import { Footer } from '@/components/shared/Footer';
 import { Toaster } from '@/components/ui/toaster';
