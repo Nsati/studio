@@ -6,9 +6,9 @@
       "type": "object",
       "description": "Represents a user of the Uttarakhand Getaways application.",
       "properties": {
-        "uid": {
+        "id": {
           "type": "string",
-          "description": "Unique identifier for the user."
+          "description": "Unique identifier for the user entity."
         },
         "name": {
           "type": "string",
@@ -21,11 +21,11 @@
         },
         "role": {
           "type": "string",
-          "description": "The user's role (e.g., user, admin)."
+          "description": "The user's role within the application (e.g., 'user', 'admin')."
         }
       },
       "required": [
-        "uid",
+        "id",
         "name",
         "email",
         "role"
@@ -35,11 +35,11 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Hotel",
       "type": "object",
-      "description": "Represents a hotel in Uttarakhand.",
+      "description": "Represents a hotel located in Uttarakhand.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the hotel."
+          "description": "Unique identifier for the hotel entity."
         },
         "name": {
           "type": "string",
@@ -47,7 +47,7 @@
         },
         "city": {
           "type": "string",
-          "description": "The city where the hotel is located."
+          "description": "The city in Uttarakhand where the hotel is located."
         },
         "description": {
           "type": "string",
@@ -55,7 +55,7 @@
         },
         "images": {
           "type": "array",
-          "description": "An array of image URLs for the hotel.",
+          "description": "An array of URLs pointing to images of the hotel.",
           "items": {
             "type": "string"
           }
@@ -69,7 +69,7 @@
         },
         "rating": {
           "type": "number",
-          "description": "The rating of the hotel."
+          "description": "The rating of the hotel (e.g., out of 5)."
         }
       },
       "required": [
@@ -86,19 +86,19 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Room",
       "type": "object",
-      "description": "Represents a room type within a hotel.",
+      "description": "Represents a room within a hotel.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the room."
+          "description": "Unique identifier for the room entity."
         },
         "hotelId": {
           "type": "string",
-          "description": "Reference to the Hotel. (Relationship: Hotel 1:N Room)"
+          "description": "Reference to Hotel. (Relationship: Hotel 1:N Room)"
         },
         "type": {
           "type": "string",
-          "description": "The type of room (e.g., Deluxe, Suite)."
+          "description": "The type of room (e.g., 'Deluxe', 'Suite')."
         },
         "price": {
           "type": "number",
@@ -106,11 +106,11 @@
         },
         "capacity": {
           "type": "number",
-          "description": "The maximum capacity of the room."
+          "description": "The maximum capacity of the room (number of guests)."
         },
         "totalRooms": {
           "type": "number",
-          "description": "The total number of rooms of this type available in the hotel."
+          "description": "The total number of rooms of this type in the hotel."
         }
       },
       "required": [
@@ -126,19 +126,19 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Booking",
       "type": "object",
-      "description": "Represents a booking made by a user for a specific room.",
+      "description": "Represents a booking made by a user for a room at a hotel.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the booking."
+          "description": "Unique identifier for the booking entity."
         },
         "userId": {
           "type": "string",
-          "description": "Reference to the User. (Relationship: User 1:N Booking)"
+          "description": "Reference to User. (Relationship: User 1:N Booking)"
         },
         "roomId": {
           "type": "string",
-          "description": "Reference to the Room. (Relationship: Room 1:N Booking)"
+          "description": "Reference to Room. (Relationship: Room 1:N Booking)"
         },
         "checkIn": {
           "type": "string",
@@ -152,11 +152,11 @@
         },
         "status": {
           "type": "string",
-          "description": "The status of the booking (e.g., locked, confirmed, cancelled)."
+          "description": "The status of the booking (e.g., 'locked', 'confirmed', 'cancelled')."
         },
         "expiresAt": {
           "type": "string",
-          "description": "The expiration timestamp for the booking (used for locking).",
+          "description": "The expiration date and time for the booking (used for 'locked' status).",
           "format": "date-time"
         }
       },
@@ -186,11 +186,11 @@
           "schema": {
             "$ref": "#/backend/entities/User"
           },
-          "description": "Stores user profiles.  The 'userId' parameter is the Firebase Authentication UID. Ensures path-based ownership for user-specific data. Includes fields 'uid', 'name', 'email', and 'role'.",
+          "description": "Stores user profiles. Uses path-based ownership for private data.",
           "params": [
             {
               "name": "userId",
-              "description": "The unique identifier for the user, matching the Firebase Authentication UID."
+              "description": "The unique identifier of the user."
             }
           ]
         }
@@ -202,11 +202,11 @@
           "schema": {
             "$ref": "#/backend/entities/Hotel"
           },
-          "description": "Stores hotel information. Includes fields 'id', 'name', 'city', 'description', 'images', 'amenities', and 'rating'.",
+          "description": "Stores hotel details.",
           "params": [
             {
               "name": "hotelId",
-              "description": "The unique identifier for the hotel."
+              "description": "The unique identifier of the hotel."
             }
           ]
         }
@@ -218,15 +218,15 @@
           "schema": {
             "$ref": "#/backend/entities/Room"
           },
-          "description": "Stores room information for each hotel. Includes fields 'id', 'hotelId', 'type', 'price', 'capacity', and 'totalRooms'.",
+          "description": "Stores room details for each hotel. Includes denormalized 'hotelId' for authorization independence.",
           "params": [
             {
               "name": "hotelId",
-              "description": "The unique identifier for the hotel."
+              "description": "The unique identifier of the hotel."
             },
             {
               "name": "roomId",
-              "description": "The unique identifier for the room."
+              "description": "The unique identifier of the room."
             }
           ]
         }
@@ -238,36 +238,36 @@
           "schema": {
             "$ref": "#/backend/entities/Booking"
           },
-          "description": "Stores booking information for each user. Includes fields 'id', 'userId', 'roomId', 'checkIn', 'checkOut', 'status', and 'expiresAt'. This structure enforces ownership; only the user with the matching 'userId' can access bookings under this path.",
+          "description": "Stores booking information for each user. Uses path-based ownership. Includes denormalized 'userId' for authorization independence.",
           "params": [
             {
               "name": "userId",
-              "description": "The unique identifier for the user who made the booking."
+              "description": "The unique identifier of the user."
             },
             {
               "name": "bookingId",
-              "description": "The unique identifier for the booking."
+              "description": "The unique identifier of the booking."
             }
           ]
         }
       },
       {
-        "path": "/roles_admin/{uid}",
+        "path": "/roles_admin/{userId}",
         "definition": {
-          "entityName": "AdminRole",
+          "entityName": "Role",
           "schema": {
             "$ref": "#/backend/entities/User"
           },
-          "description": "Collection to store admin roles.  The existence of a document with a specific UID in this collection grants admin privileges to that user. Existence over content is preferred for rule simplicity.",
+          "description": "Indicates admin role. Existence of document grants admin privileges. Uses existence over content.",
           "params": [
             {
-              "name": "uid",
-              "description": "The unique identifier for the admin user, matching the Firebase Authentication UID."
+              "name": "userId",
+              "description": "The unique identifier of the user (admin)."
             }
           ]
         }
       }
     ],
-    "reasoning": "The Firestore structure is designed to handle the Uttarakhand Getaways hotel booking application, focusing on security, scalability, and real-time updates. It leverages denormalization for authorization independence and structural segregation to simplify security rules.\n\n**Authorization Independence (CRITICAL):**\n*   The design avoids `get()` calls in security rules by denormalizing authorization context. For example, the `bookings` subcollection under `/users/{userId}` inherently grants the user access to their own bookings.\n*   Admin roles are managed using the `/roles_admin/{uid}` collection. The existence of a document in this collection grants admin privileges.\n\n**Structural Segregation:**\n*   User-specific data (bookings) is stored under `/users/{userId}`, ensuring that each user can only access their own data.\n*   Hotel and room data are stored in separate collections (`/hotels` and `/hotels/{hotelId}/rooms`) to facilitate efficient querying and management.\n\n**Access Modeling:**\n*   Path-based ownership is used for private user data (bookings under `/users/{userId}`).\n*   The membership map approach is not explicitly needed, as no collaborative access to individual documents is specified in the requirements.\n*   Global admin roles are managed using the dedicated `/roles_admin/{uid}` collection, checking for document existence to grant admin privileges.\n\n**QAPs (Rules are not Filters):**\n*   Secure `list` operations are supported by segregating data based on access needs. For example, listing bookings is secure because the bookings are stored under the user's ID (`/users/{userId}/bookings`).\n\n**Invariants:**\n*   Ownership is enforced by the path structure (e.g., `/users/{userId}/bookings/{bookingId}` ensures that only the user can access their bookings).\n*   Timestamps (e.g., `checkIn`, `checkOut`, `expiresAt`) are directly stored in the `Booking` document, allowing for easy querying and filtering based on time ranges.\n*   Data integrity is maintained by Firestore transactions and security rules that prevent unauthorized modifications.\n\nThe proposed structure aligns with the core design principles, ensuring a secure, scalable, and maintainable Firestore database for the Uttarakhand Getaways application."
+    "reasoning": "The Firestore structure is designed to optimize for security, scalability, and real-time updates in the Uttarakhand Getaways hotel booking application. It follows the core design principles of Authorization Independence, Clarity of Intent, DBAC, and QAPs. Authorization Independence is achieved through denormalization, specifically by including relevant authorization data (like hotelId) in subcollections (like rooms and bookings). This avoids the need for `get()` calls in security rules. Structural Segregation is enforced by maintaining distinct collections for users, hotels, rooms, and bookings, each with homogeneous security requirements. Access Modeling leverages path-based ownership for user-specific data (bookings) and continues the hierarchy for nested entities. A membership map (`members`) would be used for collaborative entities, though it's not directly applicable in this scenario. Global roles (DBAC) are implemented using dedicated collections for admin users (`roles_admin/{uid}`). QAPs are supported by the segregated structure. Listing hotels or rooms does not require filtering based on user roles; separate collections ensure the rules are not used as filters. Explicit State Modeling uses the `status` field in bookings to clearly represent the booking state (locked, confirmed, cancelled)."
   }
 }
