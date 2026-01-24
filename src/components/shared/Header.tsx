@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Menu, UserCircle, LogIn, Hotel } from 'lucide-react';
@@ -27,17 +27,43 @@ const navLinks = [
   { href: '/my-bookings', label: 'My Bookings' },
 ];
 
+function HeaderSkeleton() {
+  return (
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
+        <div className="container flex h-16 max-w-7xl items-center justify-between">
+            <Skeleton className="h-8 w-48" />
+            <div className="hidden items-center gap-6 md:flex">
+                <Skeleton className="h-5 w-16" />
+                <Skeleton className="h-5 w-16" />
+                <Skeleton className="h-5 w-24" />
+                <Skeleton className="h-5 w-24" />
+            </div>
+            <Skeleton className="h-10 w-24" />
+        </div>
+    </header>
+  )
+}
+
 export function Header() {
+  const [isMounted, setIsMounted] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const { user, userProfile, isLoading } = useUser();
   const auth = useAuth();
 
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   const handleLogout = async () => {
     if (!auth) return;
     await signOut(auth);
     router.push('/');
+  }
+
+  if (!isMounted) {
+    return <HeaderSkeleton />;
   }
 
   return (
