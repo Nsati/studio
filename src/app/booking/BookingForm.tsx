@@ -290,43 +290,17 @@ export function BookingForm() {
             name: "Uttarakhand Getaways",
             description: `Booking for ${hotel.name}`,
             order_id: order.id,
-            handler: async (response: any) => {
-                try {
-                    const bookingRef = doc(firestore, 'users', userIdForBooking!, 'bookings', bookingId);
-                    const roomRef = doc(firestore, 'hotels', hotel.id, 'rooms', room.id);
-
-                    const transactionResult = await runTransaction(firestore, async (transaction) => {
-                        const roomDoc = await transaction.get(roomRef);
-                        if (!roomDoc.exists() || (roomDoc.data().availableRooms ?? 0) <= 0) {
-                            return { success: false, error: "Sorry, this room just became unavailable." };
-                        }
-
-                        transaction.update(roomRef, { availableRooms: increment(-1) });
-                        transaction.update(bookingRef, { 
-                            status: 'CONFIRMED',
-                            razorpayPaymentId: response.razorpay_payment_id 
-                        });
-                        return { success: true };
-                    });
-
-                    if (transactionResult?.success) {
-                        toast({
-                            title: "Payment Received!",
-                            description: "Your booking is confirmed. Redirecting..."
-                        });
-                        router.push(`/booking/success/${bookingId}`);
-                    } else {
-                        throw new Error(transactionResult?.error || "Booking confirmation failed after payment.");
-                    }
-
-                } catch (error: any) {
-                     toast({
-                        variant: "destructive",
-                        title: "Booking Confirmation Failed",
-                        description: error.message || "Please contact support with your payment ID.",
-                    });
-                    setIsBooking(false);
-                }
+            handler: (response: any) => {
+                // The payment was successful. We don't need to do anything here on the client
+                // except redirect to the success page. The webhook will handle the actual
+                // booking confirmation and inventory update. The success page is designed
+                // to wait for this webhook confirmation.
+                toast({
+                    title: "Payment Received!",
+                    description: "Finalizing your confirmation..."
+                });
+                // The bookingId was created before opening Razorpay and passed in notes.
+                router.push(`/booking/success/${bookingId}`);
             },
             prefill: {
                 name: customerDetails.name,
@@ -529,3 +503,5 @@ export function BookingForm() {
         </div>
     );
 }
+
+    
