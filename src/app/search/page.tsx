@@ -10,11 +10,6 @@ import { Button } from '@/components/ui/button';
 import { SearchX } from 'lucide-react';
 
 
-interface SearchPageProps {
-  searchParams: { [key: string]: string | string[] | undefined };
-}
-
-
 function ResultsSkeleton() {
     return (
       <div className="flex-1">
@@ -41,7 +36,11 @@ function ResultsSkeleton() {
 }
 
 // This is an async Server Component that fetches and displays search results.
-async function Results({ searchParams }: SearchPageProps) {
+async function Results({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | string[] | undefined };
+}) {
   const city = typeof searchParams.city === 'string' ? searchParams.city : null;
   const checkIn = typeof searchParams.checkIn === 'string' ? searchParams.checkIn : null;
   const checkOut = typeof searchParams.checkOut === 'string' ? searchParams.checkOut : null;
@@ -81,7 +80,11 @@ async function Results({ searchParams }: SearchPageProps) {
 }
 
 
-export default function SearchPage({ searchParams }: SearchPageProps) {
+export default function SearchPage({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | string[] | undefined };
+}) {
   return (
     <div className="container mx-auto max-w-7xl py-8 px-4 md:px-6">
       <div className="flex flex-col gap-8 lg:flex-row">
