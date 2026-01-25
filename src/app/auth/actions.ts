@@ -1,7 +1,7 @@
 
 'use server';
 
-import { adminAuth, adminDb } from '@/firebase/admin';
+import { getAdminAuth, getAdminDb } from '@/firebase/admin';
 import type { UserProfile } from '@/lib/types';
 
 export interface SignupActionResponse {
@@ -16,16 +16,15 @@ export async function signupUser(userData: {
   pass: string;
 }): Promise<SignupActionResponse> {
     const { name, email, mobile, pass } = userData;
+    
+    const auth = getAdminAuth();
+    const db = getAdminDb();
 
-    if (!adminAuth || !adminDb) {
+    if (!auth || !db) {
         const errorMessage = 'Firebase Admin SDK is not initialized. User creation cannot proceed.';
         console.error(errorMessage);
         return { success: false, error: 'Server configuration error. Please contact support.' };
     }
-
-    // Use local constants for type safety
-    const auth = adminAuth;
-    const db = adminDb;
 
     try {
         // Check if this is the first user to make them an admin

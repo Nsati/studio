@@ -1,9 +1,14 @@
 import * as admin from 'firebase-admin';
 
-let adminDb: admin.firestore.Firestore | null = null;
-let adminAuth: admin.auth.Auth | null = null;
+/**
+ * Initializes the Firebase Admin SDK.
+ * This function is idempotent and can be safely called multiple times.
+ */
+function initializeFirebaseAdmin() {
+  if (admin.apps.length > 0) {
+    return; // Already initialized
+  }
 
-if (!admin.apps.length) {
   const serviceAccountString = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
   if (serviceAccountString) {
     try {
@@ -11,8 +16,6 @@ if (!admin.apps.length) {
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
       });
-      adminDb = admin.firestore();
-      adminAuth = admin.auth();
       console.log("✅ Firebase Admin SDK initialized successfully.");
     } catch (error: any) {
       console.error(`
@@ -22,7 +25,7 @@ if (!admin.apps.length) {
         Error: ${error.message}
         
         Please ensure the JSON content is copied correctly and is a valid single-line JSON string.
-        The server will run, but backend operations like payment confirmation will fail.
+        The server will run, but backend operations will fail.
       `);
     }
   } else {
@@ -41,11 +44,28 @@ if (!admin.apps.length) {
       The server will run, but backend operations will be disabled.
     `);
   }
-} else {
-    // If already initialized (e.g. in a hot-reload scenario), just get the instances.
-    adminDb = admin.firestore();
-    adminAuth = admin.auth();
 }
 
+/**
+ * Lazily initializes and returns the Firestore admin instance.
+ * @returns The Firestore admin instance, or null if initialization fails.
+ */
+export function getAdminDb(): admin.firestore.Firestore | null {
+    initializeFirebaseAdmin();
+    if (admin.apps.length === 0) {
+        return null;
+    }
+    return admin.firestore();
+}
 
-export { adminDb, adminAuth };
+/**
+ * Lazily initializes and returns the Auth admin instance.
+ * @returns The Auth admin instance, or null if initialization fails.
+ */
+export function getAdminAuth(): admin.auth.Auth | null {
+    initializeFirebaseAdmin();
+    if (admin.apps.length === 0) {
+        return null;
+    }
+    return admin.auth();
+}

@@ -1,6 +1,6 @@
 'use server';
 
-import { adminDb } from '@/firebase/admin';
+import { getAdminDb } from '@/firebase/admin';
 import type { Hotel, Room, Booking } from '@/lib/types';
 import { parseISO } from 'date-fns';
 
@@ -14,7 +14,9 @@ interface SearchParams {
 export async function searchHotels(params: SearchParams): Promise<{ hotels: Hotel[], error?: string }> {
     const { city, checkIn, checkOut, guests } = params;
 
-    if (!adminDb) {
+    const db = getAdminDb();
+    
+    if (!db) {
         console.error("searchHotels failed: Firebase Admin SDK is not initialized.");
         return { 
             hotels: [], 
@@ -22,8 +24,6 @@ export async function searchHotels(params: SearchParams): Promise<{ hotels: Hote
         };
     }
     
-    const db = adminDb; // Use a local constant for type safety
-
     try {
         // 1. Fetch base hotels
         let hotelsQuery: FirebaseFirestore.Query<FirebaseFirestore.DocumentData> = db.collection('hotels');

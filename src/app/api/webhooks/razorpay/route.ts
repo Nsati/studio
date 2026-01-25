@@ -2,7 +2,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
-import { adminDb } from '@/firebase/admin';
+import { getAdminDb } from '@/firebase/admin';
 import * as admin from 'firebase-admin';
 import type { Booking, Room, Hotel, ConfirmedBookingSummary } from '@/lib/types';
 import { sendBookingConfirmationEmail } from '@/services/email';
@@ -13,12 +13,13 @@ import { sendBookingConfirmationEmail } from '@/services/email';
 export async function POST(req: NextRequest) {
   console.log('--- Razorpay Webhook Endpoint Hit ---');
 
-  if (!adminDb) {
+  const db = getAdminDb();
+
+  if (!db) {
     const configError = 'FATAL - Firebase Admin SDK is not initialized. Webhook cannot proceed.';
     console.error('❌ STEP 0:', configError);
     return NextResponse.json({ error: configError }, { status: 500 });
   }
-  const db = adminDb; 
 
   const secret = process.env.RAZORPAY_WEBHOOK_SECRET || '';
   if (!secret) {

@@ -3,7 +3,7 @@
 
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
-import { adminDb } from '@/firebase/admin';
+import { getAdminDb } from '@/firebase/admin';
 import * as admin from 'firebase-admin';
 import type { Booking, Room, Hotel, ConfirmedBookingSummary } from '@/lib/types';
 import { sendBookingConfirmationEmail } from '@/services/email';
@@ -85,7 +85,8 @@ export async function verifyPaymentAndConfirmBooking(params: VerifyPaymentParams
         return { success: false, error: 'Payment gateway is not configured on the server.' };
     }
 
-    if (!adminDb) {
+    const db = getAdminDb();
+    if (!db) {
         console.error("CRITICAL: Firebase Admin SDK is not initialized.");
         return { success: false, error: "Database service is not available." };
     }
@@ -100,7 +101,6 @@ export async function verifyPaymentAndConfirmBooking(params: VerifyPaymentParams
     }
 
     // 2. Signature is valid, now confirm the booking in the database
-    const db = adminDb;
     const bookingRef = db.collection('users').doc(bookingDetails.userId).collection('bookings').doc(bookingDetails.id);
     const roomRef = db.collection('hotels').doc(bookingDetails.hotelId).collection('rooms').doc(bookingDetails.roomId);
 
