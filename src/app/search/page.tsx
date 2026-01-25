@@ -7,6 +7,7 @@ import { Hotel } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { SearchX, Terminal } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { dummyHotels } from '@/lib/dummy-data';
 
 
 function Results({ hotels, city }: { hotels: Hotel[], city: string | null }) {
@@ -50,22 +51,27 @@ export default async function SearchPage({
   // Data fetching happens on the server, before the page is rendered.
   const { hotels, error } = await searchHotels(searchParams);
 
+  // If there's an error (e.g. Admin SDK not configured), use dummy hotels as a fallback.
+  // Filter dummy hotels by city if a city is provided in the search.
+  const displayHotels = error 
+    ? dummyHotels.filter(h => !searchParams.city || searchParams.city === 'All' || h.city === searchParams.city) 
+    : hotels;
+
   return (
     <div className="container mx-auto max-w-7xl py-8 px-4 md:px-6">
       <div className="flex flex-col gap-8 lg:flex-row">
         <SearchFilters />
-        <div className="flex-1">
-          {error ? (
+        <div className="flex-1 space-y-6">
+          {error && (
              <Alert variant="destructive">
                <Terminal className="h-4 w-4" />
-               <AlertTitle>Search Unavailable</AlertTitle>
+               <AlertTitle>Live Search Offline</AlertTitle>
                <AlertDescription>
-                 {error} This is likely a server configuration issue. If you are the administrator, please ensure the Firebase Admin SDK is correctly set up with the necessary environment variables.
+                 {error} Showing fallback results without live availability. If you are the administrator, please ensure the Firebase Admin SDK is correctly set up.
                </AlertDescription>
              </Alert>
-          ) : (
-            <Results hotels={hotels} city={searchParams.city || null} />
           )}
+          <Results hotels={displayHotels} city={searchParams.city || null} />
         </div>
       </div>
     </div>
