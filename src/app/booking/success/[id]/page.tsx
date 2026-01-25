@@ -7,6 +7,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import type { ConfirmedBookingSummary } from '@/lib/types';
 import { generateTripGuide, type TripAssistantOutput } from '@/ai/flows/generate-arrival-assistant';
+import { normalizeTimestamp } from '@/lib/firestore-utils';
 
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,7 +27,7 @@ function TripAssistant({ summary }: { summary: ConfirmedBookingSummary }) {
         setIsGenerating(true);
         setError('');
         try {
-            const checkInDate = (summary.checkIn as any).toDate ? (summary.checkIn as any).toDate() : new Date(summary.checkIn);
+            const checkInDate = normalizeTimestamp(summary.checkIn);
             const result = await generateTripGuide({
                 hotelName: summary.hotelName,
                 hotelCity: summary.hotelCity,
@@ -247,8 +248,8 @@ export default function BookingSuccessPage() {
         return notFound();
     }
 
-    const checkInDate = (summaryBooking!.checkIn as any).toDate ? (summaryBooking!.checkIn as any).toDate() : new Date(summaryBooking!.checkIn);
-    const checkOutDate = (summaryBooking!.checkOut as any).toDate ? (summaryBooking!.checkOut as any).toDate() : new Date(summaryBooking!.checkOut);
+    const checkInDate = normalizeTimestamp(summaryBooking!.checkIn);
+    const checkOutDate = normalizeTimestamp(summaryBooking!.checkOut);
 
     return (
         <div className="bg-muted/40 min-h-[calc(100vh-4rem)] flex items-center">

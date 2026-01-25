@@ -6,6 +6,7 @@ import { collection, doc, runTransaction, increment, updateDoc, collectionGroup 
 import type { Booking } from '@/lib/types';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
+import { normalizeTimestamp } from '@/lib/firestore-utils';
 
 import {
   Table,
@@ -150,8 +151,8 @@ export default function BookingsPage() {
         if (!bookingsData) return null;
         // Sort bookings by creation date on the client-side
         return bookingsData.sort((a, b) => {
-             const dateA = (a.createdAt as any).toDate ? (a.createdAt as any).toDate() : new Date(a.createdAt);
-             const dateB = (b.createdAt as any).toDate ? (b.createdAt as any).toDate() : new Date(b.createdAt);
+             const dateA = normalizeTimestamp(a.createdAt);
+             const dateB = normalizeTimestamp(b.createdAt);
              return dateB.getTime() - dateA.getTime();
         });
     }, [bookingsData]);
@@ -187,8 +188,8 @@ export default function BookingsPage() {
                         </>
                     )}
                     {bookings && bookings.map(booking => {
-                        const checkIn = (booking.checkIn as any).toDate ? (booking.checkIn as any).toDate() : new Date(booking.checkIn);
-                        const checkOut = (booking.checkOut as any).toDate ? (booking.checkOut as any).toDate() : new Date(booking.checkOut);
+                        const checkIn = normalizeTimestamp(booking.checkIn);
+                        const checkOut = normalizeTimestamp(booking.checkOut);
                         return (
                             <TableRow key={booking.id}>
                                 <TableCell className="font-mono text-xs">{booking.id}</TableCell>

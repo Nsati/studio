@@ -3,6 +3,7 @@
 
 import { Resend } from 'resend';
 import { format } from 'date-fns';
+import { normalizeTimestamp } from '@/lib/firestore-utils';
 
 // Initialize Resend with the API key from environment variables.
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
@@ -11,8 +12,8 @@ interface EmailParams {
     to: string;
     customerName: string;
     hotelName: string;
-    checkIn: Date;
-    checkOut: Date;
+    checkIn: any; // Can be Date or Firestore Timestamp
+    checkOut: any; // Can be Date or Firestore Timestamp
     bookingId: string;
 }
 
@@ -24,9 +25,9 @@ export async function sendBookingConfirmationEmail(params: EmailParams) {
 
     const { to, customerName, hotelName, checkIn, checkOut, bookingId } = params;
 
-    // Ensure dates are JavaScript Date objects
-    const checkInDate = (checkIn as any).toDate ? (checkIn as any).toDate() : new Date(checkIn);
-    const checkOutDate = (checkOut as any).toDate ? (checkOut as any).toDate() : new Date(checkOut);
+    // Safely convert Firestore Timestamps or other date formats to JS Dates
+    const checkInDate = normalizeTimestamp(checkIn);
+    const checkOutDate = normalizeTimestamp(checkOut);
 
     // For Resend's test environment, all emails are sent to 'delivered@resend.dev'
     // but appear in your inbox if your domain is verified. 'onboarding@resend.dev' is a safe 'from' address for testing.

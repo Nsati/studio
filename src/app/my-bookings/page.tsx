@@ -16,7 +16,7 @@ import Link from 'next/link';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
-import { Calendar, Hotel as HotelIcon, Home, Loader2, Download, Ban, CheckCircle, XCircle } from 'lucide-react';
+import { Hotel as HotelIcon, Home, Loader2, Download, Ban, CheckCircle, XCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
 import { collection, doc, runTransaction, increment } from 'firebase/firestore';
@@ -33,6 +33,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { normalizeTimestamp } from '@/lib/firestore-utils';
 
 
 function BookingItemSkeleton() {
@@ -151,8 +152,8 @@ function BookingItem({ booking }: { booking: Booking }) {
         (img) => img.id === hotel.images[0]
     );
 
-    const checkInDate = (booking.checkIn as any).toDate ? (booking.checkIn as any).toDate() : new Date(booking.checkIn);
-    const checkOutDate = (booking.checkOut as any).toDate ? (booking.checkOut as any).toDate() : new Date(booking.checkOut);
+    const checkInDate = normalizeTimestamp(booking.checkIn);
+    const checkOutDate = normalizeTimestamp(booking.checkOut);
     const isCancelled = booking.status === 'CANCELLED';
     const isPending = booking.status === 'PENDING';
 
@@ -266,8 +267,8 @@ export default function MyBookingsPage() {
   const sortedBookings = useMemoFirebase(() => {
     if (!bookings) return [];
     return [...bookings].sort((a,b) => {
-        const dateA = (a.createdAt as any)?.toDate ? (a.createdAt as any).toDate() : new Date(a.createdAt || 0);
-        const dateB = (b.createdAt as any)?.toDate ? (b.createdAt as any).toDate() : new Date(b.createdAt || 0);
+        const dateA = normalizeTimestamp(a.createdAt);
+        const dateB = normalizeTimestamp(b.createdAt);
         return dateB.getTime() - dateA.getTime();
     });
   }, [bookings]);

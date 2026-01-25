@@ -1,9 +1,11 @@
+
 'use client';
 import { useMemo } from 'react';
 import type { Booking } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Bar, BarChart, ResponsiveContainer, XAxis } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { normalizeTimestamp } from '@/lib/firestore-utils';
 
 
 export default function BookingChart({ bookings }: { bookings: Booking[] | null }) {
@@ -12,7 +14,7 @@ export default function BookingChart({ bookings }: { bookings: Booking[] | null 
         const data: { [key: string]: { date: string; total: number } } = {};
         
         bookings.forEach(booking => {
-            const date = (booking.createdAt as any).toDate ? (booking.createdAt as any).toDate() : new Date(booking.createdAt);
+            const date = normalizeTimestamp(booking.createdAt);
             const day = date.toISOString().split('T')[0];
             if (!data[day]) {
                 data[day] = { date: day, total: 0 };
