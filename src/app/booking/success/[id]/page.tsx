@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useParams, useRouter, notFound } from 'next/navigation';
@@ -148,28 +147,28 @@ export default function BookingSuccessPage() {
         return doc(firestore, 'confirmedBookings', bookingId);
     }, [firestore, bookingId]);
 
-    const { data: summaryBooking, isLoading: isSummaryLoading, error: summaryError } = useDoc<ConfirmedBookingSummary>(summaryBookingRef);
+    // useDoc provides a realtime listener for the summary document
+    const { data: summaryBooking, error: summaryError } = useDoc<ConfirmedBookingSummary>(summaryBookingRef);
     
-    // This effect handles the initial loading and polling for the summary document
+    // This state handles the "waiting for webhook" period
     const [isWaitingForWebhook, setIsWaitingForWebhook] = useState(true);
-    useEffect(() => {
-        if (isSummaryLoading) return; // Wait for initial load attempt
 
+    useEffect(() => {
+        // If we get the summary document from the realtime listener, we can stop waiting.
         if (summaryBooking) {
-            setIsWaitingForWebhook(false); // Found it
+            setIsWaitingForWebhook(false);
             return;
         }
 
-        // If not found, poll for a short period in case of webhook delay
-        const timer = setTimeout(() => {
-            if (!summaryBooking) {
-                setIsWaitingForWebhook(false); // Stop waiting after timeout
-            }
-        }, 10000); // Wait for 10 seconds
+        // If the document doesn't appear after a while, stop waiting.
+        // This handles cases where the webhook might have failed or is taking too long.
+        const timeout = setTimeout(() => {
+            setIsWaitingForWebhook(false);
+        }, 20000); // 20-second timeout for safety
 
-        return () => clearTimeout(timer);
-
-    }, [isSummaryLoading, summaryBooking]);
+        // Cleanup the timeout if the component unmounts or the data arrives.
+        return () => clearTimeout(timeout);
+    }, [summaryBooking]);
     
     const isLoading = isUserLoading || isWaitingForWebhook;
 
@@ -194,6 +193,7 @@ export default function BookingSuccessPage() {
         );
     }
     
+    // After waiting, if the booking summary still hasn't appeared, show a 404 error.
     if (!summaryBooking) {
         return notFound();
     }
