@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useParams, notFound } from 'next/navigation';
@@ -142,54 +141,61 @@ export default function BookingSuccessPage() {
     
     const { user, isLoading: isUserLoading } = useUser();
     
-    // State for the summary, loading status, and polling
     const [summaryBooking, setSummaryBooking] = useState<ConfirmedBookingSummary | null>(null);
     const [pageStatus, setPageStatus] = useState<'loading' | 'success' | 'failed'>('loading');
 
     useEffect(() => {
-        if (!firestore || !bookingId) return;
+        // Guard against running before firebase is ready or if auth state is still resolving
+        if (!firestore || !bookingId || isUserLoading) {
+            return;
+        }
 
         const summaryBookingRef = doc(firestore, 'confirmedBookings', bookingId);
         let attempts = 0;
-        const maxAttempts = 10; // Poll 10 times (20 seconds total)
-        const intervalTime = 2000; // Poll every 2 seconds
+        const maxAttempts = 10; // Poll for 20 seconds
+        const intervalTime = 2000;
 
         let poller: NodeJS.Timeout | null = null;
-
+        
         const pollForBooking = async () => {
+            // If another process (e.g. a previous poll) already succeeded, stop.
+            if (pageStatus === 'success') {
+                if (poller) clearInterval(poller);
+                return;
+            }
+
             try {
                 const docSnap = await getDoc(summaryBookingRef);
                 if (docSnap.exists()) {
                     setSummaryBooking({ id: docSnap.id, ...docSnap.data() } as ConfirmedBookingSummary);
                     setPageStatus('success');
-                    if (poller) clearInterval(poller); // Stop polling once found
+                    if (poller) clearInterval(poller);
                     return;
                 }
             } catch (error) {
-                console.error("Error fetching booking summary:", error);
+                console.error("Error polling for booking summary:", error);
+                // Keep polling even if there's a permission error, in case the auth state resolves.
             }
 
             attempts++;
             if (attempts >= maxAttempts) {
-                console.error(`Timed out waiting for booking summary doc: ${bookingId}`);
+                console.error(`Polling timed out for booking summary doc: ${bookingId}`);
                 setPageStatus('failed');
-                if (poller) clearInterval(poller); // Stop polling on timeout
+                if (poller) clearInterval(poller);
             }
         };
 
-        // Start polling immediately and then set an interval
-        pollForBooking(); 
+        // Start polling
+        pollForBooking(); // Initial check
         poller = setInterval(pollForBooking, intervalTime);
 
-        // Cleanup function to clear interval when component unmounts
+        // Cleanup
         return () => {
             if (poller) clearInterval(poller);
         };
-    }, [firestore, bookingId]);
+    }, [firestore, bookingId, isUserLoading, pageStatus]); // Add isUserLoading dependency
 
-
-    // Overall loading state also depends on the user hook
-    const isLoading = isUserLoading || pageStatus === 'loading';
+    const isLoading = pageStatus === 'loading';
 
     if (isLoading) {
         return (
@@ -239,6 +245,7 @@ export default function BookingSuccessPage() {
     }
     
     if (pageStatus === 'success' && !summaryBooking) {
+        // This case can happen briefly between setting status and summary, or if summary is null.
         return notFound();
     }
 
@@ -320,5 +327,3 @@ export default function BookingSuccessPage() {
         </div>
     );
 }
-
-    
