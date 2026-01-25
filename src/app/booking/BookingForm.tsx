@@ -11,7 +11,7 @@ import { signInAnonymously } from 'firebase/auth';
 
 import type { Hotel, Room, Booking, Promotion, ConfirmedBookingSummary } from '@/lib/types';
 import { useFirestore, useAuth, useUser, useDoc, useCollection, useMemoFirebase } from '@/firebase';
-import { doc, collection, getDoc } from 'firebase/firestore';
+import { doc, collection, getDoc, setDoc } from 'firebase/firestore';
 
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -158,7 +158,7 @@ export function BookingForm() {
 
         let userIdForBooking = user?.uid;
         if (!userIdForBooking) {
-            if (!auth) {
+            if (!auth || !firestore) {
                  toast({ variant: 'destructive', title: 'Authentication service not available' });
                  setIsBooking(false);
                  return;
@@ -176,6 +176,36 @@ export function BookingForm() {
         }
         
         const bookingId = `booking_${Date.now()}`;
+        const bookingRef = doc(firestore, 'users', userIdForBooking, 'bookings', bookingId);
+        
+        const pendingBookingData: Booking = {
+            id: bookingId,
+            userId: userIdForBooking,
+            hotelId: hotel.id,
+            roomId: room.id,
+            roomType: room.type,
+            checkIn: new Date(checkInStr),
+            checkOut: new Date(checkOutStr),
+            guests: parseInt(guests),
+            totalPrice: totalPrice,
+            customerName: customerDetails.name,
+            customerEmail: customerDetails.email,
+            status: 'PENDING',
+            createdAt: new Date(),
+        };
+
+        try {
+            await setDoc(bookingRef, pendingBookingData);
+        } catch (error: any) {
+            console.error("Failed to create pending booking:", error);
+            toast({
+                variant: "destructive",
+                title: "Booking Initialization Failed",
+                description: `Could not save initial booking details. Error: ${error.message}`,
+            });
+            setIsBooking(false);
+            return;
+        }
 
         const orderResponse = await createRazorpayOrder(totalPrice, { user_id: userIdForBooking, booking_id: bookingId });
 
@@ -186,19 +216,6 @@ export function BookingForm() {
         }
         const { order, keyId } = orderResponse;
         
-        const bookingDetails = {
-            id: bookingId,
-            userId: userIdForBooking,
-            hotelId: hotel.id,
-            roomId: room.id,
-            roomType: room.type,
-            checkIn: checkInStr,
-            checkOut: checkOutStr,
-            guests: parseInt(guests),
-            totalPrice: totalPrice,
-            customerName: customerDetails.name,
-            customerEmail: customerDetails.email,
-        };
 
         const options = {
             key: keyId,
@@ -216,11 +233,9 @@ export function BookingForm() {
                         razorpay_payment_id: response.razorpay_payment_id,
                         razorpay_signature: response.razorpay_signature,
                     },
-                    bookingDetails,
                     {
-                        name: hotel.name,
-                        city: hotel.city,
-                        address: hotel.address
+                        userId: userIdForBooking,
+                        bookingId: bookingId,
                     }
                 );
 

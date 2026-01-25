@@ -67,7 +67,6 @@ export async function createRazorpayOrder(
   }
 }
 
-// --- NEW FUNCTION ---
 interface VerifyPaymentResponse {
   success: boolean;
   error?: string;
@@ -80,23 +79,9 @@ export async function verifyPaymentAndConfirmBooking(
     razorpay_payment_id: string;
     razorpay_signature: string;
   },
-  bookingDetails: {
-    id: string;
+  bookingIdentifiers: {
     userId: string;
-    hotelId: string;
-    roomId: string;
-    roomType: string;
-    checkIn: string;
-    checkOut: string;
-    guests: number;
-    totalPrice: number;
-    customerName: string;
-    customerEmail: string;
-  },
-  hotelDetails: {
-    name: string;
-    city: string;
-    address?: string;
+    bookingId: string;
   }
 ): Promise<VerifyPaymentResponse> {
     const keySecret = process.env.RAZORPAY_KEY_SECRET;
@@ -123,58 +108,66 @@ export async function verifyPaymentAndConfirmBooking(
     }
 
     // 2. Run Firestore transaction
-    const bookingRef = db.collection('users').doc(bookingDetails.userId).collection('bookings').doc(bookingDetails.id);
-    const roomRef = db.collection('hotels').doc(bookingDetails.hotelId).collection('rooms').doc(bookingDetails.roomId);
-    const summaryRef = db.collection('confirmedBookings').doc(bookingDetails.id);
+    const bookingRef = db.collection('users').doc(bookingIdentifiers.userId).collection('bookings').doc(bookingIdentifiers.bookingId);
 
     try {
         await db.runTransaction(async (transaction) => {
-            const roomDoc = await transaction.get(roomRef);
-            if (!roomDoc.exists) {
-                throw new Error("Room not found. Cannot confirm booking.");
+            const bookingDoc = await transaction.get(bookingRef);
+            if (!bookingDoc.exists || bookingDoc.data()?.status !== 'PENDING') {
+                if (bookingDoc.data()?.status === 'CONFIRMED') {
+                    console.log(`Booking ${bookingIdentifiers.bookingId} already confirmed. Idempotency check passed.`);
+                    return; 
+                }
+                throw new Error("Booking not found or not in a pending state.");
             }
+            
+            const bookingData = bookingDoc.data() as Booking;
+            const roomRef = db.collection('hotels').doc(bookingData.hotelId).collection('rooms').doc(bookingData.roomId);
+            const hotelRef = db.collection('hotels').doc(bookingData.hotelId);
+
+            const [roomDoc, hotelDoc] = await transaction.getAll(roomRef, hotelRef);
+            
+            if (!roomDoc.exists) throw new Error("Room data not found.");
+            if (!hotelDoc.exists) throw new Error("Hotel data not found.");
+            
             const roomData = roomDoc.data() as Room;
+            const hotelData = hotelDoc.data() as any;
 
             if ((roomData.availableRooms ?? roomData.totalRooms) <= 0) {
-                throw new Error(`Overbooking detected for room ${bookingDetails.roomId}.`);
+                throw new Error(`Overbooking detected for room ${bookingData.roomId}.`);
             }
-
-            // Decrement room count
+            
+            // Atomically update inventory and booking status
             transaction.update(roomRef, { availableRooms: admin.firestore.FieldValue.increment(-1) });
-
-            // Create user booking document
-            const finalBookingData: Booking = {
-                ...bookingDetails,
-                checkIn: new Date(bookingDetails.checkIn),
-                checkOut: new Date(bookingDetails.checkOut),
+            transaction.update(bookingRef, {
                 status: 'CONFIRMED',
-                createdAt: new Date(),
                 razorpayPaymentId: paymentData.razorpay_payment_id,
-            };
-            transaction.set(bookingRef, finalBookingData);
+                createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
 
-            // Create public summary document
-             const summaryData: ConfirmedBookingSummary = {
-                id: bookingDetails.id,
-                hotelId: bookingDetails.hotelId,
-                hotelName: hotelDetails.name,
-                hotelCity: hotelDetails.city,
-                hotelAddress: hotelDetails.address,
-                customerName: bookingDetails.customerName,
-                checkIn: new Date(bookingDetails.checkIn),
-                checkOut: new Date(bookingDetails.checkOut),
-                guests: bookingDetails.guests,
-                totalPrice: bookingDetails.totalPrice,
-                roomType: bookingDetails.roomType,
-                userId: bookingDetails.userId,
+            // Create public summary doc for success page
+            const summaryRef = db.collection('confirmedBookings').doc(bookingIdentifiers.bookingId);
+            const summaryData: ConfirmedBookingSummary = {
+                id: bookingIdentifiers.bookingId,
+                hotelId: bookingData.hotelId,
+                hotelName: hotelData.name,
+                hotelCity: hotelData.city,
+                hotelAddress: hotelData.address,
+                customerName: bookingData.customerName,
+                checkIn: bookingData.checkIn,
+                checkOut: bookingData.checkOut,
+                guests: bookingData.guests,
+                totalPrice: bookingData.totalPrice,
+                roomType: bookingData.roomType,
+                userId: bookingData.userId,
             };
             transaction.set(summaryRef, summaryData);
         });
 
-        return { success: true, bookingId: bookingDetails.id };
+        return { success: true, bookingId: bookingIdentifiers.bookingId };
 
     } catch (error: any) {
         console.error("Booking confirmation transaction failed:", error);
-        return { success: false, error: `Booking confirmation failed: ${error.message}. Please contact support with payment ID ${paymentData.razorpay_payment_id}.` };
+        return { success: false, error: `Your payment was successful, but we couldn't confirm your booking automatically: ${error.message}. Please contact support with booking ID ${bookingIdentifiers.bookingId}.` };
     }
 }
