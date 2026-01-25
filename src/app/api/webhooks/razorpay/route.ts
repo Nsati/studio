@@ -1,4 +1,3 @@
-
 'use server';
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -12,7 +11,7 @@ export async function POST(req: NextRequest) {
   console.log('--- Razorpay Webhook Endpoint Hit ---');
 
   if (!adminDb) {
-    const configError = 'FATAL - Firebase Admin SDK is not initialized. Webhook cannot proceed. Please check server logs for instructions on setting GOOGLE_APPLICATION_CREDENTIALS_JSON.';
+    const configError = 'FATAL - Firebase Admin SDK is not initialized. Webhook cannot proceed.';
     console.error('❌ STEP 0:', configError);
     return NextResponse.json({ error: configError }, { status: 500 });
   }
@@ -52,106 +51,133 @@ export async function POST(req: NextRequest) {
     if (event === 'payment.captured') {
       console.log('✅ STEP 3: "payment.captured" event received.');
       const paymentEntity = payload.payment.entity;
-      const { user_id, booking_id } = paymentEntity.notes;
+      const notes = paymentEntity.notes;
+      
+      const {
+            user_id,
+            booking_id,
+            hotel_id,
+            room_id,
+            check_in,
+            check_out,
+            guests,
+            total_price,
+            customer_name,
+            customer_email,
+            room_type,
+      } = notes;
+      
+      const requiredNotes = { user_id, booking_id, hotel_id, room_id, check_in, check_out, guests, total_price, customer_name, customer_email, room_type };
 
-      if (!user_id || !booking_id) {
-        console.error(`❌ Webhook Error: Missing user_id or booking_id in payment notes for payment ${paymentEntity.id}`);
-        return NextResponse.json({ status: 'ok', message: 'Missing notes, but acknowledged.' });
+      for (const [key, value] of Object.entries(requiredNotes)) {
+          if (!value) {
+              console.error(`❌ Webhook Error: Missing note '${key}' in payment ${paymentEntity.id}`);
+              return NextResponse.json({ status: 'ok', message: `Missing note: ${key}` });
+          }
       }
 
       const bookingRef = db.collection('users').doc(user_id).collection('bookings').doc(booking_id);
+      const roomRef = db.collection('hotels').doc(hotel_id).collection('rooms').doc(room_id);
+      
+      let createdBookingData: Booking;
 
-      const confirmedBooking = await db.runTransaction(async (transaction) => {
-        const bookingDoc = await transaction.get(bookingRef);
-        if (!bookingDoc.exists) {
-            console.error(`❌ Transaction Error: Booking ${booking_id} for user ${user_id} not found.`);
-            return null;
-        }
+      try {
+        const bookingResult = await db.runTransaction(async (transaction) => {
+            const existingBookingDoc = await transaction.get(bookingRef);
+            if (existingBookingDoc.exists()) {
+                console.log(`✅ Idempotency check pass. Booking ${booking_id} already exists.`);
+                return existingBookingDoc.data() as Booking;
+            }
 
-        const bookingData = bookingDoc.data() as Booking;
+            console.log(`ℹ️ STEP 4: [Webhook] Creating new booking ${booking_id}...`);
 
-        if (bookingData.status === 'CONFIRMED') {
-          console.log(`✅ STEP 4: Idempotency check pass. Booking ${booking_id} is already confirmed.`);
-          return bookingData;
-        }
-        
-        console.log(`ℹ️ STEP 4: [Webhook] Booking ${booking_id} was PENDING. Confirming now...`);
+            const roomDoc = await transaction.get(roomRef);
+            if (!roomDoc.exists()) {
+                throw new Error(`Room ${room_id} for booking ${booking_id} not found.`);
+            }
+            const room = roomDoc.data() as Room;
 
-        const roomRef = db.collection('hotels').doc(bookingData.hotelId).collection('rooms').doc(bookingData.roomId);
-        const roomDoc = await transaction.get(roomRef);
+            if ((room.availableRooms ?? 0) <= 0) {
+                console.error(`❌ Transaction Error: Overbooking detected for room ${room_id}! No available rooms.`);
+                throw new Error(`Overbooking detected for room ${room_id}`);
+            }
 
-        if (!roomDoc.exists) {
-            console.error(`❌ Transaction Error: Room ${bookingData.roomId} for booking ${booking_id} not found.`);
-            return null;
-        }
-        const room = roomDoc.data() as Room;
+            const newBookingData: Booking = {
+                id: booking_id,
+                hotelId: hotel_id,
+                userId: user_id,
+                roomId: room_id,
+                roomType: room_type,
+                checkIn: new Date(check_in),
+                checkOut: new Date(check_out),
+                guests: parseInt(guests),
+                totalPrice: parseFloat(total_price),
+                customerName: customer_name,
+                customerEmail: customer_email,
+                status: 'CONFIRMED',
+                createdAt: new Date(),
+                razorpayPaymentId: paymentEntity.id,
+            };
+            
+            transaction.set(bookingRef, newBookingData);
+            transaction.update(roomRef, { availableRooms: admin.firestore.FieldValue.increment(-1) });
 
-        if ((room.availableRooms ?? 0) <= 0) {
-          console.error(`❌ Transaction Error: Overbooking detected for room ${bookingData.roomId}! No available rooms.`);
-          // TODO: Here, we should refund the payment automatically.
-          return null;
-        }
-        
-        transaction.update(roomRef, { availableRooms: admin.firestore.FieldValue.increment(-1) });
-        transaction.update(bookingRef, {
-          status: 'CONFIRMED',
-          razorpayPaymentId: paymentEntity.id,
+            return newBookingData;
         });
 
-        return { ...bookingData, status: 'CONFIRMED', razorpayPaymentId: paymentEntity.id } as Booking;
-      });
-      
-      if (confirmedBooking) {
-        console.log(`✅ STEP 5: Webhook transaction for ${booking_id} completed.`);
-
-        const hotelDoc = await db.collection('hotels').doc(confirmedBooking.hotelId).get();
-        if (!hotelDoc.exists) {
-            console.error(`❌ FATAL: Could not find hotel ${confirmedBooking.hotelId} for booking ${booking_id}.`);
+        if (bookingResult) {
+            createdBookingData = bookingResult;
+            console.log(`✅ STEP 5: Webhook transaction for ${booking_id} completed.`);
         } else {
-            const hotel = hotelDoc.data() as Hotel;
-
-            // STEP 6: Create public summary for success page
-            try {
-                const summaryRef = db.collection('confirmedBookings').doc(booking_id);
-                const summaryData: ConfirmedBookingSummary = {
-                    id: booking_id,
-                    hotelId: hotel.id,
-                    hotelName: hotel.name,
-                    hotelCity: hotel.city,
-                    hotelAddress: hotel.address,
-                    customerName: confirmedBooking.customerName,
-                    checkIn: confirmedBooking.checkIn,
-                    checkOut: confirmedBooking.checkOut,
-                    guests: confirmedBooking.guests,
-                    totalPrice: confirmedBooking.totalPrice,
-                    roomType: confirmedBooking.roomType,
-                    userId: confirmedBooking.userId,
-                };
-                await summaryRef.set(summaryData);
-                console.log(`✅ STEP 6: Public booking summary created for ${booking_id}.`);
-            } catch (summaryError: any) {
-                 console.error(`❌ STEP 6: Failed to create public summary for booking ${booking_id}:`, summaryError.message);
-            }
-
-            // STEP 7: Send confirmation email
-            try {
-                console.log(`📧 STEP 7: Attempting to send confirmation email to ${confirmedBooking.customerEmail}.`);
-                await sendBookingConfirmationEmail({
-                    to: confirmedBooking.customerEmail,
-                    customerName: confirmedBooking.customerName,
-                    hotelName: hotel.name,
-                    checkIn: confirmedBooking.checkIn,
-                    checkOut: confirmedBooking.checkOut,
-                    bookingId: confirmedBooking.id || booking_id
-                });
-                console.log(`✅ STEP 8: Email logic finished for booking ${booking_id}.`);
-
-            } catch (emailError: any) {
-                console.error(`❌ STEP 8: Failed to send email for booking ${booking_id}:`, emailError.message);
-            }
+            throw new Error("Transaction returned null or undefined.");
         }
+      } catch (error: any) {
+        console.error(`❌ STEP 5: Webhook transaction for ${booking_id} failed:`, error.message);
+        return NextResponse.json({ error: 'Webhook transaction failed', details: error.message }, { status: 500 });
+      }
+
+      const hotelDoc = await db.collection('hotels').doc(createdBookingData.hotelId).get();
+      if (!hotelDoc.exists) {
+          console.error(`❌ FATAL: Could not find hotel ${createdBookingData.hotelId} for booking ${booking_id}.`);
       } else {
-        console.error(`❌ STEP 5: Webhook transaction for ${booking_id} failed or returned null.`);
+          const hotel = hotelDoc.data() as Hotel;
+
+          try {
+              const summaryRef = db.collection('confirmedBookings').doc(booking_id);
+              const summaryData: ConfirmedBookingSummary = {
+                  id: booking_id,
+                  hotelId: hotel.id,
+                  hotelName: hotel.name,
+                  hotelCity: hotel.city,
+                  hotelAddress: hotel.address,
+                  customerName: createdBookingData.customerName,
+                  checkIn: createdBookingData.checkIn,
+                  checkOut: createdBookingData.checkOut,
+                  guests: createdBookingData.guests,
+                  totalPrice: createdBookingData.totalPrice,
+                  roomType: createdBookingData.roomType,
+                  userId: createdBookingData.userId,
+              };
+              await summaryRef.set(summaryData);
+              console.log(`✅ STEP 6: Public booking summary created for ${booking_id}.`);
+          } catch (summaryError: any) {
+                console.error(`❌ STEP 6: Failed to create public summary for booking ${booking_id}:`, summaryError.message);
+          }
+
+          try {
+              console.log(`📧 STEP 7: Attempting to send confirmation email to ${createdBookingData.customerEmail}.`);
+              await sendBookingConfirmationEmail({
+                  to: createdBookingData.customerEmail,
+                  customerName: createdBookingData.customerName,
+                  hotelName: hotel.name,
+                  checkIn: createdBookingData.checkIn,
+                  checkOut: createdBookingData.checkOut,
+                  bookingId: createdBookingData.id || booking_id
+              });
+              console.log(`✅ STEP 8: Email logic finished for booking ${booking_id}.`);
+          } catch (emailError: any) {
+              console.error(`❌ STEP 8: Failed to send email for booking ${booking_id}:`, emailError.message);
+          }
       }
 
     } else {

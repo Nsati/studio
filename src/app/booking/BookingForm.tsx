@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -200,42 +199,23 @@ export function BookingForm() {
                 return;
             }
         }
+        
+        // --- Step 1: Generate a unique ID for the booking on the client ---
+        const bookingId = `booking_${Date.now()}`;
 
-        // --- Step 1: Create a PENDING booking in Firestore (Client-side) ---
-        const newBookingId = `booking_${Date.now()}`;
-        let bookingId: string;
-        try {
-            if (!userIdForBooking) throw new Error("User not authenticated.");
-            const bookingRef = doc(firestore, 'users', userIdForBooking, 'bookings', newBookingId);
-
-            const bookingData: Booking = {
-              id: newBookingId,
-              hotelId: hotel.id,
-              userId: userIdForBooking,
-              roomId: room.id,
-              roomType: room.type,
-              checkIn: checkIn,
-              checkOut: checkOut,
-              guests: parseInt(guests),
-              totalPrice: totalPrice,
-              customerName: customerDetails.name,
-              customerEmail: customerDetails.email,
-              status: 'PENDING', // Set status to PENDING
-              createdAt: new Date(),
-            };
-            await setDoc(bookingRef, bookingData);
-            bookingId = newBookingId;
-        } catch (e: any) {
-            console.error('Error creating pending booking:', e);
-            toast({ variant: 'destructive', title: 'Booking Error', description: 'Could not initialize booking.' });
-            setIsBooking(false);
-            return;
-        }
-
-        // --- Step 2: Create Razorpay order with booking context ---
+        // --- Step 2: Create Razorpay order with all booking context in notes ---
         const orderResponse = await createRazorpayOrder(totalPrice, {
             booking_id: bookingId,
-            user_id: userIdForBooking
+            user_id: userIdForBooking,
+            hotel_id: hotel.id,
+            room_id: room.id,
+            check_in: checkInStr,
+            check_out: checkOutStr,
+            guests: guests,
+            total_price: String(totalPrice),
+            customer_name: customerDetails.name,
+            customer_email: customerDetails.email,
+            room_type: room.type,
         });
 
         if (!orderResponse.success || !orderResponse.order) {
