@@ -171,3 +171,9 @@ export async function verifyPaymentAndConfirmBooking(
         return { success: false, error: `Your payment was successful, but we couldn't confirm your booking automatically: ${error.message}. Please contact support with booking ID ${bookingIdentifiers.bookingId}.` };
     }
 }
+
+export async function checkServerHealth(): Promise<{ isConfigured: boolean }> {
+  // This check relies on getAdminDb which returns null if the Admin SDK is not initialized.
+  const db = getAdminDb();
+  return { isConfigured: !!db };
+}

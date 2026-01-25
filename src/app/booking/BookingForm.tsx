@@ -5,7 +5,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, useRouter, notFound } from 'next/navigation';
 import Image from 'next/image';
 import { differenceInDays, format, parse } from 'date-fns';
-import { createRazorpayOrder, verifyPaymentAndConfirmBooking } from '@/app/booking/actions';
+import { createRazorpayOrder, verifyPaymentAndConfirmBooking, checkServerHealth } from '@/app/booking/actions';
 import { signInAnonymously } from 'firebase/auth';
 
 
@@ -20,13 +20,67 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, Calendar, Users, BedDouble, ArrowLeft, Tag, ShieldCheck, HelpCircle } from 'lucide-react';
+import { Loader2, Calendar, Users, BedDouble, ArrowLeft, Tag, ShieldCheck, HelpCircle, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
+import { BookingFormSkeleton } from './BookingFormSkeleton';
 
 declare global {
   interface Window {
     Razorpay: any;
   }
+}
+
+function ServerConfigurationError() {
+    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+    const consoleUrl = projectId
+        ? `https://console.firebase.google.com/project/${projectId}/settings/serviceaccounts/adminsdk`
+        : `https://console.firebase.google.com/`;
+
+    return (
+        <div className="container mx-auto max-w-2xl py-12 px-4 md:px-6">
+            <Card className="border-destructive">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-3 font-headline text-2xl text-destructive">
+                        <AlertCircle className="h-6 w-6" />
+                        Booking Service Unavailable
+                    </CardTitle>
+                    <CardDescription>
+                        The live booking and payment system is not configured on the server.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                        This is a server configuration issue, not a bug in the application code. To enable live bookings, the backend needs credentials to communicate securely with Firebase services for tasks like verifying payments and updating room inventory.
+                    </p>
+                    <div>
+                        <h4 className="font-semibold text-foreground">How to Fix This:</h4>
+                        <ol className="list-decimal list-inside text-sm text-muted-foreground space-y-2 mt-2">
+                            <li>
+                                Go to your Firebase project's service account settings. You can use the button below to go there directly.
+                            </li>
+                            <li>
+                                Click <strong>"Generate new private key"</strong> to download a JSON file with your server credentials.
+                            </li>
+                            <li>
+                                Copy the <strong>entire contents</strong> of that JSON file.
+                            </li>
+                            <li>
+                                In your project's <code>.env</code> file, create a new variable named <code>GOOGLE_APPLICATION_CREDENTIALS_JSON</code> and paste the copied JSON content as its value.
+                            </li>
+                            <li>Restart your development server for the changes to take effect.</li>
+                        </ol>
+                    </div>
+                </CardContent>
+                <CardFooter className="flex justify-end">
+                    <Button asChild>
+                        <a href={consoleUrl} target="_blank" rel="noopener noreferrer">
+                            Go to Firebase Console
+                        </a>
+                    </Button>
+                </CardFooter>
+            </Card>
+        </div>
+    );
 }
 
 export function BookingForm() {
@@ -36,6 +90,17 @@ export function BookingForm() {
     const auth = useAuth(); // For guest checkout
     const { toast } = useToast();
     const firestore = useFirestore();
+
+    const [serverHealth, setServerHealth] = useState<{ checked: boolean; isConfigured: boolean }>({
+        checked: false,
+        isConfigured: false,
+    });
+
+    useEffect(() => {
+        checkServerHealth().then(result => {
+            setServerHealth({ checked: true, isConfigured: result.isConfigured });
+        });
+    }, []);
 
     const hotelId = searchParams.get('hotelId');
     const roomId = searchParams.get('roomId');
@@ -75,9 +140,17 @@ export function BookingForm() {
             setCustomerDetails({ name: userProfile.displayName, email: userProfile.email });
         }
     }, [userProfile]);
+    
+    if (!serverHealth.checked) {
+        return <BookingFormSkeleton />;
+    }
+
+    if (!serverHealth.isConfigured) {
+        return <ServerConfigurationError />;
+    }
 
     if (isHotelLoading || areRoomsLoading) {
-        return null; // Let the parent Suspense boundary handle the loading UI.
+        return <BookingFormSkeleton />;
     }
     
     if (!hotelId || !roomId || !checkInStr || !checkOutStr || !hotel || !room) {
