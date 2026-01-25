@@ -5,8 +5,7 @@ import { SearchFilters } from './SearchFilters';
 import { HotelCard } from '@/components/hotel/HotelCard';
 import { Hotel } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { SearchX, Terminal } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { SearchX } from 'lucide-react';
 import { dummyHotels } from '@/lib/dummy-data';
 
 
@@ -52,7 +51,7 @@ export default async function SearchPage({
   const { hotels, error } = await searchHotels(searchParams);
 
   // If there's an error (e.g. Admin SDK not configured), use dummy hotels as a fallback.
-  // Filter dummy hotels by city if a city is provided in the search.
+  // The error is logged on the server, but we don't show it to the user.
   const displayHotels = error 
     ? dummyHotels.filter(h => !searchParams.city || searchParams.city === 'All' || h.city === searchParams.city) 
     : hotels;
@@ -62,15 +61,6 @@ export default async function SearchPage({
       <div className="flex flex-col gap-8 lg:flex-row">
         <SearchFilters />
         <div className="flex-1 space-y-6">
-          {error && (
-             <Alert variant="destructive">
-               <Terminal className="h-4 w-4" />
-               <AlertTitle>Live Search Offline</AlertTitle>
-               <AlertDescription>
-                 {error} Showing fallback results without live availability. If you are the administrator, please ensure the Firebase Admin SDK is correctly set up.
-               </AlertDescription>
-             </Alert>
-          )}
           <Results hotels={displayHotels} city={searchParams.city || null} />
         </div>
       </div>
