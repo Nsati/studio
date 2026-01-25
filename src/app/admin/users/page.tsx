@@ -1,7 +1,7 @@
 
 'use client';
 import { useMemo, useState } from 'react';
-import { useFirestore, useCollection, useUser } from '@/firebase';
+import { useFirestore, useCollection, useUser, useMemoFirebase } from '@/firebase';
 import { collection, doc, updateDoc } from 'firebase/firestore';
 import type { UserProfile } from '@/lib/types';
 import {
@@ -94,14 +94,14 @@ function RoleSelector({ user }: { user: UserProfile }) {
 export default function UsersPage() {
     const firestore = useFirestore();
 
-    const usersQuery = useMemo(() => {
+    const usersQuery = useMemoFirebase(() => {
         if (!firestore) return null;
         return collection(firestore, 'users');
     }, [firestore]);
 
     const { data: usersData, isLoading } = useCollection<UserProfile>(usersQuery);
 
-    const users = useMemo(() => {
+    const users = useMemoFirebase(() => {
         if (!usersData) return null;
         return [...usersData].sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''));
     }, [usersData]);

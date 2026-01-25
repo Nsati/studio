@@ -1,7 +1,7 @@
 
 'use client';
 import { useMemo, useState } from 'react';
-import { useFirestore, useCollection } from '@/firebase';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, doc, runTransaction, increment, updateDoc, collectionGroup } from 'firebase/firestore';
 import type { Booking } from '@/lib/types';
 import { format } from 'date-fns';
@@ -139,14 +139,14 @@ function CancelBookingAction({ booking }: { booking: Booking }) {
 export default function BookingsPage() {
     const firestore = useFirestore();
 
-    const bookingsQuery = useMemo(() => {
+    const bookingsQuery = useMemoFirebase(() => {
         if (!firestore) return null;
         return collectionGroup(firestore, 'bookings');
     }, [firestore]);
 
     const { data: bookingsData, isLoading } = useCollection<Booking>(bookingsQuery);
     
-    const bookings = useMemo(() => {
+    const bookings = useMemoFirebase(() => {
         if (!bookingsData) return null;
         // Sort bookings by creation date on the client-side
         return bookingsData.sort((a, b) => {

@@ -1,8 +1,8 @@
 
 'use client';
 
-import React, { useMemo, useState, useEffect } from 'react';
-import { useFirestore, useUser, useCollection, useDoc } from '@/firebase';
+import React, { useState, useEffect } from 'react';
+import { useFirestore, useUser, useCollection, useDoc, useMemoFirebase } from '@/firebase';
 import type { Booking, Hotel } from '@/lib/types';
 import {
   Card,
@@ -75,7 +75,7 @@ function BookingItem({ booking }: { booking: Booking }) {
     const { toast } = useToast();
     const [isCancelling, setIsCancelling] = useState(false);
 
-    const hotelRef = useMemo(() => {
+    const hotelRef = useMemoFirebase(() => {
         if (!firestore) return null;
         return doc(firestore, 'hotels', booking.hotelId);
     }, [firestore, booking.hotelId]);
@@ -243,14 +243,14 @@ export default function MyBookingsPage() {
     }
   }, [user, isUserLoading, router]);
   
-  const bookingsQuery = useMemo(() => {
+  const bookingsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return collection(firestore, 'users', user.uid, 'bookings');
   }, [firestore, user]);
 
   const { data: bookings, isLoading: areBookingsLoading } = useCollection<Booking>(bookingsQuery);
   
-  const sortedBookings = useMemo(() => {
+  const sortedBookings = useMemoFirebase(() => {
     if (!bookings) return [];
     return [...bookings].sort((a,b) => {
         const dateA = (a.createdAt as any).toDate ? (a.createdAt as any).toDate() : new Date(a.createdAt);

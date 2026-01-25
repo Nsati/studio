@@ -4,9 +4,8 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
-import { useMemo } from 'react';
 import { collection } from 'firebase/firestore';
-import { useFirestore, useCollection } from '@/firebase';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import type { City } from '@/lib/types';
 import { Skeleton } from '../ui/skeleton';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -14,14 +13,14 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 export function CitiesList() {
     const firestore = useFirestore();
 
-    const citiesQuery = useMemo(() => {
+    const citiesQuery = useMemoFirebase(() => {
         if (!firestore) return null;
         return collection(firestore, 'cities');
     }, [firestore]);
 
     const { data: citiesFromDB, isLoading } = useCollection<City>(citiesQuery);
 
-    const cities = useMemo(() => {
+    const cities = useMemoFirebase(() => {
         if (citiesFromDB && citiesFromDB.length > 0) {
             return citiesFromDB.sort((a,b) => a.name.localeCompare(b.name));
         }

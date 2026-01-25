@@ -1,10 +1,10 @@
 
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { collection } from 'firebase/firestore';
-import { useFirestore, useCollection } from '@/firebase';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 
 import type { City } from '@/lib/types';
 import { dummyCities } from '@/lib/dummy-data';
@@ -24,14 +24,14 @@ import { Search } from 'lucide-react';
 
 export function SearchFilters() {
   const firestore = useFirestore();
-  const citiesQuery = useMemo(() => {
+  const citiesQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return collection(firestore, 'cities');
   }, [firestore]);
   
   const { data: citiesFromDB, isLoading: isLoadingCities } = useCollection<City>(citiesQuery);
 
-  const cities = useMemo(() => {
+  const cities = useMemoFirebase(() => {
     const sortedCities = (citiesFromDB || []).sort((a, b) => a.name.localeCompare(b.name));
     if (sortedCities.length > 0) return sortedCities;
     if (!isLoadingCities) return dummyCities;

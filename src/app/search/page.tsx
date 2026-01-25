@@ -1,9 +1,6 @@
 
-'use client';
-
-import { Suspense, useState, useEffect, useMemo } from 'react';
+import { Suspense } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
 import { searchHotels } from './actions';
 import { SearchFilters } from './SearchFilters';
 import { HotelCard } from '@/components/hotel/HotelCard';
@@ -12,41 +9,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from '@/components/ui/button';
 import { SearchX } from 'lucide-react';
-import { useFirestore, useCollection } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import Loading from './loading';
 
-
-function ResultsSkeleton() {
-    return (
-      <div className="flex-1">
-        <div className="mb-6">
-          <Skeleton className="h-9 w-1/2" />
-          <Skeleton className="mt-2 h-5 w-1/4" />
-        </div>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Card key={i}>
-              <CardContent className="p-0">
-                <Skeleton className="h-48 w-full" />
-              </CardContent>
-              <div className="p-4 space-y-2">
-                <Skeleton className="h-6 w-3/4" />
-                <Skeleton className="h-4 w-1/2" />
-                <Skeleton className="h-4 w-1/4" />
-              </div>
-            </Card>
-          ))}
-        </div>
-      </div>
-    )
-}
-
-function Results({ hotels, isLoading, city }: { hotels: Hotel[], isLoading: boolean, city: string | null }) {
-
-  if (isLoading) {
-    return <ResultsSkeleton />;
-  }
-
+function Results({ hotels, city }: { hotels: Hotel[], city: string | null }) {
   return (
     <div className="flex-1">
       <div className="mb-6">
@@ -77,76 +42,24 @@ function Results({ hotels, isLoading, city }: { hotels: Hotel[], isLoading: bool
   );
 }
 
-function SearchPageComponent() {
-  const searchParams = useSearchParams();
-  const firestore = useFirestore();
+// This is now a server component that fetches data directly.
+export default async function SearchPage({
+  searchParams,
+}: {
+  searchParams: { city?: string; checkIn?: string; checkOut?: string; guests?: string };
+}) {
 
-  const [hotels, setHotels] = useState<Hotel[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const city = searchParams.get('city');
-  const checkIn = searchParams.get('checkIn');
-  const checkOut = searchParams.get('checkOut');
-  const guests = searchParams.get('guests');
-  
-  // Fetch all hotels on the client-side to guarantee they are shown
-  const allHotelsQuery = useMemo(() => {
-    if (!firestore) return null;
-    return collection(firestore, 'hotels');
-  }, [firestore]);
-  const { data: allHotels, isLoading: isLoadingAllHotels } = useCollection<Hotel>(allHotelsQuery);
-
-
-  useEffect(() => {
-    const fetchData = async () => {
-        setIsLoading(true);
-        // If dates are provided, use the server action for complex availability checks.
-        if (checkIn && checkOut) {
-            try {
-                const result = await searchHotels({ city, checkIn, checkOut, guests });
-                setHotels(result);
-            } catch (error) {
-                console.error("Failed to search hotels with availability:", error);
-                setHotels([]);
-            } finally {
-                setIsLoading(false);
-            }
-        } else {
-             // If no dates, use the client-side data for a simple display.
-            if (!isLoadingAllHotels && allHotels) {
-                let clientFilteredHotels = allHotels;
-                if (city && city !== 'All') {
-                    clientFilteredHotels = allHotels.filter(h => h.city === city);
-                }
-                setHotels(clientFilteredHotels);
-                setIsLoading(false);
-            } else if (isLoadingAllHotels) {
-                setIsLoading(true);
-            } else {
-                setHotels([]);
-                setIsLoading(false);
-            }
-        }
-    };
-    
-    // Re-run when search params change or when the initial client-side data loads.
-    fetchData();
-  }, [city, checkIn, checkOut, guests, allHotels, isLoadingAllHotels]);
+  // Data fetching happens on the server, before the page is rendered.
+  const hotels = await searchHotels(searchParams);
 
   return (
     <div className="container mx-auto max-w-7xl py-8 px-4 md:px-6">
       <div className="flex flex-col gap-8 lg:flex-row">
         <SearchFilters />
-        <Results hotels={hotels} isLoading={isLoading} city={city} />
+        <Suspense fallback={<Loading />}>
+           <Results hotels={hotels} city={searchParams.city || null} />
+        </Suspense>
       </div>
     </div>
   );
-}
-
-export default function SearchPage() {
-  return (
-    <Suspense fallback={<div className="container mx-auto max-w-7xl py-8 px-4 md:px-6"><ResultsSkeleton/></div>}>
-      <SearchPageComponent />
-    </Suspense>
-  )
 }

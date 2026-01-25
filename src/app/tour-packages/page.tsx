@@ -1,14 +1,14 @@
+
 'use client';
 
 import Image from 'next/image';
-import { useMemo } from 'react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar, IndianRupee, Mountain, MapPin } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
-import { useFirestore, useCollection } from '@/firebase';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import type { TourPackage } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -97,14 +97,14 @@ function TourPackageCardSkeleton() {
 
 function PackagesGrid() {
   const firestore = useFirestore();
-  const packagesQuery = useMemo(() => {
+  const packagesQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return collection(firestore, 'tourPackages');
   }, [firestore]);
 
   const { data: livePackages, isLoading } = useCollection<TourPackage>(packagesQuery);
   
-  const tourPackages = useMemo(() => {
+  const tourPackages = useMemoFirebase(() => {
     if (livePackages && livePackages.length > 0) {
       return livePackages;
     }

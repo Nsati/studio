@@ -1,3 +1,4 @@
+
 'use client';
 import { useMemo } from 'react';
 import dynamic from 'next/dynamic';
@@ -9,7 +10,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Hotel, Users2, BookOpen, IndianRupee } from 'lucide-react';
-import { useFirestore, useCollection } from '@/firebase';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, collectionGroup } from 'firebase/firestore';
 import type { Booking, Hotel as HotelType, UserProfile } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -50,17 +51,17 @@ function StatCard({ title, value, icon: Icon, description, isLoading }: any) {
 export default function AdminDashboard() {
     const firestore = useFirestore();
 
-    const bookingsQuery = useMemo(() => {
+    const bookingsQuery = useMemoFirebase(() => {
         if (!firestore) return null;
         return collectionGroup(firestore, 'bookings');
     }, [firestore]);
 
-    const hotelsQuery = useMemo(() => {
+    const hotelsQuery = useMemoFirebase(() => {
         if (!firestore) return null;
         return collection(firestore, 'hotels');
     }, [firestore]);
     
-    const usersQuery = useMemo(() => {
+    const usersQuery = useMemoFirebase(() => {
         if (!firestore) return null;
         return collection(firestore, 'users');
     }, [firestore]);
@@ -69,7 +70,7 @@ export default function AdminDashboard() {
     const { data: hotelsData, isLoading: isLoadingHotels } = useCollection<HotelType>(hotelsQuery);
     const { data: usersData, isLoading: isLoadingUsers } = useCollection<UserProfile>(usersQuery);
 
-    const { totalRevenue, totalBookings, bookingsLastMonth } = useMemo(() => {
+    const { totalRevenue, totalBookings, bookingsLastMonth } = useMemoFirebase(() => {
         if (!bookingsData) return { totalRevenue: 0, totalBookings: 0, bookingsLastMonth: 0 };
         
         const oneMonthAgo = new Date();
@@ -90,7 +91,7 @@ export default function AdminDashboard() {
         return { totalRevenue: revenue, totalBookings: bookingsData.filter(b => b.status === 'CONFIRMED').length, bookingsLastMonth: lastMonthCount };
     }, [bookingsData]);
     
-    const sortedBookings = useMemo(() => {
+    const sortedBookings = useMemoFirebase(() => {
         if (!bookingsData) return null;
         return bookingsData.sort((a, b) => {
              const dateA = (a.createdAt as any).toDate ? (a.createdAt as any).toDate() : new Date(a.createdAt);

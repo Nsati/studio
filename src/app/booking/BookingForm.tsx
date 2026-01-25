@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -9,8 +10,8 @@ import { signInAnonymously } from 'firebase/auth';
 
 
 import type { Hotel, Room, Booking, Promotion } from '@/lib/types';
-import { useFirestore, useAuth, useUser, useDoc, useCollection } from '@/firebase';
-import { doc, collection, getDoc, setDoc } from 'firebase/firestore';
+import { useFirestore, useAuth, useUser, useDoc, useCollection, useMemoFirebase } from '@/firebase';
+import { doc, collection, getDoc } from 'firebase/firestore';
 
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -43,21 +44,21 @@ export function BookingForm() {
     const checkOutStr = searchParams.get('checkOut');
     const guests = searchParams.get('guests') || '1';
     
-    const hotelRef = useMemo(() => {
+    const hotelRef = useMemoFirebase(() => {
         if (!firestore || !hotelId) return null;
         return doc(firestore, 'hotels', hotelId);
     }, [firestore, hotelId]);
 
     const { data: hotel, isLoading: isHotelLoading } = useDoc<Hotel>(hotelRef);
     
-    const roomsQuery = useMemo(() => {
+    const roomsQuery = useMemoFirebase(() => {
         if (!firestore || !hotelId) return null;
         return collection(firestore, 'hotels', hotelId, 'rooms');
     }, [firestore, hotelId]);
     
     const { data: rooms, isLoading: areRoomsLoading } = useCollection<Room>(roomsQuery);
 
-    const room = useMemo(() => {
+    const room = useMemoFirebase(() => {
         if (areRoomsLoading || !rooms) return null;
         return rooms.find(r => r.id === roomId);
     }, [areRoomsLoading, rooms, roomId]);

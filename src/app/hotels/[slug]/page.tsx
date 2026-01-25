@@ -4,12 +4,12 @@
 import { notFound, useParams } from 'next/navigation';
 import Image from 'next/image';
 import { Star, MapPin, BedDouble } from 'lucide-react';
-import React, { useMemo } from 'react';
+import React from 'react';
 
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { AmenityIcon } from '@/components/hotel/AmenityIcon';
 import type { Hotel, Room, Review } from '@/lib/types';
-import { useFirestore, useDoc, useCollection } from '@/firebase';
+import { useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
 import { doc, collection } from 'firebase/firestore';
 
 import {
@@ -31,28 +31,28 @@ export default function HotelPage() {
   const slug = params.slug as string;
   const firestore = useFirestore();
   
-  const hotelRef = useMemo(() => {
+  const hotelRef = useMemoFirebase(() => {
     if (!firestore || !slug) return null;
     return doc(firestore, 'hotels', slug);
   }, [firestore, slug]);
   
   const { data: hotel, isLoading } = useDoc<Hotel>(hotelRef);
   
-  const roomsQuery = useMemo(() => {
+  const roomsQuery = useMemoFirebase(() => {
     if (!firestore || !slug) return null;
     return collection(firestore, 'hotels', slug, 'rooms');
   }, [firestore, slug]);
 
   const { data: rooms, isLoading: isLoadingRooms } = useCollection<Room>(roomsQuery);
 
-  const reviewsQuery = useMemo(() => {
+  const reviewsQuery = useMemoFirebase(() => {
     if (!firestore || !slug) return null;
     return collection(firestore, 'hotels', slug, 'reviews');
   }, [firestore, slug]);
 
   const { data: reviews, isLoading: isLoadingReviews } = useCollection<Review>(reviewsQuery);
 
-  const minPrice = useMemo(() => {
+  const minPrice = useMemoFirebase(() => {
     if (!rooms || rooms.length === 0) return 0;
     const availableRooms = rooms.filter(r => (r.availableRooms ?? r.totalRooms) > 0);
     if (availableRooms.length === 0) return 0;

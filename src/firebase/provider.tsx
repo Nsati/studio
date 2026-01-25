@@ -188,6 +188,11 @@ export function useDoc<T = any>(
       return;
     }
 
+    // @ts-ignore
+    if (!docRef.__memo && process.env.NODE_ENV === 'development') {
+        console.warn(`Firestore reference passed to useDoc at path "${docRef.path}" is not memoized. This may cause infinite re-renders. Use the useMemoFirebase hook to memoize the reference.`);
+    }
+
     setIsLoading(true);
     setError(null);
 
@@ -243,6 +248,13 @@ export function useCollection<T = any>(
       setError(null);
       return;
     }
+    
+    const path = (refOrQuery as any)._query?.path?.canonicalString() || (refOrQuery as any).path || 'unknown path';
+
+    // @ts-ignore
+    if (!refOrQuery.__memo && process.env.NODE_ENV === 'development') {
+        console.warn(`Firestore query passed to useCollection for path "${path}" is not memoized. This may cause infinite re-renders. Use the useMemoFirebase hook to memoize the reference.`);
+    }
 
     setIsLoading(true);
     setError(null);
@@ -257,13 +269,12 @@ export function useCollection<T = any>(
       },
       (err: FirestoreError) => {
         if (err.code === 'permission-denied') {
-            const path = (refOrQuery as any)._query?.path?.canonicalString() || (refOrQuery as any).path;
              errorEmitter.emit('permission-error', new FirestorePermissionError({
-                path: path || 'unknown path',
+                path: path,
                 operation: 'list',
             }));
         }
-        console.error('Error fetching collection:', err);
+        console.error(`Error fetching collection for path "${path}":`, err);
         setError(err);
         setData(null);
         setIsLoading(false);

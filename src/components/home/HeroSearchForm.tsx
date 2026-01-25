@@ -32,21 +32,21 @@ import {
 import type { City } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { dummyCities } from '@/lib/dummy-data';
-import { useFirestore, useCollection } from '@/firebase';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export function HeroSearchForm() {
   const router = useRouter();
   
   const firestore = useFirestore();
-  const citiesQuery = useMemo(() => {
+  const citiesQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return collection(firestore, 'cities');
   }, [firestore]);
 
   const { data: citiesFromDB, isLoading: isLoadingCities } = useCollection<City>(citiesQuery);
 
-  const cities = useMemo(() => {
+  const cities = useMemoFirebase(() => {
     const sortedCities = (citiesFromDB || []).sort((a, b) => a.name.localeCompare(b.name));
     
     if (sortedCities.length > 0) return sortedCities; 
