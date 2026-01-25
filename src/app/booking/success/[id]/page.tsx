@@ -1,17 +1,17 @@
 
 'use client';
 
-import { useParams, useRouter, notFound } from 'next/navigation';
-import { useFirestore, useUser, useDoc } from '@/firebase';
-import { doc } from 'firebase/firestore';
-import { useEffect, useMemo, useState } from 'react';
+import { useParams, notFound } from 'next/navigation';
+import { useFirestore, useUser } from '@/firebase';
+import { doc, getDoc } from 'firebase/firestore';
+import { useEffect, useState } from 'react';
 import type { ConfirmedBookingSummary } from '@/lib/types';
 import { generateTripGuide, type TripAssistantOutput } from '@/ai/flows/generate-arrival-assistant';
 
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-  CheckCircle, PartyPopper, UserPlus, Bot, Map, ParkingCircle, Clock, Lightbulb, Loader2, Mountain, UtensilsCrossed, RefreshCw
+  CheckCircle, PartyPopper, UserPlus, Bot, Map, ParkingCircle, Clock, Lightbulb, Loader2, Mountain, UtensilsCrossed, RefreshCw, AlertCircle
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
@@ -140,42 +140,56 @@ export default function BookingSuccessPage() {
     const firestore = useFirestore();
     const bookingId = params.id as string;
     
-    const summaryBookingRef = useMemo(() => {
-        if (!firestore || !bookingId) return null;
-        return doc(firestore, 'confirmedBookings', bookingId);
-    }, [firestore, bookingId]);
-
-    const { data: summaryBooking, isLoading: isSummaryLoading, error: summaryError } = useDoc<ConfirmedBookingSummary>(summaryBookingRef);
     const { user, isLoading: isUserLoading } = useUser();
     
-    // State to handle the case where the doc takes a moment to appear
-    const [isWaitingForDoc, setIsWaitingForDoc] = useState(true);
-    const [timedOut, setTimedOut] = useState(false);
+    // State for the summary, loading status, and polling
+    const [summaryBooking, setSummaryBooking] = useState<ConfirmedBookingSummary | null>(null);
+    const [pageStatus, setPageStatus] = useState<'loading' | 'success' | 'failed'>('loading');
 
     useEffect(() => {
-      // If we have the doc, we are no longer waiting.
-      if (summaryBooking) {
-        setIsWaitingForDoc(false);
-        return;
-      }
-  
-      // If the initial load from useDoc is done but we don't have the doc, start a timer.
-      // This gives the backend webhook/action time to write the document.
-      if (!isSummaryLoading && !summaryBooking) {
-        const timer = setTimeout(() => {
-          // If after 20 seconds we still don't have the doc, we assume an error and time out.
-          if (!summaryBooking) {
-            setTimedOut(true);
-          }
-        }, 20000); // 20 seconds timeout
-  
-        return () => clearTimeout(timer);
-      }
-    }, [isSummaryLoading, summaryBooking]);
+        if (!firestore || !bookingId) return;
+
+        const summaryBookingRef = doc(firestore, 'confirmedBookings', bookingId);
+        let attempts = 0;
+        const maxAttempts = 10; // Poll 10 times (20 seconds total)
+        const intervalTime = 2000; // Poll every 2 seconds
+
+        let poller: NodeJS.Timeout | null = null;
+
+        const pollForBooking = async () => {
+            try {
+                const docSnap = await getDoc(summaryBookingRef);
+                if (docSnap.exists()) {
+                    setSummaryBooking({ id: docSnap.id, ...docSnap.data() } as ConfirmedBookingSummary);
+                    setPageStatus('success');
+                    if (poller) clearInterval(poller); // Stop polling once found
+                    return;
+                }
+            } catch (error) {
+                console.error("Error fetching booking summary:", error);
+            }
+
+            attempts++;
+            if (attempts >= maxAttempts) {
+                console.error(`Timed out waiting for booking summary doc: ${bookingId}`);
+                setPageStatus('failed');
+                if (poller) clearInterval(poller); // Stop polling on timeout
+            }
+        };
+
+        // Start polling immediately and then set an interval
+        pollForBooking(); 
+        poller = setInterval(pollForBooking, intervalTime);
+
+        // Cleanup function to clear interval when component unmounts
+        return () => {
+            if (poller) clearInterval(poller);
+        };
+    }, [firestore, bookingId]);
 
 
-    // The page is in a loading state if we're still loading auth OR if we're still waiting for the doc (and haven't timed out).
-    const isLoading = isUserLoading || (isWaitingForDoc && !timedOut);
+    // Overall loading state also depends on the user hook
+    const isLoading = isUserLoading || pageStatus === 'loading';
 
     if (isLoading) {
         return (
@@ -198,14 +212,39 @@ export default function BookingSuccessPage() {
         );
     }
     
-    // After loading/waiting, if we timed out, or there's a Firestore error, or we STILL don't have the doc, show 404.
-    if (timedOut || summaryError || !summaryBooking) {
-        console.error("Booking success page error:", { timedOut, summaryError: summaryError?.message, hasBooking: !!summaryBooking });
+    if (pageStatus === 'failed') {
+         return (
+            <div className="bg-muted/40 min-h-[calc(100vh-4rem)] flex items-center">
+                <div className="container mx-auto max-w-lg py-12 px-4 md:px-6">
+                    <Card className="text-center border-destructive">
+                        <CardHeader className="items-center">
+                            <AlertCircle className="h-12 w-12 text-destructive" />
+                            <CardTitle className="text-3xl font-headline mt-4">Confirmation Pending</CardTitle>
+                            <CardDescription>
+                                We are still confirming your booking with the hotel. Your payment was successful. Please check your email for the final confirmation shortly, or visit the "My Bookings" page.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="flex flex-col sm:flex-row gap-4">
+                            <Button className="w-full" asChild>
+                                <Link href="/my-bookings">Go to My Bookings</Link>
+                            </Button>
+                            <Button className="w-full" variant="outline" asChild>
+                                <Link href="/">Back to Home</Link>
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
+        );
+    }
+    
+    if (pageStatus === 'success' && !summaryBooking) {
         return notFound();
     }
 
-    const checkInDate = (summaryBooking.checkIn as any).toDate ? (summaryBooking.checkIn as any).toDate() : new Date(summaryBooking.checkIn);
-    const checkOutDate = (summaryBooking.checkOut as any).toDate ? (summaryBooking.checkOut as any).toDate() : new Date(summaryBooking.checkOut);
+    // This check is now safe because we only reach here if status is 'success'
+    const checkInDate = (summaryBooking!.checkIn as any).toDate ? (summaryBooking!.checkIn as any).toDate() : new Date(summaryBooking!.checkIn);
+    const checkOutDate = (summaryBooking!.checkOut as any).toDate ? (summaryBooking!.checkOut as any).toDate() : new Date(summaryBooking!.checkOut);
 
     return (
         <div className="bg-muted/40 min-h-[calc(100vh-4rem)] flex items-center">
@@ -215,31 +254,31 @@ export default function BookingSuccessPage() {
                         <PartyPopper className="h-12 w-12 text-primary" />
                         <CardTitle className="text-3xl font-headline mt-4">Booking Confirmed!</CardTitle>
                         <CardDescription className="max-w-md">
-                           Your Himalayan adventure awaits, {summaryBooking.customerName}. A confirmation email should arrive shortly.
+                           Your Himalayan adventure awaits, {summaryBooking!.customerName}. A confirmation email should arrive shortly.
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="p-6 space-y-6">
                         <Card className="bg-background">
                             <CardHeader>
-                                <CardTitle className="text-xl">{summaryBooking.hotelName}</CardTitle>
-                                <CardDescription>{summaryBooking.hotelCity}</CardDescription>
+                                <CardTitle className="text-xl">{summaryBooking!.hotelName}</CardTitle>
+                                <CardDescription>{summaryBooking!.hotelCity}</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-2 text-sm">
-                                <p><strong className="text-foreground">Room:</strong> {summaryBooking.roomType}</p>
+                                <p><strong className="text-foreground">Room:</strong> {summaryBooking!.roomType}</p>
                                 <p><strong className="text-foreground">Check-in:</strong> {format(checkInDate, 'EEEE, dd MMMM yyyy')}</p>
                                 <p><strong className="text-foreground">Check-out:</strong> {format(checkOutDate, 'EEEE, dd MMMM yyyy')}</p>
-                                <p><strong className="text-foreground">Guests:</strong> {summaryBooking.guests}</p>
+                                <p><strong className="text-foreground">Guests:</strong> {summaryBooking!.guests}</p>
                             </CardContent>
                         </Card>
 
                         <div className="rounded-lg border bg-background p-4 space-y-2">
                              <div className="flex justify-between items-center">
                                 <span className="text-muted-foreground">Booking ID</span>
-                                <span className="font-mono text-xs">{summaryBooking.id}</span>
+                                <span className="font-mono text-xs">{summaryBooking!.id}</span>
                             </div>
                             <div className="flex justify-between items-center">
                                 <span className="text-muted-foreground">Total Amount Paid</span>
-                                <span className="font-bold text-lg">{summaryBooking.totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}</span>
+                                <span className="font-bold text-lg">{summaryBooking!.totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}</span>
                             </div>
                              <div className="flex justify-between items-center">
                                 <span className="text-muted-foreground">Payment Status</span>
@@ -247,7 +286,7 @@ export default function BookingSuccessPage() {
                             </div>
                         </div>
                         
-                        <TripAssistant summary={summaryBooking} />
+                        <TripAssistant summary={summaryBooking!} />
 
                          {user?.isAnonymous && (
                             <Card className="bg-blue-50 border-blue-200">
