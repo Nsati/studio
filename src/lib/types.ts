@@ -1,3 +1,4 @@
+
 export interface Hotel {
   id: string; 
   name: string;
@@ -97,14 +98,3 @@ export interface Review {
   text: string;
   createdAt: Date;
 }
-
-
-// This mock type is no longer used for primary auth state.
-export type MockUser = {
-    uid: string;
-    displayName: string;
-    email: string;
-    password?: string;
-    role: 'user' | 'admin';
-    photoURL?: string | null;
-};

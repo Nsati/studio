@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -78,16 +79,15 @@ export function SignupForm() {
         const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
         const user = userCredential.user;
 
-        // Create user profile in firestore from client
-        // The "first user is admin" logic from the old server action is removed
-        // to make signup work without any server-side configuration. The admin
-        // role can be assigned manually in the Firebase console.
+        // Create user profile in firestore from the client.
+        // All new signups are 'user' by default. Admin role must be granted manually
+        // from the Firebase console for security.
         const newUserProfile: UserProfile = {
             uid: user.uid,
             displayName: values.name,
             email: values.email,
             mobile: values.mobile,
-            role: 'user', // All new signups are 'user' by default.
+            role: 'user',
             status: 'active',
         };
 

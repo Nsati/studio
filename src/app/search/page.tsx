@@ -1,7 +1,7 @@
 
 'use client';
 
-import { Suspense, useState, useEffect } from 'react';
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
@@ -66,7 +66,7 @@ function Results({ hotels, isLoading, city }: { hotels: Hotel[], isLoading: bool
           <SearchX className="h-16 w-16 text-muted-foreground/50 mb-4" />
           <h3 className="font-headline text-2xl font-bold">No Stays Found</h3>
           <p className="mt-2 max-w-md text-muted-foreground">
-            We couldn't find any properties matching your search. Add some from the admin panel to see them here.
+            We couldn't find any properties matching your search. Add some hotels in the admin panel or adjust your filters.
           </p>
           <Button variant="outline" className="mt-6" asChild>
             <Link href="/search">Clear Filters & View All</Link>
@@ -83,7 +83,8 @@ function SearchPageComponent() {
 
   const city = searchParams.get('city');
 
-  // Memoize the query so useCollection doesn't cause infinite re-renders
+  // Memoize the query so useCollection doesn't cause infinite re-renders.
+  // This is a live query that will update automatically.
   const hotelsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
 
@@ -94,10 +95,8 @@ function SearchPageComponent() {
       q = query(q, where('city', '==', city));
     }
     
-    // Note: Availability filtering (by date/guests) is complex and was
-    // dependent on a server-side action. To ensure the frontend reliably
-    // displays data from Firestore, this client-side search currently
-    // only filters by city.
+    // Note: Availability filtering (by date/guests) is a complex server-side task
+    // and is not included in this client-side implementation.
     
     return q;
   }, [firestore, city]);

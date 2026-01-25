@@ -1,4 +1,5 @@
-// This is now a barrel file. All initialization happens in FirebaseClientProvider.
+
+// This is a barrel file. All initialization happens in FirebaseClientProvider.
 // It re-exports all the necessary hooks and context providers for the rest of the app.
 export * from './provider';
 export * from './client-provider';

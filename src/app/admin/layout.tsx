@@ -44,6 +44,8 @@ function AdminAuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
+    // This effect handles the case where the user is not logged in at all.
+    // It waits for the auth state to be resolved (`isLoading` is false).
     if (isLoading) return;
     if (!user) {
       router.replace('/login?redirect=/admin');
@@ -51,6 +53,7 @@ function AdminAuthGuard({ children }: { children: React.ReactNode }) {
   }, [user, isLoading, router]);
 
   if (isLoading) {
+    // Show a loading state while we verify the user's credentials.
     return (
       <div className="flex h-screen w-full items-center justify-center bg-muted/40">
         <div className="flex items-center gap-4 text-lg">
@@ -61,10 +64,13 @@ function AdminAuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
+  // If the user is logged in and has the 'admin' role, show the admin panel.
   if (user && userProfile && userProfile.role === 'admin') {
     return <>{children}</>;
   }
 
+  // If the user is logged in but is NOT an admin, show a helpful message
+  // instead of just redirecting them away. This guides them on how to fix it.
   if (user && !isLoading) {
     return (
       <div className="flex h-screen items-center justify-center bg-background p-4">
@@ -72,18 +78,18 @@ function AdminAuthGuard({ children }: { children: React.ReactNode }) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 font-headline text-2xl text-destructive">
               <ShieldAlert className="h-6 w-6" />
-              Admin Access Denied
+              Admin Access Required
             </CardTitle>
             <CardDescription>
-              Your account does not have administrator privileges.
+              Your account (<span className="font-semibold">{user.email}</span>) does not have administrator privileges.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              This can happen if your user profile in the database is missing the correct role. The application is configured to automatically assign the 'admin' role to the very first user who signs up.
+              For security, the admin role must be assigned manually. To enable admin access for your account, please follow these steps.
             </p>
             <div>
-              <h4 className="font-semibold text-foreground">How to Fix This:</h4>
+              <h4 className="font-semibold text-foreground">How to Grant Admin Access:</h4>
               <ol className="list-decimal list-inside text-sm text-muted-foreground space-y-2 mt-2">
                 <li>Go to your Firebase project console.</li>
                 <li>Navigate to the <code className="font-mono bg-muted p-1 rounded">Firestore Database</code> section.</li>
@@ -99,7 +105,7 @@ function AdminAuthGuard({ children }: { children: React.ReactNode }) {
             </Button>
             <Button asChild>
               <a href={`https://console.firebase.google.com/project/${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}/firestore/data/~2Fusers~2F${user.uid}`} target="_blank" rel="noopener noreferrer">
-                Open Your User Document
+                Go to Your User Document
               </a>
             </Button>
           </CardFooter>
@@ -108,6 +114,7 @@ function AdminAuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
+  // Fallback for the brief moment before the redirect effect runs.
   return (
     <div className="flex h-screen w-full items-center justify-center bg-muted/40">
       <p>Redirecting to login...</p>
