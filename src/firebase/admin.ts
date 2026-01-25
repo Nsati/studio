@@ -1,3 +1,4 @@
+
 import * as admin from 'firebase-admin';
 
 /**
@@ -26,6 +27,9 @@ function initializeFirebaseAdmin() {
         
         This is a critical error. The server will run, but all backend operations that require admin privileges (like payment confirmation, search, etc.) will fail.
         Please ensure the JSON content in your .env file is a valid, single-line JSON string enclosed in quotes.
+        
+        Example .env:
+        GOOGLE_APPLICATION_CREDENTIALS_JSON='{"type": "service_account", "project_id": "...", ...}'
       `);
     }
   } else {
@@ -33,7 +37,7 @@ function initializeFirebaseAdmin() {
       ⚠️ WARNING: FIREBASE ADMIN SDK NOT INITIALIZED
       ------------------------------------------------
       Reason: The GOOGLE_APPLICATION_CREDENTIALS_JSON environment variable is not set.
-      This is required for server-side operations (like payment confirmation, search, webhooks).
+      This is required for server-side operations (like payment confirmation, server-side search, webhooks).
       
       To enable these features:
       1. Go to your Firebase Project Settings -> Service Accounts.
@@ -42,7 +46,7 @@ function initializeFirebaseAdmin() {
       4. In your .env file, create a variable: GOOGLE_APPLICATION_CREDENTIALS_JSON="{...paste content here...}"
       5. Restart your server.
       
-      The server will run, but backend operations will be disabled.
+      The server will continue to run, but backend operations that require admin privileges will be disabled.
     `);
   }
 }
