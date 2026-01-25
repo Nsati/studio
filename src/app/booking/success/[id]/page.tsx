@@ -5,7 +5,7 @@ import { useParams, useRouter, notFound } from 'next/navigation';
 import { useFirestore, useUser, useDoc } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { useEffect, useMemo, useState } from 'react';
-import type { Hotel, ConfirmedBookingSummary } from '@/lib/types';
+import type { ConfirmedBookingSummary } from '@/lib/types';
 import { generateTripGuide, type TripAssistantOutput } from '@/ai/flows/generate-arrival-assistant';
 
 import { Skeleton } from '@/components/ui/skeleton';
@@ -138,7 +138,6 @@ function TripAssistant({ summary }: { summary: ConfirmedBookingSummary }) {
 export default function BookingSuccessPage() {
     const params = useParams();
     const firestore = useFirestore();
-
     const bookingId = params.id as string;
     
     const summaryBookingRef = useMemo(() => {
@@ -146,19 +145,37 @@ export default function BookingSuccessPage() {
         return doc(firestore, 'confirmedBookings', bookingId);
     }, [firestore, bookingId]);
 
-    // Get loading and error states from the hook
     const { data: summaryBooking, isLoading: isSummaryLoading, error: summaryError } = useDoc<ConfirmedBookingSummary>(summaryBookingRef);
     const { user, isLoading: isUserLoading } = useUser();
     
-    // The page is loading if we are still checking the user state OR fetching the booking summary.
-    const isLoading = isUserLoading || isSummaryLoading;
+    // State to handle the case where the doc takes a moment to appear
+    const [isWaitingForDoc, setIsWaitingForDoc] = useState(true);
+    const [timedOut, setTimedOut] = useState(false);
 
     useEffect(() => {
-        // Log the error for easier debugging if it occurs
-        if (summaryError) {
-             console.error("Error fetching booking summary:", summaryError);
-        }
-    }, [summaryError]);
+      // If we have the doc, we are no longer waiting.
+      if (summaryBooking) {
+        setIsWaitingForDoc(false);
+        return;
+      }
+  
+      // If the initial load from useDoc is done but we don't have the doc, start a timer.
+      // This gives the backend webhook/action time to write the document.
+      if (!isSummaryLoading && !summaryBooking) {
+        const timer = setTimeout(() => {
+          // If after 20 seconds we still don't have the doc, we assume an error and time out.
+          if (!summaryBooking) {
+            setTimedOut(true);
+          }
+        }, 20000); // 20 seconds timeout
+  
+        return () => clearTimeout(timer);
+      }
+    }, [isSummaryLoading, summaryBooking]);
+
+
+    // The page is in a loading state if we're still loading auth OR if we're still waiting for the doc (and haven't timed out).
+    const isLoading = isUserLoading || (isWaitingForDoc && !timedOut);
 
     if (isLoading) {
         return (
@@ -181,9 +198,9 @@ export default function BookingSuccessPage() {
         );
     }
     
-    // After loading, if there's a Firestore error or the document is not found, show 404.
-    // This is more robust than a timer.
-    if (summaryError || !summaryBooking) {
+    // After loading/waiting, if we timed out, or there's a Firestore error, or we STILL don't have the doc, show 404.
+    if (timedOut || summaryError || !summaryBooking) {
+        console.error("Booking success page error:", { timedOut, summaryError: summaryError?.message, hasBooking: !!summaryBooking });
         return notFound();
     }
 
@@ -264,3 +281,5 @@ export default function BookingSuccessPage() {
         </div>
     );
 }
+
+    
