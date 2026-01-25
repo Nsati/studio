@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { collection } from 'firebase/firestore';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { checkServerConfig } from '@/app/booking/actions';
 
 import type { City } from '@/lib/types';
 import { dummyCities } from '@/lib/dummy-data';
@@ -19,11 +20,20 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
-import { Search } from 'lucide-react';
+import { Search, Info } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 
 export function SearchFilters() {
   const firestore = useFirestore();
+  const [isServerConfigured, setIsServerConfigured] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    checkServerConfig().then(result => {
+        setIsServerConfigured(result.isConfigured);
+    });
+  }, []);
+  
   const citiesQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return collection(firestore, 'cities');
@@ -55,7 +65,7 @@ export function SearchFilters() {
   }, [searchParams]);
 
   const createQueryString = (params: Record<string, string | null>) => {
-    const newSearchParams = new URLSearchParams(); // Start fresh to remove old params
+    const newSearchParams = new URLSearchParams();
     for (const [key, value] of Object.entries(params)) {
         if (value) {
             newSearchParams.set(key, value);
@@ -66,8 +76,10 @@ export function SearchFilters() {
   
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    router.push(`${pathname}?${createQueryString({ city: city === 'All' ? null : city, checkIn: checkin, checkOut: checkout, guests })}`);
+    router.push(`${pathname}?${createQueryString({ city: city === 'All' ? null : city, checkIn: isServerConfigured ? checkin : null, checkOut: isServerConfigured ? checkout: null, guests: isServerConfigured ? guests : null })}`);
   }
+  
+  const availabilitySearchDisabled = isServerConfigured === false;
 
   return (
      <aside className="w-full lg:w-1/4 lg:pr-8">
@@ -92,23 +104,38 @@ export function SearchFilters() {
                 </SelectContent>
               </Select>
             </div>
+
             <div className="space-y-2">
-              <Label htmlFor="checkin" className="text-lg font-semibold">
-                Check-in
-              </Label>
-              <Input id="checkin" type="date" value={checkin} onChange={e => setCheckin(e.target.value)} />
+                <div className="flex items-center justify-between">
+                    <Label htmlFor="checkin" className={cn("text-lg font-semibold", availabilitySearchDisabled && "text-muted-foreground")}>
+                        Check-in
+                    </Label>
+                    {availabilitySearchDisabled && (
+                         <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger><Info className="h-4 w-4 text-muted-foreground" /></TooltipTrigger>
+                                <TooltipContent>
+                                    <p>Server not configured for availability search.</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    )}
+                </div>
+                <Input id="checkin" type="date" value={checkin} onChange={e => setCheckin(e.target.value)} disabled={availabilitySearchDisabled} />
             </div>
+
             <div className="space-y-2">
-              <Label htmlFor="checkout" className="text-lg font-semibold">
-                Check-out
-              </Label>
-              <Input id="checkout" type="date" value={checkout} onChange={e => setCheckout(e.target.value)} />
+                <Label htmlFor="checkout" className={cn("text-lg font-semibold", availabilitySearchDisabled && "text-muted-foreground")}>
+                    Check-out
+                </Label>
+                <Input id="checkout" type="date" value={checkout} onChange={e => setCheckout(e.target.value)} disabled={availabilitySearchDisabled} />
             </div>
+
             <div className="space-y-2">
-              <Label htmlFor="guests" className="text-lg font-semibold">
-                Guests
-              </Label>
-              <Input id="guests" type="number" min="1" placeholder="2" value={guests} onChange={e => setGuests(e.target.value)} />
+                <Label htmlFor="guests" className={cn("text-lg font-semibold", availabilitySearchDisabled && "text-muted-foreground")}>
+                    Guests
+                </Label>
+                <Input id="guests" type="number" min="1" placeholder="2" value={guests} onChange={e => setGuests(e.target.value)} disabled={availabilitySearchDisabled}/>
             </div>
             <Button type="submit" className="w-full text-lg h-12 bg-accent text-accent-foreground hover:bg-accent/90">
               <Search className="mr-2 h-4 w-4" />

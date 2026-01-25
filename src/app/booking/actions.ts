@@ -7,6 +7,17 @@ import { getAdminDb } from '@/firebase/admin';
 import type { Booking, Room, ConfirmedBookingSummary } from '@/lib/types';
 import * as admin from 'firebase-admin';
 
+/**
+ * Checks if the Firebase Admin SDK has been configured on the server.
+ * This is used by the client to determine if server-dependent features can be enabled.
+ * @returns A promise that resolves to an object indicating if the server is configured.
+ */
+export async function checkServerConfig(): Promise<{ isConfigured: boolean }> {
+  const db = getAdminDb();
+  return { isConfigured: !!db };
+}
+
+
 interface CreateOrderResponse {
   success: boolean;
   order?: {
@@ -20,14 +31,14 @@ interface CreateOrderResponse {
 
 export async function createRazorpayOrder(
   amount: number,
-  notes: { [key: string]: string }
+  notes: { [key:string]: string }
 ): Promise<CreateOrderResponse> {
   const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
   const keySecret = process.env.RAZORPAY_KEY_SECRET;
 
   if (!keyId || !keySecret) {
     console.error(
-      'CRITICAL: Razorpay keys are not configured in environment variables. Set NEXT_PUBLIC_RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in your .env file.'
+      'CRITICAL: Razorpay keys are not configured. Set NEXT_PUBLIC_RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET.'
     );
     return {
       success: false,
@@ -43,10 +54,10 @@ export async function createRazorpayOrder(
     });
 
     const options = {
-      amount: Math.round(amount * 100), // amount in the smallest currency unit, ensuring integer
+      amount: Math.round(amount * 100), 
       currency: 'INR',
       receipt: `receipt_${crypto.randomBytes(6).toString('hex')}`,
-      notes, // Pass notes for webhook context
+      notes,
     };
     const order = await razorpayInstance.orders.create(options);
 
@@ -93,21 +104,19 @@ export async function verifyPaymentAndConfirmBooking(
     const db = getAdminDb();
     if (!db) {
         console.error('CRITICAL: Firebase Admin SDK is not initialized for verifyPaymentAndConfirmBooking.');
-        return { success: false, error: 'Database service is not configured on the server. Booking cannot be confirmed.' };
+        return { success: false, error: 'Database service is not configured on the server. Please set the GOOGLE_APPLICATION_CREDENTIALS_JSON environment variable.' };
     }
 
-    // 1. Verify Razorpay signature
     const body = paymentData.razorpay_order_id + "|" + paymentData.razorpay_payment_id;
     const expectedSignature = crypto
         .createHmac('sha256', keySecret)
         .update(body.toString())
         .digest('hex');
 
-    if (expectedSignature !== paymentData.razorpay_signature) {
+    if (expectedSignature !== paymentData.razororpay_signature) {
         return { success: false, error: 'Payment verification failed: Invalid signature.' };
     }
 
-    // 2. Run Firestore transaction
     const bookingRef = db.collection('users').doc(bookingIdentifiers.userId).collection('bookings').doc(bookingIdentifiers.bookingId);
 
     try {
@@ -138,7 +147,6 @@ export async function verifyPaymentAndConfirmBooking(
                 throw new Error(`Overbooking detected for room ${bookingData.roomId}.`);
             }
             
-            // Atomically update inventory and booking status
             transaction.update(roomRef, { availableRooms: admin.firestore.FieldValue.increment(-1) });
             transaction.update(bookingRef, {
                 status: 'CONFIRMED',
@@ -146,7 +154,6 @@ export async function verifyPaymentAndConfirmBooking(
                 createdAt: admin.firestore.FieldValue.serverTimestamp(),
             });
 
-            // Create public summary doc for success page
             const summaryRef = db.collection('confirmedBookings').doc(bookingIdentifiers.bookingId);
             const summaryData: ConfirmedBookingSummary = {
                 id: bookingIdentifiers.bookingId,

@@ -5,24 +5,24 @@ import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, useRouter, notFound } from 'next/navigation';
 import Image from 'next/image';
 import { differenceInDays, format, parse } from 'date-fns';
-import { createRazorpayOrder, verifyPaymentAndConfirmBooking } from '@/app/booking/actions';
+import { createRazorpayOrder, verifyPaymentAndConfirmBooking, checkServerConfig } from '@/app/booking/actions';
 import { signInAnonymously } from 'firebase/auth';
-
-
-import type { Hotel, Room, Booking, Promotion, ConfirmedBookingSummary } from '@/lib/types';
+import type { Hotel, Room, Booking, Promotion } from '@/lib/types';
 import { useFirestore, useAuth, useUser, useDoc, useCollection, useMemoFirebase } from '@/firebase';
 import { doc, collection, getDoc, setDoc } from 'firebase/firestore';
 
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, Calendar, Users, BedDouble, ArrowLeft, Tag, ShieldCheck, HelpCircle } from 'lucide-react';
+import { Loader2, Calendar, Users, BedDouble, ArrowLeft, Tag, ShieldCheck, HelpCircle, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import { BookingFormSkeleton } from './BookingFormSkeleton';
+import { firebaseConfig } from '@/firebase/config';
+
 
 declare global {
   interface Window {
@@ -30,13 +30,56 @@ declare global {
   }
 }
 
+function ServerConfigurationError() {
+    const consoleUrl = `https://console.firebase.google.com/project/${firebaseConfig.projectId}/settings/serviceaccounts/adminsdk`;
+    return (
+        <div className="container mx-auto max-w-4xl py-8 md:py-12 px-4 md:px-6">
+            <Card className="border-destructive">
+                 <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-destructive">
+                        <AlertTriangle className="h-6 w-6" />
+                        Booking Service Unavailable
+                    </CardTitle>
+                    <CardDescription>
+                        The live booking and payment system is not configured on the server.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                     <p className="text-sm text-muted-foreground">
+                       This is a server configuration issue, not a bug in the application code. To enable live bookings, the backend needs credentials to communicate securely with Firebase services for tasks like verifying payments and updating room inventory.
+                    </p>
+                    <div>
+                        <h4 className="font-semibold text-foreground">How to Fix This:</h4>
+                        <ol className="list-decimal list-inside text-sm text-muted-foreground space-y-2 mt-2">
+                             <li>Go to your Firebase project's service account settings. You can use the button below to go there directly.</li>
+                            <li>Click "Generate new private key" to download a JSON file with your server credentials.</li>
+                            <li>Copy the entire contents of that JSON file.</li>
+                            <li>In your project's <code className="font-mono bg-muted p-1 rounded">.env</code> file, create a new variable named <code className="font-mono bg-muted p-1 rounded">GOOGLE_APPLICATION_CREDENTIALS_JSON</code> and paste the copied JSON content as its value.</li>
+                            <li>Restart your development server for the changes to take effect.</li>
+                        </ol>
+                    </div>
+                </CardContent>
+                <CardFooter className="flex justify-end">
+                    <Button asChild>
+                        <a href={consoleUrl} target="_blank" rel="noopener noreferrer">
+                            Go to Firebase Console
+                        </a>
+                    </Button>
+                </CardFooter>
+            </Card>
+        </div>
+    );
+}
+
 export function BookingForm() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const { user, userProfile, isLoading: isUserLoading } = useUser();
-    const auth = useAuth(); // For guest checkout
+    const auth = useAuth();
     const { toast } = useToast();
     const firestore = useFirestore();
+
+    const [isServerConfigured, setIsServerConfigured] = useState<boolean | null>(null);
 
     const hotelId = searchParams.get('hotelId');
     const roomId = searchParams.get('roomId');
@@ -44,6 +87,13 @@ export function BookingForm() {
     const checkOutStr = searchParams.get('checkOut');
     const guests = searchParams.get('guests') || '1';
     
+    useEffect(() => {
+        // Check server configuration when the component mounts
+        checkServerConfig().then(result => {
+            setIsServerConfigured(result.isConfigured);
+        });
+    }, []);
+
     const hotelRef = useMemoFirebase(() => {
         if (!firestore || !hotelId) return null;
         return doc(firestore, 'hotels', hotelId);
@@ -63,7 +113,6 @@ export function BookingForm() {
         return rooms.find(r => r.id === roomId);
     }, [areRoomsLoading, rooms, roomId]);
 
-
     const [customerDetails, setCustomerDetails] = useState({ name: '', email: '' });
     const [isBooking, setIsBooking] = useState(false);
     const [termsAccepted, setTermsAccepted] = useState(false);
@@ -77,8 +126,12 @@ export function BookingForm() {
         }
     }, [userProfile]);
     
-    if (isUserLoading || isHotelLoading || areRoomsLoading) {
+    if (isServerConfigured === null || isUserLoading || isHotelLoading || areRoomsLoading) {
         return <BookingFormSkeleton />;
+    }
+
+    if (!isServerConfigured) {
+        return <ServerConfigurationError />;
     }
     
     if (!hotelId || !roomId || !checkInStr || !checkOutStr || !hotel || !room) {

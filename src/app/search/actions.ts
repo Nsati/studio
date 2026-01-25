@@ -13,13 +13,6 @@ interface SearchParams {
     guests?: string | null;
 }
 
-/**
- * Chunks an array into smaller arrays of a specified size.
- * Firestore 'in' queries are limited to 30 items.
- * @param arr The array to chunk.
- * @param size The size of each chunk.
- * @returns An array of chunks.
- */
 function chunkArray<T>(arr: T[], size: number): T[][] {
   const chunks: T[][] = [];
   for (let i = 0; i < arr.length; i += size) {
@@ -33,14 +26,19 @@ export async function searchHotels(params: SearchParams): Promise<Hotel[]> {
     const { city, checkIn, checkOut, guests } = params;
 
     const db = getAdminDb();
+    
+    let hotelsQuery: FirebaseFirestore.Query<FirebaseFirestore.DocumentData> = (db ?? (await import('firebase/firestore')).getFirestore()).collection('hotels');
+    
     if (!db) {
-        console.error("searchHotels failed: Firebase Admin SDK is not initialized. Cannot perform server-side search. Returning empty array.");
-        // Return empty array to avoid crashing the page.
-        return [];
+        console.warn("searchHotels is running in client-emulation mode because Firebase Admin SDK is not configured. Availability filtering is disabled.");
+        if (city && city !== 'All') {
+            hotelsQuery = hotelsQuery.where('city', '==', city);
+        }
+        const hotelsSnapshot = await (await import('firebase/firestore')).getDocs(hotelsQuery);
+        if (hotelsSnapshot.empty) return [];
+        return hotelsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Hotel[];
     }
     
-    // 1. Fetch base hotels
-    let hotelsQuery: FirebaseFirestore.Query<FirebaseFirestore.DocumentData> = db.collection('hotels');
     if (city && city !== 'All') {
         hotelsQuery = hotelsQuery.where('city', '==', city);
     }
@@ -49,8 +47,7 @@ export async function searchHotels(params: SearchParams): Promise<Hotel[]> {
     
     const allHotels = hotelsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Hotel[];
 
-    // If no date range, just return hotels filtered by city
-    if (!checkIn || !checkOut) {
+    if (!checkIn || !checkOut || !db) {
         return allHotels;
     }
 
@@ -61,7 +58,6 @@ export async function searchHotels(params: SearchParams): Promise<Hotel[]> {
     const searchCheckOut = parseISO(checkOut);
     const numGuests = guests ? parseInt(guests, 10) : 1;
 
-    // 2. Fetch all bookings that could possibly conflict, handling Firestore's 30-item limit for 'in' queries.
     const hotelIdChunks = chunkArray(hotelIds, 30);
     let allBookings: Booking[] = [];
     
@@ -80,37 +76,29 @@ export async function searchHotels(params: SearchParams): Promise<Hotel[]> {
         });
     }
 
-    // Filter bookings that conflict with the search date range
     const conflictingBookings = allBookings.filter(booking => {
         const bookingCheckIn = normalizeTimestamp(booking.checkIn);
-        // Overlap condition: (StartA < EndB) and (EndA > StartB)
-        // We already did (EndA > StartB) in the query, now we do (StartA < EndB)
         return bookingCheckIn < searchCheckOut;
     });
 
-    // 3. Fetch all rooms for the queried hotels
     const roomsByHotel: Record<string, Room[]> = {};
     await Promise.all(allHotels.map(async (hotel) => {
         const roomsSnapshot = await db.collection('hotels').doc(hotel.id).collection('rooms').get();
         roomsByHotel[hotel.id] = roomsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Room[];
     }));
     
-    // 4. Determine available hotels
     const availableHotels = allHotels.filter(hotel => {
         const roomsForHotel = roomsByHotel[hotel.id] || [];
         
         const hasAvailableRoom = roomsForHotel.some(room => {
-            // Check guest capacity
             if (room.capacity < numGuests) {
                 return false;
             }
 
-            // Count conflicting bookings for this specific room type
             const bookingCountForRoom = conflictingBookings.filter(
                 b => b.hotelId === hotel.id && b.roomId === room.id
             ).length;
 
-            // Check if there are enough rooms of this type
             return room.totalRooms > bookingCountForRoom;
         });
 
