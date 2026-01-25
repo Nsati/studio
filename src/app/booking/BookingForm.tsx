@@ -20,7 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, Calendar, Users, BedDouble, ArrowLeft, Tag, ShieldCheck, Info, HelpCircle } from 'lucide-react';
+import { Loader2, Calendar, Users, BedDouble, ArrowLeft, Tag, ShieldCheck, Info, HelpCircle, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
@@ -148,86 +148,6 @@ export function BookingForm() {
             });
         }
     };
-
-    const handleDemoBooking = async () => {
-        if (!customerDetails.name || !customerDetails.email) {
-            toast({
-                variant: 'destructive',
-                title: 'Missing Details',
-                description: 'Please provide your name and email.',
-            });
-            return;
-        }
-        if (!firestore) {
-            toast({ variant: 'destructive', title: 'Database not available' });
-            return;
-        }
-        setIsBooking(true);
-
-        let userIdForBooking = user?.uid;
-        if (!userIdForBooking) {
-            if (!auth) {
-                toast({ variant: 'destructive', title: 'Authentication service not available' });
-                setIsBooking(false);
-                return;
-            }
-            try {
-                const userCredential = await signInAnonymously(auth);
-                userIdForBooking = userCredential.user.uid;
-            } catch (error) {
-                console.error("Anonymous sign-in failed:", error);
-                toast({
-                    variant: 'destructive',
-                    title: 'Guest Checkout Failed',
-                    description: 'Could not proceed. Please try again.',
-                });
-                setIsBooking(false);
-                return;
-            }
-        }
-        
-        const bookingId = `demo_${Date.now()}`;
-        const bookingRef = doc(firestore, 'users', userIdForBooking, 'bookings', bookingId);
-        
-        const bookingDetails = {
-            userId: userIdForBooking,
-            hotelId: hotel.id,
-            roomId: room.id,
-            roomType: room.type,
-            checkIn: new Date(checkInStr),
-            checkOut: new Date(checkOutStr),
-            guests: parseInt(guests),
-            totalPrice: totalPrice,
-            customerName: customerDetails.name,
-            customerEmail: customerDetails.email,
-            status: 'PENDING' as const,
-        };
-
-        try {
-            await setDoc(bookingRef, {
-                ...bookingDetails,
-                id: bookingId,
-                createdAt: new Date(),
-            });
-
-            toast({
-                title: "Demo Booking Created!",
-                description: "This is a sample booking. It is marked as 'Pending' and can be viewed in 'My Bookings'.",
-            });
-            router.push('/my-bookings');
-
-        } catch (error: any) {
-            toast({
-                variant: "destructive",
-                title: "Demo Booking Failed",
-                description: error.message || "Could not save the demo booking. Please check console for errors.",
-                duration: 10000,
-            });
-        } finally {
-            setIsBooking(false);
-        }
-    };
-
 
     const handlePayment = async () => {
         // --- Initial validations ---
@@ -530,27 +450,27 @@ export function BookingForm() {
                     </div>
                     
                     {backendStatus === 'unavailable' &&
-                        <Alert>
-                            <Info className="h-4 w-4" />
-                            <AlertTitle className="font-semibold">Live Payments Offline</AlertTitle>
+                        <Alert variant="destructive">
+                            <AlertCircle className="h-4 w-4" />
+                            <AlertTitle className="font-semibold">Online Booking Unavailable</AlertTitle>
                             <AlertDescription className="text-xs">
-                                The live payment system is not configured. You can create a free 'Demo Booking' to test the flow.
+                                The booking service is currently not configured on the server. Please contact support.
                             </AlertDescription>
                         </Alert>
                     }
 
                     <Button
-                        onClick={backendStatus === 'ready' ? handlePayment : handleDemoBooking}
+                        onClick={handlePayment}
                         size="lg"
                         className="w-full text-lg h-14 bg-accent text-accent-foreground hover:bg-accent/90 disabled:bg-accent/50"
-                        disabled={isBooking || !termsAccepted || backendStatus === 'checking'}
+                        disabled={isBooking || !termsAccepted || backendStatus !== 'ready'}
                     >
                         {isBooking ? (
-                            <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> {backendStatus === 'ready' ? 'Processing...' : 'Saving Demo...'}</>
+                            <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Processing...</>
                         ) : backendStatus === 'checking' ? (
                             <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Checking Service...</>
                         ) : backendStatus === 'unavailable' ? (
-                            'Create Demo Booking'
+                            'Booking Service Unavailable'
                         ) : (
                             `Pay ${totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })} & Book`
                         )}
