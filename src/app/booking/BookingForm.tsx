@@ -15,13 +15,15 @@ import { doc, collection, getDoc, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, Calendar, Users, BedDouble, ArrowLeft, Tag, ShieldCheck, HelpCircle } from 'lucide-react';
+import { Loader2, Calendar, Users, BedDouble, ArrowLeft, Tag, ShieldCheck, HelpCircle, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import { BookingFormSkeleton } from './BookingFormSkeleton';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+
 
 declare global {
   interface Window {
@@ -450,6 +452,16 @@ export function BookingForm() {
                         </div>
                     </div>
                     
+                    {!serverHealth.isConfigured && serverHealth.checked && (
+                        <Alert variant="default" className="bg-amber-50 border-amber-200">
+                            <AlertTriangle className="h-4 w-4 !text-amber-600" />
+                            <AlertTitle className="text-amber-800">Demo Mode Active</AlertTitle>
+                            <AlertDescription className="text-amber-700">
+                                The live payment gateway is not configured. Bookings will be simulated for demonstration purposes.
+                            </AlertDescription>
+                        </Alert>
+                    )}
+
                     <Button
                         onClick={handlePayment}
                         size="lg"
@@ -459,7 +471,9 @@ export function BookingForm() {
                         {isBooking ? (
                             <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Processing...</>
                         ) : (
+                            serverHealth.isConfigured ?
                             `Pay ${totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })} & Book`
+                            : 'Create Demo Booking'
                         )}
                     </Button>
 
