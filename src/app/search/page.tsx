@@ -1,12 +1,10 @@
 
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where } from 'firebase/firestore';
-
+import { searchHotels } from './actions';
 import { SearchFilters } from './SearchFilters';
 import { HotelCard } from '@/components/hotel/HotelCard';
 import { Hotel } from '@/lib/types';
@@ -66,7 +64,7 @@ function Results({ hotels, isLoading, city }: { hotels: Hotel[], isLoading: bool
           <SearchX className="h-16 w-16 text-muted-foreground/50 mb-4" />
           <h3 className="font-headline text-2xl font-bold">No Stays Found</h3>
           <p className="mt-2 max-w-md text-muted-foreground">
-            We couldn't find any properties matching your search. Add some hotels in the admin panel or adjust your filters.
+            We couldn't find any properties matching your search. Try adjusting your dates, changing your location, or removing some filters.
           </p>
           <Button variant="outline" className="mt-6" asChild>
             <Link href="/search">Clear Filters & View All</Link>
@@ -79,36 +77,35 @@ function Results({ hotels, isLoading, city }: { hotels: Hotel[], isLoading: bool
 
 function SearchPageComponent() {
   const searchParams = useSearchParams();
-  const firestore = useFirestore();
+  const [hotels, setHotels] = useState<Hotel[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const city = searchParams.get('city');
+  const checkIn = searchParams.get('checkIn');
+  const checkOut = searchParams.get('checkOut');
+  const guests = searchParams.get('guests');
 
-  // Memoize the query so useCollection doesn't cause infinite re-renders.
-  // This is a live query that will update automatically.
-  const hotelsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-
-    let q = query(collection(firestore, 'hotels'));
-    
-    // Apply city filter if it exists in the URL
-    if (city && city !== 'All') {
-      q = query(q, where('city', '==', city));
-    }
-    
-    // Note: Availability filtering (by date/guests) is a complex server-side task
-    // and is not included in this client-side implementation.
-    
-    return q;
-  }, [firestore, city]);
-
-  const { data: hotels, isLoading } = useCollection<Hotel>(hotelsQuery);
-
+  useEffect(() => {
+    const fetchData = async () => {
+        setIsLoading(true);
+        try {
+            const result = await searchHotels({ city, checkIn, checkOut, guests });
+            setHotels(result);
+        } catch (error) {
+            console.error("Failed to search hotels:", error);
+            setHotels([]);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    fetchData();
+  }, [city, checkIn, checkOut, guests]);
 
   return (
     <div className="container mx-auto max-w-7xl py-8 px-4 md:px-6">
       <div className="flex flex-col gap-8 lg:flex-row">
         <SearchFilters />
-        <Results hotels={hotels || []} isLoading={isLoading} city={city} />
+        <Results hotels={hotels} isLoading={isLoading} city={city} />
       </div>
     </div>
   );
@@ -116,7 +113,6 @@ function SearchPageComponent() {
 
 export default function SearchPage() {
   return (
-    // Suspense is required because SearchPageComponent uses useSearchParams
     <Suspense fallback={<div className="container mx-auto max-w-7xl py-8 px-4 md:px-6"><ResultsSkeleton/></div>}>
       <SearchPageComponent />
     </Suspense>

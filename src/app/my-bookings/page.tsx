@@ -266,8 +266,8 @@ export default function MyBookingsPage() {
   const sortedBookings = useMemoFirebase(() => {
     if (!bookings) return [];
     return [...bookings].sort((a,b) => {
-        const dateA = (a.createdAt as any).toDate ? (a.createdAt as any).toDate() : new Date(a.createdAt);
-        const dateB = (b.createdAt as any).toDate ? (b.createdAt as any).toDate() : new Date(b.createdAt);
+        const dateA = (a.createdAt as any)?.toDate ? (a.createdAt as any).toDate() : new Date(a.createdAt || 0);
+        const dateB = (b.createdAt as any)?.toDate ? (b.createdAt as any).toDate() : new Date(b.createdAt || 0);
         return dateB.getTime() - dateA.getTime();
     });
   }, [bookings]);

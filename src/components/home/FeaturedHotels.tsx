@@ -6,8 +6,6 @@ import type { Hotel } from '@/lib/types';
 import { HotelCard } from '@/components/hotel/HotelCard';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { dummyHotels } from '@/lib/dummy-data';
-import { useMemo } from 'react';
 
 export function FeaturedHotels() {
   const firestore = useFirestore();
@@ -17,20 +15,9 @@ export function FeaturedHotels() {
     return query(collection(firestore, 'hotels'), limit(4));
   }, [firestore]);
 
-  const { data: liveHotels, isLoading } = useCollection<Hotel>(hotelsQuery);
+  const { data: featuredHotels, isLoading } = useCollection<Hotel>(hotelsQuery);
 
-  const featuredHotels = useMemo(() => {
-    if (liveHotels && liveHotels.length > 0) {
-      return liveHotels;
-    }
-    // If firestore is empty or errors out, fall back to dummy data
-    if (!isLoading && (!liveHotels || liveHotels.length === 0)) {
-        return dummyHotels.slice(0, 4);
-    }
-    return [];
-  }, [liveHotels, isLoading]);
-
-  if (isLoading && featuredHotels.length === 0) {
+  if (isLoading) {
     return (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {Array.from({ length: 4 }).map((_, i) => (

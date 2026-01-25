@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -8,8 +9,6 @@ import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import type { City } from '@/lib/types';
 import { Skeleton } from '../ui/skeleton';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { dummyCities } from '@/lib/dummy-data';
-import { useMemo } from 'react';
 
 export function CitiesList() {
     const firestore = useFirestore();
@@ -19,23 +18,9 @@ export function CitiesList() {
         return collection(firestore, 'cities');
     }, [firestore]);
 
-    const { data: citiesFromDB, isLoading } = useCollection<City>(citiesQuery);
+    const { data: cities, isLoading } = useCollection<City>(citiesQuery);
 
-    const cities = useMemo(() => {
-        // If live data is available, use it.
-        if (citiesFromDB && citiesFromDB.length > 0) {
-            return citiesFromDB.sort((a, b) => a.name.localeCompare(b.name));
-        }
-        // If loading is finished (either successfully with no data, or with an error), use dummy data.
-        if (!isLoading) {
-            return dummyCities.sort((a, b) => a.name.localeCompare(b.name));
-        }
-        // If still loading, return empty array to show skeleton.
-        return [];
-    }, [citiesFromDB, isLoading]);
-
-
-    if (isLoading && cities.length === 0) {
+    if (isLoading) {
       return (
         <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 3 }).map((_, i) => (
@@ -45,17 +30,20 @@ export function CitiesList() {
       )
     }
 
-    if (cities.length === 0) {
+    if (!cities || cities.length === 0) {
         return (
             <div className="mt-8 text-center text-muted-foreground p-8 border-2 border-dashed rounded-lg">
-                <p>No cities could be loaded at this time.</p>
+                <p>No cities have been configured in the admin panel yet.</p>
             </div>
         )
     }
+    
+    // Sort cities alphabetically
+    const sortedCities = [...cities].sort((a, b) => a.name.localeCompare(b.name));
 
     return (
         <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {cities?.map((city) => {
+          {sortedCities.map((city) => {
             const cityImage = PlaceHolderImages.find(
               (img) => img.id === city.image
             );

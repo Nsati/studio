@@ -20,6 +20,7 @@ import {
   Package,
 } from 'lucide-react';
 import { useUser } from '@/firebase';
+import { firebaseConfig } from '@/firebase/config';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
@@ -72,6 +73,7 @@ function AdminAuthGuard({ children }: { children: React.ReactNode }) {
   // If the user is logged in but is NOT an admin, show a helpful message
   // instead of just redirecting them away. This guides them on how to fix it.
   if (user && !isLoading) {
+    const consoleUrl = `https://console.firebase.google.com/project/${firebaseConfig.projectId}/firestore/data/~2Fusers~2F${user.uid}`;
     return (
       <div className="flex h-screen items-center justify-center bg-background p-4">
         <Card className="max-w-lg border-destructive">
@@ -104,7 +106,7 @@ function AdminAuthGuard({ children }: { children: React.ReactNode }) {
               <Link href="/">Back to Home</Link>
             </Button>
             <Button asChild>
-              <a href={`https://console.firebase.google.com/project/${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}/firestore/data/~2Fusers~2F${user.uid}`} target="_blank" rel="noopener noreferrer">
+              <a href={consoleUrl} target="_blank" rel="noopener noreferrer">
                 Go to Your User Document
               </a>
             </Button>

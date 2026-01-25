@@ -9,7 +9,7 @@ import React from 'react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { AmenityIcon } from '@/components/hotel/AmenityIcon';
 import type { Hotel, Room, Review } from '@/lib/types';
-import { useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirestore, useDoc, useCollection, useMemoFirebase, useUser } from '@/firebase';
 import { doc, collection } from 'firebase/firestore';
 
 import {
@@ -24,12 +24,14 @@ import { RoomBookingCard } from '@/components/hotel/RoomBookingCard';
 import { Button } from '@/components/ui/button';
 import Loading from './loading';
 import { HotelReviewSummary } from '@/components/hotel/HotelReviewSummary';
+import { WriteReviewForm } from '@/components/hotel/WriteReviewForm';
 
 
 export default function HotelPage() {
   const params = useParams();
   const slug = params.slug as string;
   const firestore = useFirestore();
+  const { user } = useUser();
   
   const hotelRef = useMemoFirebase(() => {
     if (!firestore || !slug) return null;
@@ -64,6 +66,11 @@ export default function HotelPage() {
   const handleScrollToBooking = () => {
     bookingSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  const userHasReviewed = useMemoFirebase(() => {
+    if (!user || !reviews) return false;
+    return reviews.some(review => review.userId === user.uid);
+  }, [user, reviews]);
 
   if (isLoading || isLoadingRooms || isLoadingReviews) {
     return <Loading />;
@@ -157,6 +164,20 @@ export default function HotelPage() {
           <section>
              <HotelReviewSummary reviews={reviews} hotelName={hotel.name} />
           </section>
+
+          {user && !user.isAnonymous && (
+            <>
+              <Separator />
+              <section>
+                <WriteReviewForm 
+                  hotelId={hotel.id} 
+                  userId={user.uid} 
+                  userHasReviewed={userHasReviewed} 
+                />
+              </section>
+            </>
+          )}
+
         </div>
 
         <div className="lg:col-span-1" ref={bookingSectionRef}>

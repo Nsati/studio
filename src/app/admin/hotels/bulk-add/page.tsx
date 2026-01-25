@@ -1,21 +1,5 @@
-'use client';
-import { BulkAddHotelsForm } from '@/components/admin/BulkAddHotelsForm';
-import { Card, CardContent } from '@/components/ui/card';
-
-export default function BulkAddHotelsPage() {
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="font-headline text-3xl font-bold">Bulk Add Hotels</h1>
-        <p className="text-muted-foreground">
-          Add multiple hotel properties at once. For amenities and images, use comma-separated values.
-        </p>
-      </div>
-      <Card>
-        <CardContent className="pt-6">
-          <BulkAddHotelsForm />
-        </CardContent>
-      </Card>
-    </div>
-  );
+// This page is obsolete and has been removed to prevent creation of incomplete hotel data.
+// The main "Add New Hotel" form provides a more robust way to add hotels with rooms.
+export default function ObsoleteBulkAddHotelsPage() {
+  return null;
 }

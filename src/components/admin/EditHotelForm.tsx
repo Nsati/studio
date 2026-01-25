@@ -506,7 +506,7 @@ https://images.unsplash.com/photo-2..."
                             <Input type="number" placeholder="e.g. 10" {...formField} />
                         </FormControl>
                          <FormDescription className="text-xs">
-                           Inventory: {initialRooms.find(r => r.id === field.id)?.availableRooms ?? form.watch(`rooms.${index}.totalRooms`)} / {form.watch(`rooms.${index}.totalRooms`)}
+                           Inventory: {field.id ? (initialRooms.find(r => r.id === field.id)?.availableRooms ?? 0) : form.watch(`rooms.${index}.totalRooms`)} / {form.watch(`rooms.${index}.totalRooms`)}
                         </FormDescription>
                         <FormMessage />
                         </FormItem>

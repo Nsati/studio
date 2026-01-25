@@ -8,7 +8,7 @@ import type { Hotel } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { PlusCircle, Star, MapPin, Upload, Eye } from 'lucide-react';
+import { PlusCircle, Star, MapPin, Eye } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 function HotelGridSkeleton() {
@@ -103,12 +103,6 @@ export default function HotelsPage() {
                         <Link href="/admin/hotels/new">
                             <PlusCircle className="mr-2 h-4 w-4" />
                             Add New Hotel
-                        </Link>
-                    </Button>
-                     <Button asChild variant="outline">
-                        <Link href="/admin/hotels/bulk-add">
-                            <Upload className="mr-2 h-4 w-4" />
-                            Bulk Add
                         </Link>
                     </Button>
                  </div>
