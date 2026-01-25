@@ -12,7 +12,6 @@ import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import type { TourPackage } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useMemo } from 'react';
 
 function TourPackageCard({ tourPackage }: { tourPackage: TourPackage }) {
   const image = PlaceHolderImages.find((img) => img.id === tourPackage.image);

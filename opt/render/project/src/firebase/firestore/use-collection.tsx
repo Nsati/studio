@@ -1,4 +1,1 @@
-// This file is obsolete. All its logic has been consolidated into:
-// src/firebase/client/provider.tsx
-// It can be safely deleted.
-export {};
+// This file is an obsolete duplicate and can be safely deleted. The correct file is located at /src/firebase/firestore/use-collection.tsx

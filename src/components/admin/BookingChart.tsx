@@ -15,6 +15,7 @@ export default function BookingChart({ bookings }: { bookings: Booking[] | null 
         
         bookings.forEach(booking => {
             const date = normalizeTimestamp(booking.createdAt);
+            if (isNaN(date.getTime())) return; // Skip invalid dates
             const day = date.toISOString().split('T')[0];
             if (!data[day]) {
                 data[day] = { date: day, total: 0 };

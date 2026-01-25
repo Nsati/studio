@@ -40,7 +40,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="container mx-auto px-4 md:px-6">
+      <section id="cities" className="container mx-auto px-4 md:px-6">
         <div className="space-y-4 text-center">
           <h2 className="font-headline text-4xl font-bold">Explore by City</h2>
           <p className="mx-auto max-w-2xl text-muted-foreground">

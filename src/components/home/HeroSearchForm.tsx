@@ -31,7 +31,6 @@ import {
 } from 'lucide-react';
 import type { City } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { dummyCities } from '@/lib/dummy-data';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -47,12 +46,9 @@ export function HeroSearchForm() {
   const { data: citiesFromDB, isLoading: isLoadingCities } = useCollection<City>(citiesQuery);
 
   const cities = useMemoFirebase(() => {
-    const sortedCities = (citiesFromDB || []).sort((a, b) => a.name.localeCompare(b.name));
-    
-    if (sortedCities.length > 0) return sortedCities; 
-    if (!isLoadingCities) return dummyCities;
-    return [];
-  }, [citiesFromDB, isLoadingCities]);
+    if (!citiesFromDB || citiesFromDB.length === 0) return [];
+    return [...citiesFromDB].sort((a, b) => a.name.localeCompare(b.name));
+  }, [citiesFromDB]);
 
   const [isMounted, setIsMounted] = useState(false);
   useEffect(() => {
