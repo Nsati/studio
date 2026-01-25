@@ -6,7 +6,6 @@ import { HotelCard } from '@/components/hotel/HotelCard';
 import { Hotel } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { SearchX } from 'lucide-react';
-import { dummyHotels } from '@/lib/dummy-data';
 
 
 function Results({ hotels, city }: { hotels: Hotel[], city: string | null }) {
@@ -47,23 +46,20 @@ export default async function SearchPage({
   searchParams: { city?: string; checkIn?: string; checkOut?: string; guests?: string };
 }) {
 
-  // Data fetching happens on the server, before the page is rendered.
-  const { hotels, error } = await searchHotels(searchParams);
-
-  // If there's an error (e.g. Admin SDK not configured), use dummy hotels as a fallback.
-  // The error is logged on the server, but we don't show it to the user.
-  const displayHotels = error 
-    ? dummyHotels.filter(h => !searchParams.city || searchParams.city === 'All' || h.city === searchParams.city) 
-    : hotels;
+  // Data fetching happens on the server.
+  // The searchHotels action now handles the fallback to dummy data internally.
+  const { hotels } = await searchHotels(searchParams);
 
   return (
     <div className="container mx-auto max-w-7xl py-8 px-4 md:px-6">
       <div className="flex flex-col gap-8 lg:flex-row">
         <SearchFilters />
         <div className="flex-1 space-y-6">
-          <Results hotels={displayHotels} city={searchParams.city || null} />
+           {/* We can now directly pass the hotels from the action */}
+          <Results hotels={hotels} city={searchParams.city || null} />
         </div>
       </div>
     </div>
   );
 }
+

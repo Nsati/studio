@@ -3,6 +3,7 @@
 import { getAdminDb } from '@/firebase/admin';
 import type { Hotel, Room, Booking } from '@/lib/types';
 import { parseISO } from 'date-fns';
+import { dummyHotels } from '@/lib/dummy-data';
 
 interface SearchParams {
     city?: string | null;
@@ -16,14 +17,23 @@ export async function searchHotels(params: SearchParams): Promise<{ hotels: Hote
 
     const db = getAdminDb();
     
+    // --- FALLBACK LOGIC ---
+    // If the admin SDK isn't configured, we fall back to using dummy data.
+    // This provides a functional offline/demo mode for the search page.
     if (!db) {
-        console.error("searchHotels failed: Firebase Admin SDK is not initialized.");
-        return { 
-            hotels: [], 
-            error: "Hotel availability search is currently unavailable due to a server configuration issue." 
-        };
+        console.warn("⚠️ Firebase Admin SDK not initialized. Search is running in offline mode with dummy data.");
+        
+        let hotels = dummyHotels;
+        // Apply city filter if provided
+        if (city && city !== 'All') {
+            hotels = hotels.filter(h => h.city === city);
+        }
+        
+        // Note: Date and guest filtering is not applied in this fallback mode.
+        return { hotels };
     }
     
+    // --- LIVE DATABASE LOGIC ---
     try {
         // 1. Fetch base hotels
         let hotelsQuery: FirebaseFirestore.Query<FirebaseFirestore.DocumentData> = db.collection('hotels');
