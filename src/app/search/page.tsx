@@ -1,10 +1,11 @@
+
 'use client';
 
 import { Suspense, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { useFirestore } from '@/firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, where } from 'firebase/firestore';
 
 import { SearchFilters } from './SearchFilters';
 import { HotelCard } from '@/components/hotel/HotelCard';
@@ -79,49 +80,36 @@ function Results({ hotels, isLoading, city }: { hotels: Hotel[], isLoading: bool
 function SearchPageComponent() {
   const searchParams = useSearchParams();
   const firestore = useFirestore();
-  const [hotels, setHotels] = useState<Hotel[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
   const city = searchParams.get('city');
 
-  useEffect(() => {
-    // Wait for firestore to be initialized
-    if (!firestore) return;
+  // Memoize the query so useCollection doesn't cause infinite re-renders
+  const hotelsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+
+    let q = query(collection(firestore, 'hotels'));
     
-    const fetchData = async () => {
-        setIsLoading(true);
-        try {
-            let hotelsQuery = query(collection(firestore, 'hotels'));
-
-            // Apply city filter if it exists in the URL
-            if (city && city !== 'All') {
-                hotelsQuery = query(hotelsQuery, where('city', '==', city));
-            }
-
-            // Note: Availability filtering (by date/guests) is complex and was
-            // dependent on a server-side action. To ensure the frontend reliably
-            // displays data from Firestore, this client-side search currently
-            // only filters by city.
-            
-            const snapshot = await getDocs(hotelsQuery);
-            const results = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Hotel[];
-            
-            setHotels(results);
-        } catch (error) {
-            console.error("Failed to search hotels:", error);
-            setHotels([]); // Set to empty on error
-        } finally {
-            setIsLoading(false);
-        }
-    };
-    fetchData();
+    // Apply city filter if it exists in the URL
+    if (city && city !== 'All') {
+      q = query(q, where('city', '==', city));
+    }
+    
+    // Note: Availability filtering (by date/guests) is complex and was
+    // dependent on a server-side action. To ensure the frontend reliably
+    // displays data from Firestore, this client-side search currently
+    // only filters by city.
+    
+    return q;
   }, [firestore, city]);
+
+  const { data: hotels, isLoading } = useCollection<Hotel>(hotelsQuery);
+
 
   return (
     <div className="container mx-auto max-w-7xl py-8 px-4 md:px-6">
       <div className="flex flex-col gap-8 lg:flex-row">
         <SearchFilters />
-        <Results hotels={hotels} isLoading={isLoading} city={city} />
+        <Results hotels={hotels || []} isLoading={isLoading} city={city} />
       </div>
     </div>
   );
