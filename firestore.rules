@@ -52,8 +52,8 @@ service cloud.firestore {
 
     // Temporary public collection for success page
     match /confirmedBookings/{bookingId} {
-        allow get: if true;
-        allow list, write: if false;
+        allow read: if true;
+        allow write: if false;
     }
   }
 }
