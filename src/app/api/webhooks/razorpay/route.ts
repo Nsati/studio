@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
       const bookingRef = db.collection('users').doc(user_id).collection('bookings').doc(booking_id);
       const bookingDoc = await bookingRef.get();
 
-      if (!bookingDoc.exists()) {
+      if (!bookingDoc.exists) {
           console.error(`🚨 FALLBACK TRIGGERED: Booking ${booking_id} was not found. The client-side confirmation may have failed. The webhook should handle this, but the logic is currently simplified. In a production app, you would recreate the booking here using payment notes.`);
           // In a full production app, you would use all the notes from the payment
           // to run the same booking confirmation logic found in the `verifyPaymentAndConfirmBooking` action.

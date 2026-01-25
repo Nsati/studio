@@ -15,6 +15,7 @@ interface SearchParams {
 
 /**
  * Chunks an array into smaller arrays of a specified size.
+ * Firestore 'in' queries are limited to 30 items.
  * @param arr The array to chunk.
  * @param size The size of each chunk.
  * @returns An array of chunks.
@@ -33,7 +34,7 @@ export async function searchHotels(params: SearchParams): Promise<Hotel[]> {
 
     const db = getAdminDb();
     if (!db) {
-        console.error("searchHotels failed: Firebase Admin SDK is not initialized.");
+        console.error("searchHotels failed: Firebase Admin SDK is not initialized. Cannot perform server-side search. Returning empty array.");
         // Return empty array to avoid crashing the page.
         return [];
     }

@@ -92,8 +92,8 @@ export async function verifyPaymentAndConfirmBooking(
 
     const db = getAdminDb();
     if (!db) {
-        console.error('CRITICAL: Firebase Admin SDK is not initialized.');
-        return { success: false, error: 'Database service is not configured on the server.' };
+        console.error('CRITICAL: Firebase Admin SDK is not initialized for verifyPaymentAndConfirmBooking.');
+        return { success: false, error: 'Database service is not configured on the server. Booking cannot be confirmed.' };
     }
 
     // 1. Verify Razorpay signature
