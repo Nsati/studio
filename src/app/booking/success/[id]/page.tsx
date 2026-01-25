@@ -5,7 +5,7 @@ import { useParams, useRouter, notFound } from 'next/navigation';
 import { useFirestore, useUser, useDoc } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { useEffect, useMemo, useState } from 'react';
-import type { Booking, Hotel } from '@/lib/types';
+import type { Hotel, ConfirmedBookingSummary } from '@/lib/types';
 import { generateTripGuide, type TripAssistantOutput } from '@/ai/flows/generate-arrival-assistant';
 
 import { Skeleton } from '@/components/ui/skeleton';
@@ -17,7 +17,7 @@ import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
-function TripAssistant({ hotel, booking }: { hotel: Hotel, booking: Booking }) {
+function TripAssistant({ summary }: { summary: ConfirmedBookingSummary }) {
     const [guide, setGuide] = useState<TripAssistantOutput | null>(null);
     const [isGenerating, setIsGenerating] = useState(true);
     const [error, setError] = useState('');
@@ -26,12 +26,12 @@ function TripAssistant({ hotel, booking }: { hotel: Hotel, booking: Booking }) {
         setIsGenerating(true);
         setError('');
         try {
-            const checkInDate = (booking.checkIn as any).toDate ? (booking.checkIn as any).toDate() : new Date(booking.checkIn);
+            const checkInDate = (summary.checkIn as any).toDate ? (summary.checkIn as any).toDate() : new Date(summary.checkIn);
             const result = await generateTripGuide({
-                hotelName: hotel.name,
-                hotelCity: hotel.city,
-                hotelAddress: hotel.address,
-                customerName: booking.customerName,
+                hotelName: summary.hotelName,
+                hotelCity: summary.hotelCity,
+                hotelAddress: summary.hotelAddress,
+                customerName: summary.customerName,
                 checkInDate: format(checkInDate, 'PPPP'),
             });
             setGuide(result);
@@ -46,7 +46,7 @@ function TripAssistant({ hotel, booking }: { hotel: Hotel, booking: Booking }) {
     useEffect(() => {
         generateGuide();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [hotel, booking]);
+    }, [summary]);
 
     if (isGenerating) {
         return (
@@ -143,35 +143,37 @@ export default function BookingSuccessPage() {
 
     const bookingId = params.id as string;
     
-    // This reference is now stable and points to the top-level bookings collection
-    const bookingRef = useMemo(() => {
+    const summaryBookingRef = useMemo(() => {
         if (!firestore || !bookingId) return null;
-        return doc(firestore, 'bookings', bookingId);
+        return doc(firestore, 'confirmedBookings', bookingId);
     }, [firestore, bookingId]);
 
-    // useDoc is a real-time listener. It will automatically update when the booking status changes.
-    const { data: booking, isLoading: isBookingLoading } = useDoc<Booking>(bookingRef);
-
-    const hotelRef = useMemo(() => {
-        if (!firestore || !booking) return null;
-        return doc(firestore, 'hotels', booking.hotelId);
-    }, [firestore, booking]);
+    const { data: summaryBooking, isLoading: isSummaryLoading, error: summaryError } = useDoc<ConfirmedBookingSummary>(summaryBookingRef);
     
-    const { data: hotel, isLoading: isHotelLoading } = useDoc<Hotel>(hotelRef);
-    
-    // Redirect to login if user is not authenticated after loading.
+    // This effect handles the initial loading and polling for the summary document
+    const [isWaitingForWebhook, setIsWaitingForWebhook] = useState(true);
     useEffect(() => {
-        if (!isUserLoading && !user) {
-            router.replace('/login');
-        }
-    }, [user, isUserLoading, router]);
-    
-    // This combines all loading states into one.
-    const isLoading = isUserLoading || isBookingLoading || isHotelLoading;
+        if (isSummaryLoading) return; // Wait for initial load attempt
 
-    // The key change: The "Processing" state is now tied to the real-time hook's loading state
-    // AND the booking status itself. It will show this screen until the status is no longer 'PENDING'.
-    if (isLoading || (booking && booking.status === 'PENDING')) {
+        if (summaryBooking) {
+            setIsWaitingForWebhook(false); // Found it
+            return;
+        }
+
+        // If not found, poll for a short period in case of webhook delay
+        const timer = setTimeout(() => {
+            if (!summaryBooking) {
+                setIsWaitingForWebhook(false); // Stop waiting after timeout
+            }
+        }, 10000); // Wait for 10 seconds
+
+        return () => clearTimeout(timer);
+
+    }, [isSummaryLoading, summaryBooking]);
+    
+    const isLoading = isUserLoading || isWaitingForWebhook;
+
+    if (isLoading) {
         return (
             <div className="bg-muted/40 min-h-[calc(100vh-4rem)] flex items-center">
                 <div className="container mx-auto max-w-lg py-12 px-4 md:px-6">
@@ -192,14 +194,12 @@ export default function BookingSuccessPage() {
         );
     }
     
-    // If loading is complete AND the booking is still not found or not confirmed, show an error.
-    if (!booking || !hotel || booking.status !== 'CONFIRMED') {
+    if (!summaryBooking) {
         return notFound();
     }
 
-    // --- Success UI ---
-    const checkInDate = (booking.checkIn as any).toDate ? (booking.checkIn as any).toDate() : new Date(booking.checkIn);
-    const checkOutDate = (booking.checkOut as any).toDate ? (booking.checkOut as any).toDate() : new Date(booking.checkOut);
+    const checkInDate = (summaryBooking.checkIn as any).toDate ? (summaryBooking.checkIn as any).toDate() : new Date(summaryBooking.checkIn);
+    const checkOutDate = (summaryBooking.checkOut as any).toDate ? (summaryBooking.checkOut as any).toDate() : new Date(summaryBooking.checkOut);
 
     return (
         <div className="bg-muted/40 min-h-[calc(100vh-4rem)] flex items-center">
@@ -209,31 +209,31 @@ export default function BookingSuccessPage() {
                         <PartyPopper className="h-12 w-12 text-primary" />
                         <CardTitle className="text-3xl font-headline mt-4">Booking Confirmed!</CardTitle>
                         <CardDescription className="max-w-md">
-                           Your Himalayan adventure awaits, {booking.customerName}. A confirmation email should arrive shortly.
+                           Your Himalayan adventure awaits, {summaryBooking.customerName}. A confirmation email should arrive shortly.
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="p-6 space-y-6">
                         <Card className="bg-background">
                             <CardHeader>
-                                <CardTitle className="text-xl">{hotel.name}</CardTitle>
-                                <CardDescription>{hotel.city}</CardDescription>
+                                <CardTitle className="text-xl">{summaryBooking.hotelName}</CardTitle>
+                                <CardDescription>{summaryBooking.hotelCity}</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-2 text-sm">
-                                <p><strong className="text-foreground">Room:</strong> {booking.roomType}</p>
+                                <p><strong className="text-foreground">Room:</strong> {summaryBooking.roomType}</p>
                                 <p><strong className="text-foreground">Check-in:</strong> {format(checkInDate, 'EEEE, dd MMMM yyyy')}</p>
                                 <p><strong className="text-foreground">Check-out:</strong> {format(checkOutDate, 'EEEE, dd MMMM yyyy')}</p>
-                                <p><strong className="text-foreground">Guests:</strong> {booking.guests}</p>
+                                <p><strong className="text-foreground">Guests:</strong> {summaryBooking.guests}</p>
                             </CardContent>
                         </Card>
 
                         <div className="rounded-lg border bg-background p-4 space-y-2">
                              <div className="flex justify-between items-center">
                                 <span className="text-muted-foreground">Booking ID</span>
-                                <span className="font-mono text-xs">{booking.id}</span>
+                                <span className="font-mono text-xs">{summaryBooking.id}</span>
                             </div>
                             <div className="flex justify-between items-center">
                                 <span className="text-muted-foreground">Total Amount Paid</span>
-                                <span className="font-bold text-lg">{booking.totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}</span>
+                                <span className="font-bold text-lg">{summaryBooking.totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}</span>
                             </div>
                              <div className="flex justify-between items-center">
                                 <span className="text-muted-foreground">Payment Status</span>
@@ -241,7 +241,7 @@ export default function BookingSuccessPage() {
                             </div>
                         </div>
                         
-                        <TripAssistant hotel={hotel} booking={booking} />
+                        <TripAssistant summary={summaryBooking} />
 
                          {user?.isAnonymous && (
                             <Card className="bg-blue-50 border-blue-200">

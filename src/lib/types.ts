@@ -53,6 +53,21 @@ export interface Booking {
   razorpayPaymentId?: string;
 }
 
+export interface ConfirmedBookingSummary {
+  id: string; // matches bookingId
+  hotelId: string;
+  hotelName: string;
+  hotelCity: string;
+  hotelAddress?: string;
+  customerName: string;
+  checkIn: Date;
+  checkOut: Date;
+  guests: number;
+  totalPrice: number;
+  roomType: string;
+  userId: string;
+}
+
 export interface TourPackage {
   id: string;
   title: string;

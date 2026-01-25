@@ -258,7 +258,21 @@
               "description": "The unique identifier of the user."
             }
           ]
-        }
+        },
+        "subcollections": [
+          {
+            "path": "/users/{userId}/bookings/{bookingId}",
+            "definition": {
+                "entityName": "Booking",
+                "schema": { "$ref": "#/backend/entities/Booking"},
+                "description": "Stores bookings for a specific user.",
+                "params": [
+                    { "name": "userId", "description": "The unique identifier of the user." },
+                    { "name": "bookingId", "description": "The unique identifier of the booking." }
+                ]
+            }
+          }
+        ]
       },
       {
         "path": "/hotels/{hotelId}",
@@ -296,14 +310,10 @@
           ]
         }
       },
-      {
-        "path": "/bookings/{bookingId}",
+       {
+        "path": "/confirmedBookings/{bookingId}",
         "definition": {
-          "entityName": "Booking",
-          "schema": {
-            "$ref": "#/backend/entities/Booking"
-          },
-          "description": "Stores all booking information. The 'userId' field within the document is used for authorization.",
+          "description": "Stores temporary, public summaries of confirmed bookings for the success page. Documents have a TTL of 1 day.",
           "params": [
             {
               "name": "bookingId",
