@@ -28,7 +28,11 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
-import { signupUser } from '@/app/auth/actions';
+import { useAuth, useFirestore } from '@/firebase';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
+import type { UserProfile } from '@/lib/types';
+
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
@@ -45,6 +49,8 @@ const formSchema = z.object({
 export function SignupForm() {
   const router = useRouter();
   const { toast } = useToast();
+  const auth = useAuth();
+  const firestore = useFirestore();
   const [isLoading, setIsLoading] = useState(false);
   const [serverError, setServerError] = useState('');
 
@@ -62,26 +68,46 @@ export function SignupForm() {
     setIsLoading(true);
     setServerError('');
 
-    try {
-      const result = await signupUser({
-        name: values.name,
-        email: values.email,
-        mobile: values.mobile,
-        pass: values.password,
-      });
+    if (!auth || !firestore) {
+        setServerError("Authentication service is not available. Please try again later.");
+        setIsLoading(false);
+        return;
+    }
 
-      if (result.success) {
+    try {
+        const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
+        const user = userCredential.user;
+
+        // Create user profile in firestore from client
+        // The "first user is admin" logic from the old server action is removed
+        // to make signup work without any server-side configuration. The admin
+        // role can be assigned manually in the Firebase console.
+        const newUserProfile: UserProfile = {
+            uid: user.uid,
+            displayName: values.name,
+            email: values.email,
+            mobile: values.mobile,
+            role: 'user', // All new signups are 'user' by default.
+            status: 'active',
+        };
+
+        await setDoc(doc(firestore, 'users', user.uid), newUserProfile);
+      
         toast({
-          title: 'Account Created!',
-          description: 'You can now log in with your credentials.',
+            title: 'Account Created!',
+            description: 'You can now log in with your credentials.',
         });
         router.push('/login');
-      } else {
-        throw new Error(result.error || 'Failed to create account.');
-      }
+      
     } catch (error: any) {
-      setServerError(error.message || 'An error occurred during signup.');
-      console.error(error);
+        let errorMessage = 'An unexpected error occurred during signup.';
+        if (error.code === 'auth/email-already-in-use') {
+            errorMessage = 'This email is already registered. Please log in.';
+        } else if (error.code) {
+            errorMessage = error.code.replace('auth/', '').replace(/-/g, ' ');
+        }
+        setServerError(errorMessage);
+        console.error("Client-side signup error:", error);
     } finally {
       setIsLoading(false);
     }
@@ -171,7 +197,7 @@ export function SignupForm() {
               <Button
                 type="submit"
                 className="w-full"
-                disabled={isLoading}
+                disabled={isLoading || !auth || !firestore}
               >
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Create Account
