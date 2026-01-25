@@ -5,7 +5,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, useRouter, notFound } from 'next/navigation';
 import Image from 'next/image';
 import { differenceInDays, format, parse } from 'date-fns';
-import { createRazorpayOrder, verifyPaymentAndConfirmBooking, checkServerHealth } from '@/app/booking/actions';
+import { createRazorpayOrder, verifyPaymentAndConfirmBooking, checkBackendStatus } from '@/app/booking/actions';
 import { signInAnonymously } from 'firebase/auth';
 
 
@@ -70,7 +70,7 @@ export function BookingForm() {
     const [couponCode, setCouponCode] = useState('');
     const [couponDiscount, setCouponDiscount] = useState(0);
     const [couponMessage, setCouponMessage] = useState('');
-    const [isServerHealthy, setIsServerHealthy] = useState<boolean | null>(null);
+    const [backendStatus, setBackendStatus] = useState<'checking' | 'ready' | 'unavailable'>('checking');
 
 
     useEffect(() => {
@@ -80,8 +80,8 @@ export function BookingForm() {
     }, [userProfile]);
 
     useEffect(() => {
-        checkServerHealth().then(result => {
-            setIsServerHealthy(result.isDbConnected);
+        checkBackendStatus().then(result => {
+            setBackendStatus(result.isConfigured ? 'ready' : 'unavailable');
         });
     }, []);
 
@@ -437,16 +437,6 @@ export function BookingForm() {
                         </CardContent>
                     </Card>
 
-                    {isServerHealthy === false && (
-                        <Alert variant="destructive">
-                            <AlertCircle className="h-4 w-4" />
-                            <AlertTitle>Booking Service Unavailable</AlertTitle>
-                            <AlertDescription>
-                                Live booking is currently disabled due to a server configuration issue. Please contact the site administrator. You can still browse hotels.
-                            </AlertDescription>
-                        </Alert>
-                    )}
-
                      <div className="items-top flex space-x-3">
                         <Checkbox id="terms" checked={termsAccepted} onCheckedChange={(checked) => setTermsAccepted(checked === true)} className="mt-0.5" />
                         <div className="grid gap-1.5 leading-none">
@@ -459,29 +449,33 @@ export function BookingForm() {
                         </div>
                     </div>
 
-                     <Alert className="mt-4">
-                      <Info className="h-4 w-4" />
-                      <AlertTitle className="font-semibold">Hotel Policies</AlertTitle>
-                      <AlertDescription className="text-xs">
-                        <ul className="list-disc pl-4 mt-1 space-y-1">
-                          <li>Valid government-issued photo ID is required at check-in.</li>
-                          <li>This property is couple-friendly.</li>
-                          <li>Early check-in and late check-out are subject to availability and may be chargeable.</li>
-                        </ul>
-                      </AlertDescription>
-                    </Alert>
+                     {backendStatus === 'unavailable' ? (
+                        <Alert variant="destructive">
+                            <AlertCircle className="h-4 w-4" />
+                            <AlertTitle>Online Booking Unavailable</AlertTitle>
+                            <AlertDescription>
+                                The booking service is currently not configured on the server. Please contact support.
+                            </AlertDescription>
+                        </Alert>
+                     ) : (
+                        <Alert className="mt-4">
+                            <Info className="h-4 w-4" />
+                            <AlertTitle className="font-semibold">Hotel Policies</AlertTitle>
+                            <AlertDescription className="text-xs">
+                                <ul className="list-disc pl-4 mt-1 space-y-1">
+                                <li>Valid government-issued photo ID is required at check-in.</li>
+                                <li>This property is couple-friendly.</li>
+                                <li>Early check-in and late check-out are subject to availability and may be chargeable.</li>
+                                </ul>
+                            </AlertDescription>
+                        </Alert>
+                     )}
 
 
-                    <Button onClick={handlePayment} size="lg" className="w-full text-lg h-14 bg-accent text-accent-foreground hover:bg-accent/90 disabled:bg-accent/50" disabled={isBooking || !termsAccepted || isServerHealthy !== true}>
-                        {isBooking ? (
-                            <><Loader2 className="mr-2 h-5 w-5 animate-spin" />Processing...</>
-                        ) : isServerHealthy === null ? (
-                            <><Loader2 className="mr-2 h-5 w-5 animate-spin" />Initializing...</>
-                        ) : isServerHealthy === false ? (
-                            'Booking Service Unavailable'
-                        ) : (
-                            `Pay ${totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })} & Book`
-                        )}
+                    <Button onClick={handlePayment} size="lg" className="w-full text-lg h-14 bg-accent text-accent-foreground hover:bg-accent/90 disabled:bg-accent/50" disabled={isBooking || !termsAccepted || backendStatus !== 'ready'}>
+                        {backendStatus === 'checking' && <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Checking Service...</>}
+                        {backendStatus === 'unavailable' && 'Booking Service Unavailable'}
+                        {backendStatus === 'ready' && (isBooking ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" />Processing...</> : `Pay ${totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })} & Book`)}
                     </Button>
 
                      <div className="text-center text-sm text-muted-foreground space-y-2 mt-2">

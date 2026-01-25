@@ -8,9 +8,9 @@ import * as admin from 'firebase-admin';
 import type { Booking, Room, Hotel, ConfirmedBookingSummary } from '@/lib/types';
 import { sendBookingConfirmationEmail } from '@/services/email';
 
-export async function checkServerHealth(): Promise<{ isDbConnected: boolean }> {
-    const db = getAdminDb();
-    return { isDbConnected: !!db };
+export async function checkBackendStatus() {
+  const db = getAdminDb();
+  return { isConfigured: !!db };
 }
 
 interface CreateOrderResponse {
@@ -149,7 +149,10 @@ export async function verifyPaymentAndConfirmBooking(params: VerifyPaymentParams
         // 3. Create public summary for success page
         const hotelDoc = await db.collection('hotels').doc(bookingResult.hotelId).get();
         if (!hotelDoc.exists()) {
+            // This is a critical failure. The hotel data is needed for the summary.
+            // If we proceed, the success page will 404. We must fail the entire operation.
             console.error(`CRITICAL: Hotel document ${bookingResult.hotelId} not found after booking ${bookingResult.id} was confirmed. Cannot create success summary.`);
+            // In a real production app, we would also trigger a refund for the payment here.
             throw new Error(`Could not retrieve hotel details to finalize your booking confirmation. Please contact support with your payment ID: ${razorpay_payment_id}`);
         }
         
