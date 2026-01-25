@@ -111,7 +111,7 @@ export default function AdminDashboard() {
       </div>
 
        <div className="grid gap-4 md:grid-cols-2">
-            <BookingChart bookings={sortedBookings?.filter(b => b.status === 'CONFIRMED')} />
+            <BookingChart bookings={sortedBookings?.filter(b => b.status === 'CONFIRMED') ?? null} />
             <RecentBookings bookings={sortedBookings} />
         </div>
     </div>
