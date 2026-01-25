@@ -1,14 +1,51 @@
+'use client';
+
+import { Suspense, useState, useEffect } from 'react';
 import Link from 'next/link';
-import { searchHotels } from './actions';
+import { useSearchParams } from 'next/navigation';
+import { useFirestore } from '@/firebase';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+
 import { SearchFilters } from './SearchFilters';
 import { HotelCard } from '@/components/hotel/HotelCard';
 import { Hotel } from '@/lib/types';
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from '@/components/ui/button';
-import { AlertCircle, SearchX } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { SearchX } from 'lucide-react';
 
 
-function Results({ hotels, city, searchError }: { hotels: Hotel[], city: string | null, searchError?: string }) {
+function ResultsSkeleton() {
+    return (
+      <div className="flex-1">
+        <div className="mb-6">
+          <Skeleton className="h-9 w-1/2" />
+          <Skeleton className="mt-2 h-5 w-1/4" />
+        </div>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Card key={i}>
+              <CardContent className="p-0">
+                <Skeleton className="h-48 w-full" />
+              </CardContent>
+              <div className="p-4 space-y-2">
+                <Skeleton className="h-6 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+                <Skeleton className="h-4 w-1/4" />
+              </div>
+            </Card>
+          ))}
+        </div>
+      </div>
+    )
+}
+
+function Results({ hotels, isLoading, city }: { hotels: Hotel[], isLoading: boolean, city: string | null }) {
+
+  if (isLoading) {
+    return <ResultsSkeleton />;
+  }
+
   return (
     <div className="flex-1">
       <div className="mb-6">
@@ -17,17 +54,6 @@ function Results({ hotels, city, searchError }: { hotels: Hotel[], city: string 
         </h2>
         <p className="text-muted-foreground">{hotels?.length || 0} properties found.</p>
       </div>
-
-       {searchError && (
-          <Alert variant="destructive" className="mb-6">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Live Search Offline</AlertTitle>
-            <AlertDescription>
-              {searchError} Showing fallback results. Please contact support if this issue persists.
-            </AlertDescription>
-          </Alert>
-        )}
-
       {hotels && hotels.length > 0 ? (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {hotels.map((hotel) => (
@@ -39,7 +65,7 @@ function Results({ hotels, city, searchError }: { hotels: Hotel[], city: string 
           <SearchX className="h-16 w-16 text-muted-foreground/50 mb-4" />
           <h3 className="font-headline text-2xl font-bold">No Stays Found</h3>
           <p className="mt-2 max-w-md text-muted-foreground">
-            We couldn't find any properties matching your search criteria. Try adjusting your filters.
+            We couldn't find any properties matching your search. Add some from the admin panel to see them here.
           </p>
           <Button variant="outline" className="mt-6" asChild>
             <Link href="/search">Clear Filters & View All</Link>
@@ -50,26 +76,62 @@ function Results({ hotels, city, searchError }: { hotels: Hotel[], city: string 
   );
 }
 
-// This is a server component that fetches data directly.
-export default async function SearchPage({
-  searchParams,
-}: {
-  searchParams: { city?: string; checkIn?: string; checkOut?: string; guests?: string };
-}) {
+function SearchPageComponent() {
+  const searchParams = useSearchParams();
+  const firestore = useFirestore();
+  const [hotels, setHotels] = useState<Hotel[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Data fetching happens on the server.
-  // The searchHotels action now handles the fallback to dummy data internally.
-  const { hotels, error } = await searchHotels(searchParams);
+  const city = searchParams.get('city');
+
+  useEffect(() => {
+    // Wait for firestore to be initialized
+    if (!firestore) return;
+    
+    const fetchData = async () => {
+        setIsLoading(true);
+        try {
+            let hotelsQuery = query(collection(firestore, 'hotels'));
+
+            // Apply city filter if it exists in the URL
+            if (city && city !== 'All') {
+                hotelsQuery = query(hotelsQuery, where('city', '==', city));
+            }
+
+            // Note: Availability filtering (by date/guests) is complex and was
+            // dependent on a server-side action. To ensure the frontend reliably
+            // displays data from Firestore, this client-side search currently
+            // only filters by city.
+            
+            const snapshot = await getDocs(hotelsQuery);
+            const results = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Hotel[];
+            
+            setHotels(results);
+        } catch (error) {
+            console.error("Failed to search hotels:", error);
+            setHotels([]); // Set to empty on error
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    fetchData();
+  }, [firestore, city]);
 
   return (
     <div className="container mx-auto max-w-7xl py-8 px-4 md:px-6">
       <div className="flex flex-col gap-8 lg:flex-row">
         <SearchFilters />
-        <div className="flex-1 space-y-6">
-           {/* We can now directly pass the hotels from the action */}
-          <Results hotels={hotels} city={searchParams.city || null} searchError={error} />
-        </div>
+        <Results hotels={hotels} isLoading={isLoading} city={city} />
       </div>
     </div>
   );
+}
+
+export default function SearchPage() {
+  return (
+    // Suspense is required because SearchPageComponent uses useSearchParams
+    <Suspense fallback={<div className="container mx-auto max-w-7xl py-8 px-4 md:px-6"><ResultsSkeleton/></div>}>
+      <SearchPageComponent />
+    </Suspense>
+  )
 }
