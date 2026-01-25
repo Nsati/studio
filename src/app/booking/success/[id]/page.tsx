@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useParams, notFound, useSearchParams } from 'next/navigation';
+import { useParams, notFound } from 'next/navigation';
 import { useFirestore, useUser } from '@/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
@@ -136,7 +137,6 @@ function TripAssistant({ summary }: { summary: ConfirmedBookingSummary }) {
 
 export default function BookingSuccessPage() {
     const params = useParams();
-    const searchParams = useSearchParams();
     const firestore = useFirestore();
     const bookingId = params.id as string;
     
@@ -144,35 +144,12 @@ export default function BookingSuccessPage() {
     
     const [summaryBooking, setSummaryBooking] = useState<ConfirmedBookingSummary | null>(null);
     const [pageStatus, setPageStatus] = useState<'loading' | 'success' | 'failed'>('loading');
-    const [isDemo] = useState(bookingId === 'demo');
 
     useEffect(() => {
         // Guard against running before firebase is ready or if auth state is still resolving
-        if (isUserLoading) {
+        if (isUserLoading || !firestore || !bookingId) {
             return;
         }
-
-        if (isDemo) {
-            const dataString = searchParams.get('data');
-            if (dataString) {
-                try {
-                    const summary = JSON.parse(decodeURIComponent(dataString));
-                    // Dates from JSON need to be converted back to Date objects
-                    summary.checkIn = new Date(summary.checkIn);
-                    summary.checkOut = new Date(summary.checkOut);
-                    setSummaryBooking(summary);
-                    setPageStatus('success');
-                } catch (e) {
-                    console.error("Failed to parse demo booking data", e);
-                    setPageStatus('failed');
-                }
-            } else {
-                setPageStatus('failed');
-            }
-            return; // Don't run the firestore polling logic for demos
-        }
-        
-        if (!firestore || !bookingId) return;
 
         const summaryBookingRef = doc(firestore, 'confirmedBookings', bookingId);
         let attempts = 0;
@@ -215,7 +192,7 @@ export default function BookingSuccessPage() {
         return () => {
             if (poller) clearInterval(poller);
         };
-    }, [firestore, bookingId, isUserLoading, pageStatus, isDemo, searchParams]);
+    }, [firestore, bookingId, isUserLoading, pageStatus]);
 
     const isLoading = pageStatus === 'loading';
 
@@ -281,7 +258,7 @@ export default function BookingSuccessPage() {
                         <PartyPopper className="h-12 w-12 text-primary" />
                         <CardTitle className="text-3xl font-headline mt-4">Booking Confirmed!</CardTitle>
                         <CardDescription className="max-w-md">
-                           Your Himalayan adventure awaits, {summaryBooking!.customerName}. {isDemo ? "This is a demo booking." : "A confirmation email should arrive shortly."}
+                           Your Himalayan adventure awaits, {summaryBooking!.customerName}. A confirmation email should arrive shortly.
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="p-6 space-y-6">

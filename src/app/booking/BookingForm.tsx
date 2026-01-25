@@ -1,10 +1,11 @@
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, useRouter, notFound } from 'next/navigation';
 import Image from 'next/image';
 import { differenceInDays, format, parse } from 'date-fns';
-import { createRazorpayOrder, verifyPaymentAndConfirmBooking, checkServerHealth } from '@/app/booking/actions';
+import { createRazorpayOrder, verifyPaymentAndConfirmBooking } from '@/app/booking/actions';
 import { signInAnonymously } from 'firebase/auth';
 
 
@@ -15,15 +16,13 @@ import { doc, collection, getDoc, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, Calendar, Users, BedDouble, ArrowLeft, Tag, ShieldCheck, HelpCircle, AlertTriangle } from 'lucide-react';
+import { Loader2, Calendar, Users, BedDouble, ArrowLeft, Tag, ShieldCheck, HelpCircle } from 'lucide-react';
 import Link from 'next/link';
 import { BookingFormSkeleton } from './BookingFormSkeleton';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-
 
 declare global {
   interface Window {
@@ -34,21 +33,10 @@ declare global {
 export function BookingForm() {
     const searchParams = useSearchParams();
     const router = useRouter();
-    const { user, userProfile } = useUser();
+    const { user, userProfile, isLoading: isUserLoading } = useUser();
     const auth = useAuth(); // For guest checkout
     const { toast } = useToast();
     const firestore = useFirestore();
-
-    const [serverHealth, setServerHealth] = useState<{ checked: boolean; isConfigured: boolean }>({
-        checked: false,
-        isConfigured: false,
-    });
-
-    useEffect(() => {
-        checkServerHealth().then(result => {
-            setServerHealth({ checked: true, isConfigured: result.isConfigured });
-        });
-    }, []);
 
     const hotelId = searchParams.get('hotelId');
     const roomId = searchParams.get('roomId');
@@ -89,7 +77,7 @@ export function BookingForm() {
         }
     }, [userProfile]);
     
-    if (!serverHealth.checked || isHotelLoading || areRoomsLoading) {
+    if (isUserLoading || isHotelLoading || areRoomsLoading) {
         return <BookingFormSkeleton />;
     }
     
@@ -153,7 +141,6 @@ export function BookingForm() {
     };
 
     const handlePayment = async () => {
-        // --- Initial validations ---
         if (!customerDetails.name || !customerDetails.email) {
             toast({ variant: 'destructive', title: 'Missing Details', description: 'Please provide your name and email.' });
             return;
@@ -161,34 +148,6 @@ export function BookingForm() {
         
         setIsBooking(true);
 
-        // --- Smart Demo Flow ---
-        if (!serverHealth.isConfigured) {
-            toast({ title: "Demo Mode Active", description: "Live booking is not configured. Creating a demo booking without payment." });
-            
-            await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate processing
-
-            const bookingId = `demo_${Date.now()}`;
-            const summaryData: ConfirmedBookingSummary = {
-                id: bookingId,
-                hotelId: hotel.id,
-                hotelName: hotel.name,
-                hotelCity: hotel.city,
-                hotelAddress: hotel.address,
-                customerName: customerDetails.name,
-                checkIn: new Date(checkInStr),
-                checkOut: new Date(checkOutStr),
-                guests: parseInt(guests),
-                totalPrice: totalPrice,
-                roomType: room.type,
-                userId: user?.uid || 'guest-user',
-            };
-
-            const dataString = encodeURIComponent(JSON.stringify(summaryData));
-            router.push(`/booking/success/demo?data=${dataString}`);
-            return;
-        }
-
-        // --- Live Payment Flow ---
         if (typeof window.Razorpay === 'undefined') {
             toast({ variant: "destructive", title: "Payment Gateway Error", description: "Could not connect to the payment service. Please refresh." });
             setIsBooking(false);
@@ -254,7 +213,7 @@ export function BookingForm() {
         const orderResponse = await createRazorpayOrder(totalPrice, { user_id: userIdForBooking, booking_id: bookingId });
 
         if (!orderResponse.success || !orderResponse.order) {
-            toast({ variant: 'destructive', title: 'Payment Error', description: orderResponse.error || 'Could not initiate payment.' });
+            toast({ variant: 'destructive', title: 'Payment Error', description: orderResponse.error || 'Could not initiate payment.', duration: 8000 });
             setIsBooking(false);
             return;
         }
@@ -452,16 +411,6 @@ export function BookingForm() {
                         </div>
                     </div>
                     
-                    {!serverHealth.isConfigured && serverHealth.checked && (
-                        <Alert variant="default" className="bg-amber-50 border-amber-200">
-                            <AlertTriangle className="h-4 w-4 !text-amber-600" />
-                            <AlertTitle className="text-amber-800">Demo Mode Active</AlertTitle>
-                            <AlertDescription className="text-amber-700">
-                                The live payment gateway is not configured. Bookings will be simulated for demonstration purposes.
-                            </AlertDescription>
-                        </Alert>
-                    )}
-
                     <Button
                         onClick={handlePayment}
                         size="lg"
@@ -471,9 +420,7 @@ export function BookingForm() {
                         {isBooking ? (
                             <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Processing...</>
                         ) : (
-                            serverHealth.isConfigured ?
                             `Pay ${totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })} & Book`
-                            : 'Create Demo Booking'
                         )}
                     </Button>
 
