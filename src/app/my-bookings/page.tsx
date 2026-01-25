@@ -88,20 +88,29 @@ function BookingItem({ booking }: { booking: Booking }) {
         setIsCancelling(true);
         
         const bookingRef = doc(firestore, 'users', user.uid, 'bookings', booking.id);
-        const roomRef = doc(firestore, 'hotels', booking.hotelId, 'rooms', booking.roomId);
-
+        
         try {
             await runTransaction(firestore, async (transaction) => {
                 const bookingDoc = await transaction.get(bookingRef);
-                if (!bookingDoc.exists() || bookingDoc.data().status !== 'CONFIRMED') {
-                    throw new Error("This booking cannot be cancelled or does not exist.");
+                if (!bookingDoc.exists()) {
+                    throw new Error("Booking does not exist.");
                 }
 
-                // Update booking status to CANCELLED
-                transaction.update(bookingRef, { status: 'CANCELLED' });
+                const bookingData = bookingDoc.data() as Booking;
 
-                // Increment the available rooms count
-                transaction.update(roomRef, { availableRooms: increment(1) });
+                if (bookingData.status === 'CANCELLED') {
+                    toast({ title: "Already Cancelled", description: "This booking has already been cancelled." });
+                    return;
+                }
+
+                // If the booking was confirmed, we need to add the room back to inventory.
+                if (bookingData.status === 'CONFIRMED') {
+                    const roomRef = doc(firestore, 'hotels', booking.hotelId, 'rooms', booking.roomId);
+                    transaction.update(roomRef, { availableRooms: increment(1) });
+                }
+                
+                // For both PENDING and CONFIRMED bookings, update the status to CANCELLED.
+                transaction.update(bookingRef, { status: 'CANCELLED' });
             });
 
             toast({
@@ -143,6 +152,7 @@ function BookingItem({ booking }: { booking: Booking }) {
     const checkInDate = (booking.checkIn as any).toDate ? (booking.checkIn as any).toDate() : new Date(booking.checkIn);
     const checkOutDate = (booking.checkOut as any).toDate ? (booking.checkOut as any).toDate() : new Date(booking.checkOut);
     const isCancelled = booking.status === 'CANCELLED';
+    const isPending = booking.status === 'PENDING';
 
     return (
         <Card key={booking.id} className="overflow-hidden shadow-md transition-shadow hover:shadow-lg">
@@ -175,8 +185,9 @@ function BookingItem({ booking }: { booking: Booking }) {
                                 </h3>
                                 <p className="text-muted-foreground mb-4">{hotel.city}</p>
                              </div>
-                             <Badge variant={booking.status === 'CONFIRMED' ? 'default' : 'destructive'} className="capitalize whitespace-nowrap">
-                                {booking.status === 'CONFIRMED' ? <CheckCircle className="mr-1.5 h-4 w-4" /> : <XCircle className="mr-1.5 h-4 w-4" />}
+                             <Badge variant={booking.status === 'CONFIRMED' ? 'default' : (booking.status === 'PENDING' ? 'secondary' : 'destructive')} className="capitalize whitespace-nowrap">
+                                {booking.status === 'CONFIRMED' && <CheckCircle className="mr-1.5 h-4 w-4" />}
+                                {booking.status === 'CANCELLED' && <XCircle className="mr-1.5 h-4 w-4" />}
                                 {booking.status?.toLowerCase()}
                             </Badge>
                         </div>
@@ -195,7 +206,7 @@ function BookingItem({ booking }: { booking: Booking }) {
                         <Button variant="outline" size="sm" asChild>
                             <Link href={`/hotels/${hotel.id}`}>View Hotel</Link>
                         </Button>
-                        <Button variant="outline" size="sm" onClick={() => toast({ title: "Feature Coming Soon", description: "Invoice download will be available shortly."})}>
+                        <Button variant="outline" size="sm" disabled={isPending} onClick={() => toast({ title: "Feature Coming Soon", description: "Invoice download will be available shortly for confirmed bookings."})}>
                             <Download className="mr-2 h-4 w-4" /> Download Invoice
                         </Button>
                         {!isCancelled && (
@@ -211,7 +222,7 @@ function BookingItem({ booking }: { booking: Booking }) {
                                         <AlertDialogTitle>Are you sure you want to cancel?</AlertDialogTitle>
                                         <AlertDialogDescription>
                                             This will permanently cancel your booking for {hotel.name}. 
-                                            Generally, refunds for cancellations are processed within 5-7 business days. 
+                                            {isPending ? " This was a demo booking, so no refund is applicable." : " Any applicable refund will be processed within 5-7 business days."}
                                             This action cannot be undone.
                                         </AlertDialogDescription>
                                     </AlertDialogHeader>
@@ -315,3 +326,5 @@ export default function MyBookingsPage() {
     </div>
   );
 }
+
+    
