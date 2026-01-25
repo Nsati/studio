@@ -30,6 +30,10 @@ export type SummarizeReviewsOutput = z.infer<typeof SummarizeReviewsOutputSchema
 export async function summarizeReviews(
   input: SummarizeReviewsInput
 ): Promise<SummarizeReviewsOutput> {
+  // Add a guard to prevent calling the flow if AI is not configured.
+  if (!ai.model) {
+    throw new Error('AI model is not configured. Please set GEMINI_API_KEY in your .env file.');
+  }
   return summarizeReviewsFlow(input);
 }
 

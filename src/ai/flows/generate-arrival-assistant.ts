@@ -34,6 +34,10 @@ export type TripAssistantOutput = z.infer<typeof TripAssistantOutputSchema>;
 export async function generateTripGuide(
   input: TripAssistantInput
 ): Promise<TripAssistantOutput> {
+  // Add a guard to prevent calling the flow if AI is not configured.
+  if (!ai.model) {
+    throw new Error('AI model is not configured. Please set GEMINI_API_KEY in your .env file.');
+  }
   return tripAssistantFlow(input);
 }
 
