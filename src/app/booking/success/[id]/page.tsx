@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useParams, useRouter, notFound } from 'next/navigation';
@@ -136,8 +137,6 @@ function TripAssistant({ summary }: { summary: ConfirmedBookingSummary }) {
 
 export default function BookingSuccessPage() {
     const params = useParams();
-    const router = useRouter();
-    const { user, isLoading: isUserLoading } = useUser();
     const firestore = useFirestore();
 
     const bookingId = params.id as string;
@@ -147,30 +146,19 @@ export default function BookingSuccessPage() {
         return doc(firestore, 'confirmedBookings', bookingId);
     }, [firestore, bookingId]);
 
-    // useDoc provides a realtime listener for the summary document
-    const { data: summaryBooking, error: summaryError } = useDoc<ConfirmedBookingSummary>(summaryBookingRef);
+    // Get loading and error states from the hook
+    const { data: summaryBooking, isLoading: isSummaryLoading, error: summaryError } = useDoc<ConfirmedBookingSummary>(summaryBookingRef);
+    const { user, isLoading: isUserLoading } = useUser();
     
-    // This state handles the "waiting for webhook" period
-    const [isWaitingForWebhook, setIsWaitingForWebhook] = useState(true);
+    // The page is loading if we are still checking the user state OR fetching the booking summary.
+    const isLoading = isUserLoading || isSummaryLoading;
 
     useEffect(() => {
-        // If we get the summary document from the realtime listener, we can stop waiting.
-        if (summaryBooking) {
-            setIsWaitingForWebhook(false);
-            return;
+        // Log the error for easier debugging if it occurs
+        if (summaryError) {
+             console.error("Error fetching booking summary:", summaryError);
         }
-
-        // If the document doesn't appear after a while, stop waiting.
-        // This handles cases where the webhook might have failed or is taking too long.
-        const timeout = setTimeout(() => {
-            setIsWaitingForWebhook(false);
-        }, 20000); // 20-second timeout for safety
-
-        // Cleanup the timeout if the component unmounts or the data arrives.
-        return () => clearTimeout(timeout);
-    }, [summaryBooking]);
-    
-    const isLoading = isUserLoading || isWaitingForWebhook;
+    }, [summaryError]);
 
     if (isLoading) {
         return (
@@ -181,7 +169,7 @@ export default function BookingSuccessPage() {
                             <Loader2 className="h-12 w-12 text-primary animate-spin" />
                             <CardTitle className="text-3xl font-headline mt-4">Confirming Your Booking</CardTitle>
                             <CardDescription>
-                                Your payment was successful! We are finalizing your booking with the hotel. This may take a moment.
+                                Your payment was successful! We are finalizing your booking with the hotel. This should only take a moment.
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
@@ -193,8 +181,9 @@ export default function BookingSuccessPage() {
         );
     }
     
-    // After waiting, if the booking summary still hasn't appeared, show a 404 error.
-    if (!summaryBooking) {
+    // After loading, if there's a Firestore error or the document is not found, show 404.
+    // This is more robust than a timer.
+    if (summaryError || !summaryBooking) {
         return notFound();
     }
 

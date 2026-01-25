@@ -1,3 +1,4 @@
+
 'use server';
 
 import Razorpay from 'razorpay';
@@ -142,37 +143,41 @@ export async function verifyPaymentAndConfirmBooking(params: VerifyPaymentParams
 
         // 3. Create public summary for success page
         const hotelDoc = await db.collection('hotels').doc(bookingResult.hotelId).get();
-        if (hotelDoc.exists()) {
-            const hotel = hotelDoc.data() as Hotel;
-            const summaryRef = db.collection('confirmedBookings').doc(bookingResult.id!);
-            const summaryData: ConfirmedBookingSummary = {
-                id: bookingResult.id!,
-                hotelId: hotel.id,
-                hotelName: hotel.name,
-                hotelCity: hotel.city,
-                hotelAddress: hotel.address,
-                customerName: bookingResult.customerName,
-                checkIn: bookingResult.checkIn,
-                checkOut: bookingResult.checkOut,
-                guests: bookingResult.guests,
-                totalPrice: bookingResult.totalPrice,
-                roomType: bookingResult.roomType,
-                userId: bookingResult.userId,
-            };
-            await summaryRef.set(summaryData);
-
-             // 4. Send confirmation email (do this after DB writes)
-            await sendBookingConfirmationEmail({
-                to: bookingResult.customerEmail,
-                customerName: bookingResult.customerName,
-                hotelName: hotel.name,
-                checkIn: bookingResult.checkIn,
-                checkOut: bookingResult.checkOut,
-                bookingId: bookingResult.id!
-            });
-        } else {
-             console.warn(`Could not find hotel ${bookingResult.hotelId} to send email.`);
+        if (!hotelDoc.exists()) {
+            // This is a critical failure. The hotel data is needed for the summary.
+            // If we proceed, the success page will 404. We must fail the entire operation.
+            console.error(`CRITICAL: Hotel document ${bookingResult.hotelId} not found after booking ${bookingResult.id} was confirmed. Cannot create success summary.`);
+            // In a real production app, we would also trigger a refund for the payment here.
+            throw new Error(`Could not retrieve hotel details to finalize your booking confirmation. Please contact support with your payment ID: ${razorpay_payment_id}`);
         }
+        
+        const hotel = hotelDoc.data() as Hotel;
+        const summaryRef = db.collection('confirmedBookings').doc(bookingResult.id!);
+        const summaryData: ConfirmedBookingSummary = {
+            id: bookingResult.id!,
+            hotelId: hotel.id,
+            hotelName: hotel.name,
+            hotelCity: hotel.city,
+            hotelAddress: hotel.address,
+            customerName: bookingResult.customerName,
+            checkIn: bookingResult.checkIn,
+            checkOut: bookingResult.checkOut,
+            guests: bookingResult.guests,
+            totalPrice: bookingResult.totalPrice,
+            roomType: bookingResult.roomType,
+            userId: bookingResult.userId,
+        };
+        await summaryRef.set(summaryData);
+
+         // 4. Send confirmation email (do this after DB writes)
+        await sendBookingConfirmationEmail({
+            to: bookingResult.customerEmail,
+            customerName: bookingResult.customerName,
+            hotelName: hotel.name,
+            checkIn: bookingResult.checkIn,
+            checkOut: bookingResult.checkOut,
+            bookingId: bookingResult.id!
+        });
 
         return { success: true, bookingId: bookingResult.id! };
 
