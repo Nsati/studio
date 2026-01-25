@@ -125,7 +125,8 @@ export async function verifyPaymentAndConfirmBooking(
             const roomRef = db.collection('hotels').doc(bookingData.hotelId).collection('rooms').doc(bookingData.roomId);
             const hotelRef = db.collection('hotels').doc(bookingData.hotelId);
 
-            const [roomDoc, hotelDoc] = await transaction.getAll(roomRef, hotelRef);
+            const roomDoc = await transaction.get(roomRef);
+            const hotelDoc = await transaction.get(hotelRef);
             
             if (!roomDoc.exists) throw new Error("Room data not found.");
             if (!hotelDoc.exists) throw new Error("Hotel data not found.");
