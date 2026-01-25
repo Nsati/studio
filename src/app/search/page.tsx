@@ -1,7 +1,7 @@
 
 'use client';
 
-import { Suspense, useState, useEffect } from 'react';
+import { Suspense, useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { searchHotels } from './actions';
@@ -12,6 +12,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from '@/components/ui/button';
 import { SearchX } from 'lucide-react';
+import { useFirestore, useCollection } from '@/firebase';
+import { collection } from 'firebase/firestore';
 
 
 function ResultsSkeleton() {
@@ -77,6 +79,8 @@ function Results({ hotels, isLoading, city }: { hotels: Hotel[], isLoading: bool
 
 function SearchPageComponent() {
   const searchParams = useSearchParams();
+  const firestore = useFirestore();
+
   const [hotels, setHotels] = useState<Hotel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -84,22 +88,50 @@ function SearchPageComponent() {
   const checkIn = searchParams.get('checkIn');
   const checkOut = searchParams.get('checkOut');
   const guests = searchParams.get('guests');
+  
+  // Fetch all hotels on the client-side to guarantee they are shown
+  const allHotelsQuery = useMemo(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'hotels');
+  }, [firestore]);
+  const { data: allHotels, isLoading: isLoadingAllHotels } = useCollection<Hotel>(allHotelsQuery);
+
 
   useEffect(() => {
     const fetchData = async () => {
         setIsLoading(true);
-        try {
-            const result = await searchHotels({ city, checkIn, checkOut, guests });
-            setHotels(result);
-        } catch (error) {
-            console.error("Failed to search hotels:", error);
-            setHotels([]);
-        } finally {
-            setIsLoading(false);
+        // If dates are provided, use the server action for complex availability checks.
+        if (checkIn && checkOut) {
+            try {
+                const result = await searchHotels({ city, checkIn, checkOut, guests });
+                setHotels(result);
+            } catch (error) {
+                console.error("Failed to search hotels with availability:", error);
+                setHotels([]);
+            } finally {
+                setIsLoading(false);
+            }
+        } else {
+             // If no dates, use the client-side data for a simple display.
+            if (!isLoadingAllHotels && allHotels) {
+                let clientFilteredHotels = allHotels;
+                if (city && city !== 'All') {
+                    clientFilteredHotels = allHotels.filter(h => h.city === city);
+                }
+                setHotels(clientFilteredHotels);
+                setIsLoading(false);
+            } else if (isLoadingAllHotels) {
+                setIsLoading(true);
+            } else {
+                setHotels([]);
+                setIsLoading(false);
+            }
         }
     };
+    
+    // Re-run when search params change or when the initial client-side data loads.
     fetchData();
-  }, [city, checkIn, checkOut, guests]);
+  }, [city, checkIn, checkOut, guests, allHotels, isLoadingAllHotels]);
 
   return (
     <div className="container mx-auto max-w-7xl py-8 px-4 md:px-6">
