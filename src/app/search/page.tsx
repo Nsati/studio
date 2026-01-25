@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Suspense, useState, useEffect } from 'react';
@@ -7,6 +8,7 @@ import { searchHotels } from './actions';
 import { SearchFilters } from './SearchFilters';
 import { HotelCard } from '@/components/hotel/HotelCard';
 import { Hotel } from '@/lib/types';
+import { dummyHotels } from '@/lib/dummy-data';
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from '@/components/ui/button';
@@ -89,7 +91,16 @@ function SearchPageComponent() {
         setIsLoading(true);
         try {
             const result = await searchHotels({ city, checkIn, checkOut, guests });
-            setHotels(result);
+
+            const hasSearchParams = !!(city || checkIn || checkOut || guests);
+
+            if (result.length === 0 && !hasSearchParams) {
+                // If the DB returns no results AND there are no search parameters,
+                // assume an empty DB and show dummy data for a better first-time experience.
+                setHotels(dummyHotels);
+            } else {
+                setHotels(result);
+            }
         } catch (error) {
             console.error("Failed to search hotels:", error);
             setHotels([]);
