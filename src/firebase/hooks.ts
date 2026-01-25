@@ -1,4 +1,3 @@
-
 'use client';
 import { useMemo, type DependencyList } from 'react';
 
@@ -25,7 +24,9 @@ export function useMemoFirebase<T>(
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const result = useMemo(factory, deps);
 
-  if (result) {
+  // Only add the __memo property if the result is a non-null object.
+  // This prevents crashing on primitive types like numbers, strings, or null.
+  if (result && typeof result === 'object') {
     // @ts-ignore - This is a custom property for our internal checks.
     result.__memo = true;
   }
