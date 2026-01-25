@@ -100,7 +100,8 @@ export const useUser = (): UserHookResult => {
   }, [auth]);
 
   const userProfileRef = useMemo(() => {
-    if (!user || !firestore) return null;
+    // Anonymous users don't have a profile doc, so don't attempt to fetch one.
+    if (!user || !firestore || user.isAnonymous) return null;
     return doc(firestore, 'users', user.uid);
   }, [user, firestore]);
 
@@ -119,7 +120,7 @@ export const useUser = (): UserHookResult => {
   return {
     user,
     userProfile,
-    isLoading: isAuthLoading || (user ? isProfileLoading : false),
+    isLoading: isAuthLoading || (user && !user.isAnonymous ? isProfileLoading : false),
     error,
   };
 };
