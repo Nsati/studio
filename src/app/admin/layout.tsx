@@ -97,13 +97,11 @@ function AdminAuthGuard({ children }: { children: React.ReactNode }) {
             <Button asChild variant="outline">
               <Link href="/">Back to Home</Link>
             </Button>
-            {process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID && (
-                <Button asChild>
-                <a href={`https://console.firebase.google.com/project/${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}/firestore/data/~2Fusers~2F${user.uid}`} target="_blank" rel="noopener noreferrer">
-                    Open Your User Document
-                </a>
-                </Button>
-            )}
+            <Button asChild>
+              <a href={`https://console.firebase.google.com/project/${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}/firestore/data/~2Fusers~2F${user.uid}`} target="_blank" rel="noopener noreferrer">
+                Open Your User Document
+              </a>
+            </Button>
           </CardFooter>
         </Card>
       </div>
@@ -139,7 +137,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     href={item.href}
                     className={cn(
                       "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
-                      (pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href))) && "bg-muted text-primary"
+                      pathname === item.href && "bg-muted text-primary"
                     )}
                   >
                     <item.icon className="h-4 w-4" />
@@ -185,7 +183,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         href={item.href}
                         className={cn(
                           "flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground",
-                           (pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href))) && "bg-muted text-foreground"
+                           pathname === item.href && "bg-muted text-foreground"
                         )}
                       >
                         <item.icon className="h-5 w-5" />
