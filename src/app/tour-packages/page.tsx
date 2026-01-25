@@ -13,6 +13,7 @@ import { collection } from 'firebase/firestore';
 import type { TourPackage } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { dummyTourPackages } from '@/lib/dummy-data';
+import { useMemo } from 'react';
 
 function TourPackageCard({ tourPackage }: { tourPackage: TourPackage }) {
   const image = PlaceHolderImages.find((img) => img.id === tourPackage.image);
@@ -104,21 +105,29 @@ function PackagesGrid() {
 
   const { data: livePackages, isLoading } = useCollection<TourPackage>(packagesQuery);
   
-  const tourPackages = useMemoFirebase(() => {
+  const tourPackages = useMemo(() => {
     if (livePackages && livePackages.length > 0) {
       return livePackages;
     }
-    // Fallback to dummy data if firestore is empty
+    // Fallback to dummy data if firestore is empty or errors out
     if (!isLoading && (!livePackages || livePackages.length === 0)) {
         return dummyTourPackages;
     }
     return [];
   }, [livePackages, isLoading]);
 
-  if (isLoading) {
+  if (isLoading && tourPackages.length === 0) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {Array.from({ length: 6 }).map((_, i) => <TourPackageCardSkeleton key={i} />)}
+      </div>
+    );
+  }
+
+  if (!tourPackages || tourPackages.length === 0) {
+    return (
+      <div className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-lg">
+          <p>No tour packages found. Please check back later.</p>
       </div>
     );
   }

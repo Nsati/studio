@@ -1,14 +1,14 @@
-
 import Link from 'next/link';
 import { searchHotels } from './actions';
 import { SearchFilters } from './SearchFilters';
 import { HotelCard } from '@/components/hotel/HotelCard';
 import { Hotel } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { SearchX } from 'lucide-react';
+import { AlertCircle, SearchX } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 
-function Results({ hotels, city }: { hotels: Hotel[], city: string | null }) {
+function Results({ hotels, city, searchError }: { hotels: Hotel[], city: string | null, searchError?: string }) {
   return (
     <div className="flex-1">
       <div className="mb-6">
@@ -17,6 +17,17 @@ function Results({ hotels, city }: { hotels: Hotel[], city: string | null }) {
         </h2>
         <p className="text-muted-foreground">{hotels?.length || 0} properties found.</p>
       </div>
+
+       {searchError && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Live Search Offline</AlertTitle>
+            <AlertDescription>
+              {searchError} Showing fallback results. Please contact support if this issue persists.
+            </AlertDescription>
+          </Alert>
+        )}
+
       {hotels && hotels.length > 0 ? (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {hotels.map((hotel) => (
@@ -28,7 +39,7 @@ function Results({ hotels, city }: { hotels: Hotel[], city: string | null }) {
           <SearchX className="h-16 w-16 text-muted-foreground/50 mb-4" />
           <h3 className="font-headline text-2xl font-bold">No Stays Found</h3>
           <p className="mt-2 max-w-md text-muted-foreground">
-            We couldn't find any properties matching your search. Try adjusting your dates, changing your location, or removing some filters.
+            We couldn't find any properties matching your search criteria. Try adjusting your filters.
           </p>
           <Button variant="outline" className="mt-6" asChild>
             <Link href="/search">Clear Filters & View All</Link>
@@ -48,7 +59,7 @@ export default async function SearchPage({
 
   // Data fetching happens on the server.
   // The searchHotels action now handles the fallback to dummy data internally.
-  const { hotels } = await searchHotels(searchParams);
+  const { hotels, error } = await searchHotels(searchParams);
 
   return (
     <div className="container mx-auto max-w-7xl py-8 px-4 md:px-6">
@@ -56,10 +67,9 @@ export default async function SearchPage({
         <SearchFilters />
         <div className="flex-1 space-y-6">
            {/* We can now directly pass the hotels from the action */}
-          <Results hotels={hotels} city={searchParams.city || null} />
+          <Results hotels={hotels} city={searchParams.city || null} searchError={error} />
         </div>
       </div>
     </div>
   );
 }
-

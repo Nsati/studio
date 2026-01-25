@@ -17,25 +17,20 @@ export function FeaturedHotels() {
     return query(collection(firestore, 'hotels'), limit(4));
   }, [firestore]);
 
-  const { data: liveHotels, isLoading, error } = useCollection<Hotel>(hotelsQuery);
+  const { data: liveHotels, isLoading } = useCollection<Hotel>(hotelsQuery);
 
   const featuredHotels = useMemo(() => {
-    // If there's an error loading from Firestore (e.g. no credentials), use dummy data.
-    if (error) {
-      return dummyHotels.slice(0, 4);
-    }
-    // If data loaded from Firestore, use it.
     if (liveHotels && liveHotels.length > 0) {
       return liveHotels;
     }
-    // If still loading, or if firestore is empty, use dummy data as a fallback.
+    // If firestore is empty or errors out, fall back to dummy data
     if (!isLoading && (!liveHotels || liveHotels.length === 0)) {
         return dummyHotels.slice(0, 4);
     }
     return [];
-  }, [liveHotels, isLoading, error]);
+  }, [liveHotels, isLoading]);
 
-  if (isLoading && !error) {
+  if (isLoading && featuredHotels.length === 0) {
     return (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {Array.from({ length: 4 }).map((_, i) => (
@@ -55,7 +50,7 @@ export function FeaturedHotels() {
   }
 
   if (!featuredHotels || featuredHotels.length === 0) {
-      return <p className="text-center text-muted-foreground">No featured hotels available yet.</p>
+      return <p className="text-center text-muted-foreground">No featured hotels available yet. Add some from the admin panel!</p>
   }
 
   return (
