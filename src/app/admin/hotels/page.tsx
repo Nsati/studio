@@ -8,7 +8,7 @@ import type { Hotel } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { PlusCircle, Star, MapPin, Upload } from 'lucide-react';
+import { PlusCircle, Star, MapPin, Upload, Eye } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 function HotelGridSkeleton() {
@@ -63,9 +63,16 @@ function HotelAdminCard({ hotel }: { hotel: Hotel }) {
                     <Star className="h-5 w-5 fill-current" />
                     <span>{hotel.rating}</span>
                 </div>
-                <Button variant="outline" size="sm" asChild>
-                    <Link href={`/admin/hotels/${hotel.id}/edit`}>Edit</Link>
-                </Button>
+                <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="sm" asChild>
+                        <Link href={`/hotels/${hotel.id}`} target="_blank" title="View live page">
+                            <Eye className="h-4 w-4" />
+                        </Link>
+                    </Button>
+                    <Button variant="outline" size="sm" asChild>
+                        <Link href={`/admin/hotels/${hotel.id}/edit`}>Edit</Link>
+                    </Button>
+                </div>
             </CardFooter>
         </Card>
     )

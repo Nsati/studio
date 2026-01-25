@@ -7,6 +7,9 @@ import type { Hotel, Room } from '@/lib/types';
 import { EditHotelForm } from '@/components/admin/EditHotelForm';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import { Eye } from 'lucide-react';
 
 function EditHotelPageSkeleton() {
   return (
@@ -66,9 +69,17 @@ export default function EditHotelPage() {
 
     return (
         <div className="space-y-6">
-            <div>
-                <h1 className="font-headline text-3xl font-bold">Edit Hotel</h1>
-                <p className="text-muted-foreground">Update the details for &quot;{hotel.name}&quot;.</p>
+            <div className="flex justify-between items-center">
+                <div>
+                    <h1 className="font-headline text-3xl font-bold">Edit Hotel</h1>
+                    <p className="text-muted-foreground">Update the details for &quot;{hotel.name}&quot;.</p>
+                </div>
+                 <Button asChild variant="outline">
+                    <Link href={`/hotels/${hotel.id}`} target="_blank">
+                        <Eye className="mr-2 h-4 w-4" />
+                        View Live Page
+                    </Link>
+                </Button>
             </div>
             <Card>
                 <CardContent className="pt-6">
