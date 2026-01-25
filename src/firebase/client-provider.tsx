@@ -33,8 +33,13 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
   }, []); // Empty dependency array ensures this runs once on the client
 
   if (!services) {
-    // Return null while loading. The parent dynamic import now handles the loading UI.
-    return null;
+    // Return a full-page loader if Firebase is not yet initialized.
+    // This state is managed by the dynamic import in the layout, but this is a fallback.
+    return (
+        <div className="h-screen w-full flex items-center justify-center bg-background">
+            <p>Initializing App...</p>
+        </div>
+    );
   }
 
   return (

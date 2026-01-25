@@ -88,7 +88,9 @@ export function HotelCard({ hotel }: HotelCardProps) {
               <p className="text-xs text-muted-foreground -mt-1">/night</p>
             </div>
           ) : (
-            <div /> // Placeholder to keep alignment
+            <div>
+                 <p className="text-sm font-semibold text-muted-foreground">Not available</p>
+            </div>
           )}
           <Badge>
             <Star className="h-4 w-4 fill-current mr-1" />
