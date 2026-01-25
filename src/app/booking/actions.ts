@@ -51,7 +51,7 @@ export async function createRazorpayOrder(
       success: true,
       order: {
         id: order.id,
-        amount: Number(order.amount),
+        amount: order.amount,
         currency: order.currency,
       },
       keyId: keyId,
