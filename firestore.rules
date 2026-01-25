@@ -17,14 +17,12 @@ service cloud.firestore {
       allow create: if request.auth.uid == userId;
     }
 
-    match /users/{userId}/bookings/{bookingId} {
-      // An admin can do anything. A user can do anything to their own booking.
-      allow read, write: if request.auth.uid == userId || isAdmin();
-    }
-    
-    // This rule allows admins to perform collection group queries on bookings.
-    match /{path=**}/bookings/{bookingId} {
-      allow read: if isAdmin();
+    match /bookings/{bookingId} {
+      // Admins have full access.
+      // Users can create bookings for themselves.
+      allow create: if request.auth.uid == request.resource.data.userId || isAdmin();
+      // Users can read, update, or delete their own bookings.
+      allow read, update, delete: if request.auth.uid == resource.data.userId || isAdmin();
     }
 
     match /hotels/{hotelId} {

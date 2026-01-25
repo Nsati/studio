@@ -19,7 +19,7 @@ import { format } from 'date-fns';
 import { Calendar, Hotel as HotelIcon, Home, Loader2, Download, Ban, CheckCircle, XCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
-import { collection, doc, runTransaction, increment } from 'firebase/firestore';
+import { collection, doc, runTransaction, increment, query, where } from 'firebase/firestore';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -87,7 +87,7 @@ function BookingItem({ booking }: { booking: Booking }) {
         
         setIsCancelling(true);
         
-        const bookingRef = doc(firestore, 'users', user.uid, 'bookings', booking.id);
+        const bookingRef = doc(firestore, 'bookings', booking.id);
         const roomRef = doc(firestore, 'hotels', booking.hotelId, 'rooms', booking.roomId);
 
         try {
@@ -245,7 +245,7 @@ export default function MyBookingsPage() {
   
   const bookingsQuery = useMemo(() => {
     if (!firestore || !user) return null;
-    return collection(firestore, 'users', user.uid, 'bookings');
+    return query(collection(firestore, 'bookings'), where('userId', '==', user.uid));
   }, [firestore, user]);
 
   const { data: bookings, isLoading: areBookingsLoading } = useCollection<Booking>(bookingsQuery);

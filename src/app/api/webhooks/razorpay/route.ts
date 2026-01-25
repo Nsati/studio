@@ -1,4 +1,6 @@
 
+'use server';
+
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { adminDb } from '@/firebase/admin';
@@ -15,7 +17,6 @@ export async function POST(req: NextRequest) {
     // Return 500 so Razorpay might retry later if the admin config is fixed.
     return NextResponse.json({ error: configError }, { status: 500 });
   }
-  
   const db = adminDb; // Use a local constant for type safety
 
   const secret = process.env.RAZORPAY_WEBHOOK_SECRET || '';
@@ -59,7 +60,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ status: 'ok', message: 'Missing notes, but acknowledged.' });
       }
 
-      const bookingRef = db.collection('users').doc(user_id).collection('bookings').doc(booking_id);
+      const bookingRef = db.collection('bookings').doc(booking_id);
 
       // This transaction acts as a fallback/redundancy.
       // It confirms the booking if the client-side flow failed.

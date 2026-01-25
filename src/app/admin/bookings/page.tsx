@@ -2,7 +2,7 @@
 'use client';
 import { useMemo, useState } from 'react';
 import { useFirestore, useCollection } from '@/firebase';
-import { collectionGroup, doc, runTransaction, increment, updateDoc } from 'firebase/firestore';
+import { collection, doc, runTransaction, increment, updateDoc } from 'firebase/firestore';
 import type { Booking } from '@/lib/types';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -55,7 +55,7 @@ function CancelBookingAction({ booking }: { booking: Booking }) {
         if (!firestore || !booking.id) return;
 
         setIsCancelling(true);
-        const bookingRef = doc(firestore, 'users', booking.userId, 'bookings', booking.id);
+        const bookingRef = doc(firestore, 'bookings', booking.id);
         const roomRef = doc(firestore, 'hotels', booking.hotelId, 'rooms', booking.roomId);
 
         try {
@@ -141,9 +141,8 @@ export default function BookingsPage() {
 
     const bookingsQuery = useMemo(() => {
         if (!firestore) return null;
-        // This is a collection group query. It fetches documents from all 'bookings'
-        // subcollections across the entire database.
-        return collectionGroup(firestore, 'bookings');
+        // Query the top-level 'bookings' collection
+        return collection(firestore, 'bookings');
     }, [firestore]);
 
     const { data: bookingsData, isLoading } = useCollection<Booking>(bookingsQuery);

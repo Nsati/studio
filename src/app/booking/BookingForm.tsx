@@ -206,7 +206,7 @@ export function BookingForm() {
         let bookingId: string;
         try {
             if (!userIdForBooking) throw new Error("User not authenticated.");
-            const bookingRef = doc(firestore, 'users', userIdForBooking, 'bookings', newBookingId);
+            const bookingRef = doc(firestore, 'bookings', newBookingId);
 
             const bookingData: Booking = {
               id: newBookingId,

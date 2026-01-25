@@ -143,14 +143,11 @@ export default function BookingSuccessPage() {
 
     const bookingId = params.id as string;
     
-    // Guest checkout may result in an anonymous user. We need their UID.
-    const userIdForBooking = useMemo(() => user?.uid, [user]);
-
-    // This reference is now stable and will trigger useDoc only when the user/bookingId changes.
+    // This reference is now stable and points to the top-level bookings collection
     const bookingRef = useMemo(() => {
-        if (!firestore || !userIdForBooking || !bookingId) return null;
-        return doc(firestore, 'users', userIdForBooking, 'bookings', bookingId);
-    }, [firestore, userIdForBooking, bookingId]);
+        if (!firestore || !bookingId) return null;
+        return doc(firestore, 'bookings', bookingId);
+    }, [firestore, bookingId]);
 
     // useDoc is a real-time listener. It will automatically update when the booking status changes.
     const { data: booking, isLoading: isBookingLoading } = useDoc<Booking>(bookingRef);
