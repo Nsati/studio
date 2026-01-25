@@ -1,15 +1,13 @@
 
-import { Suspense } from 'react';
 import Link from 'next/link';
 import { searchHotels } from './actions';
 import { SearchFilters } from './SearchFilters';
 import { HotelCard } from '@/components/hotel/HotelCard';
 import { Hotel } from '@/lib/types';
-import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from '@/components/ui/button';
-import { SearchX } from 'lucide-react';
-import Loading from './loading';
+import { SearchX, Terminal } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+
 
 function Results({ hotels, city }: { hotels: Hotel[], city: string | null }) {
   return (
@@ -42,7 +40,7 @@ function Results({ hotels, city }: { hotels: Hotel[], city: string | null }) {
   );
 }
 
-// This is now a server component that fetches data directly.
+// This is a server component that fetches data directly.
 export default async function SearchPage({
   searchParams,
 }: {
@@ -50,15 +48,25 @@ export default async function SearchPage({
 }) {
 
   // Data fetching happens on the server, before the page is rendered.
-  const hotels = await searchHotels(searchParams);
+  const { hotels, error } = await searchHotels(searchParams);
 
   return (
     <div className="container mx-auto max-w-7xl py-8 px-4 md:px-6">
       <div className="flex flex-col gap-8 lg:flex-row">
         <SearchFilters />
-        <Suspense fallback={<Loading />}>
-           <Results hotels={hotels} city={searchParams.city || null} />
-        </Suspense>
+        <div className="flex-1">
+          {error ? (
+             <Alert variant="destructive">
+               <Terminal className="h-4 w-4" />
+               <AlertTitle>Search Unavailable</AlertTitle>
+               <AlertDescription>
+                 {error} This is likely a server configuration issue. If you are the administrator, please ensure the Firebase Admin SDK is correctly set up with the necessary environment variables.
+               </AlertDescription>
+             </Alert>
+          ) : (
+            <Results hotels={hotels} city={searchParams.city || null} />
+          )}
+        </div>
       </div>
     </div>
   );
