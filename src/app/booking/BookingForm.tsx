@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, useRouter, notFound } from 'next/navigation';
 import Image from 'next/image';
 import { differenceInDays, format, parse } from 'date-fns';
-import { createRazorpayOrder } from '@/app/booking/actions';
+import { createRazorpayOrder, verifyPaymentAndConfirmBooking } from '@/app/booking/actions';
 import { signInAnonymously } from 'firebase/auth';
 
 
@@ -200,22 +200,13 @@ export function BookingForm() {
             }
         }
         
-        // --- Step 1: Generate a unique ID for the booking on the client ---
         const bookingId = `booking_${Date.now()}`;
 
-        // --- Step 2: Create Razorpay order with all booking context in notes ---
+        // --- Create Razorpay order ---
         const orderResponse = await createRazorpayOrder(totalPrice, {
-            booking_id: bookingId,
+            // Notes for webhook fallback
             user_id: userIdForBooking,
-            hotel_id: hotel.id,
-            room_id: room.id,
-            check_in: checkInStr,
-            check_out: checkOutStr,
-            guests: guests,
-            total_price: String(totalPrice),
-            customer_name: customerDetails.name,
-            customer_email: customerDetails.email,
-            room_type: room.type,
+            booking_id: bookingId
         });
 
         if (!orderResponse.success || !orderResponse.order) {
@@ -229,7 +220,20 @@ export function BookingForm() {
         }
         const { order, keyId } = orderResponse;
         
-        // --- Step 3: Open Razorpay Checkout ---
+        const bookingDetails = {
+            id: bookingId,
+            userId: userIdForBooking,
+            hotelId: hotel.id,
+            roomId: room.id,
+            roomType: room.type,
+            checkIn: checkInStr,
+            checkOut: checkOutStr,
+            guests: parseInt(guests),
+            totalPrice: totalPrice,
+            customerName: customerDetails.name,
+            customerEmail: customerDetails.email,
+        };
+
         const options = {
             key: keyId,
             amount: order.amount,
@@ -237,14 +241,35 @@ export function BookingForm() {
             name: "Uttarakhand Getaways",
             description: `Booking for ${hotel.name}`,
             order_id: order.id,
-            handler: () => {
-                // The payment was successful. We just need to redirect. The webhook
-                // will handle inventory and confirmation.
-                toast({
-                    title: "Payment Received!",
-                    description: "Finalizing your confirmation..."
-                });
-                router.push(`/booking/success/${bookingId}`);
+            handler: async (response: any) => {
+                try {
+                    toast({ title: "Payment Received!", description: "Verifying and confirming your booking..." });
+                    
+                    const verificationResult = await verifyPaymentAndConfirmBooking({
+                        razorpay_payment_id: response.razorpay_payment_id,
+                        razorpay_order_id: response.razorpay_order_id,
+                        razorpay_signature: response.razorpay_signature,
+                        bookingDetails: bookingDetails
+                    });
+
+                    if (verificationResult.success && verificationResult.bookingId) {
+                         toast({
+                            title: "Payment Verified!",
+                            description: "Your booking is confirmed. Redirecting..."
+                        });
+                        router.push(`/booking/success/${verificationResult.bookingId}`);
+                    } else {
+                        throw new Error(verificationResult.error || "Payment verification failed.");
+                    }
+                } catch (error: any) {
+                     toast({
+                        variant: "destructive",
+                        title: "Booking Confirmation Failed",
+                        description: error.message || "There was an issue confirming your booking after payment. Please contact support, your payment was successful.",
+                        duration: 10000,
+                    });
+                    setIsBooking(false);
+                }
             },
             prefill: {
                 name: customerDetails.name,
@@ -256,7 +281,6 @@ export function BookingForm() {
             modal: {
                 ondismiss: () => {
                     setIsBooking(false);
-                    // In a real app, a cron job would clean up PENDING bookings.
                     toast({
                         variant: 'destructive',
                         title: 'Payment Cancelled',
