@@ -4,26 +4,22 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     function isAdmin() {
-      // Check if user is authenticated, their profile exists, and has the 'admin' role.
-      // This requires the user to have read access to their own user document.
-      return request.auth != null && 
-             exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+      return request.auth != null && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
     match /users/{userId} {
-      // Admins can get any user profile.
-      // A user can get their own profile.
-      allow get: if isAdmin() || request.auth.uid == userId;
-
-      // Admins can list all user profiles.
+      // Admins can get any user document. Users can only get their own.
+      allow get: if request.auth.uid == userId || isAdmin();
+      // Only admins can list all users.
       allow list: if isAdmin();
       
-      // A user can update their own profile.
-      allow update: if request.auth.uid == userId;
-
-      // A new user can create their own profile document.
+      // A new user can create their own user document.
       allow create: if request.auth.uid == userId;
+
+      // An admin can update any field on any user.
+      // A regular user can only update their own document, and they are NOT allowed to change their 'role'.
+      allow update: if isAdmin() || (request.auth.uid == userId && request.resource.data.role == resource.data.role);
 
       match /bookings/{bookingId} {
         // User can read/write their own bookings. Admins can read/write any booking.
@@ -62,7 +58,7 @@ service cloud.firestore {
         allow write: if isAdmin();
     }
 
-    // Temporary public collection for success page. Anyone can read. No one can write.
+    // Temporary public collection for success page
     match /confirmedBookings/{bookingId} {
         allow read: if true;
         allow write: if false;
