@@ -15,11 +15,11 @@ import { doc, collection, getDoc, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, Calendar, Users, BedDouble, ArrowLeft, Tag, ShieldCheck, HelpCircle, AlertCircle } from 'lucide-react';
+import { Loader2, Calendar, Users, BedDouble, ArrowLeft, Tag, ShieldCheck, HelpCircle } from 'lucide-react';
 import Link from 'next/link';
 import { BookingFormSkeleton } from './BookingFormSkeleton';
 
@@ -27,59 +27,6 @@ declare global {
   interface Window {
     Razorpay: any;
   }
-}
-
-function ServerConfigurationError() {
-    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
-    const consoleUrl = projectId
-        ? `https://console.firebase.google.com/project/${projectId}/settings/serviceaccounts/adminsdk`
-        : `https://console.firebase.google.com/`;
-
-    return (
-        <div className="container mx-auto max-w-2xl py-12 px-4 md:px-6">
-            <Card className="border-destructive">
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-3 font-headline text-2xl text-destructive">
-                        <AlertCircle className="h-6 w-6" />
-                        Booking Service Unavailable
-                    </CardTitle>
-                    <CardDescription>
-                        The live booking and payment system is not configured on the server.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <p className="text-sm text-muted-foreground">
-                        This is a server configuration issue, not a bug in the application code. To enable live bookings, the backend needs credentials to communicate securely with Firebase services for tasks like verifying payments and updating room inventory.
-                    </p>
-                    <div>
-                        <h4 className="font-semibold text-foreground">How to Fix This:</h4>
-                        <ol className="list-decimal list-inside text-sm text-muted-foreground space-y-2 mt-2">
-                            <li>
-                                Go to your Firebase project's service account settings. You can use the button below to go there directly.
-                            </li>
-                            <li>
-                                Click <strong>"Generate new private key"</strong> to download a JSON file with your server credentials.
-                            </li>
-                            <li>
-                                Copy the <strong>entire contents</strong> of that JSON file.
-                            </li>
-                            <li>
-                                In your project's <code>.env</code> file, create a new variable named <code>GOOGLE_APPLICATION_CREDENTIALS_JSON</code> and paste the copied JSON content as its value.
-                            </li>
-                            <li>Restart your development server for the changes to take effect.</li>
-                        </ol>
-                    </div>
-                </CardContent>
-                <CardFooter className="flex justify-end">
-                    <Button asChild>
-                        <a href={consoleUrl} target="_blank" rel="noopener noreferrer">
-                            Go to Firebase Console
-                        </a>
-                    </Button>
-                </CardFooter>
-            </Card>
-        </div>
-    );
 }
 
 export function BookingForm() {
@@ -140,15 +87,7 @@ export function BookingForm() {
         }
     }, [userProfile]);
     
-    if (!serverHealth.checked) {
-        return <BookingFormSkeleton />;
-    }
-
-    if (!serverHealth.isConfigured) {
-        return <ServerConfigurationError />;
-    }
-
-    if (isHotelLoading || areRoomsLoading) {
+    if (!serverHealth.checked || isHotelLoading || areRoomsLoading) {
         return <BookingFormSkeleton />;
     }
     
@@ -213,14 +152,6 @@ export function BookingForm() {
 
     const handlePayment = async () => {
         // --- Initial validations ---
-        if (typeof window.Razorpay === 'undefined') {
-            toast({ variant: "destructive", title: "Payment Gateway Error", description: "Could not connect to the payment service. Please refresh." });
-            return;
-        }
-        if (totalPrice < 1) {
-            toast({ variant: 'destructive', title: 'Invalid Amount', description: 'Total amount must be at least ₹1.' });
-            return;
-        }
         if (!customerDetails.name || !customerDetails.email) {
             toast({ variant: 'destructive', title: 'Missing Details', description: 'Please provide your name and email.' });
             return;
@@ -228,6 +159,45 @@ export function BookingForm() {
         
         setIsBooking(true);
 
+        // --- Smart Demo Flow ---
+        if (!serverHealth.isConfigured) {
+            toast({ title: "Demo Mode Active", description: "Live booking is not configured. Creating a demo booking without payment." });
+            
+            await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate processing
+
+            const bookingId = `demo_${Date.now()}`;
+            const summaryData: ConfirmedBookingSummary = {
+                id: bookingId,
+                hotelId: hotel.id,
+                hotelName: hotel.name,
+                hotelCity: hotel.city,
+                hotelAddress: hotel.address,
+                customerName: customerDetails.name,
+                checkIn: new Date(checkInStr),
+                checkOut: new Date(checkOutStr),
+                guests: parseInt(guests),
+                totalPrice: totalPrice,
+                roomType: room.type,
+                userId: user?.uid || 'guest-user',
+            };
+
+            const dataString = encodeURIComponent(JSON.stringify(summaryData));
+            router.push(`/booking/success/demo?data=${dataString}`);
+            return;
+        }
+
+        // --- Live Payment Flow ---
+        if (typeof window.Razorpay === 'undefined') {
+            toast({ variant: "destructive", title: "Payment Gateway Error", description: "Could not connect to the payment service. Please refresh." });
+            setIsBooking(false);
+            return;
+        }
+        if (totalPrice < 1) {
+            toast({ variant: 'destructive', title: 'Invalid Amount', description: 'Total amount must be at least ₹1.' });
+            setIsBooking(false);
+            return;
+        }
+        
         let userIdForBooking = user?.uid;
         if (!userIdForBooking) {
             if (!auth || !firestore) {
@@ -288,7 +258,6 @@ export function BookingForm() {
         }
         const { order, keyId } = orderResponse;
         
-
         const options = {
             key: keyId,
             amount: order.amount,

@@ -1,6 +1,6 @@
 'use client';
 
-import { useParams, notFound } from 'next/navigation';
+import { useParams, notFound, useSearchParams } from 'next/navigation';
 import { useFirestore, useUser } from '@/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
@@ -136,6 +136,7 @@ function TripAssistant({ summary }: { summary: ConfirmedBookingSummary }) {
 
 export default function BookingSuccessPage() {
     const params = useParams();
+    const searchParams = useSearchParams();
     const firestore = useFirestore();
     const bookingId = params.id as string;
     
@@ -143,12 +144,35 @@ export default function BookingSuccessPage() {
     
     const [summaryBooking, setSummaryBooking] = useState<ConfirmedBookingSummary | null>(null);
     const [pageStatus, setPageStatus] = useState<'loading' | 'success' | 'failed'>('loading');
+    const [isDemo] = useState(bookingId === 'demo');
 
     useEffect(() => {
         // Guard against running before firebase is ready or if auth state is still resolving
-        if (!firestore || !bookingId || isUserLoading) {
+        if (isUserLoading) {
             return;
         }
+
+        if (isDemo) {
+            const dataString = searchParams.get('data');
+            if (dataString) {
+                try {
+                    const summary = JSON.parse(decodeURIComponent(dataString));
+                    // Dates from JSON need to be converted back to Date objects
+                    summary.checkIn = new Date(summary.checkIn);
+                    summary.checkOut = new Date(summary.checkOut);
+                    setSummaryBooking(summary);
+                    setPageStatus('success');
+                } catch (e) {
+                    console.error("Failed to parse demo booking data", e);
+                    setPageStatus('failed');
+                }
+            } else {
+                setPageStatus('failed');
+            }
+            return; // Don't run the firestore polling logic for demos
+        }
+        
+        if (!firestore || !bookingId) return;
 
         const summaryBookingRef = doc(firestore, 'confirmedBookings', bookingId);
         let attempts = 0;
@@ -158,7 +182,6 @@ export default function BookingSuccessPage() {
         let poller: NodeJS.Timeout | null = null;
         
         const pollForBooking = async () => {
-            // If another process (e.g. a previous poll) already succeeded, stop.
             if (pageStatus === 'success') {
                 if (poller) clearInterval(poller);
                 return;
@@ -174,7 +197,6 @@ export default function BookingSuccessPage() {
                 }
             } catch (error) {
                 console.error("Error polling for booking summary:", error);
-                // Keep polling even if there's a permission error, in case the auth state resolves.
             }
 
             attempts++;
@@ -193,7 +215,7 @@ export default function BookingSuccessPage() {
         return () => {
             if (poller) clearInterval(poller);
         };
-    }, [firestore, bookingId, isUserLoading, pageStatus]); // Add isUserLoading dependency
+    }, [firestore, bookingId, isUserLoading, pageStatus, isDemo, searchParams]);
 
     const isLoading = pageStatus === 'loading';
 
@@ -206,7 +228,7 @@ export default function BookingSuccessPage() {
                             <Loader2 className="h-12 w-12 text-primary animate-spin" />
                             <CardTitle className="text-3xl font-headline mt-4">Confirming Your Booking</CardTitle>
                             <CardDescription>
-                                Your payment was successful! We are finalizing your booking with the hotel. This should only take a moment.
+                                We are finalizing your booking. This should only take a moment.
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
@@ -227,7 +249,7 @@ export default function BookingSuccessPage() {
                             <AlertCircle className="h-12 w-12 text-destructive" />
                             <CardTitle className="text-3xl font-headline mt-4">Confirmation Pending</CardTitle>
                             <CardDescription>
-                                We are still confirming your booking with the hotel. Your payment was successful. Please check your email for the final confirmation shortly, or visit the "My Bookings" page.
+                                We are still confirming your booking. If you made a payment, please check your email for the final confirmation shortly, or visit the "My Bookings" page.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="flex flex-col sm:flex-row gap-4">
@@ -245,11 +267,9 @@ export default function BookingSuccessPage() {
     }
     
     if (pageStatus === 'success' && !summaryBooking) {
-        // This case can happen briefly between setting status and summary, or if summary is null.
         return notFound();
     }
 
-    // This check is now safe because we only reach here if status is 'success'
     const checkInDate = (summaryBooking!.checkIn as any).toDate ? (summaryBooking!.checkIn as any).toDate() : new Date(summaryBooking!.checkIn);
     const checkOutDate = (summaryBooking!.checkOut as any).toDate ? (summaryBooking!.checkOut as any).toDate() : new Date(summaryBooking!.checkOut);
 
@@ -261,7 +281,7 @@ export default function BookingSuccessPage() {
                         <PartyPopper className="h-12 w-12 text-primary" />
                         <CardTitle className="text-3xl font-headline mt-4">Booking Confirmed!</CardTitle>
                         <CardDescription className="max-w-md">
-                           Your Himalayan adventure awaits, {summaryBooking!.customerName}. A confirmation email should arrive shortly.
+                           Your Himalayan adventure awaits, {summaryBooking!.customerName}. {isDemo ? "This is a demo booking." : "A confirmation email should arrive shortly."}
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="p-6 space-y-6">
