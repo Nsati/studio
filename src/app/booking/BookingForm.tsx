@@ -1,15 +1,14 @@
-
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, useRouter, notFound } from 'next/navigation';
 import Image from 'next/image';
 import { differenceInDays, format, parse } from 'date-fns';
-import { createRazorpayOrder, verifyPaymentAndConfirmBooking, checkBackendStatus } from '@/app/booking/actions';
+import { createRazorpayOrder } from '@/app/booking/actions';
 import { signInAnonymously } from 'firebase/auth';
 
 
-import type { Hotel, Room, Booking, Promotion } from '@/lib/types';
+import type { Hotel, Room, Booking, Promotion, ConfirmedBookingSummary } from '@/lib/types';
 import { useFirestore, useAuth, useUser, useDoc, useCollection, useMemoFirebase } from '@/firebase';
 import { doc, collection, getDoc, setDoc } from 'firebase/firestore';
 
@@ -20,9 +19,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, Calendar, Users, BedDouble, ArrowLeft, Tag, ShieldCheck, Info, HelpCircle, AlertCircle } from 'lucide-react';
+import { Loader2, Calendar, Users, BedDouble, ArrowLeft, Tag, ShieldCheck, HelpCircle } from 'lucide-react';
 import Link from 'next/link';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 declare global {
   interface Window {
@@ -70,20 +68,12 @@ export function BookingForm() {
     const [couponCode, setCouponCode] = useState('');
     const [couponDiscount, setCouponDiscount] = useState(0);
     const [couponMessage, setCouponMessage] = useState('');
-    const [backendStatus, setBackendStatus] = useState<'checking' | 'ready' | 'unavailable'>('checking');
-
 
     useEffect(() => {
         if (userProfile) {
             setCustomerDetails({ name: userProfile.displayName, email: userProfile.email });
         }
     }, [userProfile]);
-
-    useEffect(() => {
-        checkBackendStatus().then(result => {
-            setBackendStatus(result.isConfigured ? 'ready' : 'unavailable');
-        });
-    }, []);
 
     if (isHotelLoading || areRoomsLoading) {
         return null; // Let the parent Suspense boundary handle the loading UI.
@@ -126,7 +116,6 @@ export function BookingForm() {
             let discountAmount = 0;
 
             if (promotion.discountType === 'percentage') {
-                // Coupon is applied on the price after hotel discount
                 discountAmount = basePriceAfterHotelDiscount * (promotion.discountValue / 100);
                 setCouponMessage(`🎉 Coupon "${promotion.code}" applied! You saved ${promotion.discountValue}%.`);
             } else { // fixed
@@ -152,27 +141,15 @@ export function BookingForm() {
     const handlePayment = async () => {
         // --- Initial validations ---
         if (typeof window.Razorpay === 'undefined') {
-            toast({
-                variant: "destructive",
-                title: "Payment Gateway Error",
-                description: "Could not connect to the payment service. Please refresh.",
-            });
+            toast({ variant: "destructive", title: "Payment Gateway Error", description: "Could not connect to the payment service. Please refresh." });
             return;
         }
         if (totalPrice < 1) {
-            toast({
-                variant: 'destructive',
-                title: 'Invalid Amount',
-                description: 'Total amount must be at least ₹1.',
-            });
+            toast({ variant: 'destructive', title: 'Invalid Amount', description: 'Total amount must be at least ₹1.' });
             return;
         }
         if (!customerDetails.name || !customerDetails.email) {
-            toast({
-                variant: 'destructive',
-                title: 'Missing Details',
-                description: 'Please provide your name and email.',
-            });
+            toast({ variant: 'destructive', title: 'Missing Details', description: 'Please provide your name and email.' });
             return;
         }
         if (!firestore) {
@@ -181,7 +158,6 @@ export function BookingForm() {
         }
         setIsBooking(true);
 
-        // --- Get or create a user for the booking ---
         let userIdForBooking = user?.uid;
         if (!userIdForBooking) {
             if (!auth) {
@@ -192,17 +168,10 @@ export function BookingForm() {
             try {
                 const userCredential = await signInAnonymously(auth);
                 userIdForBooking = userCredential.user.uid;
-                toast({
-                    title: 'Booking as Guest',
-                    description: 'Your booking will be saved temporarily.',
-                });
+                toast({ title: 'Booking as Guest', description: 'Your booking will be saved temporarily.' });
             } catch (error) {
                 console.error("Anonymous sign-in failed:", error);
-                toast({
-                    variant: 'destructive',
-                    title: 'Guest Checkout Failed',
-                    description: 'Could not proceed. Please try again.',
-                });
+                toast({ variant: 'destructive', title: 'Guest Checkout Failed', description: 'Could not proceed. Please try again.' });
                 setIsBooking(false);
                 return;
             }
@@ -210,19 +179,10 @@ export function BookingForm() {
         
         const bookingId = `booking_${Date.now()}`;
 
-        // --- Create Razorpay order ---
-        const orderResponse = await createRazorpayOrder(totalPrice, {
-            // Notes for webhook fallback
-            user_id: userIdForBooking,
-            booking_id: bookingId
-        });
+        const orderResponse = await createRazorpayOrder(totalPrice, { user_id: userIdForBooking, booking_id: bookingId });
 
         if (!orderResponse.success || !orderResponse.order) {
-            toast({
-                variant: 'destructive',
-                title: 'Payment Error',
-                description: orderResponse.error || 'Could not initiate payment.',
-            });
+            toast({ variant: 'destructive', title: 'Payment Error', description: orderResponse.error || 'Could not initiate payment.' });
             setIsBooking(false);
             return;
         }
@@ -250,50 +210,63 @@ export function BookingForm() {
             description: `Booking for ${hotel.name}`,
             order_id: order.id,
             handler: async (response: any) => {
+                if (!firestore || !userIdForBooking) {
+                    toast({ variant: 'destructive', title: 'Error', description: 'Firestore connection lost.' });
+                    setIsBooking(false);
+                    return;
+                }
+        
                 try {
-                    toast({ title: "Payment Received!", description: "Verifying and confirming your booking..." });
-                    
-                    const verificationResult = await verifyPaymentAndConfirmBooking({
-                        razorpay_payment_id: response.razorpay_payment_id,
-                        razorpay_order_id: response.razorpay_order_id,
-                        razorpay_signature: response.razorpay_signature,
-                        bookingDetails: bookingDetails
-                    });
-
-                    if (verificationResult.success && verificationResult.bookingId) {
-                         toast({
-                            title: "Payment Verified!",
-                            description: "Your booking is confirmed. Redirecting..."
-                        });
-                        router.push(`/booking/success/${verificationResult.bookingId}`);
-                    } else {
-                        throw new Error(verificationResult.error || "Payment verification failed.");
-                    }
+                    toast({ title: "Payment Received!", description: "Confirming your booking..." });
+        
+                    const finalBookingData: Booking = {
+                        ...bookingDetails,
+                        checkIn: new Date(bookingDetails.checkIn),
+                        checkOut: new Date(bookingDetails.checkOut),
+                        status: 'CONFIRMED',
+                        createdAt: new Date(),
+                        razorpayPaymentId: response.razorpay_payment_id,
+                    };
+        
+                    const userBookingRef = doc(firestore, 'users', userIdForBooking, 'bookings', bookingId);
+                    await setDoc(userBookingRef, finalBookingData);
+        
+                    const summaryData: ConfirmedBookingSummary = {
+                        id: bookingId,
+                        hotelId: hotel.id,
+                        hotelName: hotel.name,
+                        hotelCity: hotel.city,
+                        hotelAddress: hotel.address,
+                        customerName: customerDetails.name,
+                        checkIn: new Date(bookingDetails.checkIn),
+                        checkOut: new Date(bookingDetails.checkOut),
+                        guests: parseInt(guests),
+                        totalPrice: totalPrice,
+                        roomType: room.type,
+                        userId: userIdForBooking,
+                    };
+                    const summaryRef = doc(firestore, 'confirmedBookings', bookingId);
+                    await setDoc(summaryRef, summaryData);
+        
+                    toast({ title: "Booking Confirmed!", description: "Your booking is confirmed. Redirecting..." });
+                    router.push(`/booking/success/${bookingId}`);
+        
                 } catch (error: any) {
                      toast({
                         variant: "destructive",
                         title: "Booking Confirmation Failed",
-                        description: error.message || "There was an issue confirming your booking after payment. Please contact support, your payment was successful.",
+                        description: error.message || "There was an issue saving your booking after payment. Please contact support.",
                         duration: 10000,
                     });
                     setIsBooking(false);
                 }
             },
-            prefill: {
-                name: customerDetails.name,
-                email: customerDetails.email,
-            },
-            theme: {
-                color: "#388E3C", 
-            },
+            prefill: { name: customerDetails.name, email: customerDetails.email },
+            theme: { color: "#388E3C" },
             modal: {
                 ondismiss: () => {
                     setIsBooking(false);
-                    toast({
-                        variant: 'destructive',
-                        title: 'Payment Cancelled',
-                        description: 'You cancelled the payment process.',
-                    })
+                    toast({ variant: 'destructive', title: 'Payment Cancelled', description: 'You cancelled the payment process.' });
                 }
             }
         };
@@ -303,11 +276,7 @@ export function BookingForm() {
             rzp.open();
         } catch(e) {
             console.error(e);
-            toast({
-                variant: "destructive",
-                title: "Payment Error",
-                description: "Failed to open payment gateway. Please refresh.",
-            });
+            toast({ variant: "destructive", title: "Payment Error", description: "Failed to open payment gateway. Please refresh." });
             setIsBooking(false);
         }
     };
@@ -449,28 +418,14 @@ export function BookingForm() {
                         </div>
                     </div>
                     
-                    {backendStatus === 'unavailable' &&
-                        <Alert variant="destructive">
-                            <AlertCircle className="h-4 w-4" />
-                            <AlertTitle className="font-semibold">Online Booking Unavailable</AlertTitle>
-                            <AlertDescription className="text-xs">
-                                The booking service is currently not configured on the server. Please contact support.
-                            </AlertDescription>
-                        </Alert>
-                    }
-
                     <Button
                         onClick={handlePayment}
                         size="lg"
-                        className="w-full text-lg h-14 bg-accent text-accent-foreground hover:bg-accent/90 disabled:bg-accent/50"
-                        disabled={isBooking || !termsAccepted || backendStatus !== 'ready'}
+                        className="w-full text-lg h-14 bg-accent text-accent-foreground hover:bg-accent/90"
+                        disabled={isBooking || !termsAccepted}
                     >
                         {isBooking ? (
                             <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Processing...</>
-                        ) : backendStatus === 'checking' ? (
-                            <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Checking Service...</>
-                        ) : backendStatus === 'unavailable' ? (
-                            'Booking Service Unavailable'
                         ) : (
                             `Pay ${totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })} & Book`
                         )}
@@ -488,5 +443,3 @@ export function BookingForm() {
         </div>
     );
 }
-
-    

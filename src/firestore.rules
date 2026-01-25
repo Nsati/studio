@@ -4,26 +4,32 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     function isAdmin() {
-      return request.auth != null && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      // This get() is allowed by the "isOwner()" check in the /users/{userId} rule below.
+      return request.auth != null 
+             && exists(/databases/$(database)/documents/users/$(request.auth.uid)) 
+             && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
     match /users/{userId} {
-      // Admins can get any user document. Users can only get their own.
-      allow get: if request.auth.uid == userId || isAdmin();
-      // Only admins can list all users.
-      allow list: if isAdmin();
+      function isOwner() {
+        return request.auth != null && request.auth.uid == userId;
+      }
+
+      // Admins can read/list any user. Users can only read their own profile.
+      // The isOwner() part is critical. It allows a user to read their own doc,
+      // which in turn allows the get() call inside isAdmin() to succeed without recursion.
+      allow get, list: if isOwner() || isAdmin();
       
       // A new user can create their own user document.
-      allow create: if request.auth.uid == userId;
+      allow create: if isOwner();
 
       // An admin can update any field on any user.
       // A regular user can only update their own document, and they are NOT allowed to change their 'role'.
-      allow update: if isAdmin() || (request.auth.uid == userId && request.resource.data.role == resource.data.role);
+      allow update: if isAdmin() || (isOwner() && request.resource.data.role == resource.data.role);
 
       match /bookings/{bookingId} {
         // User can read/write their own bookings. Admins can read/write any booking.
-        allow read, write: if request.auth.uid == userId || isAdmin();
+        allow read, write: if isOwner() || isAdmin();
       }
     }
 
@@ -60,8 +66,11 @@ service cloud.firestore {
 
     // Temporary public collection for success page
     match /confirmedBookings/{bookingId} {
+        // Allow read for anyone to see the success page.
         allow read: if true;
-        allow write: if false;
+        // Allow write only by an authenticated user (including anonymous) for demo purposes.
+        // In production, this should be handled by a secure backend function.
+        allow write: if request.auth != null;
     }
   }
 }
