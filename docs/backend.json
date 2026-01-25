@@ -1,17 +1,17 @@
 
 {
   "entities": {
-    "User": {
+    "UserProfile": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "User",
+      "title": "User Profile",
       "type": "object",
-      "description": "Represents a user of the Uttarakhand Getaways application.",
+      "description": "Represents a user's profile in the Uttarakhand Getaways application.",
       "properties": {
-        "id": {
+        "uid": {
           "type": "string",
-          "description": "Unique identifier for the user entity."
+          "description": "Unique identifier for the user, matching Firebase Auth UID."
         },
-        "name": {
+        "displayName": {
           "type": "string",
           "description": "The user's full name."
         },
@@ -20,16 +20,28 @@
           "description": "The user's email address.",
           "format": "email"
         },
+        "mobile": {
+          "type": "string",
+          "description": "The user's 10-digit mobile number."
+        },
         "role": {
           "type": "string",
-          "description": "The user's role within the application (e.g., 'user', 'admin')."
+          "description": "The user's role within the application (e.g., 'user', 'admin').",
+          "enum": ["user", "admin"]
+        },
+        "status": {
+            "type": "string",
+            "description": "The status of the user account.",
+            "enum": ["pending", "active"]
         }
       },
       "required": [
-        "id",
-        "name",
+        "uid",
+        "displayName",
         "email",
-        "role"
+        "mobile",
+        "role",
+        "status"
       ]
     },
     "Hotel": {
@@ -54,6 +66,10 @@
           "type": "string",
           "description": "A description of the hotel."
         },
+        "address": {
+          "type": "string",
+          "description": "The full address of the hotel."
+        },
         "images": {
           "type": "array",
           "description": "An array of URLs pointing to images of the hotel.",
@@ -71,6 +87,14 @@
         "rating": {
           "type": "number",
           "description": "The rating of the hotel (e.g., out of 5)."
+        },
+        "minPrice": {
+          "type": "number",
+          "description": "The minimum price for a room in this hotel."
+        },
+        "discount": {
+          "type": "number",
+          "description": "A promotional discount percentage for the hotel."
         }
       },
       "required": [
@@ -112,6 +136,10 @@
         "totalRooms": {
           "type": "number",
           "description": "The total number of rooms of this type in the hotel."
+        },
+        "availableRooms": {
+            "type": "number",
+            "description": "The number of rooms of this type currently available."
         }
       },
       "required": [
@@ -137,9 +165,17 @@
           "type": "string",
           "description": "Reference to User. (Relationship: User 1:N Booking)"
         },
+        "hotelId": {
+          "type": "string",
+          "description": "Reference to Hotel."
+        },
         "roomId": {
           "type": "string",
           "description": "Reference to Room. (Relationship: Room 1:N Booking)"
+        },
+        "roomType": {
+          "type": "string",
+          "description": "The type of room booked."
         },
         "checkIn": {
           "type": "string",
@@ -151,24 +187,52 @@
           "description": "The check-out date for the booking.",
           "format": "date-time"
         },
+        "guests": {
+          "type": "number",
+          "description": "Number of guests for the booking."
+        },
+        "totalPrice": {
+          "type": "number",
+          "description": "The total price paid for the booking."
+        },
+        "customerName": {
+          "type": "string",
+          "description": "The name of the customer who made the booking."
+        },
+        "customerEmail": {
+          "type": "string",
+          "description": "The email of the customer who made the booking.",
+          "format": "email"
+        },
         "status": {
           "type": "string",
-          "description": "The status of the booking (e.g., 'locked', 'confirmed', 'cancelled')."
+          "description": "The status of the booking.",
+          "enum": ["CONFIRMED", "CANCELLED", "PENDING"]
         },
-        "expiresAt": {
+        "createdAt": {
           "type": "string",
-          "description": "The expiration date and time for the booking (used for 'locked' status).",
+          "description": "The timestamp when the booking was created.",
           "format": "date-time"
+        },
+        "razorpayPaymentId": {
+          "type": "string",
+          "description": "The payment ID from the Razorpay transaction."
         }
       },
       "required": [
         "id",
         "userId",
+        "hotelId",
         "roomId",
+        "roomType",
         "checkIn",
         "checkOut",
+        "guests",
+        "totalPrice",
+        "customerName",
+        "customerEmail",
         "status",
-        "expiresAt"
+        "createdAt"
       ]
     }
   },
@@ -183,9 +247,9 @@
       {
         "path": "/users/{userId}",
         "definition": {
-          "entityName": "User",
+          "entityName": "UserProfile",
           "schema": {
-            "$ref": "#/backend/entities/User"
+            "$ref": "#/backend/entities/UserProfile"
           },
           "description": "Stores user profiles. Uses path-based ownership for private data.",
           "params": [
@@ -251,24 +315,8 @@
             }
           ]
         }
-      },
-      {
-        "path": "/roles_admin/{userId}",
-        "definition": {
-          "entityName": "Role",
-          "schema": {
-            "$ref": "#/backend/entities/User"
-          },
-          "description": "Indicates admin role. Existence of document grants admin privileges. Uses existence over content.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user (admin)."
-            }
-          ]
-        }
       }
     ],
-    "reasoning": "The Firestore structure is designed to optimize for security, scalability, and real-time updates in the Uttarakhand Getaways hotel booking application. It follows the core design principles of Authorization Independence, Clarity of Intent, DBAC, and QAPs. Authorization Independence is achieved through denormalization, specifically by including relevant authorization data (like hotelId) in subcollections (like rooms and bookings). This avoids the need for `get()` calls in security rules. Structural Segregation is enforced by maintaining distinct collections for users, hotels, rooms, and bookings, each with homogeneous security requirements. Access Modeling leverages path-based ownership for user-specific data (bookings) and continues the hierarchy for nested entities. A membership map (`members`) would be used for collaborative entities, though it's not directly applicable in this scenario. Global roles (DBAC) are implemented using dedicated collections for admin users (`roles_admin/{uid}`). QAPs are supported by the segregated structure. Listing hotels or rooms does not require filtering based on user roles; separate collections ensure the rules are not used as filters. Explicit State Modeling uses the `status` field in bookings to clearly represent the booking state (locked, confirmed, cancelled)."
+    "reasoning": "The Firestore structure is designed to optimize for security, scalability, and real-time updates in the Uttarakhand Getaways hotel booking application. It follows the core design principles of Authorization Independence, Clarity of Intent, DBAC, and QAPs. Authorization Independence is achieved through denormalization, specifically by including relevant authorization data (like hotelId) in subcollections (like rooms and bookings). This avoids the need for `get()` calls in security rules. Structural Segregation is enforced by maintaining distinct collections for users, hotels, rooms, and bookings, each with homogeneous security requirements. Access Modeling leverages path-based ownership for user-specific data (bookings) and continues the hierarchy for nested entities. A membership map (`members`) would be used for collaborative entities, though it's not directly applicable in this scenario. Global roles (DBAC) are implemented by having a 'role' field on the user document. QAPs are supported by the segregated structure. Listing hotels or rooms does not require filtering based on user roles; separate collections ensure the rules are not used as filters. Explicit State Modeling uses the `status` field in bookings to clearly represent the booking state (locked, confirmed, cancelled)."
   }
 }
