@@ -69,6 +69,75 @@ export const useFirebaseApp = (): FirebaseApp => {
   return firebaseApp;
 };
 
+// --- New, more robust user hooks ---
+
+// Stage 1: Get the Firebase Auth user object.
+const useAuthUser = () => {
+  const auth = useAuth();
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, 
+      (firebaseUser) => {
+        setUser(firebaseUser);
+        setIsLoading(false);
+      },
+      (err) => {
+        console.error("Auth state listener error:", err);
+        setError(err);
+        setIsLoading(false);
+      }
+    );
+    return () => unsubscribe();
+  }, [auth]);
+
+  return { user, isLoading, error };
+}
+
+// Stage 2: Get the Firestore user profile, but only if a real user exists.
+const useUserProfile = (user: User | null) => {
+    const firestore = useFirestore();
+    const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setProfileError] = useState<Error | null>(null);
+
+    useEffect(() => {
+        // This effect runs when the user object from Stage 1 changes.
+        if (user && !user.isAnonymous) {
+            setIsLoading(true);
+            const profileRef = doc(firestore, 'users', user.uid);
+            const unsubscribe = onSnapshot(profileRef,
+                (snapshot) => {
+                    setUserProfile(snapshot.exists() ? (snapshot.data() as UserProfile) : null);
+                    setProfileError(null);
+                    setIsLoading(false);
+                },
+                (err: FirestoreError) => {
+                    if (err.code === 'permission-denied') {
+                      errorEmitter.emit('permission-error', new FirestorePermissionError({
+                        path: profileRef.path,
+                        operation: 'get',
+                      }));
+                    }
+                    console.error(`Error fetching user profile at ${profileRef.path}:`, err);
+                    setProfileError(err);
+                    setIsLoading(false);
+                }
+            );
+            return () => unsubscribe();
+        } else {
+            // If there's no user or the user is anonymous, we're not loading a profile.
+            setUserProfile(null);
+            setIsLoading(false);
+        }
+    }, [user, firestore]);
+    
+    return { userProfile, isLoading, error };
+}
+
+
 // Consolidated User Hook
 export interface UserHookResult {
   user: User | null;
@@ -77,85 +146,17 @@ export interface UserHookResult {
   error: Error | null;
 }
 
+// Stage 3: Combine auth state and profile state into one easy-to-use hook.
 export const useUser = (): UserHookResult => {
-  const auth = useAuth();
-  const firestore = useFirestore();
+    const { user, isLoading: isAuthLoading, error: authError } = useAuthUser();
+    const { userProfile, isLoading: isProfileLoading, error: profileError } = useUserProfile(user);
 
-  const [user, setUser] = useState<User | null>(null);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [authError, setAuthError] = useState<Error | null>(null);
-  const [profileError, setProfileError] = useState<Error | null>(null);
-  const [isAuthLoading, setIsAuthLoading] = useState(true);
-  const [isProfileLoading, setIsProfileLoading] = useState(false);
-
-  // Effect 1: Handle auth state changes only.
-  useEffect(() => {
-    const authUnsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser);
-      setIsAuthLoading(false);
-      setAuthError(null);
-    }, (err) => {
-      console.error("Auth state listener error:", err);
-      setAuthError(err);
-      setIsAuthLoading(false);
-    });
-    return () => authUnsubscribe();
-  }, [auth]);
-
-  // Effect 2: Handle profile fetching, which depends on the user state from Effect 1.
-  useEffect(() => {
-    let profileUnsubscribe: (() => void) | null = null;
-
-    // Always reset profile state when the user object changes.
-    setUserProfile(null);
-    setProfileError(null);
-
-    // Only fetch a profile if we have a user and they are NOT anonymous.
-    if (user && !user.isAnonymous) {
-      setIsProfileLoading(true);
-      const profileRef = doc(firestore, 'users', user.uid);
-      
-      profileUnsubscribe = onSnapshot(profileRef,
-        (snapshot) => {
-          if (snapshot.exists()) {
-            setUserProfile(snapshot.data() as UserProfile);
-          } else {
-            setUserProfile(null);
-          }
-          setProfileError(null);
-          setIsProfileLoading(false);
-        },
-        (err) => {
-          if (err.code === 'permission-denied') {
-            errorEmitter.emit('permission-error', new FirestorePermissionError({
-              path: profileRef.path,
-              operation: 'get',
-            }));
-          }
-          console.error(`Error fetching user profile at ${profileRef.path}:`, err);
-          setProfileError(err);
-          setIsProfileLoading(false);
-        }
-      );
-    } else {
-      // If there's no user or the user is anonymous, we are not loading a profile.
-      setIsProfileLoading(false);
-    }
-
-    // Cleanup subscription on unmount or if the user changes.
-    return () => {
-      if (profileUnsubscribe) {
-        profileUnsubscribe();
-      }
+    return {
+        user,
+        userProfile,
+        isLoading: isAuthLoading || isProfileLoading,
+        error: authError || profileError,
     };
-  }, [user, firestore]); // This effect re-runs ONLY when the `user` object changes.
-
-  return {
-    user,
-    userProfile,
-    isLoading: isAuthLoading || isProfileLoading,
-    error: authError || profileError,
-  };
 };
 
 // Consolidated Document Hook
