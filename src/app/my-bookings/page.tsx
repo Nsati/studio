@@ -84,13 +84,13 @@ function BookingItem({ booking }: { booking: Booking }) {
 
     const handleCancelBooking = async () => {
         if (!firestore || !user || !booking.id) return;
-        
+
         setIsCancelling(true);
-        
-        const bookingRef = doc(firestore, 'users', user.uid, 'bookings', booking.id);
-        
+        let cancellationStatus: 'success' | 'already_cancelled' | 'error' = 'error';
+
         try {
             await runTransaction(firestore, async (transaction) => {
+                const bookingRef = doc(firestore, 'users', user.uid, 'bookings', booking.id);
                 const bookingDoc = await transaction.get(bookingRef);
                 if (!bookingDoc.exists()) {
                     throw new Error("Booking does not exist.");
@@ -99,25 +99,27 @@ function BookingItem({ booking }: { booking: Booking }) {
                 const bookingData = bookingDoc.data() as Booking;
 
                 if (bookingData.status === 'CANCELLED') {
-                    toast({ title: "Already Cancelled", description: "This booking has already been cancelled." });
+                    cancellationStatus = 'already_cancelled';
                     return;
                 }
 
-                // If the booking was confirmed, we need to add the room back to inventory.
                 if (bookingData.status === 'CONFIRMED') {
                     const roomRef = doc(firestore, 'hotels', booking.hotelId, 'rooms', booking.roomId);
                     transaction.update(roomRef, { availableRooms: increment(1) });
                 }
                 
-                // For both PENDING and CONFIRMED bookings, update the status to CANCELLED.
                 transaction.update(bookingRef, { status: 'CANCELLED' });
+                cancellationStatus = 'success';
             });
 
-            toast({
-                title: "Booking Cancelled",
-                description: "Your booking has been successfully cancelled. Any applicable refund will be processed.",
-            });
-
+            if (cancellationStatus === 'success') {
+                toast({
+                    title: "Booking Cancelled",
+                    description: "Your booking has been successfully cancelled. Any applicable refund will be processed.",
+                });
+            } else if (cancellationStatus === 'already_cancelled') {
+                toast({ title: "Already Cancelled", description: "This booking has already been cancelled." });
+            }
         } catch (error: any) {
             console.error("Cancellation failed:", error);
             toast({
@@ -326,5 +328,3 @@ export default function MyBookingsPage() {
     </div>
   );
 }
-
-    
