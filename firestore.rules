@@ -3,31 +3,33 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function isUser(userId) {
-      return request.auth != null && request.auth.uid == userId;
-    }
-
     function isAdmin() {
-      let userDoc = get(/databases/$(database)/documents/users/$(request.auth.uid));
+      // This get() is allowed by the "isOwner()" check in the /users/{userId} rule below.
       return request.auth != null 
              && exists(/databases/$(database)/documents/users/$(request.auth.uid)) 
-             && userDoc.data.role == 'admin';
+             && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
     match /users/{userId} {
-      // A user can read their own profile. This also authorizes the get() in isAdmin().
-      allow get: if isUser(userId);
-      // A user can update their own profile.
-      allow update: if isUser(userId);
-       // A user can create their own profile document.
-      allow create: if isUser(userId);
+      function isOwner() {
+        return request.auth != null && request.auth.uid == userId;
+      }
 
-      // Admins can list and get any user document.
-      allow list, get: if isAdmin();
+      // Admins can read/list any user. Users can only read their own profile.
+      // The isOwner() part is critical. It allows a user to read their own doc,
+      // which in turn allows the get() call inside isAdmin() to succeed without recursion.
+      allow get, list: if isOwner() || isAdmin();
+      
+      // A new user can create their own user document.
+      allow create: if isOwner();
+
+      // An admin can update any field on any user.
+      // A regular user can only update their own document, and they are NOT allowed to change their 'role'.
+      allow update: if isAdmin() || (isOwner() && request.resource.data.role == resource.data.role);
 
       match /bookings/{bookingId} {
         // User can read/write their own bookings. Admins can read/write any booking.
-        allow read, write: if isUser(userId) || isAdmin();
+        allow read, write: if isOwner() || isAdmin();
       }
     }
 

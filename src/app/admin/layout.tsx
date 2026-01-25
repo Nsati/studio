@@ -61,7 +61,7 @@ function AdminAuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (user && userProfile && userProfile.role?.toLowerCase() === 'admin') {
+  if (user && userProfile && userProfile.role === 'admin') {
     return <>{children}</>;
   }
 
