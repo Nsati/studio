@@ -300,6 +300,16 @@ export function BookingForm() {
                     const roomRef = doc(firestore, 'hotels', hotel.id, 'rooms', room.id);
 
                     const transactionResult = await runTransaction(firestore, async (transaction) => {
+                        const bookingDoc = await transaction.get(bookingRef);
+                        if (!bookingDoc.exists()) {
+                            return { success: false, error: "Booking record not found." };
+                        }
+
+                        // Idempotency: Webhook might have confirmed it already
+                        if (bookingDoc.data().status === 'CONFIRMED') {
+                            return { success: true };
+                        }
+
                         const roomDoc = await transaction.get(roomRef);
                         if (!roomDoc.exists() || (roomDoc.data().availableRooms ?? 0) <= 0) {
                             return { success: false, error: "Sorry, this room just became unavailable." };

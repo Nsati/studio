@@ -40,7 +40,7 @@ export async function createRazorpayOrder(
     });
 
     const options = {
-      amount: amount * 100, // amount in the smallest currency unit
+      amount: Math.round(amount * 100), // amount in the smallest currency unit
       currency: 'INR',
       receipt: `receipt_${crypto.randomBytes(6).toString('hex')}`,
       notes, // Pass notes for webhook context
