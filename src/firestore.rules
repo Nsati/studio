@@ -66,11 +66,9 @@ service cloud.firestore {
 
     // Temporary public collection for success page
     match /confirmedBookings/{bookingId} {
-        // Allow read for anyone to see the success page.
         allow read: if true;
-        // Allow write only by an authenticated user (including anonymous) for demo purposes.
-        // In production, this should be handled by a secure backend function.
-        allow write: if request.auth != null;
+        // This collection should only ever be written to by the backend.
+        allow write: if false;
     }
   }
 }

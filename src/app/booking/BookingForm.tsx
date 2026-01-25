@@ -1,16 +1,17 @@
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, useRouter, notFound } from 'next/navigation';
 import Image from 'next/image';
 import { differenceInDays, format, parse } from 'date-fns';
-import { createRazorpayOrder } from '@/app/booking/actions';
+import { createRazorpayOrder, verifyPaymentAndConfirmBooking } from '@/app/booking/actions';
 import { signInAnonymously } from 'firebase/auth';
 
 
 import type { Hotel, Room, Booking, Promotion, ConfirmedBookingSummary } from '@/lib/types';
 import { useFirestore, useAuth, useUser, useDoc, useCollection, useMemoFirebase } from '@/firebase';
-import { doc, collection, getDoc, setDoc } from 'firebase/firestore';
+import { doc, collection, getDoc } from 'firebase/firestore';
 
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -152,10 +153,7 @@ export function BookingForm() {
             toast({ variant: 'destructive', title: 'Missing Details', description: 'Please provide your name and email.' });
             return;
         }
-        if (!firestore) {
-            toast({ variant: 'destructive', title: 'Database not available' });
-            return;
-        }
+        
         setIsBooking(true);
 
         let userIdForBooking = user?.uid;
@@ -210,52 +208,30 @@ export function BookingForm() {
             description: `Booking for ${hotel.name}`,
             order_id: order.id,
             handler: async (response: any) => {
-                if (!firestore || !userIdForBooking) {
-                    toast({ variant: 'destructive', title: 'Error', description: 'Firestore connection lost.' });
-                    setIsBooking(false);
-                    return;
-                }
-        
-                try {
-                    toast({ title: "Payment Received!", description: "Confirming your booking..." });
-        
-                    const finalBookingData: Booking = {
-                        ...bookingDetails,
-                        checkIn: new Date(bookingDetails.checkIn),
-                        checkOut: new Date(bookingDetails.checkOut),
-                        status: 'CONFIRMED',
-                        createdAt: new Date(),
-                        razorpayPaymentId: response.razorpay_payment_id,
-                    };
-        
-                    const userBookingRef = doc(firestore, 'users', userIdForBooking, 'bookings', bookingId);
-                    await setDoc(userBookingRef, finalBookingData);
-        
-                    const summaryData: ConfirmedBookingSummary = {
-                        id: bookingId,
-                        hotelId: hotel.id,
-                        hotelName: hotel.name,
-                        hotelCity: hotel.city,
-                        hotelAddress: hotel.address,
-                        customerName: customerDetails.name,
-                        checkIn: new Date(bookingDetails.checkIn),
-                        checkOut: new Date(bookingDetails.checkOut),
-                        guests: parseInt(guests),
-                        totalPrice: totalPrice,
-                        roomType: room.type,
-                        userId: userIdForBooking,
-                    };
-                    const summaryRef = doc(firestore, 'confirmedBookings', bookingId);
-                    await setDoc(summaryRef, summaryData);
-        
-                    toast({ title: "Booking Confirmed!", description: "Your booking is confirmed. Redirecting..." });
-                    router.push(`/booking/success/${bookingId}`);
-        
-                } catch (error: any) {
+                toast({ title: "Payment Received!", description: "Verifying and confirming your booking..." });
+
+                const verificationResult = await verifyPaymentAndConfirmBooking(
+                    {
+                        razorpay_order_id: response.razorpay_order_id,
+                        razorpay_payment_id: response.razorpay_payment_id,
+                        razorpay_signature: response.razorpay_signature,
+                    },
+                    bookingDetails,
+                    {
+                        name: hotel.name,
+                        city: hotel.city,
+                        address: hotel.address
+                    }
+                );
+
+                if (verificationResult.success && verificationResult.bookingId) {
+                     toast({ title: "Booking Confirmed!", description: "Your booking is confirmed. Redirecting..." });
+                     router.push(`/booking/success/${verificationResult.bookingId}`);
+                } else {
                      toast({
                         variant: "destructive",
                         title: "Booking Confirmation Failed",
-                        description: error.message || "There was an issue saving your booking after payment. Please contact support.",
+                        description: verificationResult.error || "There was an issue saving your booking after payment. Please contact support.",
                         duration: 10000,
                     });
                     setIsBooking(false);
