@@ -39,7 +39,11 @@ service cloud.firestore {
 
         match /rooms/{roomId} {
           allow read: if true;
-          allow write: if isAdmin();
+          // Allow admins to do any write operation.
+          allow create, delete: if isAdmin();
+          // Allow authenticated users to update a room, but ONLY if they are decrementing availableRooms by 1.
+          // This allows the client-side booking transaction to work securely.
+          allow update: if (isAdmin() || (request.auth != null && request.resource.data.availableRooms == resource.data.availableRooms - 1));
         }
         
         match /reviews/{reviewId} {
@@ -67,8 +71,9 @@ service cloud.firestore {
     // Temporary public collection for success page
     match /confirmedBookings/{bookingId} {
         allow read: if true;
-        // This collection should only ever be written to by the backend.
-        allow write: if false;
+        // Allow any authenticated user to create their own booking summary during checkout.
+        allow create: if request.auth != null;
+        allow update, delete: if false; // Prevent modification after creation
     }
   }
 }

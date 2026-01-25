@@ -5,12 +5,9 @@ import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { collection } from 'firebase/firestore';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { checkServerConfig } from '@/app/booking/actions';
 
 import type { City } from '@/lib/types';
-import { dummyCities } from '@/lib/dummy-data';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -20,19 +17,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
-import { Search, Info } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Search, Info, Calendar, Users } from 'lucide-react';
+import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Input } from '../ui/input';
 
 
 export function SearchFilters() {
   const firestore = useFirestore();
-  const [isServerConfigured, setIsServerConfigured] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    checkServerConfig().then(result => {
-        setIsServerConfigured(result.isConfigured);
-    });
-  }, []);
   
   const citiesQuery = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -42,26 +33,17 @@ export function SearchFilters() {
   const { data: citiesFromDB, isLoading: isLoadingCities } = useCollection<City>(citiesQuery);
 
   const cities = useMemoFirebase(() => {
-    const sortedCities = (citiesFromDB || []).sort((a, b) => a.name.localeCompare(b.name));
-    if (sortedCities.length > 0) return sortedCities;
-    if (!isLoadingCities) return dummyCities;
-    return [];
-  }, [citiesFromDB, isLoadingCities]);
+    return (citiesFromDB || []).sort((a, b) => a.name.localeCompare(b.name));
+  }, [citiesFromDB]);
   
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
 
   const [city, setCity] = useState(searchParams.get('city') || 'All');
-  const [checkin, setCheckin] = useState(searchParams.get('checkIn') || '');
-  const [checkout, setCheckout] = useState(searchParams.get('checkOut') || '');
-  const [guests, setGuests] = useState(searchParams.get('guests') || '1');
   
   useEffect(() => {
     setCity(searchParams.get('city') || 'All');
-    setCheckin(searchParams.get('checkIn') || '');
-    setCheckout(searchParams.get('checkOut') || '');
-    setGuests(searchParams.get('guests') || '1');
   }, [searchParams]);
 
   const createQueryString = (params: Record<string, string | null>) => {
@@ -76,11 +58,9 @@ export function SearchFilters() {
   
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    router.push(`${pathname}?${createQueryString({ city: city === 'All' ? null : city, checkIn: isServerConfigured ? checkin : null, checkOut: isServerConfigured ? checkout: null, guests: isServerConfigured ? guests : null })}`);
+    router.push(`${pathname}?${createQueryString({ city: city === 'All' ? null : city })}`);
   }
   
-  const availabilitySearchDisabled = isServerConfigured === false;
-
   return (
      <aside className="w-full lg:w-1/4 lg:pr-8">
       <Card>
@@ -104,39 +84,35 @@ export function SearchFilters() {
                 </SelectContent>
               </Select>
             </div>
-
-            <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                    <Label htmlFor="checkin" className={cn("text-lg font-semibold", availabilitySearchDisabled && "text-muted-foreground")}>
-                        Check-in
-                    </Label>
-                    {availabilitySearchDisabled && (
-                         <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger><Info className="h-4 w-4 text-muted-foreground" /></TooltipTrigger>
-                                <TooltipContent>
-                                    <p>Server not configured for availability search.</p>
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                    )}
+            
+            <TooltipProvider>
+                <div className="space-y-4 border-t pt-4">
+                     <div className="flex items-center justify-between">
+                        <Label className="text-lg font-semibold text-muted-foreground">
+                            Filter by Date &amp; Guests
+                        </Label>
+                        <Tooltip>
+                            <TooltipTrigger><Info className="h-4 w-4 text-muted-foreground" /></TooltipTrigger>
+                            <TooltipContent>
+                                <p>This feature is coming soon!</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </div>
+                    <div className="space-y-2 opacity-50">
+                        <Label htmlFor="checkin" className="flex items-center gap-2"><Calendar className="h-4 w-4" /> Check-in</Label>
+                        <Input id="checkin" type="date" disabled />
+                    </div>
+                     <div className="space-y-2 opacity-50">
+                        <Label htmlFor="checkout" className="flex items-center gap-2"><Calendar className="h-4 w-4" /> Check-out</Label>
+                        <Input id="checkout" type="date" disabled />
+                    </div>
+                     <div className="space-y-2 opacity-50">
+                        <Label htmlFor="guests" className="flex items-center gap-2"><Users className="h-4 w-4" /> Guests</Label>
+                        <Input id="guests" type="number" min="1" placeholder="2" disabled />
+                    </div>
                 </div>
-                <Input id="checkin" type="date" value={checkin} onChange={e => setCheckin(e.target.value)} disabled={availabilitySearchDisabled} />
-            </div>
+            </TooltipProvider>
 
-            <div className="space-y-2">
-                <Label htmlFor="checkout" className={cn("text-lg font-semibold", availabilitySearchDisabled && "text-muted-foreground")}>
-                    Check-out
-                </Label>
-                <Input id="checkout" type="date" value={checkout} onChange={e => setCheckout(e.target.value)} disabled={availabilitySearchDisabled} />
-            </div>
-
-            <div className="space-y-2">
-                <Label htmlFor="guests" className={cn("text-lg font-semibold", availabilitySearchDisabled && "text-muted-foreground")}>
-                    Guests
-                </Label>
-                <Input id="guests" type="number" min="1" placeholder="2" value={guests} onChange={e => setGuests(e.target.value)} disabled={availabilitySearchDisabled}/>
-            </div>
             <Button type="submit" className="w-full text-lg h-12 bg-accent text-accent-foreground hover:bg-accent/90">
               <Search className="mr-2 h-4 w-4" />
               Search

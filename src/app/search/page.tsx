@@ -1,10 +1,9 @@
 
 'use client';
 
-import { Suspense, useState, useEffect } from 'react';
+import { Suspense, useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { searchHotels } from './actions';
 import { SearchFilters } from './SearchFilters';
 import { HotelCard } from '@/components/hotel/HotelCard';
 import { Hotel } from '@/lib/types';
@@ -12,6 +11,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from '@/components/ui/button';
 import { SearchX } from 'lucide-react';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, where } from 'firebase/firestore';
 
 
 function ResultsSkeleton() {
@@ -77,35 +78,26 @@ function Results({ hotels, isLoading, city }: { hotels: Hotel[], isLoading: bool
 
 function SearchPageComponent() {
   const searchParams = useSearchParams();
-  const [hotels, setHotels] = useState<Hotel[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const firestore = useFirestore();
 
   const city = searchParams.get('city');
-  const checkIn = searchParams.get('checkIn');
-  const checkOut = searchParams.get('checkOut');
-  const guests = searchParams.get('guests');
 
-  useEffect(() => {
-    const fetchData = async () => {
-        setIsLoading(true);
-        try {
-            const result = await searchHotels({ city, checkIn, checkOut, guests });
-            setHotels(result);
-        } catch (error) {
-            console.error("Failed to search hotels:", error);
-            setHotels([]);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-    fetchData();
-  }, [city, checkIn, checkOut, guests]);
+  const hotelsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    const baseQuery = collection(firestore, 'hotels');
+    if (city && city !== 'All') {
+        return query(baseQuery, where('city', '==', city));
+    }
+    return baseQuery;
+  }, [firestore, city]);
+  
+  const { data: hotels, isLoading } = useCollection<Hotel>(hotelsQuery);
 
   return (
     <div className="container mx-auto max-w-7xl py-8 px-4 md:px-6">
       <div className="flex flex-col gap-8 lg:flex-row">
         <SearchFilters />
-        <Results hotels={hotels} isLoading={isLoading} city={city} />
+        <Results hotels={hotels || []} isLoading={isLoading} city={city} />
       </div>
     </div>
   );

@@ -3,20 +3,6 @@
 
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
-import { getAdminDb } from '@/firebase/admin';
-import type { Booking, Room, ConfirmedBookingSummary } from '@/lib/types';
-import * as admin from 'firebase-admin';
-
-/**
- * Checks if the Firebase Admin SDK has been configured on the server.
- * This is used by the client to determine if server-dependent features can be enabled.
- * @returns A promise that resolves to an object indicating if the server is configured.
- */
-export async function checkServerConfig(): Promise<{ isConfigured: boolean }> {
-  const db = getAdminDb();
-  return { isConfigured: !!db };
-}
-
 
 interface CreateOrderResponse {
   success: boolean;
@@ -78,33 +64,25 @@ export async function createRazorpayOrder(
   }
 }
 
+
 interface VerifyPaymentResponse {
   success: boolean;
   error?: string;
-  bookingId?: string;
 }
 
-export async function verifyPaymentAndConfirmBooking(
+// This function now ONLY verifies the payment signature.
+// All database operations are moved to a client-side transaction.
+export async function verifyRazorpaySignature(
   paymentData: {
     razorpay_order_id: string;
     razorpay_payment_id: string;
     razorpay_signature: string;
-  },
-  bookingIdentifiers: {
-    userId: string;
-    bookingId: string;
   }
 ): Promise<VerifyPaymentResponse> {
     const keySecret = process.env.RAZORPAY_KEY_SECRET;
     if (!keySecret) {
-        console.error('CRITICAL: RAZORPAY_KEY_SECRET is not configured.');
-        return { success: false, error: 'Payment verification is not configured on the server.' };
-    }
-
-    const db = getAdminDb();
-    if (!db) {
-        console.error('CRITICAL: Firebase Admin SDK is not initialized for verifyPaymentAndConfirmBooking.');
-        return { success: false, error: 'Database service is not configured on the server. Please set the GOOGLE_APPLICATION_CREDENTIALS_JSON environment variable.' };
+        console.error('CRITICAL: RAZORPAY_KEY_SECRET is not configured for signature verification.');
+        return { success: false, error: 'Payment verification service is not configured.' };
     }
 
     const body = paymentData.razorpay_order_id + "|" + paymentData.razorpay_payment_id;
@@ -113,69 +91,9 @@ export async function verifyPaymentAndConfirmBooking(
         .update(body.toString())
         .digest('hex');
 
-    if (expectedSignature !== paymentData.razororpay_signature) {
+    if (expectedSignature !== paymentData.razorpay_signature) {
         return { success: false, error: 'Payment verification failed: Invalid signature.' };
     }
 
-    const bookingRef = db.collection('users').doc(bookingIdentifiers.userId).collection('bookings').doc(bookingIdentifiers.bookingId);
-
-    try {
-        await db.runTransaction(async (transaction) => {
-            const bookingDoc = await transaction.get(bookingRef);
-            if (!bookingDoc.exists || bookingDoc.data()?.status !== 'PENDING') {
-                if (bookingDoc.data()?.status === 'CONFIRMED') {
-                    console.log(`Booking ${bookingIdentifiers.bookingId} already confirmed. Idempotency check passed.`);
-                    return; 
-                }
-                throw new Error("Booking not found or not in a pending state.");
-            }
-            
-            const bookingData = bookingDoc.data() as Booking;
-            const roomRef = db.collection('hotels').doc(bookingData.hotelId).collection('rooms').doc(bookingData.roomId);
-            const hotelRef = db.collection('hotels').doc(bookingData.hotelId);
-
-            const roomDoc = await transaction.get(roomRef);
-            const hotelDoc = await transaction.get(hotelRef);
-            
-            if (!roomDoc.exists) throw new Error("Room data not found.");
-            if (!hotelDoc.exists) throw new Error("Hotel data not found.");
-            
-            const roomData = roomDoc.data() as Room;
-            const hotelData = hotelDoc.data() as any;
-
-            if ((roomData.availableRooms ?? roomData.totalRooms) <= 0) {
-                throw new Error(`Overbooking detected for room ${bookingData.roomId}.`);
-            }
-            
-            transaction.update(roomRef, { availableRooms: admin.firestore.FieldValue.increment(-1) });
-            transaction.update(bookingRef, {
-                status: 'CONFIRMED',
-                razorpayPaymentId: paymentData.razorpay_payment_id,
-                createdAt: admin.firestore.FieldValue.serverTimestamp(),
-            });
-
-            const summaryRef = db.collection('confirmedBookings').doc(bookingIdentifiers.bookingId);
-            const summaryData: ConfirmedBookingSummary = {
-                id: bookingIdentifiers.bookingId,
-                hotelId: bookingData.hotelId,
-                hotelName: hotelData.name,
-                hotelCity: hotelData.city,
-                hotelAddress: hotelData.address,
-                customerName: bookingData.customerName,
-                checkIn: bookingData.checkIn,
-                checkOut: bookingData.checkOut,
-                guests: bookingData.guests,
-                totalPrice: bookingData.totalPrice,
-                roomType: bookingData.roomType,
-                userId: bookingData.userId,
-            };
-            transaction.set(summaryRef, summaryData);
-        });
-
-        return { success: true, bookingId: bookingIdentifiers.bookingId };
-
-    } catch (error: any) {
-        console.error("Booking confirmation transaction failed:", error);
-        return { success: false, error: `Your payment was successful, but we couldn't confirm your booking automatically: ${error.message}. Please contact support with booking ID ${bookingIdentifiers.bookingId}.` };
-    }
+    return { success: true };
 }

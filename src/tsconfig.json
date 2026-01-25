@@ -1,3 +1,1 @@
-{
-  "//": "This file is obsolete and can be deleted. The main tsconfig.json is in the root directory."
-}
+// This file is obsolete and can be safely deleted. The main tsconfig.json is in the root directory.

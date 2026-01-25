@@ -5,70 +5,28 @@ import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, useRouter, notFound } from 'next/navigation';
 import Image from 'next/image';
 import { differenceInDays, format, parse } from 'date-fns';
-import { createRazorpayOrder, verifyPaymentAndConfirmBooking, checkServerConfig } from '@/app/booking/actions';
+import { createRazorpayOrder, verifyRazorpaySignature } from '@/app/booking/actions';
 import { signInAnonymously } from 'firebase/auth';
-import type { Hotel, Room, Booking, Promotion } from '@/lib/types';
+import type { Hotel, Room, Booking, Promotion, ConfirmedBookingSummary } from '@/lib/types';
 import { useFirestore, useAuth, useUser, useDoc, useCollection, useMemoFirebase } from '@/firebase';
-import { doc, collection, getDoc, setDoc } from 'firebase/firestore';
+import { doc, collection, getDoc, runTransaction, setDoc, serverTimestamp, increment } from 'firebase/firestore';
 
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, Calendar, Users, BedDouble, ArrowLeft, Tag, ShieldCheck, HelpCircle, AlertTriangle } from 'lucide-react';
+import { Loader2, Calendar, Users, BedDouble, ArrowLeft, Tag, ShieldCheck, HelpCircle } from 'lucide-react';
 import Link from 'next/link';
 import { BookingFormSkeleton } from './BookingFormSkeleton';
-import { firebaseConfig } from '@/firebase/config';
 
 
 declare global {
   interface Window {
     Razorpay: any;
   }
-}
-
-function ServerConfigurationError() {
-    const consoleUrl = `https://console.firebase.google.com/project/${firebaseConfig.projectId}/settings/serviceaccounts/adminsdk`;
-    return (
-        <div className="container mx-auto max-w-4xl py-8 md:py-12 px-4 md:px-6">
-            <Card className="border-destructive">
-                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-destructive">
-                        <AlertTriangle className="h-6 w-6" />
-                        Booking Service Unavailable
-                    </CardTitle>
-                    <CardDescription>
-                        The live booking and payment system is not configured on the server.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                     <p className="text-sm text-muted-foreground">
-                       This is a server configuration issue, not a bug in the application code. To enable live bookings, the backend needs credentials to communicate securely with Firebase services for tasks like verifying payments and updating room inventory.
-                    </p>
-                    <div>
-                        <h4 className="font-semibold text-foreground">How to Fix This:</h4>
-                        <ol className="list-decimal list-inside text-sm text-muted-foreground space-y-2 mt-2">
-                             <li>Go to your Firebase project's service account settings. You can use the button below to go there directly.</li>
-                            <li>Click "Generate new private key" to download a JSON file with your server credentials.</li>
-                            <li>Copy the entire contents of that JSON file.</li>
-                            <li>In your project's <code className="font-mono bg-muted p-1 rounded">.env</code> file, create a new variable named <code className="font-mono bg-muted p-1 rounded">GOOGLE_APPLICATION_CREDENTIALS_JSON</code> and paste the copied JSON content as its value.</li>
-                            <li>Restart your development server for the changes to take effect.</li>
-                        </ol>
-                    </div>
-                </CardContent>
-                <CardFooter className="flex justify-end">
-                    <Button asChild>
-                        <a href={consoleUrl} target="_blank" rel="noopener noreferrer">
-                            Go to Firebase Console
-                        </a>
-                    </Button>
-                </CardFooter>
-            </Card>
-        </div>
-    );
 }
 
 export function BookingForm() {
@@ -79,21 +37,12 @@ export function BookingForm() {
     const { toast } = useToast();
     const firestore = useFirestore();
 
-    const [isServerConfigured, setIsServerConfigured] = useState<boolean | null>(null);
-
     const hotelId = searchParams.get('hotelId');
     const roomId = searchParams.get('roomId');
     const checkInStr = searchParams.get('checkIn');
     const checkOutStr = searchParams.get('checkOut');
     const guests = searchParams.get('guests') || '1';
     
-    useEffect(() => {
-        // Check server configuration when the component mounts
-        checkServerConfig().then(result => {
-            setIsServerConfigured(result.isConfigured);
-        });
-    }, []);
-
     const hotelRef = useMemoFirebase(() => {
         if (!firestore || !hotelId) return null;
         return doc(firestore, 'hotels', hotelId);
@@ -126,12 +75,8 @@ export function BookingForm() {
         }
     }, [userProfile]);
     
-    if (isServerConfigured === null || isUserLoading || isHotelLoading || areRoomsLoading) {
+    if (isUserLoading || isHotelLoading || areRoomsLoading) {
         return <BookingFormSkeleton />;
-    }
-
-    if (!isServerConfigured) {
-        return <ServerConfigurationError />;
     }
     
     if (!hotelId || !roomId || !checkInStr || !checkOutStr || !hotel || !room) {
@@ -198,6 +143,10 @@ export function BookingForm() {
             toast({ variant: 'destructive', title: 'Missing Details', description: 'Please provide your name and email.' });
             return;
         }
+        if (!firestore) {
+            toast({ variant: 'destructive', title: 'Database not available' });
+            return;
+        }
         
         setIsBooking(true);
 
@@ -214,7 +163,7 @@ export function BookingForm() {
         
         let userIdForBooking = user?.uid;
         if (!userIdForBooking) {
-            if (!auth || !firestore) {
+            if (!auth) {
                  toast({ variant: 'destructive', title: 'Authentication service not available' });
                  setIsBooking(false);
                  return;
@@ -234,8 +183,7 @@ export function BookingForm() {
         const bookingId = `booking_${Date.now()}`;
         const bookingRef = doc(firestore, 'users', userIdForBooking, 'bookings', bookingId);
         
-        const pendingBookingData: Booking = {
-            id: bookingId,
+        const pendingBookingData: Omit<Booking, 'createdAt' | 'id'> = {
             userId: userIdForBooking,
             hotelId: hotel.id,
             roomId: room.id,
@@ -247,11 +195,10 @@ export function BookingForm() {
             customerName: customerDetails.name,
             customerEmail: customerDetails.email,
             status: 'PENDING',
-            createdAt: new Date(),
         };
 
         try {
-            await setDoc(bookingRef, pendingBookingData);
+            await setDoc(bookingRef, { id: bookingId, ...pendingBookingData, createdAt: serverTimestamp() });
         } catch (error: any) {
             console.error("Failed to create pending booking:", error);
             toast({
@@ -282,26 +229,66 @@ export function BookingForm() {
             handler: async (response: any) => {
                 toast({ title: "Payment Received!", description: "Verifying and confirming your booking..." });
 
-                const verificationResult = await verifyPaymentAndConfirmBooking(
-                    {
-                        razorpay_order_id: response.razorpay_order_id,
-                        razorpay_payment_id: response.razorpay_payment_id,
-                        razorpay_signature: response.razorpay_signature,
-                    },
-                    {
-                        userId: userIdForBooking,
-                        bookingId: bookingId,
-                    }
-                );
+                // Verify signature on server
+                const verificationResult = await verifyRazorpaySignature({
+                    razorpay_order_id: response.razorpay_order_id,
+                    razorpay_payment_id: response.razorpay_payment_id,
+                    razorpay_signature: response.razorpay_signature,
+                });
 
-                if (verificationResult.success && verificationResult.bookingId) {
-                     toast({ title: "Booking Confirmed!", description: "Your booking is confirmed. Redirecting..." });
-                     router.push(`/booking/success/${verificationResult.bookingId}`);
-                } else {
-                     toast({
+                if (!verificationResult.success) {
+                    toast({ variant: "destructive", title: "Payment Verification Failed", description: verificationResult.error, duration: 10000 });
+                    setIsBooking(false);
+                    return;
+                }
+                
+                // On successful verification, run client-side transaction
+                try {
+                    const roomRefForTx = doc(firestore, 'hotels', hotel.id, 'rooms', room.id);
+                    const bookingRefForTx = doc(firestore, 'users', userIdForBooking!, 'bookings', bookingId);
+                    const summaryRef = doc(firestore, 'confirmedBookings', bookingId);
+    
+                    await runTransaction(firestore, async (transaction) => {
+                        const roomDoc = await transaction.get(roomRefForTx);
+                        if (!roomDoc.exists()) throw new Error("Room data not found.");
+                        
+                        const roomData = roomDoc.data() as Room;
+                        if ((roomData.availableRooms ?? roomData.totalRooms) <= 0) {
+                            throw new Error(`Sorry, this room just sold out.`);
+                        }
+    
+                        transaction.update(roomRefForTx, { availableRooms: increment(-1) });
+                        transaction.update(bookingRefForTx, {
+                            status: 'CONFIRMED',
+                            razorpayPaymentId: response.razorpay_payment_id,
+                        });
+                        
+                        const summaryData: ConfirmedBookingSummary = {
+                            id: bookingId,
+                            hotelId: hotel.id,
+                            hotelName: hotel.name,
+                            hotelCity: hotel.city,
+                            hotelAddress: hotel.address,
+                            customerName: customerDetails.name,
+                            checkIn: new Date(checkInStr),
+                            checkOut: new Date(checkOutStr),
+                            guests: parseInt(guests),
+                            totalPrice: totalPrice,
+                            roomType: room.type,
+                            userId: userIdForBooking!,
+                        };
+                        transaction.set(summaryRef, summaryData);
+                    });
+
+                    toast({ title: "Booking Confirmed!", description: "Your booking is confirmed. Redirecting..." });
+                    router.push(`/booking/success/${bookingId}`);
+
+                } catch (error: any) {
+                    console.error("Booking confirmation transaction failed:", error);
+                    toast({
                         variant: "destructive",
                         title: "Booking Confirmation Failed",
-                        description: verificationResult.error || "There was an issue saving your booking after payment. Please contact support.",
+                        description: `Your payment was successful, but we couldn't confirm your booking automatically: ${error.message}. Please contact support with booking ID ${bookingId}.`,
                         duration: 10000,
                     });
                     setIsBooking(false);
