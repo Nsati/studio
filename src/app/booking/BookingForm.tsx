@@ -5,7 +5,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, useRouter, notFound } from 'next/navigation';
 import Image from 'next/image';
 import { differenceInDays, format, parse } from 'date-fns';
-import { createRazorpayOrder, verifyPaymentAndConfirmBooking } from '@/app/booking/actions';
+import { createRazorpayOrder, verifyPaymentAndConfirmBooking, checkServerHealth } from '@/app/booking/actions';
 import { signInAnonymously } from 'firebase/auth';
 
 
@@ -20,7 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, Calendar, Users, BedDouble, ArrowLeft, Tag, ShieldCheck, Info, HelpCircle } from 'lucide-react';
+import { Loader2, Calendar, Users, BedDouble, ArrowLeft, Tag, ShieldCheck, Info, HelpCircle, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
@@ -70,6 +70,7 @@ export function BookingForm() {
     const [couponCode, setCouponCode] = useState('');
     const [couponDiscount, setCouponDiscount] = useState(0);
     const [couponMessage, setCouponMessage] = useState('');
+    const [isServerHealthy, setIsServerHealthy] = useState<boolean | null>(null);
 
 
     useEffect(() => {
@@ -77,6 +78,12 @@ export function BookingForm() {
             setCustomerDetails({ name: userProfile.displayName, email: userProfile.email });
         }
     }, [userProfile]);
+
+    useEffect(() => {
+        checkServerHealth().then(result => {
+            setIsServerHealthy(result.isDbConnected);
+        });
+    }, []);
 
     if (isHotelLoading || areRoomsLoading) {
         return null; // Let the parent Suspense boundary handle the loading UI.
@@ -430,6 +437,16 @@ export function BookingForm() {
                         </CardContent>
                     </Card>
 
+                    {isServerHealthy === false && (
+                        <Alert variant="destructive">
+                            <AlertCircle className="h-4 w-4" />
+                            <AlertTitle>Booking Service Unavailable</AlertTitle>
+                            <AlertDescription>
+                                Live booking is currently disabled due to a server configuration issue. Please contact the site administrator. You can still browse hotels.
+                            </AlertDescription>
+                        </Alert>
+                    )}
+
                      <div className="items-top flex space-x-3">
                         <Checkbox id="terms" checked={termsAccepted} onCheckedChange={(checked) => setTermsAccepted(checked === true)} className="mt-0.5" />
                         <div className="grid gap-1.5 leading-none">
@@ -455,9 +472,16 @@ export function BookingForm() {
                     </Alert>
 
 
-                    <Button onClick={handlePayment} size="lg" className="w-full text-lg h-14 bg-accent text-accent-foreground hover:bg-accent/90 disabled:bg-accent/50" disabled={isBooking || !termsAccepted}>
-                        {isBooking && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
-                        {isBooking ? 'Processing...' : `Pay ${totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })} & Book`}
+                    <Button onClick={handlePayment} size="lg" className="w-full text-lg h-14 bg-accent text-accent-foreground hover:bg-accent/90 disabled:bg-accent/50" disabled={isBooking || !termsAccepted || isServerHealthy !== true}>
+                        {isBooking ? (
+                            <><Loader2 className="mr-2 h-5 w-5 animate-spin" />Processing...</>
+                        ) : isServerHealthy === null ? (
+                            <><Loader2 className="mr-2 h-5 w-5 animate-spin" />Initializing...</>
+                        ) : isServerHealthy === false ? (
+                            'Booking Service Unavailable'
+                        ) : (
+                            `Pay ${totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })} & Book`
+                        )}
                     </Button>
 
                      <div className="text-center text-sm text-muted-foreground space-y-2 mt-2">
