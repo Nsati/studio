@@ -10,7 +10,6 @@ import { useFirestore, useCollection } from '@/firebase';
 import type { City } from '@/lib/types';
 import { Skeleton } from '../ui/skeleton';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { dummyCities } from '@/lib/dummy-data';
 
 export function CitiesList() {
     const firestore = useFirestore();
@@ -26,11 +25,8 @@ export function CitiesList() {
         if (citiesFromDB && citiesFromDB.length > 0) {
             return citiesFromDB.sort((a,b) => a.name.localeCompare(b.name));
         }
-        if (!isLoading && (!citiesFromDB || citiesFromDB.length === 0)) {
-            return dummyCities;
-        }
         return [];
-      }, [citiesFromDB, isLoading]);
+      }, [citiesFromDB]);
 
     if (isLoading) {
       return (
@@ -40,6 +36,14 @@ export function CitiesList() {
           ))}
         </div>
       )
+    }
+
+    if (cities.length === 0) {
+        return (
+            <div className="mt-8 text-center text-muted-foreground p-8 border-2 border-dashed rounded-lg">
+                <p>No cities have been configured in the database yet.</p>
+            </div>
+        )
     }
 
     return (
