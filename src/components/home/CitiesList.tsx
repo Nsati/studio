@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -9,6 +8,7 @@ import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import type { City } from '@/lib/types';
 import { Skeleton } from '../ui/skeleton';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { dummyCities } from '@/lib/dummy-data';
 
 export function CitiesList() {
     const firestore = useFirestore();
@@ -18,16 +18,22 @@ export function CitiesList() {
         return collection(firestore, 'cities');
     }, [firestore]);
 
-    const { data: citiesFromDB, isLoading } = useCollection<City>(citiesQuery);
+    const { data: citiesFromDB, isLoading, error } = useCollection<City>(citiesQuery);
 
     const cities = useMemoFirebase(() => {
+        // Use live data if available
         if (citiesFromDB && citiesFromDB.length > 0) {
             return citiesFromDB.sort((a,b) => a.name.localeCompare(b.name));
         }
+        // Use dummy data if loading is finished and there's an error or no data
+        if (!isLoading) {
+            return dummyCities.sort((a,b) => a.name.localeCompare(b.name));
+        }
+        // Otherwise, we are loading, so return empty for the skeleton
         return [];
-      }, [citiesFromDB]);
+      }, [citiesFromDB, isLoading, error]);
 
-    if (isLoading) {
+    if (isLoading && !error) {
       return (
         <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 3 }).map((_, i) => (
@@ -40,7 +46,7 @@ export function CitiesList() {
     if (cities.length === 0) {
         return (
             <div className="mt-8 text-center text-muted-foreground p-8 border-2 border-dashed rounded-lg">
-                <p>No cities have been configured in the database yet.</p>
+                <p>No cities could be loaded at this time.</p>
             </div>
         )
     }
