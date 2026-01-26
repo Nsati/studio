@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import Razorpay from 'razorpay';
 import { getFirebaseAdmin } from '@/firebase/admin';
-import { FieldValue } from 'firebase-admin/firestore';
+import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import type { Booking, Hotel, Room, ConfirmedBookingSummary } from '@/lib/types';
 
 /**
@@ -100,7 +100,12 @@ export async function POST(req: NextRequest) {
         if (!roomDoc.exists) throw new Error(`Room document ${room_id} not found.`);
         if (!hotelDoc.exists) throw new Error(`Hotel document ${hotel_id} not found.`);
         
-        const bookingData = bookingDoc.data() as Booking;
+        // Define a more specific type for the data read from Firestore to handle Timestamps correctly
+        const bookingData = bookingDoc.data() as Omit<Booking, 'checkIn' | 'checkOut' | 'createdAt'> & {
+            checkIn: Timestamp;
+            checkOut: Timestamp;
+            createdAt: Timestamp;
+        };
         
         if (bookingData.status === 'CONFIRMED') {
             console.log(`ℹ️ Booking ${booking_id} is already confirmed. Skipping transaction.`);
@@ -128,8 +133,8 @@ export async function POST(req: NextRequest) {
           hotelCity: hotelData.city,
           hotelAddress: hotelData.address || '',
           customerName: bookingData.customerName,
-          checkIn: (bookingData.checkIn as any).toDate(),
-          checkOut: (bookingData.checkOut as any).toDate(),
+          checkIn: bookingData.checkIn.toDate(),
+          checkOut: bookingData.checkOut.toDate(),
           guests: bookingData.guests,
           totalPrice: bookingData.totalPrice,
           roomType: bookingData.roomType,
