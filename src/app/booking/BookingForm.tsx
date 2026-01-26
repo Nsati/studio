@@ -8,7 +8,7 @@ import { differenceInDays, format, parse } from 'date-fns';
 import { initializeBookingAndCreateOrder } from './actions';
 import { signInAnonymously } from 'firebase/auth';
 import type { Hotel, Room, Booking, Promotion } from '@/lib/types';
-import { useFirestore, useAuth, useUser, useDoc, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirestore, useAuth, useUser, useDoc, useCollection, useMemoFirebase, type WithId } from '@/firebase';
 import { doc, collection, getDoc, runTransaction } from 'firebase/firestore';
 
 import { useToast } from '@/hooks/use-toast';
@@ -217,19 +217,34 @@ export function BookingForm() {
                     const roomRef = doc(firestore, 'hotels', hotelId, 'rooms', roomId);
 
                     await runTransaction(firestore, async (transaction) => {
-                         const bookingDoc = await transaction.get(bookingRef);
-                         if (!bookingDoc.exists() || bookingDoc.data().status !== 'PENDING') {
-                            throw new Error("Booking not found or already processed.");
-                         }
-                         // Update booking status
-                         transaction.update(bookingRef, {
-                            status: 'CONFIRMED',
-                            razorpayPaymentId: response.razorpay_payment_id,
-                         });
-                         // Decrement room availability
-                         transaction.update(roomRef, {
-                            availableRooms: (bookingDoc.data().availableRooms ?? 1) -1
-                         });
+                        const bookingDoc = await transaction.get(bookingRef);
+                        if (!bookingDoc.exists() || bookingDoc.data().status !== 'PENDING') {
+                           throw new Error("Booking not found or already processed.");
+                        }
+                        
+                        // Atomically read the room document and decrement its availability
+                        const roomDoc = await transaction.get(roomRef);
+                        if (!roomDoc.exists()) {
+                            throw new Error("The room you are trying to book does not exist.");
+                        }
+                        const roomData = roomDoc.data() as Room;
+                        const newAvailableRooms = (roomData.availableRooms ?? 0) - 1;
+            
+                        // Prevent overbooking
+                        if (newAvailableRooms < 0) {
+                            throw new Error("Sorry, this room just sold out. Your payment will not be processed.");
+                        }
+            
+                        // Update booking status to CONFIRMED
+                        transaction.update(bookingRef, {
+                           status: 'CONFIRMED',
+                           razorpayPaymentId: response.razorpay_payment_id,
+                        });
+                        
+                        // Update the room's availability
+                        transaction.update(roomRef, {
+                           availableRooms: newAvailableRooms
+                        });
                     });
 
                     toast({ title: "Booking Confirmed!", description: "Your booking has been finalized. Redirecting..." });
