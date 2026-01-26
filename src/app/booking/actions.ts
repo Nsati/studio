@@ -1,3 +1,4 @@
+
 'use server';
 
 import Razorpay from 'razorpay';
@@ -42,20 +43,41 @@ export async function initializeBookingAndCreateOrder(
   const adminDb = admin.firestore;
 
   const { 
-    userId, hotelId, roomId, roomType, checkIn, checkOut, guests, totalPrice, customerName, customerEmail
+    userId, hotelId, roomId, roomType, guests, totalPrice, customerName, customerEmail
   } = bookingData;
+
+  // The checkIn and checkOut from the client are serialized as strings.
+  // We must convert them back to Date objects for the Admin SDK.
+  const checkInDate = new Date(bookingData.checkIn);
+  const checkOutDate = new Date(bookingData.checkOut);
+
+  if (isNaN(checkInDate.getTime()) || isNaN(checkOutDate.getTime())) {
+    const errorMessage = 'Invalid date format received from the client.';
+    console.error(`SERVER ACTION ERROR: ${errorMessage}`);
+    return { success: false, error: errorMessage, order: null, keyId: null, bookingId: null };
+  }
+
 
   const bookingId = `booking_${Date.now()}`;
   const bookingRef = adminDb.collection('users').doc(userId).collection('bookings').doc(bookingId);
 
   // 1. Create the PENDING booking document on the server
   try {
-    const pendingBooking: Omit<Booking, 'id' | 'razorpayPaymentId'> = {
-      ...bookingData,
-      status: 'PENDING',
-      createdAt: Timestamp.now(),
+     const pendingBookingData = {
+      userId,
+      hotelId,
+      roomId,
+      roomType,
+      guests,
+      totalPrice,
+      customerName,
+      customerEmail,
+      checkIn: checkInDate, // Use the JS Date object
+      checkOut: checkOutDate, // Use the JS Date object
+      status: 'PENDING' as const,
+      createdAt: Timestamp.now(), // Admin SDK can mix Timestamps and Dates
     };
-    await bookingRef.set({ id: bookingId, ...pendingBooking });
+    await bookingRef.set({ id: bookingId, ...pendingBookingData });
   } catch (error: any) {
     console.error('SERVER ACTION ERROR: Failed to create PENDING booking:', error);
     return { success: false, error: 'Could not initialize booking on the server. Please try again.', order: null, keyId: null, bookingId: null };
