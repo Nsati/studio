@@ -84,13 +84,6 @@ export async function POST(req: NextRequest) {
       
       const rzpInstance = new Razorpay({ key_id: keyId, key_secret: keySecret });
       const admin = getFirebaseAdmin();
-      
-      if (!admin) {
-        // This check is now mostly redundant due to the env var checks above, but serves as a final safeguard.
-        const errorMessage = 'Firebase Admin SDK is not initialized. This is a critical server configuration error.';
-        console.error(`❌ FATAL WEBHOOK ERROR: ${errorMessage}`);
-        return NextResponse.json({ status: 'error', message: errorMessage }, { status: 500 });
-      }
       const adminDb = admin.firestore;
       
       // 4. Fetch order and run transaction

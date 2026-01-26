@@ -81,19 +81,15 @@ function initializeAdmin() {
 }
 
 /**
- * Provides a "safe" way to get access to the initialized Firebase Admin services.
- * It will not throw an error if initialization fails due to misconfiguration.
- * Instead, it will log the error to the server console and return null.
- * Callers must check for a null return value.
+ * Provides access to the initialized Firebase Admin services.
+ * It will throw a descriptive error if initialization fails due to misconfiguration,
+ * which is useful for debugging server-side issues.
  *
- * @returns An object containing the admin app, firestore, and auth services, or null if initialization failed.
+ * @returns An object containing the admin app, firestore, and auth services.
  */
 export function getFirebaseAdmin() {
-  try {
-    return initializeAdmin();
-  } catch (e) {
-    // initializeAdmin() already logs the detailed error.
-    // We catch the thrown error and return null to the caller.
-    return null;
-  }
+  // This now directly calls initializeAdmin. If initialization fails,
+  // it will throw an error, causing the server action or API route to fail
+  // with a clear message. This is better for debugging configuration issues.
+  return initializeAdmin();
 }

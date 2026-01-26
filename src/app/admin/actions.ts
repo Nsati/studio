@@ -25,10 +25,6 @@ export async function getAdminDashboardStats(): Promise<{
     hotels: SerializableHotel[]
 }> {
     const admin = getFirebaseAdmin();
-    if (!admin) {
-        console.warn('Admin dashboard stats could not be loaded because Firebase Admin SDK is not initialized.');
-        return { bookings: [], users: [], hotels: [] };
-    }
     const adminDb = admin.firestore;
     
     const [bookingsSnapshot, usersSnapshot, hotelsSnapshot] = await Promise.all([

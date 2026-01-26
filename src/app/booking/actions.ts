@@ -47,11 +47,6 @@ export async function initializeBookingAndCreateOrder(
   // --- End of Validation Block ---
 
   const admin = getFirebaseAdmin();
-  if (!admin) {
-    const errorMessage = 'Failed to initialize Firebase Admin SDK. Please check server configuration and .env file.';
-    console.error(`SERVER ACTION ERROR: ${errorMessage}`);
-    return { success: false, error: errorMessage, order: null, keyId: null, bookingId: null };
-  }
   const adminDb = admin.firestore;
   
   const { userId, hotelId, roomId, customerName, customerEmail, guests, couponCode } = data;

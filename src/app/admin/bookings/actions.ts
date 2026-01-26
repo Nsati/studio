@@ -19,10 +19,6 @@ export type SerializableBooking = Omit<Booking, 'checkIn' | 'checkOut' | 'create
  */
 export async function getAdminAllBookings(): Promise<SerializableBooking[]> {
     const admin = getFirebaseAdmin();
-    if (!admin) {
-        console.warn('Admin bookings could not be loaded because Firebase Admin SDK is not initialized.');
-        return [];
-    }
     const adminDb = admin.firestore;
     
     const bookingsSnapshot = await adminDb.collectionGroup('bookings').get();
