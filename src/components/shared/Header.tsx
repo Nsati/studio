@@ -105,7 +105,7 @@ export default function Header() {
       <div className="container flex h-16 items-center">
         <Link href="/" className="flex items-center gap-2 mr-6">
           <Hotel className="h-6 w-6 text-primary" />
-          <span className="hidden font-bold sm:inline-block font-headline text-lg">
+          <span className="font-bold font-headline text-lg">
             Uttarakhand Getaways
           </span>
         </Link>
