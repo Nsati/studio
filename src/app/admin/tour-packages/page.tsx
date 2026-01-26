@@ -1,6 +1,6 @@
 
 'use client';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirestore, useCollection, useMemoFirebase, type WithId } from '@/firebase';
 import Link from 'next/link';
 import Image from 'next/image';
 import { collection } from 'firebase/firestore';
@@ -30,7 +30,7 @@ function PackageGridSkeleton() {
     )
 }
 
-function TourPackageAdminCard({ tourPackage }: { tourPackage: TourPackage }) {
+function TourPackageAdminCard({ tourPackage }: { tourPackage: WithId<TourPackage> }) {
     const imageUrl = PlaceHolderImages.find((img) => img.id === tourPackage.image)?.imageUrl;
 
     return (
