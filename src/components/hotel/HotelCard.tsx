@@ -39,8 +39,7 @@ export function HotelCard({ hotel }: HotelCardProps) {
   return (
     <Link href={`/hotels/${hotel.id}`} className="group block">
       <Card className="h-full overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border-border">
-        <CardContent className="p-0">
-          <div className="relative w-full aspect-[4/3]">
+        <CardContent className="p-0 relative w-full aspect-[4/3]">
             {imageUrl ? (
               <Image
                 src={imageUrl}
@@ -60,7 +59,6 @@ export function HotelCard({ hotel }: HotelCardProps) {
                     {hotel.discount}% OFF
                 </Badge>
             )}
-          </div>
         </CardContent>
         <CardHeader className="p-4">
           <CardTitle className="font-headline text-xl leading-tight group-hover:text-primary">

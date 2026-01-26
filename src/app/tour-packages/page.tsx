@@ -42,7 +42,7 @@ export default function TourPackagesPage() {
                     const pkgImage = PlaceHolderImages.find(img => img.id === pkg.image);
                     return (
                         <Card key={pkg.id} className="flex flex-col overflow-hidden transition-shadow hover:shadow-lg">
-                           <div className="relative w-full aspect-video">
+                           <CardContent className="p-0 relative w-full aspect-video">
                             {pkgImage && (
                                 <Image
                                 src={pkgImage.imageUrl}
@@ -53,7 +53,7 @@ export default function TourPackagesPage() {
                                 className="object-cover"
                                 />
                             )}
-                            </div>
+                            </CardContent>
                             <CardHeader>
                                 <CardTitle className="font-headline text-xl leading-tight">{pkg.title}</CardTitle>
                                 <CardDescription className="flex items-center gap-2 pt-1">
@@ -77,7 +77,7 @@ export default function TourPackagesPage() {
                                 </div>
                                  <Button asChild>
                                     <Link href="/search">Book Hotel</Link>
-                                </Button>
+                                 </Button>
                              </CardFooter>
                         </Card>
                     )

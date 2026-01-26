@@ -52,23 +52,25 @@ export default function HomePage() {
             {dummyCities.map((city) => {
               const cityImage = PlaceHolderImages.find((img) => img.id === city.image);
               return (
-                <Link key={city.id} href={`/search?city=${city.name}`} className="group block">
-                  <div className="relative aspect-square overflow-hidden rounded-lg">
-                    {cityImage && (
-                      <Image
-                        src={cityImage.imageUrl}
-                        alt={city.name}
-                        data-ai-hint={cityImage.imageHint}
-                        fill
-                        sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 16vw"
-                        className="object-cover transition-transform duration-300 group-hover:scale-105"
-                      />
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                    <h3 className="absolute bottom-3 left-3 font-headline text-lg font-bold text-white">
-                      {city.name}
-                    </h3>
-                  </div>
+                <Link
+                  key={city.id}
+                  href={`/search?city=${city.name}`}
+                  className="group relative block aspect-square overflow-hidden rounded-lg"
+                >
+                  {cityImage && (
+                    <Image
+                      src={cityImage.imageUrl}
+                      alt={city.name}
+                      data-ai-hint={cityImage.imageHint}
+                      fill
+                      sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 16vw"
+                      className="object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  <h3 className="absolute bottom-3 left-3 font-headline text-lg font-bold text-white">
+                    {city.name}
+                  </h3>
                 </Link>
               );
             })}
@@ -114,10 +116,8 @@ export default function HomePage() {
               return (
                 <Link key={pkg.id} href="/tour-packages" className="group block">
                   <Card className="h-full overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-                    <CardContent className="p-0">
-                      <div className="relative w-full aspect-video">
-                        {pkgImage && <Image src={pkgImage.imageUrl} alt={pkg.title} fill className="object-cover" />}
-                      </div>
+                    <CardContent className="p-0 relative w-full aspect-video">
+                      {pkgImage && <Image src={pkgImage.imageUrl} alt={pkg.title} fill className="object-cover" />}
                     </CardContent>
                     <CardHeader>
                       <CardTitle className="font-headline text-xl leading-tight group-hover:text-primary">{pkg.title}</CardTitle>
