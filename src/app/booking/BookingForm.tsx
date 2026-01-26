@@ -9,7 +9,7 @@ import { initializeBookingAndCreateOrder } from './actions';
 import { signInAnonymously } from 'firebase/auth';
 import type { Hotel, Room, Booking, Promotion } from '@/lib/types';
 import { useFirestore, useAuth, useUser, useDoc, useCollection, useMemoFirebase, type WithId } from '@/firebase';
-import { doc, collection, getDoc, runTransaction } from 'firebase/firestore';
+import { doc, collection, getDoc } from 'firebase/firestore';
 
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -205,57 +205,10 @@ export function BookingForm() {
             description: `Booking for ${hotel.name}`,
             order_id: order.id,
             handler: async (response: any) => {
+                // Payment was successful. The server-side webhook will handle confirmation.
+                // We just need to redirect the user to the success page.
                 toast({ title: "Payment Received!", description: "Finalizing your booking..." });
-                
-                if (!firestore || !userIdForBooking || !bookingId || !hotelId || !roomId) {
-                     toast({ variant: "destructive", title: "Confirmation Error", description: "Could not finalize booking. Missing required information." });
-                     return;
-                }
-
-                try {
-                    const bookingRef = doc(firestore, 'users', userIdForBooking, 'bookings', bookingId);
-                    const roomRef = doc(firestore, 'hotels', hotelId, 'rooms', roomId);
-
-                    await runTransaction(firestore, async (transaction) => {
-                        const bookingDoc = await transaction.get(bookingRef);
-                        if (!bookingDoc.exists() || bookingDoc.data().status !== 'PENDING') {
-                           throw new Error("Booking not found or already processed.");
-                        }
-                        
-                        // Atomically read the room document and decrement its availability
-                        const roomDoc = await transaction.get(roomRef);
-                        if (!roomDoc.exists()) {
-                            throw new Error("The room you are trying to book does not exist.");
-                        }
-                        const roomData = roomDoc.data() as Room;
-                        const newAvailableRooms = (roomData.availableRooms ?? 0) - 1;
-            
-                        // Prevent overbooking
-                        if (newAvailableRooms < 0) {
-                            throw new Error("Sorry, this room just sold out. Your payment will not be processed.");
-                        }
-            
-                        // Update booking status to CONFIRMED
-                        transaction.update(bookingRef, {
-                           status: 'CONFIRMED',
-                           razorpayPaymentId: response.razorpay_payment_id,
-                        });
-                        
-                        // Update the room's availability
-                        transaction.update(roomRef, {
-                           availableRooms: newAvailableRooms
-                        });
-                    });
-
-                    toast({ title: "Booking Confirmed!", description: "Your booking has been finalized. Redirecting..." });
-                    router.push(`/booking/success/${bookingId}`);
-
-                } catch (error: any) {
-                    console.error("Client-side confirmation failed:", error);
-                    toast({ variant: "destructive", title: "Confirmation Failed", description: `Your payment was successful, but we couldn't automatically confirm your booking. Please contact support with booking ID: ${bookingId}. Error: ${error.message}` });
-                    // Still redirect, but the success page will show the pending state and guide the user.
-                    router.push(`/booking/success/${bookingId}`);
-                }
+                router.push(`/booking/success/${bookingId}`);
             },
             prefill: { name: customerDetails.name, email: customerDetails.email },
             theme: { color: "#388E3C" },
