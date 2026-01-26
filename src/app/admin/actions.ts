@@ -18,6 +18,7 @@ export type SerializableHotel = Omit<Hotel, ''>; // Hotel is already serializabl
 /**
  * Fetches all necessary data for the admin dashboard using the Firebase Admin SDK,
  * which bypasses all Firestore security rules.
+ * Gracefully returns empty data if the admin SDK is not initialized.
  */
 export async function getAdminDashboardStats(): Promise<{
     bookings: SerializableBooking[],
@@ -25,6 +26,10 @@ export async function getAdminDashboardStats(): Promise<{
     hotels: SerializableHotel[]
 }> {
     const admin = getFirebaseAdmin();
+    if (!admin) {
+        console.warn('Admin dashboard stats skipped: Firebase Admin SDK not initialized.');
+        return { bookings: [], users: [], hotels: [] };
+    }
     const adminDb = admin.firestore;
     
     const [bookingsSnapshot, usersSnapshot, hotelsSnapshot] = await Promise.all([

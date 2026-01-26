@@ -28,25 +28,22 @@ export async function initializeBookingAndCreateOrder(
     couponCode?: string;
   }
 ) {
-  // --- Start of Validation Block ---
-  const requiredServerEnvs = {
-    'FIREBASE_PROJECT_ID': process.env.FIREBASE_PROJECT_ID,
-    'FIREBASE_PRIVATE_KEY': process.env.FIREBASE_PRIVATE_KEY,
-    'FIREBASE_CLIENT_EMAIL': process.env.FIREBASE_CLIENT_EMAIL,
-    'RAZORPAY_KEY_ID': process.env.RAZORPAY_KEY_ID,
-    'RAZORPAY_KEY_SECRET': process.env.RAZORPAY_KEY_SECRET
-  };
+  const admin = getFirebaseAdmin();
+  if (!admin) {
+    const errorMessage = "Server is not configured for payments. Please contact support. (Admin: Firebase SDK init failed)";
+    console.error(`SERVER ACTION ERROR: ${errorMessage}`);
+    return { success: false, error: errorMessage, order: null, keyId: null, bookingId: null };
+  }
 
-  for (const [key, value] of Object.entries(requiredServerEnvs)) {
-    if (!value) {
-      const errorMessage = `Server configuration error: The environment variable '${key}' is missing. Please check your .env file.`;
+  const keyId = process.env.RAZORPAY_KEY_ID;
+  const keySecret = process.env.RAZORPAY_KEY_SECRET;
+
+  if (!keyId || !keySecret) {
+      const errorMessage = "Payment processing is currently unavailable. (Admin: Razorpay keys missing)";
       console.error(`SERVER ACTION ERROR: ${errorMessage}`);
       return { success: false, error: errorMessage, order: null, keyId: null, bookingId: null };
-    }
   }
-  // --- End of Validation Block ---
-
-  const admin = getFirebaseAdmin();
+  
   const adminDb = admin.firestore;
   
   const { userId, hotelId, roomId, customerName, customerEmail, guests, couponCode } = data;
@@ -119,9 +116,6 @@ export async function initializeBookingAndCreateOrder(
     await bookingRef.set({ id: bookingId, ...pendingBookingData });
 
     // 2. Create Razorpay order
-    const keyId = process.env.RAZORPAY_KEY_ID!;
-    const keySecret = process.env.RAZORPAY_KEY_SECRET!;
-    
     const razorpayInstance = new Razorpay({ key_id: keyId, key_secret: keySecret });
     const amountInPaise = Math.round(finalPrice * 100);
     

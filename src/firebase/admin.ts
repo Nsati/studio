@@ -3,93 +3,63 @@ import { initializeApp, getApps, cert, App } from 'firebase-admin/app';
 import { getFirestore, Firestore } from 'firebase-admin/firestore';
 import { getAuth, Auth } from 'firebase-admin/auth';
 
-// IMPORTANT: The service account credentials should be stored securely as environment variables.
-// These placeholders will be replaced by the actual values from the .env file.
 const serviceAccount = {
   projectId: process.env.FIREBASE_PROJECT_ID,
   privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'), // Replace escaped newlines
   clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
 };
 
-// Singleton pattern to avoid re-initialization
 let adminServices: { app: App; firestore: Firestore; auth: Auth } | null = null;
-let initError: Error | null = null; // Store initialization error
+let initAttempted = false;
 
 /**
- * Initializes the Firebase Admin SDK. This function is designed to be called
- * internally and will throw an error on failure, which can be caught.
- * It ensures initialization only happens once.
+ * Initializes the Firebase Admin SDK once.
+ * Logs a detailed error and returns null if initialization fails, but does not throw.
+ * This prevents server crashes due to misconfiguration.
  */
-function initializeAdmin() {
-  // If already initialized successfully, return the existing services
-  if (adminServices) {
-    return adminServices;
-  }
-  // If initialization failed before, re-throw the stored error immediately
-  if (initError) {
-    throw initError;
-  }
-
-  // Fallback to check if an app was initialized elsewhere.
-  if (getApps().length > 0) {
-    const app = getApps()[0];
-    adminServices = {
-        app,
-        firestore: getFirestore(app),
-        auth: getAuth(app),
-    };
-    return adminServices;
-  }
-
-  // Check if all required environment variables are present
-  if (!serviceAccount.projectId || !serviceAccount.privateKey || !serviceAccount.clientEmail) {
-    initError = new Error(
-      'Firebase Admin SDK credentials are not fully configured. ' +
-      'Please ensure FIREBASE_PROJECT_ID, FIREBASE_PRIVATE_KEY, and FIREBASE_CLIENT_EMAIL are set in your .env file.'
-    );
-    // Log a persistent warning on the server console
-    console.error(`[FATAL] FIREBASE ADMIN INIT FAILED: ${initError.message}`);
-    throw initError;
-  }
-
-  try {
-    const app = initializeApp({
-      credential: cert(serviceAccount),
-    });
-    adminServices = {
-        app,
-        firestore: getFirestore(app),
-        auth: getAuth(app),
-    };
-    return adminServices;
-  } catch (error: any) {
-    if (error.message.includes('Invalid PEM formatted message')) {
-        initError = new Error(
-            'Failed to initialize Firebase Admin SDK: The private key is malformed. ' +
-            'Please ensure the FIREBASE_PRIVATE_KEY in your .env file is correctly formatted. ' +
-            'It should be a single-line string with "\\n" for newlines, and must include the ' +
-            '"-----BEGIN PRIVATE KEY-----" and "-----END PRIVATE KEY-----" markers. ' +
-            'Original error: ' + error.message
-        );
-    } else {
-        initError = error; // Store any other initialization error
+function initializeAdminInternal(): { app: App; firestore: Firestore; auth: Auth } | null {
+    if (getApps().length > 0) {
+        const app = getApps()[0];
+        return { app, firestore: getFirestore(app), auth: getAuth(app) };
     }
-    // Log the detailed error to the server console and throw it.
-    console.error(`[FATAL] FIREBASE ADMIN INIT FAILED: ${initError.message}`);
-    throw initError;
-  }
+
+    if (!serviceAccount.projectId || !serviceAccount.privateKey || !serviceAccount.clientEmail) {
+        console.error(
+            '[FATAL] Firebase Admin SDK credentials are not fully configured. ' +
+            'Please ensure FIREBASE_PROJECT_ID, FIREBASE_PRIVATE_KEY, and FIREBASE_CLIENT_EMAIL are set in your .env file. ' +
+            'Server-side features like payment confirmation and admin tools will be disabled.'
+        );
+        return null;
+    }
+
+    try {
+        const app = initializeApp({ credential: cert(serviceAccount) });
+        return { app, firestore: getFirestore(app), auth: getAuth(app) };
+    } catch (error: any) {
+        let errorMessage = 'An unknown error occurred during Firebase Admin SDK initialization.';
+        if (error.message.includes('Invalid PEM formatted message')) {
+            errorMessage = 'Failed to initialize Firebase Admin SDK: The private key is malformed. ' +
+                'Please ensure the FIREBASE_PRIVATE_KEY in your .env file is correctly formatted. ' +
+                'It should be a single-line string with "\\n" for newlines, and must include the ' +
+                '"-----BEGIN PRIVATE KEY-----" and "-----END PRIVATE KEY-----" markers.';
+        }
+        console.error(`[FATAL] FIREBASE ADMIN INIT FAILED: ${errorMessage} Original error: ${error.message}`);
+        console.error('Server-side features like payment confirmation and admin tools will be disabled.');
+        return null;
+    }
 }
 
 /**
  * Provides access to the initialized Firebase Admin services.
- * It will throw a descriptive error if initialization fails due to misconfiguration,
- * which is useful for debugging server-side issues.
+ * This is a singleton that will attempt initialization only once.
+ * It returns null if initialization fails, preventing server crashes.
  *
- * @returns An object containing the admin app, firestore, and auth services.
+ * @returns An object with admin services, or null if initialization failed.
  */
 export function getFirebaseAdmin() {
-  // This now directly calls initializeAdmin. If initialization fails,
-  // it will throw an error, causing the server action or API route to fail
-  // with a clear message. This is better for debugging configuration issues.
-  return initializeAdmin();
+    if (!initAttempted) {
+        adminServices = initializeAdminInternal();
+        initAttempted = true;
+    }
+    return adminServices;
 }

@@ -25,27 +25,21 @@ import type { Booking, Hotel, Room, ConfirmedBookingSummary } from '@/lib/types'
 export async function POST(req: NextRequest) {
   console.log('--- Razorpay Webhook Endpoint Hit ---');
 
-  // --- Start of Robust Validation Block ---
-  const requiredServerEnvs = {
-    'RAZORPAY_WEBHOOK_SECRET': process.env.RAZORPAY_WEBHOOK_SECRET,
-    'RAZORPAY_KEY_ID': process.env.RAZORPAY_KEY_ID,
-    'RAZORPAY_KEY_SECRET': process.env.RAZORPAY_KEY_SECRET,
-    'FIREBASE_PROJECT_ID': process.env.FIREBASE_PROJECT_ID,
-    'FIREBASE_PRIVATE_KEY': process.env.FIREBASE_PRIVATE_KEY,
-    'FIREBASE_CLIENT_EMAIL': process.env.FIREBASE_CLIENT_EMAIL,
-  };
-
-  for (const [key, value] of Object.entries(requiredServerEnvs)) {
-    if (!value) {
-        const errorMessage = `Webhook failed: Server configuration error. The environment variable '${key}' is missing.`;
-        console.error(`❌ FATAL WEBHOOK ERROR: ${errorMessage}`);
-        // Return 500 to indicate a server configuration issue. Razorpay will retry.
-        return NextResponse.json({ status: 'error', message: 'Internal server configuration error.' }, { status: 500 });
-    }
+  const admin = getFirebaseAdmin();
+  if (!admin) {
+    console.error('❌ FATAL WEBHOOK ERROR: Firebase Admin SDK is not initialized. Cannot process booking confirmation.');
+    return NextResponse.json({ status: 'error', message: 'Internal server configuration error.' }, { status: 500 });
   }
-  // --- End of Robust Validation Block ---
 
-  const secret = process.env.RAZORPAY_WEBHOOK_SECRET!;
+  const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
+  const keyId = process.env.RAZORPAY_KEY_ID;
+  const keySecret = process.env.RAZORPAY_KEY_SECRET;
+
+  if (!secret || !keyId || !keySecret) {
+      console.error('❌ FATAL WEBHOOK ERROR: Razorpay environment variables are missing.');
+      return NextResponse.json({ status: 'error', message: 'Internal server configuration error.' }, { status: 500 });
+  }
+
   const signature = req.headers.get('x-razorpay-signature');
   const bodyText = await req.text();
 
@@ -79,11 +73,7 @@ export async function POST(req: NextRequest) {
       const paymentId = paymentEntity.id;
 
       // 3. Initialize services
-      const keyId = process.env.RAZORPAY_KEY_ID!;
-      const keySecret = process.env.RAZORPAY_KEY_SECRET!;
-      
       const rzpInstance = new Razorpay({ key_id: keyId, key_secret: keySecret });
-      const admin = getFirebaseAdmin();
       const adminDb = admin.firestore;
       
       // 4. Fetch order and run transaction

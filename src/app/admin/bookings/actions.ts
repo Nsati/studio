@@ -16,9 +16,14 @@ export type SerializableBooking = Omit<Booking, 'checkIn' | 'checkOut' | 'create
 /**
  * Fetches all bookings using the Firebase Admin SDK, which bypasses all security rules.
  * This ensures admins can reliably retrieve all data.
+ * Gracefully returns an empty array if the Admin SDK is not initialized.
  */
 export async function getAdminAllBookings(): Promise<SerializableBooking[]> {
     const admin = getFirebaseAdmin();
+    if (!admin) {
+        console.warn('Admin get all bookings skipped: Firebase Admin SDK not initialized.');
+        return [];
+    }
     const adminDb = admin.firestore;
     
     const bookingsSnapshot = await adminDb.collectionGroup('bookings').get();
