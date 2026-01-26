@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useUser, useAuth } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { useRouter, usePathname } from 'next/navigation';
-import { Hotel, User, LogOut, LayoutDashboard, Book, Menu } from 'lucide-react';
+import { User, LogOut, LayoutDashboard, Book, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -22,6 +22,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '../ui/skeleton';
 import { cn } from '@/lib/utils';
+import { Logo } from './Logo';
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -107,8 +108,8 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center">
-        <Link href="/" className="flex items-center gap-2 mr-6">
-          <Hotel className="h-6 w-6 text-primary" />
+        <Link href="/" className="flex items-center gap-3 mr-6">
+          <Logo />
           <span className="font-bold font-headline text-lg">
             Uttarakhand Getaways
           </span>
@@ -141,8 +142,8 @@ export default function Header() {
                 <SheetContent side="right">
                     <nav className="grid gap-6 text-lg font-medium mt-10">
                         <SheetClose asChild>
-                          <Link href="/" className="flex items-center gap-2 mb-6">
-                            <Hotel className="h-6 w-6 text-primary" />
+                          <Link href="/" className="flex items-center gap-3 mb-6">
+                            <Logo />
                             <span className="font-bold font-headline text-lg">
                               Uttarakhand Getaways
                             </span>
