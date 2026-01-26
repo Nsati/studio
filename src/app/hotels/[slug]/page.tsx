@@ -165,7 +165,7 @@ export default function HotelPage() {
                 <WriteReviewForm 
                   hotelId={hotel.id} 
                   userId={user.uid} 
-                  userHasReviewed={userHasReviewed} 
+                  userHasReviewed={userHasReviewed ?? false} 
                 />
               </section>
             </>
