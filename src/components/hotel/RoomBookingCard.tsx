@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 
 import type { Hotel, Room } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import type { WithId } from '@/firebase';
 
 import {
   Card,
@@ -32,9 +33,9 @@ import { Skeleton } from '../ui/skeleton';
 import { Badge } from '../ui/badge';
 
 
-export function RoomBookingCard({ hotel, rooms, isLoadingRooms }: { hotel: Hotel, rooms: Room[], isLoadingRooms: boolean }) {
+export function RoomBookingCard({ hotel, rooms, isLoadingRooms }: { hotel: WithId<Hotel>, rooms: WithId<Room>[], isLoadingRooms: boolean }) {
   const [dates, setDates] = useState<DateRange | undefined>();
-  const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
+  const [selectedRoom, setSelectedRoom] = useState<WithId<Room> | null>(null);
   const [guests, setGuests] = useState('1');
   const router = useRouter();
   const { toast } = useToast();
@@ -66,7 +67,7 @@ export function RoomBookingCard({ hotel, rooms, isLoadingRooms }: { hotel: Hotel
 
   const isDateRangeValid = dates?.from && dates?.to && nights > 0;
   
-  const handleRoomSelect = (room: Room) => {
+  const handleRoomSelect = (room: WithId<Room>) => {
     if (isDateRangeValid) {
         setSelectedRoom(room);
     }
