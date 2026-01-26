@@ -1,11 +1,11 @@
 'use client';
-import { useMemo, useState } from 'react';
-import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
-import { collection, doc, runTransaction, increment, updateDoc, collectionGroup } from 'firebase/firestore';
+import { useMemo, useState, useEffect } from 'react';
+import { useFirestore, useUser } from '@/firebase';
+import { collection, doc, runTransaction, increment, updateDoc } from 'firebase/firestore';
 import type { Booking, Room } from '@/lib/types';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
-import { normalizeTimestamp } from '@/lib/firestore-utils';
+import { getAdminAllBookings, type SerializableBooking } from './actions';
 
 import {
   Table,
@@ -24,7 +24,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -46,7 +45,7 @@ function BookingRowSkeleton() {
     )
 }
 
-function CancelBookingAction({ booking }: { booking: Booking }) {
+function CancelBookingAction({ booking, onBookingCancelled }: { booking: Booking, onBookingCancelled: () => void }) {
     const firestore = useFirestore();
     const { toast } = useToast();
     const [isCancelling, setIsCancelling] = useState(false);
@@ -67,7 +66,6 @@ function CancelBookingAction({ booking }: { booking: Booking }) {
                 const bookingData = bookingDoc.data() as Booking;
 
                 if (bookingData.status === 'CANCELLED') {
-                    // Already cancelled, do nothing.
                     toast({
                         variant: "destructive",
                         title: "Already Cancelled",
@@ -76,7 +74,6 @@ function CancelBookingAction({ booking }: { booking: Booking }) {
                     return;
                 }
                 
-                // Increment room count only if booking was confirmed
                 if (bookingData.status === 'CONFIRMED') {
                     const roomRef = doc(firestore, 'hotels', booking.hotelId, 'rooms', booking.roomId);
                     const roomDoc = await transaction.get(roomRef);
@@ -89,7 +86,6 @@ function CancelBookingAction({ booking }: { booking: Booking }) {
                     }
                 }
                 
-                // Finally, update the booking status
                 transaction.update(bookingRef, { status: 'CANCELLED' });
             });
 
@@ -97,6 +93,7 @@ function CancelBookingAction({ booking }: { booking: Booking }) {
                 title: 'Booking Cancelled',
                 description: `Booking ID ${booking.id} has been successfully cancelled.`,
             });
+            onBookingCancelled();
 
         } catch (error: any) {
             console.error("Cancellation failed:", error);
@@ -141,27 +138,45 @@ function CancelBookingAction({ booking }: { booking: Booking }) {
 }
 
 export default function BookingsPage() {
-    const firestore = useFirestore();
     const { userProfile } = useUser();
+    const [bookings, setBookings] = useState<Booking[] | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
 
-    const bookingsQuery = useMemoFirebase(() => {
-        if (!firestore || userProfile?.role !== 'admin') return null;
-        return collectionGroup(firestore, 'bookings');
-    }, [firestore, userProfile]);
+    const fetchData = async () => {
+        setIsLoading(true);
+        try {
+            const serializableBookings = await getAdminAllBookings();
+            const deserializedBookings: Booking[] = serializableBookings.map(b => ({
+                ...b,
+                checkIn: new Date(b.checkIn),
+                checkOut: new Date(b.checkOut),
+                createdAt: new Date(b.createdAt),
+            }));
 
-    const { data: bookingsData, isLoading } = useCollection<Booking>(bookingsQuery);
-    
-    const bookings = useMemoFirebase(() => {
-        if (!bookingsData) return null;
-        // Sort bookings by creation date on the client-side
-        return bookingsData.sort((a, b) => {
-             const dateA = normalizeTimestamp(a.createdAt);
-             const dateB = normalizeTimestamp(b.createdAt);
-             if (isNaN(dateA.getTime())) return -1;
-             if (isNaN(dateB.getTime())) return 1;
-             return dateB.getTime() - dateA.getTime();
-        });
-    }, [bookingsData]);
+            // Sort bookings by creation date on the client-side
+            const sorted = deserializedBookings.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+            setBookings(sorted);
+        } catch (error) {
+            console.error("Failed to fetch admin bookings:", error);
+            // You could show an error toast here
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (userProfile?.role === 'admin') {
+            fetchData();
+        } else if (userProfile) {
+            // Not an admin, stop loading and show nothing.
+            setIsLoading(false);
+            setBookings([]);
+        }
+    }, [userProfile]);
+
+    if (!userProfile && !isLoading) {
+        return null;
+    }
 
 
   return (
@@ -170,7 +185,7 @@ export default function BookingsPage() {
        <Card>
         <CardHeader>
             <CardTitle>All Bookings</CardTitle>
-            <CardDescription>This is a live list of all bookings made across the platform.</CardDescription>
+            <CardDescription>This is a list of all bookings made across the platform, fetched securely from the server.</CardDescription>
         </CardHeader>
         <CardContent>
             <Table>
@@ -194,8 +209,8 @@ export default function BookingsPage() {
                         </>
                     )}
                     {bookings && bookings.map(booking => {
-                        const checkIn = normalizeTimestamp(booking.checkIn);
-                        const checkOut = normalizeTimestamp(booking.checkOut);
+                        const checkIn = booking.checkIn;
+                        const checkOut = booking.checkOut;
                         return (
                             <TableRow key={booking.id}>
                                 <TableCell className="font-mono text-xs">{booking.id}</TableCell>
@@ -216,7 +231,7 @@ export default function BookingsPage() {
                                     {booking.totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
                                 </TableCell>
                                 <TableCell className="text-right">
-                                    <CancelBookingAction booking={booking} />
+                                    <CancelBookingAction booking={booking} onBookingCancelled={fetchData} />
                                 </TableCell>
                             </TableRow>
                         )

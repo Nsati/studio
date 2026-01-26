@@ -1,5 +1,5 @@
 'use client';
-import { useMemo } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import {
   Card,
@@ -9,11 +9,10 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Hotel, Users2, BookOpen, IndianRupee } from 'lucide-react';
-import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
-import { collection, collectionGroup } from 'firebase/firestore';
-import type { Booking, Hotel as HotelType, UserProfile } from '@/lib/types';
+import { useUser } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
-import { normalizeTimestamp } from '@/lib/firestore-utils';
+import { getAdminDashboardStats, type SerializableBooking, type SerializableHotel, type SerializableUserProfile } from './actions';
+
 
 const BookingChart = dynamic(() => import('@/components/admin/BookingChart'), {
   ssr: false,
@@ -49,29 +48,38 @@ function StatCard({ title, value, icon: Icon, description, isLoading }: any) {
 }
 
 export default function AdminDashboard() {
-    const firestore = useFirestore();
     const { userProfile } = useUser();
+    const [stats, setStats] = useState<{
+        bookingsData: SerializableBooking[] | null,
+        hotelsData: SerializableHotel[] | null,
+        usersData: SerializableUserProfile[] | null,
+    }>({ bookingsData: null, hotelsData: null, usersData: null });
+    const [isLoading, setIsLoading] = useState(true);
 
-    const bookingsQuery = useMemoFirebase(() => {
-        if (!firestore || userProfile?.role !== 'admin') return null;
-        return collectionGroup(firestore, 'bookings');
-    }, [firestore, userProfile]);
+    useEffect(() => {
+        if (userProfile?.role === 'admin') {
+            setIsLoading(true);
+            getAdminDashboardStats().then(data => {
+                setStats({
+                    bookingsData: data.bookings,
+                    hotelsData: data.hotels,
+                    usersData: data.users
+                });
+            }).catch(err => {
+                console.error("Failed to load dashboard stats", err);
+                // Optionally set an error state here and show a toast
+            }).finally(() => {
+                setIsLoading(false);
+            });
+        } else if (userProfile) {
+            // User is loaded but is not an admin
+            setIsLoading(false);
+        }
+    }, [userProfile]);
 
-    const hotelsQuery = useMemoFirebase(() => {
-        if (!firestore) return null;
-        return collection(firestore, 'hotels');
-    }, [firestore]);
-    
-    const usersQuery = useMemoFirebase(() => {
-        if (!firestore || userProfile?.role !== 'admin') return null;
-        return collection(firestore, 'users');
-    }, [firestore, userProfile]);
-    
-    const { data: bookingsData, isLoading: isLoadingBookings } = useCollection<Booking>(bookingsQuery);
-    const { data: hotelsData, isLoading: isLoadingHotels } = useCollection<HotelType>(hotelsQuery);
-    const { data: usersData, isLoading: isLoadingUsers } = useCollection<UserProfile>(usersQuery);
+    const { bookingsData, hotelsData, usersData } = stats;
 
-    const { totalRevenue, totalBookings, bookingsLastMonth } = useMemoFirebase(() => {
+    const { totalRevenue, totalBookings, bookingsLastMonth } = useMemo(() => {
         if (!bookingsData) return { totalRevenue: 0, totalBookings: 0, bookingsLastMonth: 0 };
         
         const oneMonthAgo = new Date();
@@ -82,7 +90,7 @@ export default function AdminDashboard() {
         bookingsData.forEach(b => {
             if (b.status === 'CONFIRMED') {
                 revenue += b.totalPrice;
-                const createdAt = normalizeTimestamp(b.createdAt);
+                const createdAt = new Date(b.createdAt);
                 if (!isNaN(createdAt.getTime()) && createdAt > oneMonthAgo) {
                     lastMonthCount++;
                 }
@@ -92,15 +100,11 @@ export default function AdminDashboard() {
         return { totalRevenue: revenue, totalBookings: bookingsData.filter(b => b.status === 'CONFIRMED').length, bookingsLastMonth: lastMonthCount };
     }, [bookingsData]);
     
-    const sortedBookings = useMemoFirebase(() => {
+    const sortedBookings = useMemo(() => {
         if (!bookingsData) return null;
-        return bookingsData.sort((a, b) => {
-             const dateA = normalizeTimestamp(a.createdAt);
-             const dateB = normalizeTimestamp(b.createdAt);
-             if (isNaN(dateA.getTime())) return -1;
-             if (isNaN(dateB.getTime())) return 1;
-             return dateB.getTime() - dateA.getTime();
-        });
+        return bookingsData
+          .map(b => ({ ...b, createdAt: new Date(b.createdAt) })) // Deserialize dates for sorting/charting
+          .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
     }, [bookingsData]);
 
   return (
@@ -108,10 +112,10 @@ export default function AdminDashboard() {
       <h1 className="font-headline text-3xl font-bold">Admin Dashboard</h1>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard title="Total Revenue" value={totalRevenue.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })} icon={IndianRupee} description="All-time revenue" isLoading={isLoadingBookings} />
-        <StatCard title="Confirmed Bookings" value={totalBookings} icon={BookOpen} description={`+${bookingsLastMonth} from last month`} isLoading={isLoadingBookings} />
-        <StatCard title="Hotels" value={hotelsData?.length || 0} icon={Hotel} description="Total active properties" isLoading={isLoadingHotels}/>
-        <StatCard title="Users" value={usersData?.length || 0} icon={Users2} description="Total registered users" isLoading={isLoadingUsers} />
+        <StatCard title="Total Revenue" value={totalRevenue.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })} icon={IndianRupee} description="All-time revenue" isLoading={isLoading} />
+        <StatCard title="Confirmed Bookings" value={totalBookings} icon={BookOpen} description={`+${bookingsLastMonth} from last month`} isLoading={isLoading} />
+        <StatCard title="Hotels" value={hotelsData?.length || 0} icon={Hotel} description="Total active properties" isLoading={isLoading}/>
+        <StatCard title="Users" value={usersData?.length || 0} icon={Users2} description="Total registered users" isLoading={isLoading} />
       </div>
 
        <div className="grid gap-4 md:grid-cols-2">
