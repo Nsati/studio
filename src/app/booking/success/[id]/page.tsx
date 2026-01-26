@@ -157,21 +157,13 @@ export default function BookingSuccessPage() {
         const maxAttempts = 20; // Poll for 10 seconds
         const intervalTime = 500; // Poll every 0.5 seconds
 
-        let poller: NodeJS.Timeout | null = null;
-        
         const pollForBooking = async () => {
-            if (pageStatus === 'success') {
-                if (poller) clearInterval(poller);
-                return;
-            }
-
             try {
                 const docSnap = await getDoc(summaryBookingRef);
                 if (docSnap.exists()) {
                     setSummaryBooking({ id: docSnap.id, ...docSnap.data() } as ConfirmedBookingSummary);
                     setPageStatus('success');
-                    if (poller) clearInterval(poller);
-                    return;
+                    return; // Stop polling
                 }
             } catch (error) {
                 console.error("Error polling for booking summary:", error);
@@ -181,19 +173,26 @@ export default function BookingSuccessPage() {
             if (attempts >= maxAttempts) {
                 console.error(`Polling timed out for booking summary doc: ${bookingId}`);
                 setPageStatus('failed');
-                if (poller) clearInterval(poller);
             }
         };
 
         // Start polling
-        pollForBooking(); // Initial check
-        poller = setInterval(pollForBooking, intervalTime);
+        const poller = setInterval(() => {
+            if (pageStatus === 'success' || pageStatus === 'failed') {
+                clearInterval(poller);
+            } else {
+                pollForBooking();
+            }
+        }, intervalTime);
+        
+        pollForBooking(); // Initial immediate check
 
         // Cleanup
         return () => {
-            if (poller) clearInterval(poller);
+            clearInterval(poller);
         };
-    }, [firestore, bookingId, isUserLoading, pageStatus]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [firestore, bookingId, isUserLoading]);
 
     const isLoading = pageStatus === 'loading';
 
