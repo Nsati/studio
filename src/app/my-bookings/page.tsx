@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -33,6 +32,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { normalizeTimestamp } from '@/lib/firestore-utils';
 
 
@@ -271,18 +271,26 @@ export default function MyBookingsPage() {
 
   const { data: bookings, isLoading: areBookingsLoading } = useCollection<Booking>(bookingsQuery);
   
-  const sortedBookings = useMemoFirebase(() => {
-    if (!bookings) return [];
-    return [...bookings].sort((a,b) => {
+  const { confirmed, cancelled, pending } = useMemoFirebase(() => {
+    if (!bookings) return { confirmed: [], cancelled: [], pending: [] };
+    
+    const sorted = [...bookings].sort((a,b) => {
         const dateA = normalizeTimestamp(a.createdAt);
         const dateB = normalizeTimestamp(b.createdAt);
-        if (isNaN(dateA.getTime())) return -1; // a is pending, put it first
-        if (isNaN(dateB.getTime())) return 1;  // b is pending, put it first
+        if (isNaN(dateA.getTime())) return -1;
+        if (isNaN(dateB.getTime())) return 1;
         return dateB.getTime() - dateA.getTime();
     });
+
+    return {
+        confirmed: sorted.filter(b => b.status === 'CONFIRMED'),
+        cancelled: sorted.filter(b => b.status === 'CANCELLED'),
+        pending: sorted.filter(b => b.status === 'PENDING'),
+    };
   }, [bookings]);
 
   const isLoading = isUserLoading || areBookingsLoading;
+  const totalBookings = bookings?.length ?? 0;
 
   if (isLoading || !user) {
     return (
@@ -309,7 +317,7 @@ export default function MyBookingsPage() {
             </p>
         </div>
 
-        {sortedBookings?.length === 0 ? (
+        {totalBookings === 0 ? (
             <Card className="flex flex-col items-center justify-center py-20 text-center border-2 border-dashed bg-transparent">
             <CardHeader>
                 <CardTitle className="font-headline">No Bookings Yet</CardTitle>
@@ -328,11 +336,46 @@ export default function MyBookingsPage() {
             </CardContent>
             </Card>
         ) : (
-            <div className="space-y-8">
-            {sortedBookings?.map((booking) => (
-                <BookingItem key={booking.id} booking={booking} />
-            ))}
-            </div>
+            <Tabs defaultValue="upcoming" className="w-full">
+                <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="upcoming">Upcoming ({confirmed.length})</TabsTrigger>
+                    <TabsTrigger value="pending">Pending ({pending.length})</TabsTrigger>
+                    <TabsTrigger value="cancelled">Cancelled ({cancelled.length})</TabsTrigger>
+                </TabsList>
+                <TabsContent value="upcoming">
+                    <div className="space-y-8 mt-8">
+                        {confirmed.length > 0 ? (
+                            confirmed.map(booking => <BookingItem key={booking.id} booking={booking} />)
+                        ) : (
+                           <div className="text-center text-muted-foreground py-20">
+                             <p>You have no upcoming bookings.</p>
+                           </div>
+                        )}
+                    </div>
+                </TabsContent>
+                <TabsContent value="pending">
+                     <div className="space-y-8 mt-8">
+                        {pending.length > 0 ? (
+                            pending.map(booking => <BookingItem key={booking.id} booking={booking} />)
+                        ) : (
+                           <div className="text-center text-muted-foreground py-20">
+                             <p>You have no bookings pending payment.</p>
+                           </div>
+                        )}
+                    </div>
+                </TabsContent>
+                <TabsContent value="cancelled">
+                     <div className="space-y-8 mt-8">
+                        {cancelled.length > 0 ? (
+                            cancelled.map(booking => <BookingItem key={booking.id} booking={booking} />)
+                        ) : (
+                           <div className="text-center text-muted-foreground py-20">
+                             <p>You have no cancelled bookings.</p>
+                           </div>
+                        )}
+                    </div>
+                </TabsContent>
+            </Tabs>
         )}
         </div>
     </div>
