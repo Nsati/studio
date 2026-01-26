@@ -4,59 +4,41 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     function isAdmin() {
-      // This get() is allowed by the "allow get" rule in the /users/{userId} match below.
-      // That rule is non-recursive, which is critical for this function to work.
+      // This function depends on the simple, non-recursive 'allow get' rule below.
+      // It allows this function to securely read the user's role document.
       return request.auth != null 
              && exists(/databases/$(database)/documents/users/$(request.auth.uid)) 
              && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
     match /users/{userId} {
-      // CRITICAL: This rule allows a user to get their OWN doc, and admins to get ANY doc.
-      // It does NOT call isAdmin() inside the user-specific part to prevent recursion.
-      // This is the rule that allows the get() call inside the isAdmin() function to succeed.
-      allow get: if request.auth.uid == userId || isAdmin();
+      // A user can get their OWN document. This is non-recursive and makes isAdmin() work.
+      allow get: if request.auth.uid == userId;
 
-      // Allow admins to perform broad list operations.
-      allow list: if isAdmin();
-      // Allow users to create their own profiles.
-      allow create: if request.auth.uid == userId || isAdmin();
+      // A user can create their own user document during signup.
+      allow create: if request.auth.uid == userId;
       
-      // Separate update rules for clarity and correctness.
-      // Rule 1: A user can update their OWN profile, but CANNOT change their role.
-      allow update: if request.auth.uid == userId && request.resource.data.role == resource.data.role;
-      // Rule 2: An admin can update ANY user profile (including changing their role).
-      allow update: if isAdmin();
+      // A user can update their OWN document, but CANNOT change their role.
+      allow update: if request.auth.uid == userId 
+                     && request.resource.data.role == resource.data.role;
 
-
+      // Admins have broader permissions on user documents.
+      allow get, list, update, delete: if isAdmin();
+      
       match /bookings/{bookingId} {
         allow read: if request.auth.uid == userId || isAdmin();
-
+        
         // A user can create their own booking, but it must be in a PENDING state.
+        // This is required for the client-side pre-payment step.
         allow create: if request.auth.uid == userId && request.resource.data.status == 'PENDING';
         
-        // Update rules are more specific.
-        allow update: if isAdmin() || (request.auth.uid == userId && (
-            // User can confirm their OWN pending booking.
-            // This is the critical rule for the client-side payment confirmation transaction.
-            ( resource.data.status == 'PENDING'
-              && request.resource.data.status == 'CONFIRMED'
-              // We use diff() to ensure ONLY 'status' and 'razorpayPaymentId' were changed.
-              // This is robust and prevents accidental data corruption.
-              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'razorpayPaymentId'])
-            ) ||
-            // User can cancel their OWN confirmed booking.
-            ( resource.data.status == 'CONFIRMED'
-              && request.resource.data.status == 'CANCELLED'
-              // Ensure only the 'status' field is being changed.
-              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
-            )
-        ));
+        // Users can no longer update bookings directly (confirm/cancel).
+        // This must be done via server actions or webhooks using the Admin SDK.
+        // Admins can still update bookings.
+        allow update, delete: if isAdmin();
       }
     }
 
-    // This global rule allows admins to perform `list` operations (collection group queries)
-    // across all `bookings` subcollections.
     match /{path=**}/bookings/{bookingId} {
         allow list: if isAdmin();
     }
@@ -67,19 +49,10 @@ service cloud.firestore {
 
         match /rooms/{roomId} {
           allow read: if true;
-          allow create, delete: if isAdmin();
-          
-          // Allow admins to update anything.
-          // For users, allow updating ONLY the 'availableRooms' field, and only by 1.
-          allow update: if isAdmin() || 
-                         (request.auth != null &&
-                          // Ensure only the 'availableRooms' field is being changed.
-                          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['availableRooms']) &&
-                          // Allow the count to be incremented or decremented by exactly 1.
-                          // This supports both booking and cancellation transactions.
-                          (request.resource.data.availableRooms == resource.data.availableRooms + 1 ||
-                           request.resource.data.availableRooms == resource.data.availableRooms - 1)
-                         );
+          // Room documents can only be written by an Admin.
+          // Inventory updates for bookings/cancellations are now handled by the
+          // Admin SDK on the server, which bypasses these rules.
+          allow write: if isAdmin();
         }
         
         match /reviews/{reviewId} {
@@ -104,14 +77,10 @@ service cloud.firestore {
         allow write: if isAdmin();
     }
 
-    // Temporary public collection for success page
     match /confirmedBookings/{bookingId} {
         allow read: if true;
-        // Allow any authenticated user to create their own booking summary during checkout.
         allow create: if request.auth != null;
-        allow update, delete: if false; // Prevent modification after creation
+        allow update, delete: if false;
     }
   }
 }
-
-    
