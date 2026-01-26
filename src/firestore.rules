@@ -12,33 +12,45 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
+      // CRITICAL: This rule specifically allows a user to read THEIR OWN document.
+      // It does NOT call isAdmin(), which prevents rule evaluation recursion.
+      // This is the rule that allows the get() call inside the isAdmin() function to succeed.
       allow get: if request.auth.uid == userId;
+
+      // Allow admins to perform broad list/update operations.
+      // Allow users to create/update their own profiles.
       allow list: if isAdmin();
       allow create: if request.auth.uid == userId || isAdmin();
       allow update: if isAdmin() || (request.auth.uid == userId && request.resource.data.role == resource.data.role);
 
       match /bookings/{bookingId} {
         allow read: if request.auth.uid == userId || isAdmin();
-        
-        // Allow user to create their own PENDING booking
-        allow create: if request.auth.uid == userId && request.resource.data.status == 'PENDING';
 
-        // Allow user to update their own booking from PENDING to CONFIRMED
-        allow update: if request.auth.uid == userId
-                      && resource.data.status == 'PENDING'
-                      && request.resource.data.status == 'CONFIRMED'
-                      && request.resource.data.razorpayPaymentId != null
-                      && request.resource.data.keys().removeAll(['userId', 'hotelId', 'roomId', 'roomType', 'guests', 'totalPrice', 'customerName', 'customerEmail', 'checkIn', 'checkOut', 'createdAt']).size() == 0;
+        // A user can create their own booking, but it must be in a PENDING state.
+        allow create: if request.auth.uid == userId && request.resource.data.status == 'PENDING';
         
-        // Allow admin to update any booking
-        allow update: if isAdmin();
-        
-        // Allow user or admin to cancel their own booking.
-        allow update: if (request.auth.uid == userId || isAdmin())
-                      && request.resource.data.status == 'CANCELLED';
+        // Update rules are more specific.
+        allow update: if isAdmin() || (request.auth.uid == userId && (
+            // User can confirm their OWN pending booking.
+            // This is the critical rule for the client-side payment confirmation transaction.
+            ( resource.data.status == 'PENDING'
+              && request.resource.data.status == 'CONFIRMED'
+              // We use diff() to ensure ONLY 'status' and 'razorpayPaymentId' were changed.
+              // This is robust and prevents accidental data corruption.
+              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'razorpayPaymentId'])
+            ) ||
+            // User can cancel their OWN confirmed booking.
+            ( resource.data.status == 'CONFIRMED'
+              && request.resource.data.status == 'CANCELLED'
+              // Ensure only the 'status' field is being changed.
+              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+            )
+        ));
       }
     }
 
+    // This global rule allows admins to perform `list` operations (collection group queries)
+    // across all `bookings` subcollections.
     match /{path=**}/bookings/{bookingId} {
         allow list: if isAdmin();
     }
@@ -51,10 +63,12 @@ service cloud.firestore {
           allow read: if true;
           allow create, delete: if isAdmin();
           
+          // Allow admins to update anything.
+          // Allow any authenticated user (for booking/cancelling) to update ONLY the 'availableRooms' field.
+          // This is now robust and won't fail on other field comparisons.
           allow update: if isAdmin() || 
                          (request.auth != null &&
-                          request.resource.data.availableRooms != resource.data.availableRooms &&
-                          request.resource.data.keys().removeAll(['availableRooms']).size() == 0
+                          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['availableRooms'])
                          );
         }
         
@@ -78,6 +92,14 @@ service cloud.firestore {
     match /promotions/{promoId} {
         allow read: if true;
         allow write: if isAdmin();
+    }
+
+    // Temporary public collection for success page
+    match /confirmedBookings/{bookingId} {
+        allow read: if true;
+        // Allow any authenticated user to create their own booking summary during checkout.
+        allow create: if request.auth != null;
+        allow update, delete: if false; // Prevent modification after creation
     }
   }
 }

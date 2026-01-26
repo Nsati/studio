@@ -9,7 +9,7 @@ import { initializeBookingAndCreateOrder } from './actions';
 import { signInAnonymously } from 'firebase/auth';
 import type { Hotel, Room, Booking, Promotion } from '@/lib/types';
 import { useFirestore, useAuth, useUser, useDoc, useCollection, useMemoFirebase, type WithId } from '@/firebase';
-import { doc, collection, getDoc } from 'firebase/firestore';
+import { doc, collection, getDoc, runTransaction } from 'firebase/firestore';
 
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -137,6 +137,55 @@ export function BookingForm() {
             });
         }
     };
+    
+    const handleClientSideConfirmation = async (paymentResponse: { razorpay_payment_id: string }, bookingId: string, userId: string) => {
+        if (!firestore || !hotelId || !roomId) {
+            toast({ variant: 'destructive', title: 'Confirmation Error', description: 'Database connection failed.' });
+            return;
+        }
+
+        const bookingRef = doc(firestore, 'users', userId, 'bookings', bookingId);
+        const roomRef = doc(firestore, 'hotels', hotelId, 'rooms', roomId);
+
+        try {
+            await runTransaction(firestore, async (transaction) => {
+                const roomDoc = await transaction.get(roomRef);
+                if (!roomDoc.exists()) {
+                    throw new Error("Room data not found. Cannot confirm booking.");
+                }
+
+                const roomData = roomDoc.data() as Room;
+                const newAvailableRooms = (roomData.availableRooms ?? 0) - 1;
+
+                if (newAvailableRooms < 0) {
+                    throw new Error("Sorry, this room just got sold out!");
+                }
+
+                // Update room inventory
+                transaction.update(roomRef, { availableRooms: newAvailableRooms });
+                
+                // Update booking status
+                transaction.update(bookingRef, {
+                    status: 'CONFIRMED',
+                    razorpayPaymentId: paymentResponse.razorpay_payment_id
+                });
+            });
+
+            toast({ title: "Booking Confirmed!", description: "Your booking has been finalized." });
+            router.push(`/booking/success/${bookingId}`);
+
+        } catch (error: any) {
+            console.error("Client-side confirmation failed:", error);
+            toast({
+                variant: "destructive",
+                title: "Confirmation Failed",
+                description: error.message || "We received your payment, but couldn't auto-confirm your booking. Please check 'My Bookings' or contact support.",
+                duration: 10000
+            });
+            // Still redirect, but the page will show a pending state
+            router.push(`/booking/success/${bookingId}`);
+        }
+    };
 
     const handlePayment = async () => {
         if (!customerDetails.name || !customerDetails.email) {
@@ -205,10 +254,9 @@ export function BookingForm() {
             description: `Booking for ${hotel.name}`,
             order_id: order.id,
             handler: async (response: any) => {
-                // Payment was successful. The server-side webhook will handle confirmation.
-                // We just need to redirect the user to the success page.
+                // Payment was successful. Now, run the client-side confirmation.
                 toast({ title: "Payment Received!", description: "Finalizing your booking..." });
-                router.push(`/booking/success/${bookingId}`);
+                await handleClientSideConfirmation(response, bookingId, userIdForBooking!);
             },
             prefill: { name: customerDetails.name, email: customerDetails.email },
             theme: { color: "#388E3C" },

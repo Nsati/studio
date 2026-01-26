@@ -140,6 +140,33 @@ function SuccessContent({ booking, hotel }: { booking: WithId<Booking>, hotel: W
     const { user } = useUser();
     const checkInDate = normalizeTimestamp(booking.checkIn);
     const checkOutDate = normalizeTimestamp(booking.checkOut);
+
+    if (booking.status !== 'CONFIRMED') {
+         return (
+            <div className="bg-muted/40 min-h-[calc(100vh-4rem)] flex items-center">
+                <div className="container mx-auto max-w-lg py-12 px-4 md:px-6">
+                    <Card className="text-center border-amber-500">
+                        <CardHeader className="items-center">
+                            <Loader2 className="h-12 w-12 text-amber-500 animate-spin" />
+                            <CardTitle className="text-3xl font-headline mt-4 text-amber-700">Confirmation Pending</CardTitle>
+                            <CardDescription>
+                                We received your payment, but we're still finalizing the confirmation. This can happen due to high traffic. Please check "My Bookings" in a few minutes.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="flex flex-col sm:flex-row gap-4">
+                            <Button className="w-full" asChild>
+                                <Link href="/my-bookings">Go to My Bookings</Link>
+                            </Button>
+                            <Button className="w-full" variant="outline" asChild>
+                                <Link href="/">Back to Home</Link>
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
+        );
+    }
+    
      return (
         <div className="bg-muted/40 min-h-[calc(100vh-4rem)] flex items-center">
             <div className="container mx-auto max-w-2xl py-12 px-4 md:px-6">
@@ -221,19 +248,15 @@ export default function BookingSuccessPage() {
     const bookingId = params.id as string;
     
     const { user, isLoading: isUserLoading } = useUser();
-    
-    const [bookingSnapshot, setBookingSnapshot] = useState<DocumentSnapshot<Booking> | null>(null);
-    const [pageStatus, setPageStatus] = useState<'loading' | 'success' | 'failed'>('loading');
 
+    // The booking is confirmed on the client now, so we don't need complex polling.
+    // We just need to load the booking data to display it.
     const bookingRef = useMemoFirebase(() => {
         if (!firestore || !user || !bookingId) return null;
         return doc(firestore, 'users', user.uid, 'bookings', bookingId);
     }, [firestore, user, bookingId]);
     
-    const booking = useMemoFirebase(() => {
-        if (!bookingSnapshot || !bookingSnapshot.exists()) return null;
-        return { ...bookingSnapshot.data(), id: bookingSnapshot.id } as WithId<Booking>;
-    }, [bookingSnapshot]);
+    const { data: booking, isLoading: isBookingLoading } = useDoc<Booking>(bookingRef);
 
     const hotelRef = useMemoFirebase(() => {
         if (!firestore || !booking) return null;
@@ -243,50 +266,7 @@ export default function BookingSuccessPage() {
     const { data: hotel, isLoading: isHotelLoading } = useDoc<Hotel>(hotelRef);
 
 
-    useEffect(() => {
-        if (!bookingRef) {
-             if (!isUserLoading) setPageStatus('failed'); // User not loaded or no booking ref
-            return;
-        }
-
-        let attempts = 0;
-        const maxAttempts = 20; // Poll for 10 seconds
-        const intervalTime = 500; // Poll every 0.5 seconds
-
-        const pollForBooking = async () => {
-            try {
-                const docSnap = await getDoc(bookingRef);
-                if (docSnap.exists() && docSnap.data().status === 'CONFIRMED') {
-                    setBookingSnapshot(docSnap as DocumentSnapshot<Booking>);
-                    setPageStatus('success');
-                    return; // Stop polling
-                }
-            } catch (error) {
-                console.error("Error polling for booking:", error);
-            }
-
-            attempts++;
-            if (attempts >= maxAttempts) {
-                console.error(`Polling timed out for booking: ${bookingId}`);
-                setPageStatus('failed');
-            }
-        };
-
-        const poller = setInterval(() => {
-            if (pageStatus === 'success' || pageStatus === 'failed') {
-                clearInterval(poller);
-            } else {
-                pollForBooking();
-            }
-        }, intervalTime);
-        
-        pollForBooking(); // Initial immediate check
-
-        return () => clearInterval(poller);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [bookingRef, isUserLoading]);
-
-    const isLoading = pageStatus === 'loading' || (pageStatus === 'success' && (isUserLoading || isHotelLoading));
+    const isLoading = isUserLoading || isBookingLoading || (booking && isHotelLoading);
 
     if (isLoading) {
         return (
@@ -295,9 +275,9 @@ export default function BookingSuccessPage() {
                     <Card className="text-center">
                         <CardHeader className="items-center">
                             <Loader2 className="h-12 w-12 text-primary animate-spin" />
-                            <CardTitle className="text-3xl font-headline mt-4">Confirming Your Booking</CardTitle>
+                            <CardTitle className="text-3xl font-headline mt-4">Loading Your Booking Details</CardTitle>
                             <CardDescription>
-                                We are finalizing your booking. This should only take a moment.
+                                Please wait a moment...
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
@@ -309,16 +289,16 @@ export default function BookingSuccessPage() {
         );
     }
     
-    if (pageStatus === 'failed') {
+    if (!booking || !hotel) {
          return (
             <div className="bg-muted/40 min-h-[calc(100vh-4rem)] flex items-center">
                 <div className="container mx-auto max-w-lg py-12 px-4 md:px-6">
                     <Card className="text-center border-destructive">
                         <CardHeader className="items-center">
                             <AlertCircle className="h-12 w-12 text-destructive" />
-                            <CardTitle className="text-3xl font-headline mt-4">Confirmation Pending</CardTitle>
+                            <CardTitle className="text-3xl font-headline mt-4">Booking Not Found</CardTitle>
                             <CardDescription>
-                                We are still confirming your booking. If you made a payment, please check your email for the final confirmation shortly, or visit the "My Bookings" page.
+                                We couldn't find the details for this booking. It might have been cancelled or the link is incorrect.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="flex flex-col sm:flex-row gap-4">
@@ -335,9 +315,5 @@ export default function BookingSuccessPage() {
         );
     }
     
-    if (pageStatus === 'success' && booking && hotel) {
-        return <SuccessContent booking={booking} hotel={hotel} />;
-    }
-
-    return notFound();
+    return <SuccessContent booking={booking} hotel={hotel} />;
 }
