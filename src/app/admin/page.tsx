@@ -1,4 +1,3 @@
-
 'use client';
 import { useMemo, useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
@@ -130,7 +129,12 @@ export default function AdminDashboard() {
     const sortedBookings = useMemo(() => {
         if (!bookingsData) return null;
         return bookingsData
-          .map(b => ({ ...b, createdAt: new Date(b.createdAt) })) // Deserialize dates for sorting/charting
+          .map(b => ({
+            ...b,
+            checkIn: new Date(b.checkIn),
+            checkOut: new Date(b.checkOut),
+            createdAt: new Date(b.createdAt)
+          })) // Deserialize all dates for sorting/charting
           .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
     }, [bookingsData]);
 
