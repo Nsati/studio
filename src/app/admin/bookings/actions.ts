@@ -16,10 +16,13 @@ export type SerializableBooking = Omit<Booking, 'checkIn' | 'checkOut' | 'create
 /**
  * Fetches all bookings using the Firebase Admin SDK, which bypasses all security rules.
  * This ensures admins can reliably retrieve all data.
- * This will throw an error if the Admin SDK is not initialized.
  */
 export async function getAdminAllBookings(): Promise<WithId<SerializableBooking>[]> {
-    const { adminDb } = getFirebaseAdmin();
+    const { adminDb, error } = getFirebaseAdmin();
+    if (error || !adminDb) {
+        console.error("Admin bookings error:", error);
+        return [];
+    }
     
     const bookingsSnapshot = await adminDb.collectionGroup('bookings').get();
 
@@ -27,9 +30,8 @@ export async function getAdminAllBookings(): Promise<WithId<SerializableBooking>
     bookingsSnapshot.forEach(doc => {
         const data = doc.data() as Booking;
         bookings.push({
-            ...(data as any), // This is a bit of a hack to satisfy TS with the new structure
-            id: doc.id, // Ensure ID is included
-            // Convert Timestamps to ISO strings for serialization
+            ...(data as any),
+            id: doc.id,
             checkIn: (data.checkIn as any).toDate().toISOString(),
             checkOut: (data.checkOut as any).toDate().toISOString(),
             createdAt: (data.createdAt as any)?.toDate()?.toISOString() || new Date().toISOString(),

@@ -3,29 +3,33 @@
 
 import { getFirebaseAdmin } from '@/firebase/admin';
 import type { Booking, UserProfile, Hotel } from '@/lib/types';
+import type { WithId } from '@/firebase';
 
-// Omit functions and other non-serializable fields from types to be sent to the client.
 export type SerializableBooking = Omit<Booking, 'checkIn' | 'checkOut' | 'createdAt'> & {
     id: string;
     checkIn: string;
     checkOut: string;
     createdAt: string;
 };
-export type SerializableUserProfile = Omit<UserProfile, ''>; // UserProfile is already serializable
-export type SerializableHotel = Omit<Hotel, ''>; // Hotel is already serializable
+export type SerializableUserProfile = WithId<UserProfile>;
+export type SerializableHotel = WithId<Hotel>;
 
 
 /**
  * Fetches all necessary data for the admin dashboard using the Firebase Admin SDK,
  * which bypasses all Firestore security rules.
- * This will throw an error if the admin SDK is not initialized.
  */
 export async function getAdminDashboardStats(): Promise<{
     bookings: SerializableBooking[],
     users: SerializableUserProfile[],
     hotels: SerializableHotel[]
 }> {
-    const { adminDb } = getFirebaseAdmin();
+    const { adminDb, error } = getFirebaseAdmin();
+    if (error || !adminDb) {
+        console.error("Admin dashboard error:", error);
+        // Return empty arrays to prevent client-side crashes, but the error is logged.
+        return { bookings: [], users: [], hotels: [] };
+    }
     
     const [bookingsSnapshot, usersSnapshot, hotelsSnapshot] = await Promise.all([
         adminDb.collectionGroup('bookings').get(),
@@ -38,16 +42,14 @@ export async function getAdminDashboardStats(): Promise<{
         return {
             ...data,
             id: doc.id,
-            // Convert Timestamps to ISO strings for serialization
             checkIn: (data.checkIn as any).toDate().toISOString(),
             checkOut: (data.checkOut as any).toDate().toISOString(),
-            // Handle cases where createdAt might not exist (e.g., old data)
             createdAt: (data.createdAt as any)?.toDate()?.toISOString() || new Date(0).toISOString(),
         };
     });
 
-    const users: SerializableUserProfile[] = usersSnapshot.docs.map(doc => doc.data() as UserProfile);
-    const hotels: SerializableHotel[] = hotelsSnapshot.docs.map(doc => doc.data() as Hotel);
+    const users: SerializableUserProfile[] = usersSnapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() as UserProfile) }));
+    const hotels: SerializableHotel[] = hotelsSnapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() as Hotel) }));
     
     return { bookings, users, hotels };
 }

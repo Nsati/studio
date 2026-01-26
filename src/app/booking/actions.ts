@@ -2,7 +2,6 @@
 'use server';
 
 import Razorpay from 'razorpay';
-import crypto from 'crypto';
 import { getFirebaseAdmin } from '@/firebase/admin';
 import { Timestamp } from 'firebase-admin/firestore';
 import type { Booking, Hotel, Room, Promotion } from '@/lib/types';
@@ -37,7 +36,12 @@ export async function initializeBookingAndCreateOrder(
       return { success: false, error: errorMessage, order: null, keyId: null, bookingId: null };
   }
 
-  const { adminDb } = getFirebaseAdmin();
+  const { adminDb, error: adminError } = getFirebaseAdmin();
+  if (!adminDb) {
+      const errorMessage = adminError || "Payment processing is currently unavailable. (Admin Error: Firebase Admin SDK failed to initialize).";
+      console.error(`SERVER ACTION ERROR: ${errorMessage}`);
+      return { success: false, error: errorMessage, order: null, keyId: null, bookingId: null };
+  }
   
   const { userId, hotelId, roomId, customerName, customerEmail, guests, couponCode } = data;
 
@@ -136,40 +140,4 @@ export async function initializeBookingAndCreateOrder(
     await bookingRef.delete().catch(delErr => console.error('Failed to clean up orphaned pending booking:', delErr));
     return { success: false, error: error.message || 'An unknown server error occurred.', order: null, keyId: null, bookingId: null };
   }
-}
-
-
-/**
- * Verifies a Razorpay payment signature.
- * This is kept for optional client-side checks but is not the primary confirmation mechanism anymore.
- */
-export async function verifyRazorpaySignature(data: {
-  razorpay_order_id: string;
-  razorpay_payment_id: string;
-  razorpay_signature: string;
-}) {
-    const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
-    
-    if (!webhookSecret || webhookSecret === 'your_webhook_secret_here') {
-        console.error("RAZORPAY_WEBHOOK_SECRET is not set or is still the placeholder. Cannot verify signature.");
-        return { success: false, error: "Server configuration error: Webhook secret is missing or not configured." };
-    }
-
-    try {
-        const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = data;
-        const body = razorpay_order_id + '|' + razorpay_payment_id;
-        const expectedSignature = crypto
-            .createHmac('sha256', webhookSecret)
-            .update(body.toString())
-            .digest('hex');
-
-        if (expectedSignature === razorpay_signature) {
-            return { success: true, error: null };
-        } else {
-            return { success: false, error: 'Signature mismatch.' };
-        }
-    } catch (error: any) {
-        console.error('Signature verification failed:', error);
-        return { success: false, error: 'An unexpected error occurred during signature verification.' };
-    }
 }

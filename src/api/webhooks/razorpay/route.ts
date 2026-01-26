@@ -29,7 +29,6 @@ export async function POST(req: NextRequest) {
   const keyId = process.env.RAZORPAY_KEY_ID;
   const keySecret = process.env.RAZORPAY_KEY_SECRET;
 
-  // These checks are critical. If the server isn't configured for Razorpay, fail loudly.
   if (!secret || !keyId || !keySecret) {
       const errorMsg = '❌ FATAL WEBHOOK ERROR: Razorpay environment variables are missing (KEY_ID, KEY_SECRET, or WEBHOOK_SECRET).';
       console.error(errorMsg);
@@ -61,23 +60,23 @@ export async function POST(req: NextRequest) {
     const body = JSON.parse(bodyText);
     const event = body.event;
 
-    // 2. Process only successful payment events
     if (event === 'payment.captured') {
       console.log('✅ STEP 2: Received "payment.captured" event.');
       const paymentEntity = body.payload.payment.entity;
       const orderId = paymentEntity.order_id;
       const paymentId = paymentEntity.id;
 
-      // 3. Initialize services
-      const { adminDb } = getFirebaseAdmin(); // This will throw if not configured.
+      const { adminDb, error: adminError } = getFirebaseAdmin();
+      if (!adminDb) {
+        const errorMsg = adminError || 'FATAL WEBHOOK ERROR: Firebase Admin SDK is not initialized.';
+        console.error(`❌ ${errorMsg}`);
+        return NextResponse.json({ status: 'error', message: `Internal server configuration error: ${errorMsg}` }, { status: 500 });
+      }
+
       const rzpInstance = new Razorpay({ key_id: keyId, key_secret: keySecret });
-      
-      // 4. Fetch order and run transaction
       const order = await rzpInstance.orders.fetch(orderId);
 
       if (!order?.notes?.booking_id || !order.notes.user_id || !order.notes.hotel_id || !order.notes.room_id) {
-        // This is a critical error. The order notes are our source of truth.
-        // Returning 500 allows retry in case of a temporary Razorpay API issue.
         throw new Error(`Order ${orderId} is missing required notes for booking confirmation.`);
       }
 
@@ -96,7 +95,6 @@ export async function POST(req: NextRequest) {
         if (!roomDoc.exists) throw new Error(`Room document ${room_id} not found.`);
         if (!hotelDoc.exists) throw new Error(`Hotel document ${hotel_id} not found.`);
         
-        // Define a more specific type for the data read from Firestore to handle Timestamps correctly
         const bookingData = bookingDoc.data() as Omit<Booking, 'checkIn' | 'checkOut' | 'createdAt'> & {
             checkIn: Timestamp;
             checkOut: Timestamp;
@@ -105,13 +103,11 @@ export async function POST(req: NextRequest) {
         
         if (bookingData.status === 'CONFIRMED') {
             console.log(`ℹ️ Booking ${booking_id} is already confirmed. Skipping transaction.`);
-            return; // Idempotent: already processed
+            return;
         }
         
-        // Only confirm PENDING bookings.
         if (bookingData.status !== 'PENDING') {
             console.error(`❌ Webhook Error: Attempted to confirm a booking with status '${bookingData.status}'. Booking ID: ${booking_id}`);
-            // Don't throw, just log and exit. We don't want to retry this.
             return;
         }
 
@@ -150,7 +146,6 @@ export async function POST(req: NextRequest) {
 
   } catch (error: any) {
     console.error('❌ FATAL WEBHOOK ERROR:', error.message);
-    // Return 500 for internal/transient errors so Razorpay retries the webhook.
     return NextResponse.json({ error: 'Webhook handler failed internally', details: error.message }, { status: 500 });
   }
 }
