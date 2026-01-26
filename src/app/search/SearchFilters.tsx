@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -19,7 +18,7 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { Search, Info, Calendar, Users } from 'lucide-react';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Input } from '../ui/input';
+import { Input } from '@/components/ui/input';
 
 
 export function SearchFilters() {
