@@ -28,9 +28,16 @@ service cloud.firestore {
       allow update: if isAdmin() || (isOwner() && request.resource.data.role == resource.data.role);
 
       match /bookings/{bookingId} {
-        // User can read/write their own bookings. Admins can read/write any booking.
-        allow read, write: if isOwner() || isAdmin();
+        // User can get/write their own bookings. Admin can get/write any booking.
+        // `list` permission for admins is handled by the global collection group rule below.
+        allow get, write: if isOwner() || isAdmin();
       }
+    }
+
+    // This global rule allows admins to perform `list` operations (collection group queries)
+    // across all `bookings` subcollections.
+    match /{path=**}/bookings/{bookingId} {
+        allow list: if isAdmin();
     }
 
     match /hotels/{hotelId} {
