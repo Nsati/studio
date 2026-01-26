@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useFirestore, useUser, useCollection, useDoc, useMemoFirebase, type WithId } from '@/firebase';
 import type { Booking, Hotel, Room } from '@/lib/types';
 import {
@@ -89,7 +89,7 @@ function BookingItem({ booking }: { booking: WithId<Booking> }) {
         setIsCancelling(true);
 
         try {
-            const cancellationStatus = await runTransaction(firestore, async (transaction): Promise<'success' | 'already_cancelled'> => {
+            await runTransaction(firestore, async (transaction) => {
                 const bookingRef = doc(firestore, 'users', user.uid, 'bookings', booking.id);
                 const bookingDoc = await transaction.get(bookingRef);
                 if (!bookingDoc.exists()) {
@@ -99,7 +99,8 @@ function BookingItem({ booking }: { booking: WithId<Booking> }) {
                 const bookingData = bookingDoc.data() as Booking;
 
                 if (bookingData.status === 'CANCELLED') {
-                    return 'already_cancelled';
+                    toast({ title: "Already Cancelled", description: "This booking has already been cancelled." });
+                    return;
                 }
 
                 if (bookingData.status === 'CONFIRMED') {
@@ -115,17 +116,14 @@ function BookingItem({ booking }: { booking: WithId<Booking> }) {
                 }
                 
                 transaction.update(bookingRef, { status: 'CANCELLED' });
-                return 'success';
+            });
+            
+            // The onSnapshot listener in useCollection will handle the UI update automatically.
+            toast({
+                title: "Booking Cancelled",
+                description: "Your booking has been successfully cancelled. Any applicable refund will be processed.",
             });
 
-            if (cancellationStatus === 'success') {
-                toast({
-                    title: "Booking Cancelled",
-                    description: "Your booking has been successfully cancelled. Any applicable refund will be processed.",
-                });
-            } else if (cancellationStatus === 'already_cancelled') {
-                toast({ title: "Already Cancelled", description: "This booking has already been cancelled." });
-            }
         } catch (error: any) {
             console.error("Cancellation failed:", error);
             toast({
@@ -269,7 +267,7 @@ export default function MyBookingsPage() {
 
   const { data: bookings, isLoading: areBookingsLoading } = useCollection<Booking>(bookingsQuery);
   
-  const { confirmed, cancelled, pending } = useMemoFirebase(() => {
+  const { confirmed, cancelled, pending } = useMemo(() => {
     if (!bookings) return { confirmed: [], cancelled: [], pending: [] };
     
     const sorted = [...bookings].sort((a,b) => {
