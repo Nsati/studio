@@ -5,11 +5,11 @@ import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, useRouter, notFound } from 'next/navigation';
 import Image from 'next/image';
 import { differenceInDays, format, parse } from 'date-fns';
-import { createRazorpayOrder, verifyRazorpaySignature, confirmBooking } from './actions';
+import { createRazorpayOrder, verifyRazorpaySignature } from './actions';
 import { signInAnonymously } from 'firebase/auth';
-import type { Hotel, Room, Booking, Promotion, ConfirmedBookingSummary } from '@/lib/types';
+import type { Hotel, Room, Booking, Promotion } from '@/lib/types';
 import { useFirestore, useAuth, useUser, useDoc, useCollection, useMemoFirebase } from '@/firebase';
-import { doc, collection, getDoc, runTransaction, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, collection, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -210,7 +210,12 @@ export function BookingForm() {
             return;
         }
 
-        const orderResponse = await createRazorpayOrder(totalPrice, { user_id: userIdForBooking, booking_id: bookingId });
+        const orderResponse = await createRazorpayOrder(totalPrice, {
+            user_id: userIdForBooking,
+            booking_id: bookingId,
+            hotel_id: hotel.id,
+            room_id: room.id,
+        });
 
         if (!orderResponse.success || !orderResponse.order) {
             toast({ variant: 'destructive', title: 'Payment Error', description: orderResponse.error || 'Could not initiate payment.', duration: 8000 });
@@ -227,64 +232,12 @@ export function BookingForm() {
             description: `Booking for ${hotel.name}`,
             order_id: order.id,
             handler: async (response: any) => {
-                toast({ title: "Payment Received!", description: "Verifying and confirming your booking..." });
-
-                // 1. Verify signature on server
-                const verificationResult = await verifyRazorpaySignature({
-                    razorpay_order_id: response.razorpay_order_id,
-                    razorpay_payment_id: response.razorpay_payment_id,
-                    razorpay_signature: response.razorpay_signature,
-                });
-
-                if (!verificationResult.success) {
-                    toast({ variant: "destructive", title: "Payment Verification Failed", description: verificationResult.error, duration: 10000 });
-                    setIsBooking(false);
-                    return;
-                }
+                toast({ title: "Payment Received!", description: "Finalizing your booking. You will be redirected..." });
                 
-                // 2. On successful verification, call the new server action to run the transaction
-                try {
-                     const summaryData: ConfirmedBookingSummary = {
-                        id: bookingId,
-                        hotelId: hotel.id,
-                        hotelName: hotel.name,
-                        hotelCity: hotel.city,
-                        hotelAddress: hotel.address,
-                        customerName: customerDetails.name,
-                        checkIn: new Date(checkInStr),
-                        checkOut: new Date(checkOutStr),
-                        guests: parseInt(guests),
-                        totalPrice: totalPrice,
-                        roomType: room.type,
-                        userId: userIdForBooking!,
-                    };
-                    
-                    const confirmationResult = await confirmBooking({
-                        hotelId: hotel.id,
-                        roomId: room.id,
-                        userId: userIdForBooking!,
-                        bookingId: bookingId,
-                        razorpayPaymentId: response.razorpay_payment_id,
-                        summaryData: summaryData
-                    });
-
-                    if (!confirmationResult.success) {
-                        throw new Error(confirmationResult.error || "An unknown error occurred during confirmation.");
-                    }
-
-                    toast({ title: "Booking Confirmed!", description: "Your booking is confirmed. Redirecting..." });
-                    router.push(`/booking/success/${bookingId}`);
-
-                } catch (error: any) {
-                    console.error("Booking confirmation failed:", error);
-                    toast({
-                        variant: "destructive",
-                        title: "Booking Confirmation Failed",
-                        description: `Your payment was successful, but we couldn't confirm your booking automatically: ${error.message}. Please contact support with booking ID ${bookingId}.`,
-                        duration: 10000,
-                    });
-                    setIsBooking(false);
-                }
+                // The booking is no longer confirmed here. The server-side webhook handles it.
+                // We just redirect the user to the success page, which will poll for the
+                // confirmed status.
+                router.push(`/booking/success/${bookingId}`);
             },
             prefill: { name: customerDetails.name, email: customerDetails.email },
             theme: { color: "#388E3C" },
