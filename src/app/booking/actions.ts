@@ -7,23 +7,26 @@ import crypto from 'crypto';
 /**
  * Creates a Razorpay order.
  * This is a server action and should only be called from a 'use client' component.
+ * This version is hardened to prevent crashes and always return a structured response.
  */
 export async function createRazorpayOrder(amount: number, notes: Record<string, string | undefined>) {
-  const keyId = process.env.RAZORPAY_KEY_ID;
-  const keySecret = process.env.RAZORPAY_KEY_SECRET;
-
-  if (!keyId || !keySecret) {
-    console.error("Razorpay KEY_ID or KEY_SECRET is not set in .env.");
-    return { success: false, error: 'Payment gateway is not configured correctly on the server.', order: null, keyId: null };
-  }
-
   try {
+    const keyId = process.env.RAZORPAY_KEY_ID;
+    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+
+    if (!keyId || !keySecret) {
+      return { success: false, error: 'Payment gateway is not configured on the server. Missing API keys.', order: null, keyId: null };
+    }
+    
+    if (typeof amount !== 'number' || isNaN(amount)) {
+      return { success: false, error: `Invalid order amount provided. Expected a number.`, order: null, keyId: null };
+    }
+
     const razorpayInstance = new Razorpay({
       key_id: keyId,
       key_secret: keySecret,
     });
 
-    // Ensure amount is an integer and at least 1 Rupee (100 paise)
     const amountInPaise = Math.round(amount * 100);
     if (amountInPaise < 100) {
         return { success: false, error: 'Order amount must be at least ₹1.00', order: null, keyId: null };
@@ -32,19 +35,23 @@ export async function createRazorpayOrder(amount: number, notes: Record<string, 
     const options = {
       amount: amountInPaise,
       currency: 'INR',
-      receipt: notes.booking_id, // Use booking_id as the unique receipt
+      receipt: `receipt_booking_${notes.booking_id}`,
       notes: notes,
     };
     
     const order = await razorpayInstance.orders.create(options);
+    
     if (!order) {
-      return { success: false, error: 'Failed to create order with Razorpay.', order: null, keyId: null };
+      // This case is unlikely as .create() would throw on failure, but it's a safe fallback.
+      return { success: false, error: 'Failed to create order with Razorpay. The order object was null.', order: null, keyId: null };
     }
+    
     return { success: true, order, keyId, error: null };
 
   } catch (error: any) {
-    console.error('Razorpay order creation failed:', error);
-    return { success: false, error: error.message || 'An unknown error occurred while creating the payment order.', order: null, keyId: null };
+    // Ensure that any and all errors are caught and returned as a structured JSON response.
+    const errorMessage = error.message || 'An unknown error occurred during payment processing.';
+    return { success: false, error: errorMessage, order: null, keyId: null };
   }
 }
 
