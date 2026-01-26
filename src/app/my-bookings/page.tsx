@@ -109,13 +109,9 @@ function BookingItem({ booking }: { booking: Booking }) {
                     const roomDoc = await transaction.get(roomRef);
                     if (roomDoc.exists()) {
                         const roomData = roomDoc.data() as Room;
-                        // Safer inventory update: only act if availableRooms is a valid number.
-                        if (typeof roomData.availableRooms === 'number') {
-                            const newAvailableRooms = roomData.availableRooms + 1;
-                            // Ensure we don't increment past the total number of rooms
-                            if (newAvailableRooms <= roomData.totalRooms) {
-                                transaction.update(roomRef, { availableRooms: newAvailableRooms });
-                            }
+                        const newAvailableRooms = (roomData.availableRooms ?? 0) + 1;
+                         if (newAvailableRooms <= roomData.totalRooms) {
+                            transaction.update(roomRef, { availableRooms: newAvailableRooms });
                         }
                     }
                 }
