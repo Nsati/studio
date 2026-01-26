@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useFirestore, useUser, useCollection, useDoc, useMemoFirebase } from '@/firebase';
+import { useFirestore, useUser, useCollection, useDoc, useMemoFirebase, type WithId } from '@/firebase';
 import type { Booking, Hotel, Room } from '@/lib/types';
 import {
   Card,
@@ -70,7 +70,7 @@ function BookingItemSkeleton() {
 }
 
 
-function BookingItem({ booking }: { booking: Booking }) {
+function BookingItem({ booking }: { booking: WithId<Booking> }) {
     const firestore = useFirestore();
     const { user } = useUser();
     const { toast } = useToast();

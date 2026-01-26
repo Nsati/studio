@@ -54,7 +54,6 @@ export function WriteReviewForm({ hotelId, userId, userHasReviewed }: WriteRevie
     try {
       await setDoc(reviewRef, {
         ...values,
-        id: userId,
         hotelId,
         userId,
         authorName: userProfile.displayName,

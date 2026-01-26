@@ -1,3 +1,4 @@
+
 'use client';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -101,7 +102,6 @@ export function AddHotelForm() {
     const hotelRef = doc(firestore, 'hotels', hotelId);
     const { rooms, ...hotelData } = values;
     batch.set(hotelRef, {
-        id: hotelId,
         ...hotelData,
         minPrice,
     });
@@ -111,7 +111,6 @@ export function AddHotelForm() {
         const roomId = slugify(`${values.name} ${room.type} ${Math.random().toString(36).substring(2, 7)}`, { lower: true, strict: true });
         const roomRef = doc(firestore, 'hotels', hotelId, 'rooms', roomId);
         batch.set(roomRef, {
-            id: roomId,
             hotelId: hotelId,
             ...room,
             availableRooms: room.totalRooms, // On creation, all rooms are available

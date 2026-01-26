@@ -1,6 +1,6 @@
 
 'use client';
-import { useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirestore, useDoc, useCollection, useMemoFirebase, type WithId } from '@/firebase';
 import { useParams, notFound } from 'next/navigation';
 import { doc, collection } from 'firebase/firestore';
 import type { Hotel, Room } from '@/lib/types';

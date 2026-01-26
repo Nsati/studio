@@ -99,7 +99,7 @@ export async function initializeBookingAndCreateOrder(
     // --- END SERVER-SIDE PRICE CALCULATION ---
 
     // 1. Create the PENDING booking document on the server with authoritative price
-    const pendingBookingData: Omit<Booking, 'id'> = {
+    const pendingBookingData: Booking = {
       userId,
       hotelId,
       roomId,
@@ -111,9 +111,9 @@ export async function initializeBookingAndCreateOrder(
       checkIn: checkInDate,
       checkOut: checkOutDate,
       status: 'PENDING',
-      createdAt: Timestamp.now(),
+      createdAt: Timestamp.now().toDate(),
     };
-    await bookingRef.set({ id: bookingId, ...pendingBookingData });
+    await bookingRef.set(pendingBookingData);
 
     // 2. Create Razorpay order
     const razorpayInstance = new Razorpay({ key_id: keyId, key_secret: keySecret });

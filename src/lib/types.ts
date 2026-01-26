@@ -1,6 +1,5 @@
 
 export interface Hotel {
-  id: string; 
   name: string;
   city: string;
   description: string;
@@ -13,7 +12,6 @@ export interface Hotel {
 }
 
 export interface Room {
-  id: string; 
   hotelId: string;
   type: 'Standard' | 'Deluxe' | 'Suite';
   price: number;
@@ -38,7 +36,6 @@ export interface UserProfile {
 }
 
 export interface Booking {
-  id?: string; 
   hotelId: string;
   userId: string;
   roomId: string;
@@ -55,7 +52,6 @@ export interface Booking {
 }
 
 export interface ConfirmedBookingSummary {
-  id: string; // matches bookingId
   hotelId: string;
   hotelName: string;
   hotelCity: string;
@@ -70,7 +66,6 @@ export interface ConfirmedBookingSummary {
 }
 
 export interface TourPackage {
-  id: string;
   title: string;
   duration: string;
   destinations: string[];
@@ -80,7 +75,6 @@ export interface TourPackage {
 }
 
 export interface Promotion {
-  id: string; // The coupon code, also used as doc ID
   code: string;
   description: string;
   discountType: 'percentage' | 'fixed';
@@ -89,7 +83,6 @@ export interface Promotion {
 }
 
 export interface Review {
-  id: string;
   hotelId: string;
   userId: string;
   authorName: string;

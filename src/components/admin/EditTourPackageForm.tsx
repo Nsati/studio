@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useRouter } from 'next/navigation';
 import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
-import { useFirestore } from '@/firebase';
+import { useFirestore, type WithId } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 import type { TourPackage } from '@/lib/types';
@@ -31,7 +31,7 @@ const formSchema = z.object({
 });
 
 type EditTourPackageFormProps = {
-    tourPackage: TourPackage;
+    tourPackage: WithId<TourPackage>;
 }
 
 export function EditTourPackageForm({ tourPackage }: EditTourPackageFormProps) {

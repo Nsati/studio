@@ -1,6 +1,7 @@
+
 'use client';
 import { useMemo, useState, useEffect } from 'react';
-import { useFirestore, useUser } from '@/firebase';
+import { useFirestore, useUser, type WithId } from '@/firebase';
 import { collection, doc, runTransaction, increment, updateDoc } from 'firebase/firestore';
 import type { Booking, Room } from '@/lib/types';
 import { format } from 'date-fns';
@@ -45,7 +46,7 @@ function BookingRowSkeleton() {
     )
 }
 
-function CancelBookingAction({ booking, onBookingCancelled }: { booking: Booking, onBookingCancelled: () => void }) {
+function CancelBookingAction({ booking, onBookingCancelled }: { booking: WithId<Booking>, onBookingCancelled: () => void }) {
     const firestore = useFirestore();
     const { toast } = useToast();
     const [isCancelling, setIsCancelling] = useState(false);
@@ -139,14 +140,14 @@ function CancelBookingAction({ booking, onBookingCancelled }: { booking: Booking
 
 export default function BookingsPage() {
     const { userProfile } = useUser();
-    const [bookings, setBookings] = useState<Booking[] | null>(null);
+    const [bookings, setBookings] = useState<WithId<Booking>[] | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     const fetchData = async () => {
         setIsLoading(true);
         try {
             const serializableBookings = await getAdminAllBookings();
-            const deserializedBookings: Booking[] = serializableBookings.map(b => ({
+            const deserializedBookings: WithId<Booking>[] = serializableBookings.map(b => ({
                 ...b,
                 checkIn: new Date(b.checkIn),
                 checkOut: new Date(b.checkOut),

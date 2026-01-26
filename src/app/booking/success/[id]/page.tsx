@@ -2,7 +2,7 @@
 'use client';
 
 import { useParams, notFound } from 'next/navigation';
-import { useFirestore, useUser } from '@/firebase';
+import { useFirestore, useUser, type WithId } from '@/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import type { ConfirmedBookingSummary } from '@/lib/types';
@@ -18,7 +18,7 @@ import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
-function TripAssistant({ summary }: { summary: ConfirmedBookingSummary }) {
+function TripAssistant({ summary }: { summary: WithId<ConfirmedBookingSummary> }) {
     const [guide, setGuide] = useState<TripAssistantOutput | null>(null);
     const [isGenerating, setIsGenerating] = useState(true);
     const [error, setError] = useState('');
@@ -143,7 +143,7 @@ export default function BookingSuccessPage() {
     
     const { user, isLoading: isUserLoading } = useUser();
     
-    const [summaryBooking, setSummaryBooking] = useState<ConfirmedBookingSummary | null>(null);
+    const [summaryBooking, setSummaryBooking] = useState<WithId<ConfirmedBookingSummary> | null>(null);
     const [pageStatus, setPageStatus] = useState<'loading' | 'success' | 'failed'>('loading');
 
     useEffect(() => {
@@ -161,7 +161,7 @@ export default function BookingSuccessPage() {
             try {
                 const docSnap = await getDoc(summaryBookingRef);
                 if (docSnap.exists()) {
-                    setSummaryBooking({ id: docSnap.id, ...docSnap.data() } as ConfirmedBookingSummary);
+                    setSummaryBooking({ id: docSnap.id, ...(docSnap.data() as ConfirmedBookingSummary) });
                     setPageStatus('success');
                     return; // Stop polling
                 }

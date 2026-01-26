@@ -1,6 +1,6 @@
 
 'use client';
-import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { useFirestore, useDoc, useMemoFirebase, type WithId } from '@/firebase';
 import { useParams, notFound } from 'next/navigation';
 import { doc } from 'firebase/firestore';
 import type { TourPackage } from '@/lib/types';

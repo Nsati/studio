@@ -165,7 +165,7 @@ export const useUser = (): UserHookResult => {
 
 
 // Consolidated Document Hook
-type WithId<T> = T & { id: string };
+export type WithId<T> = T & { id: string };
 
 export interface UseDocResult<T> {
   data: WithId<T> | null;

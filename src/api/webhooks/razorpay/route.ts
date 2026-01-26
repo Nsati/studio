@@ -127,7 +127,6 @@ export async function POST(req: NextRequest) {
         }
 
         const summaryData: ConfirmedBookingSummary = {
-          id: booking_id,
           hotelId: hotel_id,
           hotelName: hotelData.name,
           hotelCity: hotelData.city,

@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useRouter } from 'next/navigation';
 import { doc, writeBatch, deleteDoc, collection, getDocs } from 'firebase/firestore';
-import { useFirestore } from '@/firebase';
+import { useFirestore, type WithId } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import slugify from 'slugify';
 import { useState } from 'react';
@@ -65,8 +65,8 @@ const formSchema = z.object({
 });
 
 type EditHotelFormProps = {
-    hotel: Hotel;
-    rooms: Room[];
+    hotel: WithId<Hotel>;
+    rooms: WithId<Room>[];
 }
 
 export function EditHotelForm({ hotel, rooms: initialRooms }: EditHotelFormProps) {
@@ -89,7 +89,7 @@ export function EditHotelForm({ hotel, rooms: initialRooms }: EditHotelFormProps
       discount: hotel.discount || 0,
       amenities: hotel.amenities,
       images: hotel.images,
-      rooms: initialRooms,
+      rooms: initialRooms.map(r => ({...r})), // Pass rooms with their IDs
     },
   });
 
@@ -126,23 +126,23 @@ export function EditHotelForm({ hotel, rooms: initialRooms }: EditHotelFormProps
     });
 
     for (const room of rooms) {
-        if (room.id) {
-            const roomRef = doc(firestore, 'hotels', hotelId, 'rooms', room.id);
-            const currentInitialRoom = initialRooms.find(r => r.id === room.id);
+        const { id: roomId, ...roomData } = room;
+        if (roomId) {
+            const roomRef = doc(firestore, 'hotels', hotelId, 'rooms', roomId);
+            const currentInitialRoom = initialRooms.find(r => r.id === roomId);
             const totalRoomsDelta = currentInitialRoom ? room.totalRooms - currentInitialRoom.totalRooms : 0;
             const newAvailableRooms = (currentInitialRoom?.availableRooms ?? 0) + totalRoomsDelta;
 
             batch.update(roomRef, { 
-                ...room,
+                ...roomData,
                 availableRooms: newAvailableRooms >= 0 ? newAvailableRooms : 0,
             });
         } else {
-            const roomId = slugify(`${values.name} ${room.type} ${Math.random().toString(36).substring(2, 7)}`, { lower: true, strict: true });
-            const roomRef = doc(firestore, 'hotels', hotelId, 'rooms', roomId);
+            const newRoomId = slugify(`${values.name} ${room.type} ${Math.random().toString(36).substring(2, 7)}`, { lower: true, strict: true });
+            const roomRef = doc(firestore, 'hotels', hotelId, 'rooms', newRoomId);
             batch.set(roomRef, {
-                id: roomId,
                 hotelId: hotelId,
-                ...room,
+                ...roomData,
                 availableRooms: room.totalRooms,
             });
         }

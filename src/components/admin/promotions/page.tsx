@@ -1,7 +1,7 @@
 
 'use client';
 import { useMemo, useState } from 'react';
-import { useFirestore, useCollection, useMemoFirebase, type WithId } from '@/firebase';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, doc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import type { Promotion } from '@/lib/types';
 import { useForm } from 'react-hook-form';
@@ -59,7 +59,7 @@ function PromotionForm({
   promotion,
   onOpenChange,
 }: {
-  promotion?: WithId<Promotion> | null;
+  promotion?: Promotion & { id: string } | null;
   onOpenChange: (open: boolean) => void;
 }) {
     const firestore = useFirestore();
@@ -188,7 +188,7 @@ function PromotionForm({
     )
 }
 
-function PromotionsTable({ promotions, onEdit, onDelete }: { promotions: WithId<Promotion>[], onEdit: (p: WithId<Promotion>) => void, onDelete: (p: WithId<Promotion>) => void }) {
+function PromotionsTable({ promotions, onEdit, onDelete }: { promotions: (Promotion & {id: string})[], onEdit: (p: Promotion & {id: string}) => void, onDelete: (p: Promotion & {id: string}) => void }) {
     return (
         <Table>
             <TableHeader>
@@ -237,10 +237,10 @@ export default function PromotionsPage() {
     const { data: promotions, isLoading } = useCollection<Promotion>(promotionsQuery);
 
     const [isFormOpen, setIsFormOpen] = useState(false);
-    const [editingPromotion, setEditingPromotion] = useState<WithId<Promotion> | null>(null);
-    const [deletingPromotion, setDeletingPromotion] = useState<WithId<Promotion>| null>(null);
+    const [editingPromotion, setEditingPromotion] = useState<(Promotion & {id: string}) | null>(null);
+    const [deletingPromotion, setDeletingPromotion] = useState<(Promotion & {id: string})| null>(null);
 
-    const handleEdit = (p: WithId<Promotion>) => {
+    const handleEdit = (p: Promotion & {id: string}) => {
         setEditingPromotion(p);
         setIsFormOpen(true);
     };

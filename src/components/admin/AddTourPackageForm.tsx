@@ -1,3 +1,4 @@
+
 'use client';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -59,7 +60,6 @@ export function AddTourPackageForm() {
     try {
         const packageRef = doc(firestore, 'tourPackages', packageId);
         await setDoc(packageRef, {
-            id: packageId,
             title: values.title,
             duration: values.duration,
             price: values.price,
