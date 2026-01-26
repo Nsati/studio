@@ -1,6 +1,7 @@
+
 'use client';
 import { useMemo, useState } from 'react';
-import { useFirestore, useCollection, useUser, useMemoFirebase } from '@/firebase';
+import { useFirestore, useCollection, useUser, useMemoFirebase, type WithId } from '@/firebase';
 import { collection, doc, updateDoc } from 'firebase/firestore';
 import type { UserProfile } from '@/lib/types';
 import {
@@ -33,7 +34,7 @@ function UserRowSkeleton() {
     )
 }
 
-function RoleSelector({ user }: { user: UserProfile }) {
+function RoleSelector({ user }: { user: WithId<UserProfile> }) {
     const { user: currentUser } = useUser();
     const firestore = useFirestore();
     const { toast } = useToast();
@@ -101,7 +102,7 @@ export default function UsersPage() {
 
     const { data: usersData, isLoading } = useCollection<UserProfile>(usersQuery);
 
-    const users = useMemoFirebase(() => {
+    const users = useMemo(() => {
         if (!usersData) return null;
         return [...usersData].sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''));
     }, [usersData]);
