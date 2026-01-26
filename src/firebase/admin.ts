@@ -25,15 +25,30 @@ function initializeAdminApp() {
   // Check if all required environment variables are present
   if (!serviceAccount.projectId || !serviceAccount.privateKey || !serviceAccount.clientEmail) {
     throw new Error(
-      'Firebase Admin SDK credentials are not fully configured in environment variables. ' +
-      'Please set FIREBASE_PROJECT_ID, FIREBASE_PRIVATE_KEY, and FIREBASE_CLIENT_EMAIL.'
+      'Firebase Admin SDK credentials are not fully configured. ' +
+      'Please ensure FIREBASE_PROJECT_ID, FIREBASE_PRIVATE_KEY, and FIREBASE_CLIENT_EMAIL are set in your .env file.'
     );
   }
 
-  // Initialize the Firebase Admin SDK
-  return initializeApp({
-    credential: cert(serviceAccount),
-  });
+  try {
+    // Initialize the Firebase Admin SDK
+    return initializeApp({
+      credential: cert(serviceAccount),
+    });
+  } catch (error: any) {
+    // Catch the specific PEM parsing error and provide a more helpful message.
+    if (error.message.includes('Invalid PEM formatted message')) {
+        throw new Error(
+            'Failed to initialize Firebase Admin SDK: The private key is malformed. ' +
+            'Please ensure the FIREBASE_PRIVATE_KEY in your .env file is correctly formatted. ' +
+            'It should be a single-line string with "\\n" for newlines, and must include the ' +
+            '"-----BEGIN PRIVATE KEY-----" and "-----END PRIVATE KEY-----" markers. ' +
+            'Original error: ' + error.message
+        );
+    }
+    // Re-throw other errors
+    throw error;
+  }
 }
 
 /**
