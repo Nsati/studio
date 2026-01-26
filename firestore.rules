@@ -24,8 +24,28 @@ service cloud.firestore {
       allow update: if isAdmin() || (request.auth.uid == userId && request.resource.data.role == resource.data.role);
 
       match /bookings/{bookingId} {
-        // User can read/write their own bookings. Admin can read/write any booking.
-        allow read, write: if request.auth.uid == userId || isAdmin();
+        allow read: if request.auth.uid == userId || isAdmin();
+
+        // A user can create their own booking, but it must be in a PENDING state.
+        allow create: if request.auth.uid == userId && request.resource.data.status == 'PENDING';
+        
+        // Update rules are more specific.
+        allow update: if isAdmin() || (request.auth.uid == userId && (
+            // User can confirm their OWN pending booking.
+            // This is the critical rule for the client-side payment confirmation transaction.
+            ( resource.data.status == 'PENDING'
+              && request.resource.data.status == 'CONFIRMED'
+              // We use diff() to ensure ONLY 'status' and 'razorpayPaymentId' were changed.
+              // This is robust and prevents accidental data corruption.
+              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'razorpayPaymentId'])
+            ) ||
+            // User can cancel their OWN confirmed booking.
+            ( resource.data.status == 'CONFIRMED'
+              && request.resource.data.status == 'CANCELLED'
+              // Ensure only the 'status' field is being changed.
+              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+            )
+        ));
       }
     }
 
@@ -44,17 +64,11 @@ service cloud.firestore {
           allow create, delete: if isAdmin();
           
           // Allow admins to update anything.
-          // Allow any authenticated user (booking/cancelling) to update ONLY the 'availableRooms' field.
-          // All other fields must remain unchanged. This is a more robust rule than using .diff().
+          // Allow any authenticated user (for booking/cancelling) to update ONLY the 'availableRooms' field.
+          // This is now robust and won't fail on other field comparisons.
           allow update: if isAdmin() || 
                          (request.auth != null &&
-                          request.resource.data.availableRooms != resource.data.availableRooms && // The only field that IS allowed to change
-                          request.resource.data.id == resource.data.id &&
-                          request.resource.data.hotelId == resource.data.hotelId &&
-                          request.resource.data.type == resource.data.type &&
-                          request.resource.data.price == resource.data.price &&
-                          request.resource.data.capacity == resource.data.capacity &&
-                          request.resource.data.totalRooms == resource.data.totalRooms
+                          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['availableRooms'])
                          );
         }
         
