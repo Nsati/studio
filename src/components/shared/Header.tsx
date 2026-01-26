@@ -107,30 +107,39 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center">
-        <Link href="/" className="flex items-center gap-3 mr-6">
-          <Logo />
-          <span className="font-bold font-headline text-lg">
-            Uttarakhand Getaways
-          </span>
-        </Link>
-        <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={cn(
-                "transition-colors hover:text-primary",
-                pathname === link.href
-                  ? "text-primary font-semibold"
-                  : "text-muted-foreground"
-              )}
-            >
-              {link.label}
+      <div className="container flex h-16 items-center justify-between">
+        {/* Left Side: Logo */}
+        <div className="flex items-center gap-3">
+            <Link href="/" className="flex items-center gap-3">
+                <Logo />
+                <span className="hidden font-bold font-headline text-lg sm:inline-block">
+                    Uttarakhand Getaways
+                </span>
             </Link>
-          ))}
-        </nav>
-        <div className="flex flex-1 items-center justify-end gap-2">
+        </div>
+        
+        {/* Center: Desktop Navigation */}
+        <div className="hidden md:flex">
+            <nav className="flex items-center gap-1 rounded-full bg-muted/50 p-1">
+                {navLinks.map((link) => (
+                    <Link
+                    key={link.href}
+                    href={link.href}
+                    className={cn(
+                        "rounded-full px-4 py-1.5 text-sm font-medium transition-colors hover:text-foreground",
+                        pathname === link.href
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground"
+                    )}
+                    >
+                    {link.label}
+                    </Link>
+                ))}
+            </nav>
+        </div>
+
+        {/* Right Side: User Menu & Mobile Menu */}
+        <div className="flex items-center gap-2">
           <UserNav />
            <div className="md:hidden">
             <Sheet>
