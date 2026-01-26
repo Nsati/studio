@@ -12,16 +12,22 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      // CRITICAL: This rule specifically allows a user to read THEIR OWN document.
-      // It does NOT call isAdmin(), which prevents rule evaluation recursion.
+      // CRITICAL: This rule allows a user to get their OWN doc, and admins to get ANY doc.
+      // It does NOT call isAdmin() inside the user-specific part to prevent recursion.
       // This is the rule that allows the get() call inside the isAdmin() function to succeed.
-      allow get: if request.auth.uid == userId;
+      allow get: if request.auth.uid == userId || isAdmin();
 
-      // Allow admins to perform broad list/update operations.
-      // Allow users to create/update their own profiles.
+      // Allow admins to perform broad list operations.
       allow list: if isAdmin();
+      // Allow users to create their own profiles.
       allow create: if request.auth.uid == userId || isAdmin();
-      allow update: if isAdmin() || (request.auth.uid == userId && request.resource.data.role == resource.data.role);
+      
+      // Separate update rules for clarity and correctness.
+      // Rule 1: A user can update their OWN profile, but CANNOT change their role.
+      allow update: if request.auth.uid == userId && request.resource.data.role == resource.data.role;
+      // Rule 2: An admin can update ANY user profile (including changing their role).
+      allow update: if isAdmin();
+
 
       match /bookings/{bookingId} {
         allow read: if request.auth.uid == userId || isAdmin();
@@ -29,21 +35,18 @@ service cloud.firestore {
         // A user can create their own booking, but it must be in a PENDING state.
         allow create: if request.auth.uid == userId && request.resource.data.status == 'PENDING';
         
-        // Update rules are more specific.
+        // Update rules are more specific and use request.writeFields for reliability.
         allow update: if isAdmin() || (request.auth.uid == userId && (
             // User can confirm their OWN pending booking.
-            // This is the critical rule for the client-side payment confirmation transaction.
             ( resource.data.status == 'PENDING'
               && request.resource.data.status == 'CONFIRMED'
-              // We use diff() to ensure ONLY 'status' and 'razorpayPaymentId' were changed.
-              // This is robust and prevents accidental data corruption.
-              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'razorpayPaymentId'])
+              && request.writeFields.hasAll(['status', 'razorpayPaymentId'])
+              && request.writeFields.size() == 2
             ) ||
-            // User can cancel their OWN confirmed booking.
-            ( resource.data.status == 'CONFIRMED'
+            // User can cancel their OWN confirmed or pending booking.
+            ( (resource.data.status == 'CONFIRMED' || resource.data.status == 'PENDING')
               && request.resource.data.status == 'CANCELLED'
-              // Ensure only the 'status' field is being changed.
-              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+              && request.writeFields.hasOnly(['status'])
             )
         ));
       }
@@ -64,12 +67,13 @@ service cloud.firestore {
           allow create, delete: if isAdmin();
           
           // Allow admins to update anything.
-          // Allow any authenticated user (for booking/cancelling) to update ONLY the 'availableRooms' field.
-          // This rule uses request.writeFields, which is a simpler and more direct way to check update operations.
+          // For users, allow updating ONLY the 'availableRooms' field, and only by 1.
+          // This is a more reliable check than using diff().
           allow update: if isAdmin() || 
                          (request.auth != null &&
-                          request.writeFields.size() == 1 &&
-                          request.writeFields[0] == 'availableRooms'
+                          request.writeFields.hasOnly(['availableRooms']) &&
+                          (request.resource.data.availableRooms == resource.data.availableRooms + 1 ||
+                           request.resource.data.availableRooms == resource.data.availableRooms - 1)
                          );
         }
         
@@ -104,5 +108,4 @@ service cloud.firestore {
     }
   }
 }
-
     
