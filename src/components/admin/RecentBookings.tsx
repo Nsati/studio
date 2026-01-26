@@ -1,8 +1,10 @@
+
 'use client';
 import type { Booking } from '@/lib/types';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import type { WithId } from '@/firebase';
 
-export default function RecentBookings({ bookings }: { bookings: Booking[] | null }) {
+export default function RecentBookings({ bookings }: { bookings: WithId<Booking>[] | null }) {
     return (
         <Card>
             <CardHeader>

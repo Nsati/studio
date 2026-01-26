@@ -6,9 +6,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Bar, BarChart, ResponsiveContainer, XAxis } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { normalizeTimestamp } from '@/lib/firestore-utils';
+import type { WithId } from '@/firebase';
 
 
-export default function BookingChart({ bookings }: { bookings: Booking[] | null }) {
+export default function BookingChart({ bookings }: { bookings: WithId<Booking>[] | null }) {
     const chartData = useMemo(() => {
         if (!bookings) return [];
         const data: { [key: string]: { date: string; total: number } } = {};
