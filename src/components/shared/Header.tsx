@@ -23,6 +23,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '../ui/skeleton';
 
 const navLinks = [
+  { href: '/', label: 'Home' },
   { href: '/search', label: 'Hotels' },
   { href: '/tour-packages', label: 'Tour Packages' },
   { href: '/about', label: 'About Us' },
