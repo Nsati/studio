@@ -1,5 +1,5 @@
 'use client';
-import { useMemo, useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import {
   Card,
@@ -9,9 +9,11 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Hotel, Users2, BookOpen, IndianRupee, AlertCircle } from 'lucide-react';
-import { useUser } from '@/firebase';
+import { useUser, useCollection, useMemoFirebase, useFirestore } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
-import { getAdminDashboardStats, type SerializableBooking, type SerializableHotel, type SerializableUserProfile } from './actions';
+import { collection, collectionGroup, query } from 'firebase/firestore';
+import type { Booking, Hotel as HotelType, UserProfile } from '@/lib/types';
+import { normalizeTimestamp } from '@/lib/firestore-utils';
 
 
 const BookingChart = dynamic(() => import('@/components/admin/BookingChart'), {
@@ -56,7 +58,7 @@ function AdminErrorState({ error }: { error: Error }) {
                     Admin Panel Error
                 </CardTitle>
                 <CardDescription className="text-destructive">
-                    The admin panel could not be loaded because the server is not properly configured. Check the server logs for a `[FATAL]` error message.
+                    The admin panel could not load all data. This may be due to a permissions issue.
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -72,38 +74,29 @@ function AdminErrorState({ error }: { error: Error }) {
 
 
 export default function AdminDashboard() {
-    const { userProfile } = useUser();
-    const [stats, setStats] = useState<{
-        bookingsData: SerializableBooking[] | null,
-        hotelsData: SerializableHotel[] | null,
-        usersData: SerializableUserProfile[] | null,
-    }>({ bookingsData: null, hotelsData: null, usersData: null });
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<Error | null>(null);
+    const { userProfile, isLoading: isUserLoading } = useUser();
+    const firestore = useFirestore();
 
-    useEffect(() => {
-        if (userProfile?.role === 'admin') {
-            setIsLoading(true);
-            getAdminDashboardStats().then(data => {
-                setStats({
-                    bookingsData: data.bookings,
-                    hotelsData: data.hotels,
-                    usersData: data.users
-                });
-                setError(null);
-            }).catch(err => {
-                console.error("Failed to load dashboard stats", err);
-                setError(err);
-            }).finally(() => {
-                setIsLoading(false);
-            });
-        } else if (userProfile) {
-            // User is loaded but is not an admin
-            setIsLoading(false);
-        }
-    }, [userProfile]);
+    const bookingsQuery = useMemoFirebase(() => {
+        if (!firestore || userProfile?.role !== 'admin') return null;
+        return query(collectionGroup(firestore, 'bookings'));
+    }, [firestore, userProfile]);
+    const { data: bookingsData, isLoading: areBookingsLoading, error: bookingsError } = useCollection<Booking>(bookingsQuery);
 
-    const { bookingsData, hotelsData, usersData } = stats;
+    const usersQuery = useMemoFirebase(() => {
+        if (!firestore || userProfile?.role !== 'admin') return null;
+        return collection(firestore, 'users');
+    }, [firestore, userProfile]);
+    const { data: usersData, isLoading: areUsersLoading, error: usersError } = useCollection<UserProfile>(usersQuery);
+
+    const hotelsQuery = useMemoFirebase(() => {
+        if (!firestore || userProfile?.role !== 'admin') return null;
+        return collection(firestore, 'hotels');
+    }, [firestore, userProfile]);
+    const { data: hotelsData, isLoading: areHotelsLoading, error: hotelsError } = useCollection<HotelType>(hotelsQuery);
+    
+    const isLoading = isUserLoading || areBookingsLoading || areUsersLoading || areHotelsLoading;
+    const error = bookingsError || usersError || hotelsError;
 
     const { totalRevenue, totalBookings, bookingsLastMonth } = useMemo(() => {
         if (!bookingsData) return { totalRevenue: 0, totalBookings: 0, bookingsLastMonth: 0 };
@@ -116,7 +109,7 @@ export default function AdminDashboard() {
         bookingsData.forEach(b => {
             if (b.status === 'CONFIRMED') {
                 revenue += b.totalPrice;
-                const createdAt = new Date(b.createdAt);
+                const createdAt = normalizeTimestamp(b.createdAt);
                 if (!isNaN(createdAt.getTime()) && createdAt > oneMonthAgo) {
                     lastMonthCount++;
                 }
@@ -128,14 +121,14 @@ export default function AdminDashboard() {
     
     const sortedBookings = useMemo(() => {
         if (!bookingsData) return null;
-        return bookingsData
-          .map(b => ({
-            ...b,
-            checkIn: new Date(b.checkIn),
-            checkOut: new Date(b.checkOut),
-            createdAt: new Date(b.createdAt)
-          })) // Deserialize all dates for sorting/charting
-          .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+        return [...bookingsData]
+          .sort((a, b) => {
+            const dateA = normalizeTimestamp(a.createdAt);
+            const dateB = normalizeTimestamp(b.createdAt);
+            if (isNaN(dateA.getTime())) return 1;
+            if (isNaN(dateB.getTime())) return -1;
+            return dateB.getTime() - dateA.getTime();
+        });
     }, [bookingsData]);
 
   return (
