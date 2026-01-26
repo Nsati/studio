@@ -87,10 +87,9 @@ function BookingItem({ booking }: { booking: WithId<Booking> }) {
         if (!firestore || !user || !booking.id) return;
 
         setIsCancelling(true);
-        let cancellationStatus: 'success' | 'already_cancelled' | 'error' = 'error';
 
         try {
-            await runTransaction(firestore, async (transaction) => {
+            const cancellationStatus = await runTransaction(firestore, async (transaction): Promise<'success' | 'already_cancelled'> => {
                 const bookingRef = doc(firestore, 'users', user.uid, 'bookings', booking.id);
                 const bookingDoc = await transaction.get(bookingRef);
                 if (!bookingDoc.exists()) {
@@ -100,8 +99,7 @@ function BookingItem({ booking }: { booking: WithId<Booking> }) {
                 const bookingData = bookingDoc.data() as Booking;
 
                 if (bookingData.status === 'CANCELLED') {
-                    cancellationStatus = 'already_cancelled';
-                    return;
+                    return 'already_cancelled';
                 }
 
                 if (bookingData.status === 'CONFIRMED') {
@@ -117,7 +115,7 @@ function BookingItem({ booking }: { booking: WithId<Booking> }) {
                 }
                 
                 transaction.update(bookingRef, { status: 'CANCELLED' });
-                cancellationStatus = 'success';
+                return 'success';
             });
 
             if (cancellationStatus === 'success') {
@@ -277,8 +275,8 @@ export default function MyBookingsPage() {
     const sorted = [...bookings].sort((a,b) => {
         const dateA = normalizeTimestamp(a.createdAt);
         const dateB = normalizeTimestamp(b.createdAt);
-        if (isNaN(dateA.getTime())) return -1;
-        if (isNaN(dateB.getTime())) return 1;
+        if (isNaN(dateA.getTime())) return 1;
+        if (isNaN(dateB.getTime())) return -1;
         return dateB.getTime() - dateA.getTime();
     });
 
