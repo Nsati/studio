@@ -1,5 +1,7 @@
 import { Hotel, Room, City, TourPackage, Review } from './types';
 
+type WithId<T> = T & { id: string };
+
 export const dummyCities: City[] = [
   { id: 'nainital', name: 'Nainital', image: 'city-nainital' },
   { id: 'mussoorie', name: 'Mussoorie', image: 'city-mussoorie' },
@@ -9,7 +11,7 @@ export const dummyCities: City[] = [
   { id: 'jim-corbett', name: 'Jim Corbett', image: 'city-jim-corbett' },
 ];
 
-export const dummyHotels: Hotel[] = [
+export const dummyHotels: WithId<Hotel>[] = [
   {
     id: 'the-naini-retreat',
     name: 'The Naini Retreat',
@@ -74,7 +76,7 @@ export const dummyHotels: Hotel[] = [
   },
 ];
 
-export const dummyRooms: Room[] = [
+export const dummyRooms: WithId<Room>[] = [
   // The Naini Retreat
   { id: 'nr-std', hotelId: 'the-naini-retreat', type: 'Standard', price: 8000, capacity: 2, totalRooms: 10 },
   { id: 'nr-dlx', hotelId: 'the-naini-retreat', type: 'Deluxe', price: 12000, capacity: 2, totalRooms: 8 },
@@ -97,7 +99,7 @@ export const dummyRooms: Room[] = [
   { id: 'sv-ste', hotelId: 'the-savoy', type: 'Suite', price: 28000, capacity: 4, totalRooms: 10 },
 ];
 
-export const dummyTourPackages: TourPackage[] = [
+export const dummyTourPackages: WithId<TourPackage>[] = [
   {
     id: 'amazing-uttarakhand',
     title: 'Amazing Uttarakhand Tour',
@@ -154,7 +156,7 @@ export const dummyTourPackages: TourPackage[] = [
   }
 ];
 
-export const dummyReviews: Review[] = [
+export const dummyReviews: WithId<Review>[] = [
   // Reviews for The Naini Retreat
   {
     id: 'review-1',
