@@ -3,138 +3,19 @@
 
 import { useParams, notFound } from 'next/navigation';
 import { useFirestore, useUser, useDoc, useMemoFirebase, type WithId } from '@/firebase';
-import { doc, getDoc, DocumentSnapshot } from 'firebase/firestore';
-import { useEffect, useState } from 'react';
+import { doc } from 'firebase/firestore';
 import type { Booking, Hotel } from '@/lib/types';
-import { generateTripGuide, type TripAssistantOutput } from '@/ai/flows/generate-arrival-assistant';
 import { normalizeTimestamp } from '@/lib/firestore-utils';
 
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-  CheckCircle, PartyPopper, UserPlus, Bot, Map, ParkingCircle, Clock, Lightbulb, Loader2, Mountain, UtensilsCrossed, RefreshCw, AlertCircle
+  CheckCircle, PartyPopper, UserPlus, Loader2, AlertCircle
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
-function TripAssistant({ booking, hotel }: { booking: WithId<Booking>, hotel: WithId<Hotel> }) {
-    const [guide, setGuide] = useState<TripAssistantOutput | null>(null);
-    const [isGenerating, setIsGenerating] = useState(true);
-    const [error, setError] = useState('');
-
-    const generateGuide = async () => {
-        setIsGenerating(true);
-        setError('');
-        try {
-            const checkInDate = normalizeTimestamp(booking.checkIn);
-            const result = await generateTripGuide({
-                hotelName: hotel.name,
-                hotelCity: hotel.city,
-                hotelAddress: hotel.address,
-                customerName: booking.customerName,
-                checkInDate: format(checkInDate, 'PPPP'),
-            });
-            setGuide(result);
-        } catch (err) {
-            console.error("Failed to generate trip guide:", err);
-            setError("Sorry, the assistant is currently unavailable. Please try again.");
-        } finally {
-            setIsGenerating(false);
-        }
-    };
-
-    useEffect(() => {
-        generateGuide();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [booking, hotel]);
-
-    if (isGenerating) {
-        return (
-            <Card className="bg-primary/5 border-primary/20 mt-6">
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-3 text-primary">
-                        <Loader2 className="h-6 w-6 animate-spin" />
-                        Generating Your Personal Trip Assistant...
-                    </CardTitle>
-                    <CardDescription>Our AI is crafting personalized tips for your trip. Please wait a moment.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4 pt-4">
-                    <Skeleton className="h-5 w-full" />
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <Skeleton className="h-12 w-full" />
-                        <Skeleton className="h-12 w-full" />
-                        <Skeleton className="h-12 w-full" />
-                        <Skeleton className="h-12 w-full" />
-                    </div>
-                </CardContent>
-            </Card>
-        )
-    }
-
-    if (error) {
-        return (
-            <Card className="bg-destructive/10 border-destructive/20 mt-6 text-center">
-                <CardHeader>
-                    <CardTitle className="flex items-center justify-center gap-2">
-                        <Bot className="h-6 w-6 text-destructive" />
-                        Assistant Unavailable
-                    </CardTitle>
-                    <CardDescription className="text-destructive/80">{error}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Button onClick={generateGuide} variant="secondary">
-                        <RefreshCw className="mr-2 h-4 w-4" />
-                        Try Again
-                    </Button>
-                </CardContent>
-            </Card>
-        )
-    }
-    
-    if (guide) {
-        return (
-             <Card className="bg-primary/5 border-primary/20 mt-6">
-                <CardHeader>
-                    <CardTitle className="text-xl flex items-center gap-2">
-                        <Bot className="h-6 w-6 text-primary" /> Your Smart Trip Assistant
-                    </CardTitle>
-                    <CardDescription>{guide.welcomeMessage}</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-5 text-sm">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-5">
-                        <div className="flex gap-3 items-start">
-                            <Map className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
-                            <div><strong className="block text-foreground">Navigation</strong> <a href={guide.googleMapsUrl} target="_blank" rel="noopener noreferrer" className="text-primary underline">Get Directions</a></div>
-                        </div>
-                        <div className="flex gap-3 items-start">
-                            <ParkingCircle className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
-                            <div><strong className="block text-foreground">Parking</strong> {guide.parkingInfo}</div>
-                        </div>
-                         <div className="flex gap-3 items-start">
-                            <Clock className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
-                            <div><strong className="block text-foreground">Check-in</strong> {guide.checkInReminder}</div>
-                        </div>
-                         <div className="flex gap-3 items-start">
-                            <Lightbulb className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
-                            <div><strong className="block text-foreground">Local Tip</strong> {guide.localTip}</div>
-                        </div>
-                         <div className="flex gap-3 items-start">
-                            <Mountain className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
-                            <div><strong className="block text-foreground">Activity Suggestion</strong> {guide.suggestedActivity}</div>
-                        </div>
-                         <div className="flex gap-3 items-start">
-                            <UtensilsCrossed className="h-5 w-5 mt-0.5 text-primary flex-shrink-0" />
-                            <div><strong className="block text-foreground">Must-Try Cuisine</strong> {guide.localCuisineRecommendation}</div>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-        )
-    }
-
-    return null;
-}
 
 function SuccessContent({ booking, hotel }: { booking: WithId<Booking>, hotel: WithId<Hotel> }) {
     const { user } = useUser();
@@ -207,8 +88,6 @@ function SuccessContent({ booking, hotel }: { booking: WithId<Booking>, hotel: W
                             </div>
                         </div>
                         
-                        <TripAssistant booking={booking} hotel={hotel} />
-
                          {user?.isAnonymous && (
                             <Card className="bg-blue-50 border-blue-200">
                                 <CardHeader className="flex-row items-center gap-4 space-y-0">

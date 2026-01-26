@@ -23,7 +23,6 @@ import { Separator } from '@/components/ui/separator';
 import { RoomBookingCard } from '@/components/hotel/RoomBookingCard';
 import { Button } from '@/components/ui/button';
 import Loading from './loading';
-import { HotelReviewSummary } from '@/components/hotel/HotelReviewSummary';
 import { WriteReviewForm } from '@/components/hotel/WriteReviewForm';
 
 
@@ -157,12 +156,6 @@ export default function HotelPage() {
                 </div>
               ))}
             </div>
-          </section>
-
-          <Separator />
-
-          <section>
-             <HotelReviewSummary reviews={reviews} hotelName={hotel.name} />
           </section>
 
           {user && !user.isAnonymous && (
