@@ -157,6 +157,8 @@ export default function BookingsPage() {
         return bookingsData.sort((a, b) => {
              const dateA = normalizeTimestamp(a.createdAt);
              const dateB = normalizeTimestamp(b.createdAt);
+             if (isNaN(dateA.getTime())) return -1;
+             if (isNaN(dateB.getTime())) return 1;
              return dateB.getTime() - dateA.getTime();
         });
     }, [bookingsData]);

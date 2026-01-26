@@ -277,6 +277,8 @@ export default function MyBookingsPage() {
     return [...bookings].sort((a,b) => {
         const dateA = normalizeTimestamp(a.createdAt);
         const dateB = normalizeTimestamp(b.createdAt);
+        if (isNaN(dateA.getTime())) return -1; // a is pending, put it first
+        if (isNaN(dateB.getTime())) return 1;  // b is pending, put it first
         return dateB.getTime() - dateA.getTime();
     });
   }, [bookings]);

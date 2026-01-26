@@ -42,12 +42,17 @@ service cloud.firestore {
           allow create, delete: if isAdmin();
           
           // Allow admins to update anything.
-          // Allow any authenticated user to update ONLY the availableRooms field.
-          // This secures the client-side transaction for booking and canceling
-          // without being overly restrictive and causing crashes.
+          // Allow authenticated users (including anonymous) to update ONLY the 'availableRooms' field
+          // by ensuring all other sensitive fields remain unchanged.
+          // This is critical for the booking and cancellation client-side transactions.
           allow update: if isAdmin() ||
                          (request.auth != null &&
-                          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['availableRooms']));
+                          request.resource.data.price == resource.data.price &&
+                          request.resource.data.type == resource.data.type &&
+                          request.resource.data.capacity == resource.data.capacity &&
+                          request.resource.data.totalRooms == resource.data.totalRooms &&
+                          request.resource.data.hotelId == resource.data.hotelId
+                         );
         }
         
         match /reviews/{reviewId} {
