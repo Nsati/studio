@@ -16,11 +16,17 @@ import type { Booking } from '@/lib/types';
 export async function initializeBookingAndCreateOrder(
   bookingData: Omit<Booking, 'id' | 'status' | 'createdAt' | 'razorpayPaymentId'>
 ) {
+  const admin = getFirebaseAdmin();
+  if (!admin) {
+    console.error('SERVER ACTION ERROR: Firebase Admin SDK is not initialized. Check server configuration and .env file.');
+    return { success: false, error: 'Server is not configured for payments. Please contact support.', order: null, keyId: null, bookingId: null };
+  }
+  const adminDb = admin.firestore;
+
   const { 
     userId, hotelId, roomId, roomType, checkIn, checkOut, guests, totalPrice, customerName, customerEmail
   } = bookingData;
 
-  const adminDb = getFirebaseAdmin().firestore();
   const bookingId = `booking_${Date.now()}`;
   const bookingRef = adminDb.collection('users').doc(userId).collection('bookings').doc(bookingId);
 

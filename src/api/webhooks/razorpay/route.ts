@@ -79,7 +79,13 @@ export async function POST(req: NextRequest) {
       const { booking_id, user_id, hotel_id, room_id } = order.notes;
       console.log(`✅ STEP 3: Extracted details from order notes: booking_id=${booking_id}, user_id=${user_id}`);
       
-      const adminDb = getFirebaseAdmin().firestore();
+      const admin = getFirebaseAdmin();
+      if (!admin) {
+          console.error('❌ FATAL: Razorpay webhook failed because Firebase Admin SDK is not initialized. Check server configuration.');
+          // Return a 500 to indicate a server configuration error. Razorpay might retry.
+          return NextResponse.json({ status: 'error', message: 'Internal server configuration error.' }, { status: 500 });
+      }
+      const adminDb = admin.firestore;
 
       // Define document references
       const roomRef = adminDb.collection('hotels').doc(hotel_id).collection('rooms').doc(room_id);

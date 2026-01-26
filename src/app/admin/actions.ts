@@ -1,3 +1,4 @@
+
 'use server';
 
 import { getFirebaseAdmin } from '@/firebase/admin';
@@ -23,7 +24,12 @@ export async function getAdminDashboardStats(): Promise<{
     users: SerializableUserProfile[],
     hotels: SerializableHotel[]
 }> {
-    const adminDb = getFirebaseAdmin().firestore();
+    const admin = getFirebaseAdmin();
+    if (!admin) {
+        console.warn('Admin dashboard stats could not be loaded because Firebase Admin SDK is not initialized.');
+        return { bookings: [], users: [], hotels: [] };
+    }
+    const adminDb = admin.firestore;
     
     const [bookingsSnapshot, usersSnapshot, hotelsSnapshot] = await Promise.all([
         adminDb.collectionGroup('bookings').get(),
