@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
-import { LayoutDashboard, Hotel, BookOpen, IndianRupee, BarChart, Users2, Tag, Star, Settings as SettingsIcon, LogOut, ExternalLink } from 'lucide-react';
+import { LayoutDashboard, Hotel, BookOpen, Users2, Tag, LogOut, ExternalLink, Map } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
@@ -14,13 +14,9 @@ const navItems = [
     { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/admin/bookings', label: 'Bookings', icon: BookOpen },
     { href: '/admin/hotels', label: 'Hotels', icon: Hotel },
-    { href: '/admin/tour-packages', label: 'Tour Packages', icon: IndianRupee },
+    { href: '/admin/tour-packages', label: 'Tour Packages', icon: Map },
     { href: '/admin/users', label: 'Users', icon: Users2 },
     { href: '/admin/promotions', label: 'Promotions', icon: Tag },
-    { href: '/admin/reviews', label: 'Reviews', icon: Star },
-    { href: '/admin/payments', label: 'Payments', icon: IndianRupee },
-    { href: '/admin/reports', label: 'Reports', icon: BarChart },
-    { href: '/admin/settings', label: 'Settings', icon: SettingsIcon },
 ];
 
 function AdminLayoutSkeleton() {
@@ -29,7 +25,7 @@ function AdminLayoutSkeleton() {
             <aside className="w-64 border-r p-4 space-y-4">
                 <Skeleton className="h-8 w-32" />
                 <div className="space-y-2">
-                    {Array.from({length: 8}).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
+                    {Array.from({length: 6}).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
                 </div>
             </aside>
             <main className="flex-1 p-8">

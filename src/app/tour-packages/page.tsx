@@ -41,7 +41,7 @@ export default function TourPackagesPage() {
                 {dummyTourPackages.map((pkg) => {
                     const pkgImage = PlaceHolderImages.find(img => img.id === pkg.image);
                     return (
-                        <Card key={pkg.id} className="flex flex-col overflow-hidden transition-shadow hover:shadow-lg">
+                        <Card key={pkg.id} className="flex flex-col overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
                            <CardContent className="p-0 relative w-full aspect-video">
                             {pkgImage && (
                                 <Image

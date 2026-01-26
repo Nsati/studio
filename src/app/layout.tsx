@@ -1,59 +1,45 @@
-import { Playfair_Display, PT_Sans } from 'next/font/google';
-import { cn } from '@/lib/utils';
+import type { Metadata } from 'next';
+import { PT_Sans, Playfair_Display } from 'next/font/google';
+import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
-import dynamic from 'next/dynamic';
-import { Header } from '@/components/shared/Header';
-import { Footer } from '@/components/shared/Footer';
+import Header from '@/components/shared/Header';
+import Footer from '@/components/shared/Footer';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
+import { FirebaseClientProvider } from '@/firebase/client-provider';
 
-// Dynamically import the provider to ensure it's client-side only
-const FirebaseClientProvider = dynamic(
-  () => import('@/firebase/client-provider').then((mod) => mod.FirebaseClientProvider),
-  {
-    // You can add a loading component here if you wish
-    loading: () => <div className="h-screen w-full flex items-center justify-center bg-background">Loading App...</div>,
-  }
-);
-
-const fontBody = PT_Sans({
+const fontSans = PT_Sans({
   subsets: ['latin'],
   weight: ['400', '700'],
-  variable: '--font-body',
+  variable: '--font-sans',
 });
 
-const fontHeadline = Playfair_Display({
+const fontHeading = Playfair_Display({
   subsets: ['latin'],
   weight: ['400', '700'],
-  variable: '--font-headline',
+  variable: '--font-heading',
 });
 
-export const metadata = {
-  title: 'Uttarakhand Getaways',
-  description: 'Your gateway to the serene beauty of the Himalayas. Book your unforgettable stay with us.',
+export const metadata: Metadata = {
+  title: 'Himalayan Retreats',
+  description: 'Book your dream getaway in the mountains.',
 };
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   return (
-    <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth">
-      <body
-        className={cn(
-          'min-h-screen bg-background font-body antialiased',
-          fontBody.variable,
-          fontHeadline.variable
-        )}
-      >
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${fontSans.variable} ${fontHeading.variable} font-sans bg-background text-foreground`}>
         <FirebaseClientProvider>
-          <div className="relative flex min-h-screen flex-col">
-            <Header />
-            <main className="flex-grow">{children}</main>
-            <Footer />
-          </div>
-          <Toaster />
           <FirebaseErrorListener />
+          <Header />
+          <main className="min-h-screen">
+            {children}
+          </main>
+          <Footer />
+          <Toaster />
         </FirebaseClientProvider>
       </body>
     </html>

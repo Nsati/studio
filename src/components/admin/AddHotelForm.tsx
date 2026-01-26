@@ -107,7 +107,8 @@ export function AddHotelForm() {
     });
 
     for (const room of rooms) {
-        const roomId = slugify(`${values.name} ${room.type}`, { lower: true, strict: true });
+        // Add a random suffix to the room ID to prevent collisions if adding multiple rooms of the same type
+        const roomId = slugify(`${values.name} ${room.type} ${Math.random().toString(36).substring(2, 7)}`, { lower: true, strict: true });
         const roomRef = doc(firestore, 'hotels', hotelId, 'rooms', roomId);
         batch.set(roomRef, {
             id: roomId,
