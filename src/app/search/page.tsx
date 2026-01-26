@@ -7,6 +7,8 @@ import type { Hotel } from '@/lib/types';
 import { HotelCard } from '@/components/hotel/HotelCard';
 import Loading from './loading';
 import { SearchFilters } from './SearchFilters';
+import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 
 function SearchResults() {
   const firestore = useFirestore();
