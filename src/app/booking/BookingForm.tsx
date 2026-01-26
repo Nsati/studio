@@ -176,20 +176,19 @@ export function BookingForm() {
             }
         }
         
-        const bookingDataForServer = {
+        const dataForServer = {
             userId: userIdForBooking,
             hotelId: hotel.id,
             roomId: room.id,
-            roomType: room.type,
             checkIn: new Date(checkInStr),
             checkOut: new Date(checkOutStr),
             guests: parseInt(guests),
-            totalPrice: totalPrice,
             customerName: customerDetails.name,
             customerEmail: customerDetails.email,
+            couponCode: couponDiscount > 0 ? couponCode : undefined,
         };
 
-        const orderResponse = await initializeBookingAndCreateOrder(bookingDataForServer);
+        const orderResponse = await initializeBookingAndCreateOrder(dataForServer);
 
         if (!orderResponse.success || !orderResponse.order || !orderResponse.bookingId) {
             toast({ variant: 'destructive', title: 'Payment Error', description: orderResponse.error || 'Could not initiate payment.', duration: 8000 });
