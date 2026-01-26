@@ -1,7 +1,7 @@
 
 import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Heart, Globe, Shield, Star, Mountain } from 'lucide-react';
 
 const teamMembers = [
@@ -66,8 +66,8 @@ export default function AboutPage() {
             priority
           />
         )}
-        <div className="absolute inset-0 bg-black/50" />
-        <div className="relative z-10 p-4">
+        <div className="absolute inset-0 bg-black/60" />
+        <div className="relative z-10 p-4" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
           <h1 className="font-headline text-4xl font-bold md:text-6xl">About Uttarakhand Getaways</h1>
           <p className="mt-4 max-w-2xl mx-auto text-lg md:text-xl">
             Crafting Unforgettable Journeys in the Heart of the Himalayas.
@@ -76,7 +76,7 @@ export default function AboutPage() {
       </section>
 
       {/* Mission Section */}
-      <section className="py-16 px-4 md:px-6">
+      <section className="py-16 px-4 md:px-6 bg-muted/40">
         <div className="container mx-auto max-w-4xl text-center">
             <Mountain className="h-16 w-16 mx-auto text-primary mb-4" />
           <h2 className="font-headline text-3xl font-bold mb-4">Our Mission</h2>
@@ -87,7 +87,7 @@ export default function AboutPage() {
       </section>
 
       {/* Why Choose Us Section */}
-       <section className="bg-muted/40 py-16 px-4 md:px-6">
+       <section className="bg-background py-16 px-4 md:px-6">
             <div className="container mx-auto">
                 <div className="text-center mb-12">
                     <h2 className="font-headline text-3xl font-bold">Why Choose Us?</h2>
@@ -95,20 +95,24 @@ export default function AboutPage() {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                     {whyChooseUs.map((item) => (
-                        <div key={item.title} className="text-center">
-                            <div className="flex items-center justify-center h-16 w-16 rounded-full bg-primary text-primary-foreground mx-auto mb-4">
-                                <item.icon className="h-8 w-8" />
-                            </div>
-                            <h3 className="text-xl font-bold mb-2">{item.title}</h3>
-                            <p className="text-muted-foreground">{item.description}</p>
-                        </div>
+                        <Card key={item.title} className="text-center pt-6 hover:shadow-lg hover:-translate-y-1 transition-all">
+                            <CardHeader className="items-center p-4">
+                                <div className="flex items-center justify-center h-16 w-16 rounded-full bg-primary/10 text-primary mb-4">
+                                    <item.icon className="h-8 w-8" />
+                                </div>
+                                <CardTitle className="text-xl">{item.title}</CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-4 pt-0">
+                                <p className="text-muted-foreground">{item.description}</p>
+                            </CardContent>
+                        </Card>
                     ))}
                 </div>
             </div>
        </section>
 
       {/* Team Section */}
-      <section className="py-16 px-4 md:px-6">
+      <section className="py-16 px-4 md:px-6 bg-muted/40">
         <div className="container mx-auto">
           <div className="text-center mb-12">
             <h2 className="font-headline text-3xl font-bold">Meet Our Core Team</h2>
@@ -118,7 +122,7 @@ export default function AboutPage() {
             {teamMembers.map((member) => {
               const memberImage = PlaceHolderImages.find((img) => img.id === member.image);
               return (
-                <Card key={member.name} className="text-center overflow-hidden border-border hover:shadow-lg transition-shadow">
+                <Card key={member.name} className="text-center overflow-hidden border-border hover:shadow-lg transition-shadow bg-card">
                   <CardContent className="p-0">
                     <div className="relative w-full aspect-square">
                       {memberImage && (
