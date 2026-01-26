@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -18,7 +17,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 
 interface HotelCardProps {
-  hotel: Hotel;
+  hotel: Hotel & { id: string };
 }
 
 
