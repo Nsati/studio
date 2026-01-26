@@ -1,4 +1,3 @@
-
 export interface Hotel {
   name: string;
   city: string;
@@ -21,7 +20,7 @@ export interface Room {
 }
 
 export interface City {
-  id: string; 
+  id: string;
   name: string;
   image: string;
 }
@@ -36,8 +35,8 @@ export interface UserProfile {
 }
 
 export interface Booking {
-  hotelId: string;
   userId: string;
+  hotelId: string;
   roomId: string;
   roomType: string;
   checkIn: Date;
@@ -49,6 +48,7 @@ export interface Booking {
   status: 'CONFIRMED' | 'CANCELLED' | 'PENDING';
   createdAt: Date;
   razorpayPaymentId?: string;
+  couponCode?: string;
 }
 
 export interface ConfirmedBookingSummary {

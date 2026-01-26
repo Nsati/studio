@@ -1,15 +1,14 @@
-
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, useRouter, notFound } from 'next/navigation';
 import Image from 'next/image';
 import { differenceInDays, format, parse } from 'date-fns';
-import { initializeBookingAndCreateOrder } from './actions';
+import { createRazorpayOrder } from './actions';
 import { signInAnonymously } from 'firebase/auth';
 import type { Hotel, Room, Booking, Promotion } from '@/lib/types';
 import { useFirestore, useAuth, useUser, useDoc, useCollection, useMemoFirebase, type WithId } from '@/firebase';
-import { doc, collection, getDoc, runTransaction } from 'firebase/firestore';
+import { doc, collection, getDoc, runTransaction, setDoc, Timestamp } from 'firebase/firestore';
 
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -225,56 +224,75 @@ export function BookingForm() {
             }
         }
         
-        const dataForServer = {
-            userId: userIdForBooking,
-            hotelId: hotel.id,
-            roomId: room.id,
-            checkIn: new Date(checkInStr),
-            checkOut: new Date(checkOutStr),
-            guests: parseInt(guests),
-            customerName: customerDetails.name,
-            customerEmail: customerDetails.email,
-            couponCode: couponDiscount > 0 ? couponCode : undefined,
-        };
-
-        const orderResponse = await initializeBookingAndCreateOrder(dataForServer);
-
-        if (!orderResponse.success || !orderResponse.order || !orderResponse.bookingId) {
-            toast({ variant: 'destructive', title: 'Payment Error', description: orderResponse.error || 'Could not initiate payment.', duration: 8000 });
+        if (!firestore) {
+            toast({ variant: 'destructive', title: 'Database not available' });
             setIsBooking(false);
             return;
         }
-        const { order, keyId, bookingId } = orderResponse;
-        
-        const options = {
-            key: keyId,
-            amount: order.amount,
-            currency: order.currency,
-            name: "Uttarakhand Getaways",
-            description: `Booking for ${hotel.name}`,
-            order_id: order.id,
-            handler: async (response: any) => {
-                // Payment was successful. Now, run the client-side confirmation.
-                toast({ title: "Payment Received!", description: "Finalizing your booking..." });
-                await handleClientSideConfirmation(response, bookingId, userIdForBooking!);
-            },
-            prefill: { name: customerDetails.name, email: customerDetails.email },
-            theme: { color: "#388E3C" },
-            modal: {
-                ondismiss: () => {
-                    setIsBooking(false);
-                    toast({ variant: 'destructive', title: 'Payment Cancelled', description: 'You cancelled the payment process.' });
-                }
-            }
-        };
 
         try {
+            // Step 1: Create the PENDING booking document on the client.
+            const bookingId = `booking_${Date.now()}_${userIdForBooking!.substring(0, 5)}`;
+            const bookingRef = doc(firestore, 'users', userIdForBooking, 'bookings', bookingId);
+            
+            const pendingBookingData: Booking = {
+                userId: userIdForBooking,
+                hotelId: hotel.id,
+                roomId: room.id,
+                roomType: room.type,
+                checkIn: checkIn,
+                checkOut: checkOut,
+                guests: parseInt(guests),
+                totalPrice: totalPrice,
+                customerName: customerDetails.name,
+                customerEmail: customerDetails.email,
+                status: 'PENDING',
+                createdAt: Timestamp.now().toDate(),
+                ...(couponDiscount > 0 && { couponCode: couponCode }),
+            };
+
+            await setDoc(bookingRef, pendingBookingData);
+
+            // Step 2: Call the simplified server action to get a Razorpay order.
+            const orderResponse = await createRazorpayOrder(totalPrice, bookingId);
+
+            if (!orderResponse.success || !orderResponse.order) {
+                toast({ variant: 'destructive', title: 'Payment Error', description: orderResponse.error || 'Could not initiate payment.', duration: 8000 });
+                setIsBooking(false);
+                // In a real app, you might want to delete the pending booking here.
+                return;
+            }
+            const { order, keyId } = orderResponse;
+            
+            // Step 3: Open Razorpay checkout.
+            const options = {
+                key: keyId,
+                amount: order.amount,
+                currency: order.currency,
+                name: "Uttarakhand Getaways",
+                description: `Booking for ${hotel.name}`,
+                order_id: order.id,
+                handler: async (response: any) => {
+                    toast({ title: "Payment Received!", description: "Finalizing your booking..." });
+                    await handleClientSideConfirmation(response, bookingId, userIdForBooking!);
+                },
+                prefill: { name: customerDetails.name, email: customerDetails.email },
+                theme: { color: "#388E3C" },
+                modal: {
+                    ondismiss: () => {
+                        setIsBooking(false);
+                        toast({ variant: 'destructive', title: 'Payment Cancelled', description: 'You cancelled the payment process.' });
+                    }
+                }
+            };
+
             const rzp = new window.Razorpay(options);
             rzp.open();
-        } catch(e) {
-            console.error(e);
-            toast({ variant: "destructive", title: "Payment Error", description: "Failed to open payment gateway. Please refresh." });
-            setIsBooking(false);
+
+        } catch (error: any) {
+             console.error("Client-side booking initialization failed:", error);
+             toast({ variant: 'destructive', title: 'Booking Error', description: 'Could not create initial booking document. Please try again.' });
+             setIsBooking(false);
         }
     };
 
