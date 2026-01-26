@@ -14,7 +14,7 @@ let adminServices: { app: App; firestore: Firestore; auth: Auth } | null = null;
  * are missing or malformed. This "fail fast, fail loud" approach ensures
 * configuration issues are immediately obvious.
  *
- * @returns An object with admin services { app, firestore, auth }.
+ * @returns An object with admin services { app, firestore: adminDb, auth: adminAuth }.
  */
 export function getFirebaseAdmin() {
     // If services are already initialized, return them immediately.
@@ -62,9 +62,21 @@ export function getFirebaseAdmin() {
         return adminServices;
 
     } catch (error: any) {
-        let detailedError = 'An unknown error occurred.';
+        let detailedError = `An unknown error occurred. Original error: ${error.message}`;
         if (error.message.includes('Invalid PEM formatted message')) {
-            detailedError = 'The `FIREBASE_PRIVATE_KEY` is malformed. Please ensure it is copied correctly into your .env file, enclosed in double quotes, and uses "\\n" for newlines. It must include the "-----BEGIN PRIVATE KEY-----" and "-----END PRIVATE KEY-----" markers.';
+            const errorMessage = `
+[FATAL] Firebase Admin SDK init failed: The \`FIREBASE_PRIVATE_KEY\` is malformed.
+
+This is a configuration error in your .env file, not a code bug.
+
+Please ensure the FIREBASE_PRIVATE_KEY variable looks EXACTLY like this example, including the quotes and \\n characters:
+
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\\nYOUR_VERY_LONG_KEY_HERE\\n-----END PRIVATE KEY-----\\n"
+
+Original Error: ${error.message}
+`;
+            throw new Error(errorMessage);
+
         } else if (error.code === 'app/invalid-credential') {
              detailedError = `The service account credentials (projectId, clientEmail, or privateKey) are invalid. Please check their values in your .env file. Original error: ${error.message}`;
         }
