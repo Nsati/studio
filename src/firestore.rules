@@ -12,16 +12,22 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      // CRITICAL: This rule specifically allows a user to read THEIR OWN document.
-      // It does NOT call isAdmin(), which prevents rule evaluation recursion.
+      // CRITICAL: This rule allows a user to get their OWN doc, and admins to get ANY doc.
+      // It does NOT call isAdmin() inside the user-specific part to prevent recursion.
       // This is the rule that allows the get() call inside the isAdmin() function to succeed.
-      allow get: if request.auth.uid == userId;
+      allow get: if request.auth.uid == userId || isAdmin();
 
-      // Allow admins to perform broad list/update operations.
-      // Allow users to create/update their own profiles.
+      // Allow admins to perform broad list operations.
       allow list: if isAdmin();
+      // Allow users to create their own profiles.
       allow create: if request.auth.uid == userId || isAdmin();
-      allow update: if isAdmin() || (request.auth.uid == userId && request.resource.data.role == resource.data.role);
+      
+      // Separate update rules for clarity and correctness.
+      // Rule 1: A user can update their OWN profile, but CANNOT change their role.
+      allow update: if request.auth.uid == userId && request.resource.data.role == resource.data.role;
+      // Rule 2: An admin can update ANY user profile (including changing their role).
+      allow update: if isAdmin();
+
 
       match /bookings/{bookingId} {
         allow read: if request.auth.uid == userId || isAdmin();
@@ -64,12 +70,15 @@ service cloud.firestore {
           allow create, delete: if isAdmin();
           
           // Allow admins to update anything.
-          // Allow any authenticated user (for booking/cancelling) to update ONLY the 'availableRooms' field.
-          // This rule uses request.writeFields, which is a simpler and more direct way to check update operations.
+          // For users, allow updating ONLY the 'availableRooms' field, and only by 1.
           allow update: if isAdmin() || 
                          (request.auth != null &&
-                          request.writeFields.size() == 1 &&
-                          request.writeFields[0] == 'availableRooms'
+                          // Ensure only the 'availableRooms' field is being changed.
+                          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['availableRooms']) &&
+                          // Allow the count to be incremented or decremented by exactly 1.
+                          // This supports both booking and cancellation transactions.
+                          (request.resource.data.availableRooms == resource.data.availableRooms + 1 ||
+                           request.resource.data.availableRooms == resource.data.availableRooms - 1)
                          );
         }
         
