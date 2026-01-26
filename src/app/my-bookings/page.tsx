@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -18,7 +19,7 @@ import { format } from 'date-fns';
 import { Hotel as HotelIcon, Home, Loader2, Download, Ban, CheckCircle, XCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
-import { collection, doc, runTransaction } from 'firebase/firestore';
+import { collection } from 'firebase/firestore';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -34,6 +35,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { normalizeTimestamp } from '@/lib/firestore-utils';
+import { cancelBookingAction } from './actions';
 
 
 function BookingItemSkeleton() {
@@ -84,56 +86,26 @@ function BookingItem({ booking }: { booking: WithId<Booking> }) {
     const { data: hotel, isLoading } = useDoc<Hotel>(hotelRef);
 
     const handleCancelBooking = async () => {
-        if (!firestore || !user || !booking.id) return;
+        if (!user || !booking.id) return;
 
         setIsCancelling(true);
 
-        try {
-            await runTransaction(firestore, async (transaction) => {
-                const bookingRef = doc(firestore, 'users', user.uid, 'bookings', booking.id);
-                const bookingDoc = await transaction.get(bookingRef);
-                if (!bookingDoc.exists()) {
-                    throw new Error("Booking does not exist.");
-                }
-
-                const bookingData = bookingDoc.data() as Booking;
-
-                if (bookingData.status === 'CANCELLED') {
-                    toast({ title: "Already Cancelled", description: "This booking has already been cancelled." });
-                    return;
-                }
-
-                if (bookingData.status === 'CONFIRMED') {
-                    const roomRef = doc(firestore, 'hotels', booking.hotelId, 'rooms', booking.roomId);
-                    const roomDoc = await transaction.get(roomRef);
-                    if (roomDoc.exists()) {
-                        const roomData = roomDoc.data() as Room;
-                        const newAvailableRooms = (roomData.availableRooms ?? 0) + 1;
-                         if (newAvailableRooms <= roomData.totalRooms) {
-                            transaction.update(roomRef, { availableRooms: newAvailableRooms });
-                        }
-                    }
-                }
-                
-                transaction.update(bookingRef, { status: 'CANCELLED' });
-            });
-            
-            // The onSnapshot listener in useCollection will handle the UI update automatically.
+        const result = await cancelBookingAction(user.uid, booking.id);
+        
+        if (result.success) {
             toast({
                 title: "Booking Cancelled",
                 description: "Your booking has been successfully cancelled. Any applicable refund will be processed.",
             });
-
-        } catch (error: any) {
-            console.error("Cancellation failed:", error);
+        } else {
             toast({
                 variant: "destructive",
                 title: "Cancellation Failed",
-                description: error.message || "Could not cancel the booking. Please try again.",
+                description: result.message,
             });
-        } finally {
-            setIsCancelling(false);
         }
+
+        setIsCancelling(false);
     };
 
 
@@ -228,7 +200,7 @@ function BookingItem({ booking }: { booking: WithId<Booking> }) {
                                         <AlertDialogTitle>Are you sure you want to cancel?</AlertDialogTitle>
                                         <AlertDialogDescription>
                                             This will permanently cancel your booking for {hotel.name}. 
-                                            {isPending ? " This was a demo booking, so no refund is applicable." : " Any applicable refund will be processed within 5-7 business days."}
+                                            Any applicable refund will be processed within 5-7 business days.
                                             This action cannot be undone.
                                         </AlertDialogDescription>
                                     </AlertDialogHeader>

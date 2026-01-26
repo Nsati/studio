@@ -1,3 +1,4 @@
+
 'use server';
 
 import Razorpay from 'razorpay';
@@ -5,11 +6,13 @@ import Razorpay from 'razorpay';
 /**
  * Creates a Razorpay order.
  * This server action is now simplified to only handle payment gateway interaction.
- * It has no dependency on the Firebase Admin SDK, which was the source of the "server not configured" error.
+ * It has no dependency on the Firebase Admin SDK.
+ * It includes the bookingId and userId in the notes for the webhook to use.
  */
 export async function createRazorpayOrder(
   totalPrice: number,
-  bookingId: string
+  bookingId: string,
+  userId: string
 ) {
   const keyId = process.env.RAZORPAY_KEY_ID;
   const keySecret = process.env.RAZORPAY_KEY_SECRET;
@@ -33,7 +36,10 @@ export async function createRazorpayOrder(
       amount: amountInPaise,
       currency: 'INR',
       receipt: `receipt_${bookingId}`,
-      notes: { booking_id: bookingId },
+      notes: { 
+        booking_id: bookingId,
+        user_id: userId,
+      },
     };
 
     const order = await razorpayInstance.orders.create(orderOptions);

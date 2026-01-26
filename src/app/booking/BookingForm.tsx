@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -136,55 +137,6 @@ export function BookingForm() {
             });
         }
     };
-    
-    const handleClientSideConfirmation = async (paymentResponse: { razorpay_payment_id: string }, bookingId: string, userId: string) => {
-        if (!firestore || !hotelId || !roomId) {
-            toast({ variant: 'destructive', title: 'Confirmation Error', description: 'Database connection failed.' });
-            return;
-        }
-
-        const bookingRef = doc(firestore, 'users', userId, 'bookings', bookingId);
-        const roomRef = doc(firestore, 'hotels', hotelId, 'rooms', roomId);
-
-        try {
-            await runTransaction(firestore, async (transaction) => {
-                const roomDoc = await transaction.get(roomRef);
-                if (!roomDoc.exists()) {
-                    throw new Error("Room data not found. Cannot confirm booking.");
-                }
-
-                const roomData = roomDoc.data() as Room;
-                const newAvailableRooms = (roomData.availableRooms ?? 0) - 1;
-
-                if (newAvailableRooms < 0) {
-                    throw new Error("Sorry, this room just got sold out!");
-                }
-
-                // Update room inventory
-                transaction.update(roomRef, { availableRooms: newAvailableRooms });
-                
-                // Update booking status
-                transaction.update(bookingRef, {
-                    status: 'CONFIRMED',
-                    razorpayPaymentId: paymentResponse.razorpay_payment_id
-                });
-            });
-
-            toast({ title: "Booking Confirmed!", description: "Your booking has been finalized." });
-            router.push(`/booking/success/${bookingId}`);
-
-        } catch (error: any) {
-            console.error("Client-side confirmation failed:", error);
-            toast({
-                variant: "destructive",
-                title: "Confirmation Failed",
-                description: error.message || "We received your payment, but couldn't auto-confirm your booking. Please check 'My Bookings' or contact support.",
-                duration: 10000
-            });
-            // Still redirect, but the page will show a pending state
-            router.push(`/booking/success/${bookingId}`);
-        }
-    };
 
     const handlePayment = async () => {
         if (!customerDetails.name || !customerDetails.email) {
@@ -253,13 +205,12 @@ export function BookingForm() {
 
             await setDoc(bookingRef, pendingBookingData);
 
-            // Step 2: Call the simplified server action to get a Razorpay order.
-            const orderResponse = await createRazorpayOrder(totalPrice, bookingId);
+            // Step 2: Call server action to get a Razorpay order, passing the userId.
+            const orderResponse = await createRazorpayOrder(totalPrice, bookingId, userIdForBooking);
 
             if (!orderResponse.success || !orderResponse.order) {
                 toast({ variant: 'destructive', title: 'Payment Error', description: orderResponse.error || 'Could not initiate payment.', duration: 8000 });
                 setIsBooking(false);
-                // In a real app, you might want to delete the pending booking here.
                 return;
             }
             const { order, keyId } = orderResponse;
@@ -273,8 +224,10 @@ export function BookingForm() {
                 description: `Booking for ${hotel.name}`,
                 order_id: order.id,
                 handler: async (response: any) => {
-                    toast({ title: "Payment Received!", description: "Finalizing your booking..." });
-                    await handleClientSideConfirmation(response, bookingId, userIdForBooking!);
+                    // Confirmation is now handled by the webhook.
+                    // Just inform the user and redirect.
+                    toast({ title: "Payment Received!", description: "Finalizing your booking... You will be redirected shortly." });
+                    router.push(`/booking/success/${bookingId}`);
                 },
                 prefill: { name: customerDetails.name, email: customerDetails.email },
                 theme: { color: "#388E3C" },
