@@ -1,14 +1,13 @@
 
 'use client';
 
-import { useParams, notFound } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useFirestore, useUser, useDoc, useMemoFirebase, type WithId } from '@/firebase';
 import { doc } from 'firebase/firestore';
-import type { Booking, Hotel } from '@/lib/types';
+import type { ConfirmedBookingSummary } from '@/lib/types';
 import { normalizeTimestamp } from '@/lib/firestore-utils';
 import { useState, useEffect } from 'react';
 
-import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   CheckCircle, PartyPopper, UserPlus, Loader2, AlertCircle
@@ -18,36 +17,10 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
 
-function SuccessContent({ booking, hotel }: { booking: WithId<Booking>, hotel: WithId<Hotel> }) {
-    const { user } = useUser();
-    const checkInDate = normalizeTimestamp(booking.checkIn);
-    const checkOutDate = normalizeTimestamp(booking.checkOut);
-
-    if (booking.status !== 'CONFIRMED') {
-         return (
-            <div className="bg-muted/40 min-h-[calc(100vh-4rem)] flex items-center">
-                <div className="container mx-auto max-w-lg py-12 px-4 md:px-6">
-                    <Card className="text-center border-amber-500">
-                        <CardHeader className="items-center">
-                            <Loader2 className="h-12 w-12 text-amber-500 animate-spin" />
-                            <CardTitle className="text-3xl font-headline mt-4 text-amber-700">Confirmation Pending</CardTitle>
-                            <CardDescription>
-                                We received your payment, but we're still finalizing the confirmation. This can happen due to high traffic. Please check "My Bookings" in a few minutes.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="flex flex-col sm:flex-row gap-4">
-                            <Button className="w-full" asChild>
-                                <Link href="/my-bookings">Go to My Bookings</Link>
-                            </Button>
-                            <Button className="w-full" variant="outline" asChild>
-                                <Link href="/">Back to Home</Link>
-                            </Button>
-                        </CardContent>
-                    </Card>
-                </div>
-            </div>
-        );
-    }
+function SuccessContent({ bookingSummary }: { bookingSummary: WithId<ConfirmedBookingSummary> }) {
+    const { user } = useUser(); // We only need the user here for the anonymous check
+    const checkInDate = normalizeTimestamp(bookingSummary.checkIn);
+    const checkOutDate = normalizeTimestamp(bookingSummary.checkOut);
     
      return (
         <div className="bg-muted/40 min-h-[calc(100vh-4rem)] flex items-center">
@@ -57,31 +30,31 @@ function SuccessContent({ booking, hotel }: { booking: WithId<Booking>, hotel: W
                         <PartyPopper className="h-12 w-12 text-primary" />
                         <CardTitle className="text-3xl font-headline mt-4">Booking Confirmed!</CardTitle>
                         <CardDescription className="max-w-md">
-                           Your Himalayan adventure awaits, {booking.customerName}. A confirmation email should arrive shortly.
+                           Your Himalayan adventure awaits, {bookingSummary.customerName}. A confirmation email should arrive shortly.
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="p-6 space-y-6">
                         <Card className="bg-background">
                             <CardHeader>
-                                <CardTitle className="text-xl">{hotel.name}</CardTitle>
-                                <CardDescription>{hotel.city}</CardDescription>
+                                <CardTitle className="text-xl">{bookingSummary.hotelName}</CardTitle>
+                                <CardDescription>{bookingSummary.hotelCity}</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-2 text-sm">
-                                <p><strong className="text-foreground">Room:</strong> {booking.roomType}</p>
+                                <p><strong className="text-foreground">Room:</strong> {bookingSummary.roomType}</p>
                                 <p><strong className="text-foreground">Check-in:</strong> {format(checkInDate, 'EEEE, dd MMMM yyyy')}</p>
                                 <p><strong className="text-foreground">Check-out:</strong> {format(checkOutDate, 'EEEE, dd MMMM yyyy')}</p>
-                                <p><strong className="text-foreground">Guests:</strong> {booking.guests}</p>
+                                <p><strong className="text-foreground">Guests:</strong> {bookingSummary.guests}</p>
                             </CardContent>
                         </Card>
 
                         <div className="rounded-lg border bg-background p-4 space-y-2">
                              <div className="flex justify-between items-center">
                                 <span className="text-muted-foreground">Booking ID</span>
-                                <span className="font-mono text-xs">{booking.id}</span>
+                                <span className="font-mono text-xs">{bookingSummary.id}</span>
                             </div>
                             <div className="flex justify-between items-center">
                                 <span className="text-muted-foreground">Total Amount Paid</span>
-                                <span className="font-bold text-lg">{booking.totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}</span>
+                                <span className="font-bold text-lg">{bookingSummary.totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}</span>
                             </div>
                              <div className="flex justify-between items-center">
                                 <span className="text-muted-foreground">Payment Status</span>
@@ -127,42 +100,30 @@ export default function BookingSuccessPage() {
     const firestore = useFirestore();
     const bookingId = params.id as string;
     
-    const { user, isLoading: isUserLoading } = useUser();
-    const [isAwaitingConfirmation, setIsAwaitingConfirmation] = useState(true);
+    const [timedOut, setTimedOut] = useState(false);
 
-    const bookingRef = useMemoFirebase(() => {
-        if (!firestore || !user || !bookingId) return null;
-        return doc(firestore, 'users', user.uid, 'bookings', bookingId);
-    }, [firestore, user, bookingId]);
+    // This ref is much simpler, no user dependency
+    const summaryRef = useMemoFirebase(() => {
+        if (!firestore || !bookingId) return null;
+        return doc(firestore, 'confirmedBookings', bookingId);
+    }, [firestore, bookingId]);
     
-    const { data: booking, isLoading: isBookingLoading } = useDoc<Booking>(bookingRef);
-
-    const hotelRef = useMemoFirebase(() => {
-        if (!firestore || !booking) return null;
-        return doc(firestore, 'hotels', booking.hotelId);
-    }, [firestore, booking]);
-    
-    const { data: hotel, isLoading: isHotelLoading } = useDoc<Hotel>(hotelRef);
+    const { data: bookingSummary, isLoading: isSummaryLoading } = useDoc<ConfirmedBookingSummary>(summaryRef);
 
     useEffect(() => {
-        if (booking) {
-            if (booking.status === 'CONFIRMED') {
-                setIsAwaitingConfirmation(false);
-            } else {
-                // If the status is not confirmed, set a timeout.
-                // The onSnapshot listener in useDoc will handle the update if it comes in time.
-                const timer = setTimeout(() => {
-                    setIsAwaitingConfirmation(false); // Stop waiting after 15 seconds
-                }, 15000);
-
-                return () => clearTimeout(timer); // Cleanup the timer
-            }
+        // If the listener is still loading after 15 seconds, we'll time out.
+        if (isSummaryLoading) {
+            const timer = setTimeout(() => {
+                if (!bookingSummary) { // Check again inside timeout
+                    setTimedOut(true);
+                }
+            }, 15000);
+            return () => clearTimeout(timer);
         }
-    }, [booking]);
+    }, [isSummaryLoading, bookingSummary]);
 
-    const isLoading = isUserLoading || isBookingLoading || (booking && isHotelLoading) || (booking && booking.status !== 'CONFIRMED' && isAwaitingConfirmation);
-
-    if (isLoading) {
+    if (isSummaryLoading && !timedOut) {
+        // Show loading spinner while we wait for the doc
         return (
             <div className="bg-muted/40 min-h-[calc(100vh-4rem)] flex items-center">
                 <div className="container mx-auto max-w-lg py-12 px-4 md:px-6">
@@ -183,16 +144,17 @@ export default function BookingSuccessPage() {
         );
     }
     
-    if (!booking || !hotel) {
-         return (
+    if (!bookingSummary) {
+        // This renders if the doc is not found after loading, or if we timed out
+        return (
             <div className="bg-muted/40 min-h-[calc(100vh-4rem)] flex items-center">
                 <div className="container mx-auto max-w-lg py-12 px-4 md:px-6">
-                    <Card className="text-center border-destructive">
+                    <Card className="text-center border-amber-500">
                         <CardHeader className="items-center">
-                            <AlertCircle className="h-12 w-12 text-destructive" />
-                            <CardTitle className="text-3xl font-headline mt-4">Booking Not Found</CardTitle>
+                            <AlertCircle className="h-12 w-12 text-amber-500" />
+                            <CardTitle className="text-3xl font-headline mt-4 text-amber-700">Confirmation Pending</CardTitle>
                             <CardDescription>
-                                We couldn't find the details for this booking. It might have been cancelled or the link is incorrect.
+                                We received your payment, but we're still finalizing the confirmation due to high traffic. Please check "My Bookings" in a few minutes, or contact support if the issue persists.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="flex flex-col sm:flex-row gap-4">
@@ -209,5 +171,6 @@ export default function BookingSuccessPage() {
         );
     }
     
-    return <SuccessContent booking={booking} hotel={hotel} />;
+    // Success, we have the summary document
+    return <SuccessContent bookingSummary={bookingSummary} />;
 }

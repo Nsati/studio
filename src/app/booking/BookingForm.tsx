@@ -190,6 +190,9 @@ export function BookingForm() {
             const pendingBookingData: Booking = {
                 userId: userIdForBooking,
                 hotelId: hotel.id,
+                hotelName: hotel.name,
+                hotelCity: hotel.city,
+                hotelAddress: hotel.address || '',
                 roomId: room.id,
                 roomType: room.type,
                 checkIn: checkIn,

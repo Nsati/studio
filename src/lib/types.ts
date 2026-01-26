@@ -38,6 +38,9 @@ export interface UserProfile {
 export interface Booking {
   userId: string;
   hotelId: string;
+  hotelName?: string;
+  hotelCity?: string;
+  hotelAddress?: string;
   roomId: string;
   roomType: string;
   checkIn: Date;
