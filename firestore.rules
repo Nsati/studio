@@ -4,41 +4,35 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     function isAdmin() {
-      // This get() is allowed by the "isOwner()" check in the /users/{userId} rule below.
+      // This get() is allowed by the "allow get" rule in the /users/{userId} match below.
+      // That rule is non-recursive, which is critical for this function to work.
       return request.auth != null 
              && exists(/databases/$(database)/documents/users/$(request.auth.uid)) 
              && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
     match /users/{userId} {
-      function isOwner() {
-        return request.auth != null && request.auth.uid == userId;
-      }
+      // CRITICAL: This rule specifically allows a user to read THEIR OWN document.
+      // It does NOT call isAdmin(), which prevents rule evaluation recursion.
+      // This is the rule that allows the get() call inside the isAdmin() function to succeed.
+      allow get: if request.auth.uid == userId;
 
-      // Admins can read/list any user. Users can only read their own profile.
-      // The isOwner() part is critical. It allows a user to read their own doc,
-      // which in turn allows the get() call inside isAdmin() to succeed without recursion.
-      allow get, list: if isOwner() || isAdmin();
-      
-      // A new user can create their own user document.
-      allow create: if isOwner();
-
-      // An admin can update any field on any user.
-      // A regular user can only update their own document, and they are NOT allowed to change their 'role'.
-      allow update: if isAdmin() || (isOwner() && request.resource.data.role == resource.data.role);
+      // Allow admins to perform broad list/update operations.
+      // Allow users to create/update their own profiles.
+      allow list: if isAdmin();
+      allow create: if request.auth.uid == userId || isAdmin();
+      allow update: if isAdmin() || (request.auth.uid == userId && request.resource.data.role == resource.data.role);
 
       match /bookings/{bookingId} {
-        // User can get/write their own bookings. Admin can get/write any booking.
-        allow get, write: if isOwner() || isAdmin();
+        // User can read/write their own bookings. Admin can read/write any booking.
+        allow read, write: if request.auth.uid == userId || isAdmin();
       }
     }
 
     // This global rule allows admins to perform `list` operations (collection group queries)
     // across all `bookings` subcollections.
     match /{path=**}/bookings/{bookingId} {
-        allow list: if request.auth != null &&
-                     exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-                     get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+        allow list: if isAdmin();
     }
 
     match /hotels/{hotelId} {
