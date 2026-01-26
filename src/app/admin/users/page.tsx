@@ -1,4 +1,3 @@
-
 'use client';
 import { useMemo, useState } from 'react';
 import { useFirestore, useCollection, useUser, useMemoFirebase } from '@/firebase';
@@ -93,11 +92,12 @@ function RoleSelector({ user }: { user: UserProfile }) {
 
 export default function UsersPage() {
     const firestore = useFirestore();
+    const { userProfile } = useUser();
 
     const usersQuery = useMemoFirebase(() => {
-        if (!firestore) return null;
+        if (!firestore || userProfile?.role !== 'admin') return null;
         return collection(firestore, 'users');
-    }, [firestore]);
+    }, [firestore, userProfile]);
 
     const { data: usersData, isLoading } = useCollection<UserProfile>(usersQuery);
 

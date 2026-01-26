@@ -1,4 +1,3 @@
-
 'use client';
 import { useMemo } from 'react';
 import dynamic from 'next/dynamic';
@@ -10,7 +9,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Hotel, Users2, BookOpen, IndianRupee } from 'lucide-react';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
 import { collection, collectionGroup } from 'firebase/firestore';
 import type { Booking, Hotel as HotelType, UserProfile } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -51,11 +50,12 @@ function StatCard({ title, value, icon: Icon, description, isLoading }: any) {
 
 export default function AdminDashboard() {
     const firestore = useFirestore();
+    const { userProfile } = useUser();
 
     const bookingsQuery = useMemoFirebase(() => {
-        if (!firestore) return null;
+        if (!firestore || userProfile?.role !== 'admin') return null;
         return collectionGroup(firestore, 'bookings');
-    }, [firestore]);
+    }, [firestore, userProfile]);
 
     const hotelsQuery = useMemoFirebase(() => {
         if (!firestore) return null;
@@ -63,9 +63,9 @@ export default function AdminDashboard() {
     }, [firestore]);
     
     const usersQuery = useMemoFirebase(() => {
-        if (!firestore) return null;
+        if (!firestore || userProfile?.role !== 'admin') return null;
         return collection(firestore, 'users');
-    }, [firestore]);
+    }, [firestore, userProfile]);
     
     const { data: bookingsData, isLoading: isLoadingBookings } = useCollection<Booking>(bookingsQuery);
     const { data: hotelsData, isLoading: isLoadingHotels } = useCollection<HotelType>(hotelsQuery);

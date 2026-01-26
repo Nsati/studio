@@ -1,7 +1,6 @@
-
 'use client';
 import { useMemo, useState } from 'react';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
 import { collection, doc, runTransaction, increment, updateDoc, collectionGroup } from 'firebase/firestore';
 import type { Booking, Room } from '@/lib/types';
 import { format } from 'date-fns';
@@ -143,11 +142,12 @@ function CancelBookingAction({ booking }: { booking: Booking }) {
 
 export default function BookingsPage() {
     const firestore = useFirestore();
+    const { userProfile } = useUser();
 
     const bookingsQuery = useMemoFirebase(() => {
-        if (!firestore) return null;
+        if (!firestore || userProfile?.role !== 'admin') return null;
         return collectionGroup(firestore, 'bookings');
-    }, [firestore]);
+    }, [firestore, userProfile]);
 
     const { data: bookingsData, isLoading } = useCollection<Booking>(bookingsQuery);
     
