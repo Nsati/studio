@@ -249,8 +249,26 @@ export function useCollection<T = any>(
       return;
     }
     
-    const path = (refOrQuery as any)._query?.path?.canonicalString() || (refOrQuery as any).path || 'unknown path';
-
+    let path = 'unknown path';
+    try {
+        const internalQuery = (refOrQuery as any)._query;
+        if (internalQuery) {
+            // This is a Query object
+            if (internalQuery.collectionGroup) {
+                // This is a collectionGroup query
+                path = `collectionGroup('${internalQuery.collectionGroup}')`;
+            } else if (internalQuery.path) {
+                // This is a regular collection query
+                path = internalQuery.path.segments.join('/');
+            }
+        } else if ((refOrQuery as any).path) {
+            // This is a CollectionReference
+            path = (refOrQuery as any).path;
+        }
+    } catch (e) {
+        console.error("Could not determine query path for error reporting", e);
+    }
+    
     // @ts-ignore
     if (!refOrQuery.__memo && process.env.NODE_ENV === 'development') {
         console.warn(`Firestore query passed to useCollection for path "${path}" is not memoized. This may cause infinite re-renders. Use the useMemoFirebase hook to memoize the reference.`);
