@@ -4,7 +4,7 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useRouter } from 'next/navigation';
-import { doc, writeBatch, deleteDoc, collection } from 'firebase/firestore';
+import { doc, writeBatch, deleteDoc, collection, getDocs } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import slugify from 'slugify';
@@ -184,13 +184,12 @@ export function EditHotelForm({ hotel, rooms: initialRooms }: EditHotelFormProps
 
     try {
         const [roomsSnap, reviewsSnap] = await Promise.all([
-             // In a real app with many rooms/reviews, you'd paginate this.
-             // For this app's scale, getting them all is fine.
+             getDocs(roomsRef),
+             getDocs(reviewsRef)
         ]);
 
-        initialRooms.forEach(room => {
-            batch.delete(doc(roomsRef, room.id));
-        });
+        roomsSnap.forEach(roomDoc => batch.delete(roomDoc.ref));
+        reviewsSnap.forEach(reviewDoc => batch.delete(reviewDoc.ref));
         
         batch.delete(hotelRef);
         await batch.commit();

@@ -39,11 +39,16 @@ service cloud.firestore {
 
         match /rooms/{roomId} {
           allow read: if true;
-          // Allow admins to do any write operation.
           allow create, delete: if isAdmin();
-          // Allow authenticated users to update a room, but ONLY if they are decrementing availableRooms by 1.
-          // This allows the client-side booking transaction to work securely.
-          allow update: if (isAdmin() || (request.auth != null && request.resource.data.availableRooms == resource.data.availableRooms - 1));
+          
+          // Allow admins to update anything.
+          // Allow regular users to update ONLY the availableRooms count by exactly 1 (up or down).
+          // This secures the client-side transaction for booking and canceling.
+          allow update: if isAdmin() ||
+                         (request.auth != null &&
+                          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['availableRooms']) &&
+                          (request.resource.data.availableRooms == resource.data.availableRooms + 1 ||
+                           request.resource.data.availableRooms == resource.data.availableRooms - 1));
         }
         
         match /reviews/{reviewId} {

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -8,7 +9,7 @@ import { createRazorpayOrder, verifyRazorpaySignature } from './actions';
 import { signInAnonymously } from 'firebase/auth';
 import type { Hotel, Room, Booking, Promotion, ConfirmedBookingSummary } from '@/lib/types';
 import { useFirestore, useAuth, useUser, useDoc, useCollection, useMemoFirebase } from '@/firebase';
-import { doc, collection, getDoc, runTransaction, setDoc, serverTimestamp, increment } from 'firebase/firestore';
+import { doc, collection, getDoc, runTransaction, setDoc, serverTimestamp } from 'firebase/firestore';
 
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -255,8 +256,10 @@ export function BookingForm() {
                         if ((roomData.availableRooms ?? roomData.totalRooms) <= 0) {
                             throw new Error(`Sorry, this room just sold out.`);
                         }
+                        
+                        const newAvailableRooms = (roomData.availableRooms ?? roomData.totalRooms) - 1;
     
-                        transaction.update(roomRefForTx, { availableRooms: increment(-1) });
+                        transaction.update(roomRefForTx, { availableRooms: newAvailableRooms });
                         transaction.update(bookingRefForTx, {
                             status: 'CONFIRMED',
                             razorpayPaymentId: response.razorpay_payment_id,

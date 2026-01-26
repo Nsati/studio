@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, doc, runTransaction, increment, updateDoc, collectionGroup } from 'firebase/firestore';
-import type { Booking } from '@/lib/types';
+import type { Booking, Room } from '@/lib/types';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { normalizeTimestamp } from '@/lib/firestore-utils';
@@ -57,7 +57,6 @@ function CancelBookingAction({ booking }: { booking: Booking }) {
 
         setIsCancelling(true);
         const bookingRef = doc(firestore, 'users', booking.userId, 'bookings', booking.id);
-        const roomRef = doc(firestore, 'hotels', booking.hotelId, 'rooms', booking.roomId);
 
         try {
             await runTransaction(firestore, async (transaction) => {
@@ -80,9 +79,14 @@ function CancelBookingAction({ booking }: { booking: Booking }) {
                 
                 // Increment room count only if booking was confirmed
                 if (bookingData.status === 'CONFIRMED') {
+                    const roomRef = doc(firestore, 'hotels', booking.hotelId, 'rooms', booking.roomId);
                     const roomDoc = await transaction.get(roomRef);
                     if (roomDoc.exists()) {
-                        transaction.update(roomRef, { availableRooms: increment(1) });
+                        const roomData = roomDoc.data() as Room;
+                        const newAvailableRooms = (roomData.availableRooms ?? 0) + 1;
+                         if (newAvailableRooms <= roomData.totalRooms) {
+                            transaction.update(roomRef, { availableRooms: newAvailableRooms });
+                        }
                     }
                 }
                 

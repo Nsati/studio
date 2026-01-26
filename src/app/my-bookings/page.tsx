@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useFirestore, useUser, useCollection, useDoc, useMemoFirebase } from '@/firebase';
-import type { Booking, Hotel } from '@/lib/types';
+import type { Booking, Hotel, Room } from '@/lib/types';
 import {
   Card,
   CardContent,
@@ -19,7 +19,7 @@ import { format } from 'date-fns';
 import { Hotel as HotelIcon, Home, Loader2, Download, Ban, CheckCircle, XCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
-import { collection, doc, runTransaction, increment } from 'firebase/firestore';
+import { collection, doc, runTransaction } from 'firebase/firestore';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -106,7 +106,15 @@ function BookingItem({ booking }: { booking: Booking }) {
 
                 if (bookingData.status === 'CONFIRMED') {
                     const roomRef = doc(firestore, 'hotels', booking.hotelId, 'rooms', booking.roomId);
-                    transaction.update(roomRef, { availableRooms: increment(1) });
+                    const roomDoc = await transaction.get(roomRef);
+                    if (roomDoc.exists()) {
+                        const roomData = roomDoc.data() as Room;
+                        const newAvailableRooms = (roomData.availableRooms ?? 0) + 1;
+                        // Ensure we don't increment past the total number of rooms
+                        if (newAvailableRooms <= roomData.totalRooms) {
+                            transaction.update(roomRef, { availableRooms: newAvailableRooms });
+                        }
+                    }
                 }
                 
                 transaction.update(bookingRef, { status: 'CANCELLED' });
