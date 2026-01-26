@@ -5,11 +5,11 @@ import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, useRouter, notFound } from 'next/navigation';
 import Image from 'next/image';
 import { differenceInDays, format, parse } from 'date-fns';
-import { createRazorpayOrder, verifyRazorpaySignature } from './actions';
+import { initializeBookingAndCreateOrder } from './actions';
 import { signInAnonymously } from 'firebase/auth';
 import type { Hotel, Room, Booking, Promotion } from '@/lib/types';
 import { useFirestore, useAuth, useUser, useDoc, useCollection, useMemoFirebase } from '@/firebase';
-import { doc, collection, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, collection, getDoc } from 'firebase/firestore';
 
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -143,10 +143,6 @@ export function BookingForm() {
             toast({ variant: 'destructive', title: 'Missing Details', description: 'Please provide your name and email.' });
             return;
         }
-        if (!firestore) {
-            toast({ variant: 'destructive', title: 'Database not available' });
-            return;
-        }
         
         setIsBooking(true);
 
@@ -180,10 +176,7 @@ export function BookingForm() {
             }
         }
         
-        const bookingId = `booking_${Date.now()}`;
-        const bookingRef = doc(firestore, 'users', userIdForBooking, 'bookings', bookingId);
-        
-        const pendingBookingData: Omit<Booking, 'createdAt' | 'id'> = {
+        const bookingDataForServer = {
             userId: userIdForBooking,
             hotelId: hotel.id,
             roomId: room.id,
@@ -194,35 +187,16 @@ export function BookingForm() {
             totalPrice: totalPrice,
             customerName: customerDetails.name,
             customerEmail: customerDetails.email,
-            status: 'PENDING',
         };
 
-        try {
-            await setDoc(bookingRef, { id: bookingId, ...pendingBookingData, createdAt: serverTimestamp() });
-        } catch (error: any) {
-            console.error("Failed to create pending booking:", error);
-            toast({
-                variant: "destructive",
-                title: "Booking Initialization Failed",
-                description: `Could not save initial booking details. Error: ${error.message}`,
-            });
-            setIsBooking(false);
-            return;
-        }
+        const orderResponse = await initializeBookingAndCreateOrder(bookingDataForServer);
 
-        const orderResponse = await createRazorpayOrder(totalPrice, {
-            user_id: userIdForBooking,
-            booking_id: bookingId,
-            hotel_id: hotel.id,
-            room_id: room.id,
-        });
-
-        if (!orderResponse.success || !orderResponse.order) {
+        if (!orderResponse.success || !orderResponse.order || !orderResponse.bookingId) {
             toast({ variant: 'destructive', title: 'Payment Error', description: orderResponse.error || 'Could not initiate payment.', duration: 8000 });
             setIsBooking(false);
             return;
         }
-        const { order, keyId } = orderResponse;
+        const { order, keyId, bookingId } = orderResponse;
         
         const options = {
             key: keyId,
@@ -236,7 +210,7 @@ export function BookingForm() {
                 
                 // The booking is no longer confirmed here. The server-side webhook handles it.
                 // We just redirect the user to the success page, which will poll for the
-                // confirmed status.
+                // confirmed status, using the booking ID we got from our server action.
                 router.push(`/booking/success/${bookingId}`);
             },
             prefill: { name: customerDetails.name, email: customerDetails.email },

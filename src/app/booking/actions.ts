@@ -3,61 +3,84 @@
 
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
+import { getFirebaseAdmin } from '@/firebase/admin';
+import { Timestamp } from 'firebase-admin/firestore';
+import type { Booking } from '@/lib/types';
+
 
 /**
- * Creates a Razorpay order.
- * This server action now includes detailed notes (booking_id, user_id, etc.)
- * which are crucial for the server-side webhook to identify and confirm the booking.
+ * Creates a PENDING booking document in Firestore using the Admin SDK,
+ * then creates a corresponding Razorpay order. This server-side approach
+ * is more robust than creating the booking from the client.
  */
-export async function createRazorpayOrder(
-  amount: number,
-  notes: {
-    booking_id: string;
-    user_id: string;
-    hotel_id: string;
-    room_id: string;
-  }
+export async function initializeBookingAndCreateOrder(
+  bookingData: Omit<Booking, 'id' | 'status' | 'createdAt' | 'razorpayPaymentId'>
 ) {
+  const { 
+    userId, hotelId, roomId, roomType, checkIn, checkOut, guests, totalPrice, customerName, customerEmail
+  } = bookingData;
+
+  const adminDb = getFirebaseAdmin().firestore();
+  const bookingId = `booking_${Date.now()}`;
+  const bookingRef = adminDb.collection('users').doc(userId).collection('bookings').doc(bookingId);
+
+  // 1. Create the PENDING booking document on the server
+  try {
+    const pendingBooking: Omit<Booking, 'id' | 'razorpayPaymentId'> = {
+      ...bookingData,
+      status: 'PENDING',
+      createdAt: Timestamp.now(),
+    };
+    await bookingRef.set({ id: bookingId, ...pendingBooking });
+  } catch (error: any) {
+    console.error('SERVER ACTION ERROR: Failed to create PENDING booking:', error);
+    return { success: false, error: 'Could not initialize booking on the server. Please try again.', order: null, keyId: null, bookingId: null };
+  }
+
+  // 2. Create Razorpay order
   try {
     const keyId = process.env.RAZORPAY_KEY_ID;
     const keySecret = process.env.RAZORPAY_KEY_SECRET;
 
     if (!keyId || !keySecret) {
-      return { success: false, error: 'Payment gateway is not configured on the server. Missing API keys.', order: null, keyId: null };
+      throw new Error('Payment gateway is not configured. Missing API keys.');
     }
     
-    if (typeof amount !== 'number' || isNaN(amount)) {
-      return { success: false, error: `Invalid order amount provided. Expected a number.`, order: null, keyId: null };
-    }
-
     const razorpayInstance = new Razorpay({
       key_id: keyId,
       key_secret: keySecret,
     });
 
-    const amountInPaise = Math.round(amount * 100);
+    const amountInPaise = Math.round(totalPrice * 100);
     if (amountInPaise < 100) {
-        return { success: false, error: 'Order amount must be at least ₹1.00', order: null, keyId: null };
+        throw new Error('Order amount must be at least ₹1.00');
     }
 
     const options = {
       amount: amountInPaise,
       currency: 'INR',
-      receipt: `receipt_booking_${notes.booking_id}`,
-      notes: notes,
+      receipt: `receipt_booking_${bookingId}`,
+      notes: {
+        booking_id: bookingId,
+        user_id: userId,
+        hotel_id: hotelId,
+        room_id: roomId,
+      },
     };
     
     const order = await razorpayInstance.orders.create(options);
     
     if (!order) {
-      return { success: false, error: 'Failed to create order with Razorpay. The order object was null.', order: null, keyId: null };
+      throw new Error('Failed to create order with Razorpay.');
     }
     
-    return { success: true, order, keyId, error: null };
+    return { success: true, order, keyId, error: null, bookingId: bookingId };
 
   } catch (error: any) {
-    const errorMessage = error.message || 'An unknown error occurred during payment processing.';
-    return { success: false, error: errorMessage, order: null, keyId: null };
+    console.error('SERVER ACTION ERROR: Failed to create Razorpay order:', error);
+    // Attempt to delete the PENDING booking if order creation fails, to avoid orphaned bookings
+    await bookingRef.delete().catch(delErr => console.error('Failed to clean up orphaned pending booking:', delErr));
+    return { success: false, error: error.message || 'An unknown error occurred.', order: null, keyId: null, bookingId: null };
   }
 }
 
