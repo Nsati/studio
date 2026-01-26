@@ -6,6 +6,7 @@ import { useFirestore, useUser, useDoc, useMemoFirebase, type WithId } from '@/f
 import { doc } from 'firebase/firestore';
 import type { Booking, Hotel } from '@/lib/types';
 import { normalizeTimestamp } from '@/lib/firestore-utils';
+import { useState, useEffect } from 'react';
 
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -127,9 +128,8 @@ export default function BookingSuccessPage() {
     const bookingId = params.id as string;
     
     const { user, isLoading: isUserLoading } = useUser();
+    const [isAwaitingConfirmation, setIsAwaitingConfirmation] = useState(true);
 
-    // The booking is confirmed on the client now, so we don't need complex polling.
-    // We just need to load the booking data to display it.
     const bookingRef = useMemoFirebase(() => {
         if (!firestore || !user || !bookingId) return null;
         return doc(firestore, 'users', user.uid, 'bookings', bookingId);
@@ -144,8 +144,23 @@ export default function BookingSuccessPage() {
     
     const { data: hotel, isLoading: isHotelLoading } = useDoc<Hotel>(hotelRef);
 
+    useEffect(() => {
+        if (booking) {
+            if (booking.status === 'CONFIRMED') {
+                setIsAwaitingConfirmation(false);
+            } else {
+                // If the status is not confirmed, set a timeout.
+                // The onSnapshot listener in useDoc will handle the update if it comes in time.
+                const timer = setTimeout(() => {
+                    setIsAwaitingConfirmation(false); // Stop waiting after 15 seconds
+                }, 15000);
 
-    const isLoading = isUserLoading || isBookingLoading || (booking && isHotelLoading);
+                return () => clearTimeout(timer); // Cleanup the timer
+            }
+        }
+    }, [booking]);
+
+    const isLoading = isUserLoading || isBookingLoading || (booking && isHotelLoading) || (booking && booking.status !== 'CONFIRMED' && isAwaitingConfirmation);
 
     if (isLoading) {
         return (
@@ -154,9 +169,9 @@ export default function BookingSuccessPage() {
                     <Card className="text-center">
                         <CardHeader className="items-center">
                             <Loader2 className="h-12 w-12 text-primary animate-spin" />
-                            <CardTitle className="text-3xl font-headline mt-4">Loading Your Booking Details</CardTitle>
+                            <CardTitle className="text-3xl font-headline mt-4">Finalizing Your Confirmation</CardTitle>
                             <CardDescription>
-                                Please wait a moment...
+                                Your payment was successful! Please wait a moment while we confirm your booking with the hotel.
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
