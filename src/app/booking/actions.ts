@@ -1,4 +1,3 @@
-
 'use server';
 
 import Razorpay from 'razorpay';
@@ -16,10 +15,29 @@ import type { Booking } from '@/lib/types';
 export async function initializeBookingAndCreateOrder(
   bookingData: Omit<Booking, 'id' | 'status' | 'createdAt' | 'razorpayPaymentId'>
 ) {
+  // --- Start of New Validation Block ---
+  const requiredServerEnvs = {
+    'FIREBASE_PROJECT_ID': process.env.FIREBASE_PROJECT_ID,
+    'FIREBASE_PRIVATE_KEY': process.env.FIREBASE_PRIVATE_KEY,
+    'FIREBASE_CLIENT_EMAIL': process.env.FIREBASE_CLIENT_EMAIL,
+    'RAZORPAY_KEY_ID': process.env.RAZORPAY_KEY_ID,
+    'RAZORPAY_KEY_SECRET': process.env.RAZORPAY_KEY_SECRET
+  };
+
+  for (const [key, value] of Object.entries(requiredServerEnvs)) {
+    if (!value) {
+      const errorMessage = `Server configuration error: The environment variable '${key}' is missing. Please check your .env file.`;
+      console.error(`SERVER ACTION ERROR: ${errorMessage}`);
+      return { success: false, error: errorMessage, order: null, keyId: null, bookingId: null };
+    }
+  }
+  // --- End of New Validation Block ---
+
   const admin = getFirebaseAdmin();
   if (!admin) {
-    console.error('SERVER ACTION ERROR: Firebase Admin SDK is not initialized. Check server configuration and .env file.');
-    return { success: false, error: 'Server is not configured for payments. Please contact support.', order: null, keyId: null, bookingId: null };
+    const errorMessage = 'Failed to initialize Firebase Admin SDK. This can happen if the private key format is incorrect. Please review the key in your .env file and check server logs for details.';
+    console.error(`SERVER ACTION ERROR: ${errorMessage}`);
+    return { success: false, error: errorMessage, order: null, keyId: null, bookingId: null };
   }
   const adminDb = admin.firestore;
 
@@ -45,12 +63,9 @@ export async function initializeBookingAndCreateOrder(
 
   // 2. Create Razorpay order
   try {
-    const keyId = process.env.RAZORPAY_KEY_ID;
-    const keySecret = process.env.RAZORPAY_KEY_SECRET;
-
-    if (!keyId || !keySecret) {
-      throw new Error('Payment gateway is not configured. Missing API keys.');
-    }
+    // Keys are already validated above, so we can safely use them.
+    const keyId = process.env.RAZORPAY_KEY_ID!;
+    const keySecret = process.env.RAZORPAY_KEY_SECRET!;
     
     const razorpayInstance = new Razorpay({
       key_id: keyId,

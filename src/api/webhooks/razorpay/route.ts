@@ -25,12 +25,25 @@ import type { Booking, Hotel, Room, ConfirmedBookingSummary } from '@/lib/types'
 export async function POST(req: NextRequest) {
   console.log('--- Razorpay Webhook Endpoint Hit ---');
 
-  const secret = process.env.RAZORPAY_WEBHOOK_SECRET || '';
-  if (!secret) {
-    console.error('❌ STEP 0: RAZORPAY_WEBHOOK_SECRET is not set. Cannot verify webhook signature.');
-    return NextResponse.json({ status: 'error', message: 'Webhook secret not configured on server.' }, { status: 400 });
-  }
+  // --- Start of New Validation Block ---
+  const requiredServerEnvs = {
+    'RAZORPAY_WEBHOOK_SECRET': process.env.RAZORPAY_WEBHOOK_SECRET,
+    'RAZORPAY_KEY_ID': process.env.RAZORPAY_KEY_ID,
+    'RAZORPAY_KEY_SECRET': process.env.RAZORPAY_KEY_SECRET,
+    'FIREBASE_PROJECT_ID': process.env.FIREBASE_PROJECT_ID,
+  };
 
+  for (const [key, value] of Object.entries(requiredServerEnvs)) {
+    if (!value) {
+        const errorMessage = `Webhook failed: Server configuration error. The environment variable '${key}' is missing.`;
+        console.error(`❌ FATAL: ${errorMessage}`);
+        // Return 500 to indicate a server configuration issue. Razorpay might retry.
+        return NextResponse.json({ status: 'error', message: 'Internal server configuration error.' }, { status: 500 });
+    }
+  }
+  // --- End of New Validation Block ---
+
+  const secret = process.env.RAZORPAY_WEBHOOK_SECRET!;
   const signature = req.headers.get('x-razorpay-signature');
   if (!signature) {
     console.warn('⚠️ Webhook ignored: Signature missing.');
@@ -62,12 +75,9 @@ export async function POST(req: NextRequest) {
       const orderId = paymentEntity.order_id;
       const paymentId = paymentEntity.id;
 
-      const keyId = process.env.RAZORPAY_KEY_ID;
-      const keySecret = process.env.RAZORPAY_KEY_SECRET;
-
-      if (!keyId || !keySecret) {
-        throw new Error('Razorpay keys are not configured on the server.');
-      }
+      // Keys are already validated above
+      const keyId = process.env.RAZORPAY_KEY_ID!;
+      const keySecret = process.env.RAZORPAY_KEY_SECRET!;
       
       const rzpInstance = new Razorpay({ key_id: keyId, key_secret: keySecret });
       const order = await rzpInstance.orders.fetch(orderId);
