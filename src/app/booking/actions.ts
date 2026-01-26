@@ -28,23 +28,16 @@ export async function initializeBookingAndCreateOrder(
     couponCode?: string;
   }
 ) {
-  const admin = getFirebaseAdmin();
-  if (!admin) {
-    const errorMessage = "Server is not configured for payments. Please contact support. (Admin: Firebase SDK init failed)";
-    console.error(`SERVER ACTION ERROR: ${errorMessage}`);
-    return { success: false, error: errorMessage, order: null, keyId: null, bookingId: null };
-  }
-
   const keyId = process.env.RAZORPAY_KEY_ID;
   const keySecret = process.env.RAZORPAY_KEY_SECRET;
 
   if (!keyId || !keySecret) {
-      const errorMessage = "Payment processing is currently unavailable. (Admin: Razorpay keys missing)";
+      const errorMessage = "Payment processing is currently unavailable. (Admin Error: Razorpay keys are missing in .env).";
       console.error(`SERVER ACTION ERROR: ${errorMessage}`);
       return { success: false, error: errorMessage, order: null, keyId: null, bookingId: null };
   }
-  
-  const adminDb = admin.firestore;
+
+  const { adminDb } = getFirebaseAdmin();
   
   const { userId, hotelId, roomId, customerName, customerEmail, guests, couponCode } = data;
 

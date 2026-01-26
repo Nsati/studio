@@ -25,19 +25,15 @@ import type { Booking, Hotel, Room, ConfirmedBookingSummary } from '@/lib/types'
 export async function POST(req: NextRequest) {
   console.log('--- Razorpay Webhook Endpoint Hit ---');
 
-  const admin = getFirebaseAdmin();
-  if (!admin) {
-    console.error('❌ FATAL WEBHOOK ERROR: Firebase Admin SDK is not initialized. Cannot process booking confirmation.');
-    return NextResponse.json({ status: 'error', message: 'Internal server configuration error.' }, { status: 500 });
-  }
-
   const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
   const keyId = process.env.RAZORPAY_KEY_ID;
   const keySecret = process.env.RAZORPAY_KEY_SECRET;
 
+  // These checks are critical. If the server isn't configured for Razorpay, fail loudly.
   if (!secret || !keyId || !keySecret) {
-      console.error('❌ FATAL WEBHOOK ERROR: Razorpay environment variables are missing.');
-      return NextResponse.json({ status: 'error', message: 'Internal server configuration error.' }, { status: 500 });
+      const errorMsg = '❌ FATAL WEBHOOK ERROR: Razorpay environment variables are missing (KEY_ID, KEY_SECRET, or WEBHOOK_SECRET).';
+      console.error(errorMsg);
+      return NextResponse.json({ status: 'error', message: `Internal server configuration error: ${errorMsg}` }, { status: 500 });
   }
 
   const signature = req.headers.get('x-razorpay-signature');
@@ -73,8 +69,8 @@ export async function POST(req: NextRequest) {
       const paymentId = paymentEntity.id;
 
       // 3. Initialize services
+      const { adminDb } = getFirebaseAdmin(); // This will throw if not configured.
       const rzpInstance = new Razorpay({ key_id: keyId, key_secret: keySecret });
-      const adminDb = admin.firestore;
       
       // 4. Fetch order and run transaction
       const order = await rzpInstance.orders.fetch(orderId);

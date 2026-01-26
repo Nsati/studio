@@ -1,3 +1,4 @@
+
 'use client';
 import { useMemo, useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
@@ -8,7 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Hotel, Users2, BookOpen, IndianRupee } from 'lucide-react';
+import { Hotel, Users2, BookOpen, IndianRupee, AlertCircle } from 'lucide-react';
 import { useUser } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getAdminDashboardStats, type SerializableBooking, type SerializableHotel, type SerializableUserProfile } from './actions';
@@ -47,6 +48,30 @@ function StatCard({ title, value, icon: Icon, description, isLoading }: any) {
     )
 }
 
+function AdminErrorState({ error }: { error: Error }) {
+    return (
+        <Card className="col-span-full bg-destructive/10 border-destructive/20">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-destructive">
+                    <AlertCircle className="h-6 w-6" />
+                    Admin Panel Error
+                </CardTitle>
+                <CardDescription className="text-destructive">
+                    The admin panel could not be loaded because the server is not properly configured. Check the server logs for a `[FATAL]` error message.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <pre className="text-xs text-destructive-foreground bg-destructive/20 p-4 rounded-md overflow-x-auto">
+                    <code>
+                        {error.message}
+                    </code>
+                </pre>
+            </CardContent>
+        </Card>
+    )
+}
+
+
 export default function AdminDashboard() {
     const { userProfile } = useUser();
     const [stats, setStats] = useState<{
@@ -55,6 +80,7 @@ export default function AdminDashboard() {
         usersData: SerializableUserProfile[] | null,
     }>({ bookingsData: null, hotelsData: null, usersData: null });
     const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<Error | null>(null);
 
     useEffect(() => {
         if (userProfile?.role === 'admin') {
@@ -65,9 +91,10 @@ export default function AdminDashboard() {
                     hotelsData: data.hotels,
                     usersData: data.users
                 });
+                setError(null);
             }).catch(err => {
                 console.error("Failed to load dashboard stats", err);
-                // Optionally set an error state here and show a toast
+                setError(err);
             }).finally(() => {
                 setIsLoading(false);
             });
@@ -111,12 +138,16 @@ export default function AdminDashboard() {
     <div className="space-y-6">
       <h1 className="font-headline text-3xl font-bold">Admin Dashboard</h1>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard title="Total Revenue" value={totalRevenue.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })} icon={IndianRupee} description="All-time revenue" isLoading={isLoading} />
-        <StatCard title="Confirmed Bookings" value={totalBookings} icon={BookOpen} description={`+${bookingsLastMonth} from last month`} isLoading={isLoading} />
-        <StatCard title="Hotels" value={hotelsData?.length || 0} icon={Hotel} description="Total active properties" isLoading={isLoading}/>
-        <StatCard title="Users" value={usersData?.length || 0} icon={Users2} description="Total registered users" isLoading={isLoading} />
-      </div>
+        {error && (
+            <AdminErrorState error={error} />
+        )}
+
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <StatCard title="Total Revenue" value={totalRevenue.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })} icon={IndianRupee} description="All-time revenue" isLoading={isLoading} />
+            <StatCard title="Confirmed Bookings" value={totalBookings} icon={BookOpen} description={`+${bookingsLastMonth} from last month`} isLoading={isLoading} />
+            <StatCard title="Hotels" value={hotelsData?.length || 0} icon={Hotel} description="Total active properties" isLoading={isLoading}/>
+            <StatCard title="Users" value={usersData?.length || 0} icon={Users2} description="Total registered users" isLoading={isLoading} />
+        </div>
 
        <div className="grid gap-4 md:grid-cols-2">
             <BookingChart bookings={sortedBookings?.filter(b => b.status === 'CONFIRMED') ?? null} />
