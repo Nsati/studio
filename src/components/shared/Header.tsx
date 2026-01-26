@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { useUser, useAuth } from '@/firebase';
 import { signOut } from 'firebase/auth';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Hotel, User, LogOut, LayoutDashboard, Book, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/sheet';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '../ui/skeleton';
+import { cn } from '@/lib/utils';
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -101,6 +102,8 @@ function UserNav() {
 
 
 export default function Header() {
+  const pathname = usePathname();
+
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center">
@@ -115,7 +118,12 @@ export default function Header() {
             <Link
               key={link.href}
               href={link.href}
-              className="transition-colors hover:text-foreground/80 text-foreground/60"
+              className={cn(
+                "transition-colors hover:text-primary",
+                pathname === link.href
+                  ? "text-primary font-semibold"
+                  : "text-muted-foreground"
+              )}
             >
               {link.label}
             </Link>
@@ -144,7 +152,12 @@ export default function Header() {
                           <SheetClose asChild key={link.href}>
                             <Link
                               href={link.href}
-                              className="transition-colors hover:text-foreground/80 text-foreground/60"
+                              className={cn(
+                                "transition-colors hover:text-primary",
+                                pathname === link.href
+                                  ? "text-primary"
+                                  : "text-muted-foreground"
+                              )}
                             >
                               {link.label}
                             </Link>
