@@ -1,6 +1,6 @@
 
 'use client';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirestore, useCollection, useMemoFirebase, type WithId } from '@/firebase';
 import Link from 'next/link';
 import Image from 'next/image';
 import { collection } from 'firebase/firestore';
@@ -30,7 +30,7 @@ function HotelGridSkeleton() {
     )
 }
 
-function HotelAdminCard({ hotel }: { hotel: Hotel }) {
+function HotelAdminCard({ hotel }: { hotel: WithId<Hotel> }) {
     const imageUrl = hotel.images[0]?.startsWith('http')
         ? hotel.images[0]
         : PlaceHolderImages.find((img) => img.id === hotel.images[0])?.imageUrl;
