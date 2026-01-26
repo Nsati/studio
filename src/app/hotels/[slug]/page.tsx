@@ -181,7 +181,7 @@ export default function HotelPage() {
        {/* Sticky Footer for Mobile */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t p-3 shadow-[0_-2px_10px_rgba(0,0,0,0.1)] flex items-center justify-between gap-4">
         <div>
-          {minPrice > 0 ? (
+          {minPrice !== null && minPrice > 0 ? (
              <div>
                 <p className="font-bold text-lg text-foreground">
                   {minPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}
@@ -193,7 +193,7 @@ export default function HotelPage() {
              <p className="text-sm font-semibold text-muted-foreground">Booking not available</p>
           )}
         </div>
-        <Button onClick={handleScrollToBooking} disabled={minPrice === 0} size="lg">
+        <Button onClick={handleScrollToBooking} disabled={minPrice === null || minPrice === 0} size="lg">
             Book Now
         </Button>
       </div>
