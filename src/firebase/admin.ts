@@ -5,7 +5,8 @@ import { getAuth, Auth } from 'firebase-admin/auth';
 
 const serviceAccount = {
   projectId: process.env.FIREBASE_PROJECT_ID,
-  privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'), // Replace escaped newlines
+  // The crucial fix: replace escaped newlines with actual newlines.
+  privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
   clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
 };
 
@@ -18,33 +19,38 @@ let initAttempted = false;
  * This prevents server crashes due to misconfiguration.
  */
 function initializeAdminInternal(): { app: App; firestore: Firestore; auth: Auth } | null {
+    // If already initialized (e.g., in a hot-reload environment), return the existing instance.
     if (getApps().length > 0) {
         const app = getApps()[0];
         return { app, firestore: getFirestore(app), auth: getAuth(app) };
     }
 
-    if (!serviceAccount.projectId || !serviceAccount.privateKey || !serviceAccount.clientEmail) {
-        console.error(
-            '[FATAL] Firebase Admin SDK credentials are not fully configured. ' +
-            'Please ensure FIREBASE_PROJECT_ID, FIREBASE_PRIVATE_KEY, and FIREBASE_CLIENT_EMAIL are set in your .env file. ' +
-            'Server-side features like payment confirmation and admin tools will be disabled.'
-        );
+    // Check for missing credentials and provide specific feedback.
+    if (!serviceAccount.projectId) {
+        console.error('[FATAL] Firebase Admin SDK init failed: `FIREBASE_PROJECT_ID` is not set in your .env file.');
+        return null;
+    }
+    if (!serviceAccount.clientEmail) {
+        console.error('[FATAL] Firebase Admin SDK init failed: `FIREBASE_CLIENT_EMAIL` is not set in your .env file.');
+        return null;
+    }
+    if (!serviceAccount.privateKey) {
+        console.error('[FATAL] Firebase Admin SDK init failed: `FIREBASE_PRIVATE_KEY` is not set in your .env file.');
         return null;
     }
 
     try {
         const app = initializeApp({ credential: cert(serviceAccount) });
+        console.log("✅ Firebase Admin SDK initialized successfully.");
         return { app, firestore: getFirestore(app), auth: getAuth(app) };
     } catch (error: any) {
         let errorMessage = 'An unknown error occurred during Firebase Admin SDK initialization.';
         if (error.message.includes('Invalid PEM formatted message')) {
-            errorMessage = 'Failed to initialize Firebase Admin SDK: The private key is malformed. ' +
-                'Please ensure the FIREBASE_PRIVATE_KEY in your .env file is correctly formatted. ' +
-                'It should be a single-line string with "\\n" for newlines, and must include the ' +
-                '"-----BEGIN PRIVATE KEY-----" and "-----END PRIVATE KEY-----" markers.';
+            errorMessage = 'The `FIREBASE_PRIVATE_KEY` is malformed. Please ensure it is copied correctly into your .env file, enclosed in double quotes, and uses "\\n" for newlines. It must include the "-----BEGIN PRIVATE KEY-----" and "-----END PRIVATE KEY-----" markers.';
+        } else if (error.code === 'app/invalid-credential') {
+             errorMessage = `The service account credentials (projectId, clientEmail, or privateKey) are invalid. Please check their values in your .env file. Original error: ${error.message}`;
         }
-        console.error(`[FATAL] FIREBASE ADMIN INIT FAILED: ${errorMessage} Original error: ${error.message}`);
-        console.error('Server-side features like payment confirmation and admin tools will be disabled.');
+        console.error(`[FATAL] Firebase Admin SDK init failed: ${errorMessage}`);
         return null;
     }
 }
