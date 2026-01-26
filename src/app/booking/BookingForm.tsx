@@ -5,7 +5,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, useRouter, notFound } from 'next/navigation';
 import Image from 'next/image';
 import { differenceInDays, format, parse } from 'date-fns';
-import { createRazorpayOrder, verifyRazorpaySignature } from './actions';
+import { createRazorpayOrder, verifyRazorpaySignature, confirmBooking } from './actions';
 import { signInAnonymously } from 'firebase/auth';
 import type { Hotel, Room, Booking, Promotion, ConfirmedBookingSummary } from '@/lib/types';
 import { useFirestore, useAuth, useUser, useDoc, useCollection, useMemoFirebase } from '@/firebase';
@@ -229,7 +229,7 @@ export function BookingForm() {
             handler: async (response: any) => {
                 toast({ title: "Payment Received!", description: "Verifying and confirming your booking..." });
 
-                // Verify signature on server
+                // 1. Verify signature on server
                 const verificationResult = await verifyRazorpaySignature({
                     razorpay_order_id: response.razorpay_order_id,
                     razorpay_payment_id: response.razorpay_payment_id,
@@ -242,51 +242,41 @@ export function BookingForm() {
                     return;
                 }
                 
-                // On successful verification, run client-side transaction
+                // 2. On successful verification, call the new server action to run the transaction
                 try {
-                    const roomRefForTx = doc(firestore, 'hotels', hotel.id, 'rooms', room.id);
-                    const bookingRefForTx = doc(firestore, 'users', userIdForBooking!, 'bookings', bookingId);
-                    const summaryRef = doc(firestore, 'confirmedBookings', bookingId);
-    
-                    await runTransaction(firestore, async (transaction) => {
-                        const roomDoc = await transaction.get(roomRefForTx);
-                        if (!roomDoc.exists()) throw new Error("Room data not found.");
-                        
-                        const roomData = roomDoc.data() as Room;
-                        if ((roomData.availableRooms ?? roomData.totalRooms) <= 0) {
-                            throw new Error(`Sorry, this room just sold out.`);
-                        }
-                        
-                        const newAvailableRooms = (roomData.availableRooms ?? roomData.totalRooms) - 1;
-    
-                        transaction.update(roomRefForTx, { availableRooms: newAvailableRooms });
-                        transaction.update(bookingRefForTx, {
-                            status: 'CONFIRMED',
-                            razorpayPaymentId: response.razorpay_payment_id,
-                        });
-                        
-                        const summaryData: ConfirmedBookingSummary = {
-                            id: bookingId,
-                            hotelId: hotel.id,
-                            hotelName: hotel.name,
-                            hotelCity: hotel.city,
-                            hotelAddress: hotel.address,
-                            customerName: customerDetails.name,
-                            checkIn: new Date(checkInStr),
-                            checkOut: new Date(checkOutStr),
-                            guests: parseInt(guests),
-                            totalPrice: totalPrice,
-                            roomType: room.type,
-                            userId: userIdForBooking!,
-                        };
-                        transaction.set(summaryRef, summaryData);
+                     const summaryData: ConfirmedBookingSummary = {
+                        id: bookingId,
+                        hotelId: hotel.id,
+                        hotelName: hotel.name,
+                        hotelCity: hotel.city,
+                        hotelAddress: hotel.address,
+                        customerName: customerDetails.name,
+                        checkIn: new Date(checkInStr),
+                        checkOut: new Date(checkOutStr),
+                        guests: parseInt(guests),
+                        totalPrice: totalPrice,
+                        roomType: room.type,
+                        userId: userIdForBooking!,
+                    };
+                    
+                    const confirmationResult = await confirmBooking({
+                        hotelId: hotel.id,
+                        roomId: room.id,
+                        userId: userIdForBooking!,
+                        bookingId: bookingId,
+                        razorpayPaymentId: response.razorpay_payment_id,
+                        summaryData: summaryData
                     });
+
+                    if (!confirmationResult.success) {
+                        throw new Error(confirmationResult.error || "An unknown error occurred during confirmation.");
+                    }
 
                     toast({ title: "Booking Confirmed!", description: "Your booking is confirmed. Redirecting..." });
                     router.push(`/booking/success/${bookingId}`);
 
                 } catch (error: any) {
-                    console.error("Booking confirmation transaction failed:", error);
+                    console.error("Booking confirmation failed:", error);
                     toast({
                         variant: "destructive",
                         title: "Booking Confirmation Failed",

@@ -3,6 +3,9 @@
 
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
+import { getFirebaseAdmin } from '@/firebase/admin';
+import type { ConfirmedBookingSummary, Room } from '@/lib/types';
+import { FieldValue } from 'firebase-admin/firestore';
 
 /**
  * Creates a Razorpay order.
@@ -90,5 +93,56 @@ export async function verifyRazorpaySignature(data: {
     } catch (error: any) {
         console.error('Signature verification failed:', error);
         return { success: false, error: 'An unexpected error occurred during signature verification.' };
+    }
+}
+
+
+/**
+ * Server-side transaction to confirm a booking after successful payment.
+ * This runs with admin privileges and is more robust than client-side transactions.
+ */
+export async function confirmBooking(details: {
+    hotelId: string;
+    roomId: string;
+    userId: string;
+    bookingId: string;
+    razorpayPaymentId: string;
+    summaryData: ConfirmedBookingSummary;
+}) {
+    try {
+        const adminDb = getFirebaseAdmin().firestore();
+        const { hotelId, roomId, userId, bookingId, razorpayPaymentId, summaryData } = details;
+
+        const roomRef = adminDb.collection('hotels').doc(hotelId).collection('rooms').doc(roomId);
+        const bookingRef = adminDb.collection('users').doc(userId).collection('bookings').doc(bookingId);
+        const summaryRef = adminDb.collection('confirmedBookings').doc(bookingId);
+
+        await adminDb.runTransaction(async (transaction) => {
+            const roomDoc = await transaction.get(roomRef);
+            if (!roomDoc.exists) {
+                throw new Error("Room data not found during transaction.");
+            }
+            
+            const roomData = roomDoc.data() as Room;
+            const currentAvailability = roomData.availableRooms ?? roomData.totalRooms;
+            
+            if (currentAvailability <= 0) {
+                throw new Error("Sorry, this room just sold out.");
+            }
+
+            // Perform the three writes atomically
+            transaction.update(roomRef, { availableRooms: FieldValue.increment(-1) });
+            transaction.update(bookingRef, {
+                status: 'CONFIRMED',
+                razorpayPaymentId: razorpayPaymentId,
+            });
+            transaction.set(summaryRef, summaryData);
+        });
+        
+        return { success: true, error: null };
+
+    } catch (error: any) {
+        console.error('FATAL: Server-side booking confirmation failed:', error);
+        return { success: false, error: error.message || 'Failed to confirm booking on server.' };
     }
 }

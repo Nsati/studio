@@ -39,12 +39,11 @@ service cloud.firestore {
 
         match /rooms/{roomId} {
           allow read: if true;
-          allow create, delete: if isAdmin();
-          
-          // Allow admins to update anything.
-          // Allow any authenticated user (booking or cancelling) to update ONLY the 'availableRooms' field.
-          allow update: if isAdmin() || 
-                         (request.auth != null && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['availableRooms']));
+          // Only admins can create, delete, or update room details.
+          // The booking transaction now happens on the server with admin rights,
+          // so we don't need a complex rule for users here anymore.
+          // This is more secure.
+          allow write: if isAdmin();
         }
         
         match /reviews/{reviewId} {
@@ -72,7 +71,8 @@ service cloud.firestore {
     // Temporary public collection for success page
     match /confirmedBookings/{bookingId} {
         allow read: if true;
-        // Allow any authenticated user to create their own booking summary during checkout.
+        // This is now created by the server-side admin action, but we can keep
+        // a rule allowing authenticated users just in case of future changes.
         allow create: if request.auth != null;
         allow update, delete: if false; // Prevent modification after creation
     }
