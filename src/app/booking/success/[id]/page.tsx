@@ -2,10 +2,10 @@
 'use client';
 
 import { useParams, notFound } from 'next/navigation';
-import { useFirestore, useUser, type WithId } from '@/firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { useFirestore, useUser, useDoc, useMemoFirebase, type WithId } from '@/firebase';
+import { doc, getDoc, DocumentSnapshot } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
-import type { ConfirmedBookingSummary } from '@/lib/types';
+import type { Booking, Hotel } from '@/lib/types';
 import { generateTripGuide, type TripAssistantOutput } from '@/ai/flows/generate-arrival-assistant';
 import { normalizeTimestamp } from '@/lib/firestore-utils';
 
@@ -18,7 +18,7 @@ import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
-function TripAssistant({ summary }: { summary: WithId<ConfirmedBookingSummary> }) {
+function TripAssistant({ booking, hotel }: { booking: WithId<Booking>, hotel: WithId<Hotel> }) {
     const [guide, setGuide] = useState<TripAssistantOutput | null>(null);
     const [isGenerating, setIsGenerating] = useState(true);
     const [error, setError] = useState('');
@@ -27,12 +27,12 @@ function TripAssistant({ summary }: { summary: WithId<ConfirmedBookingSummary> }
         setIsGenerating(true);
         setError('');
         try {
-            const checkInDate = normalizeTimestamp(summary.checkIn);
+            const checkInDate = normalizeTimestamp(booking.checkIn);
             const result = await generateTripGuide({
-                hotelName: summary.hotelName,
-                hotelCity: summary.hotelCity,
-                hotelAddress: summary.hotelAddress,
-                customerName: summary.customerName,
+                hotelName: hotel.name,
+                hotelCity: hotel.city,
+                hotelAddress: hotel.address,
+                customerName: booking.customerName,
                 checkInDate: format(checkInDate, 'PPPP'),
             });
             setGuide(result);
@@ -47,7 +47,7 @@ function TripAssistant({ summary }: { summary: WithId<ConfirmedBookingSummary> }
     useEffect(() => {
         generateGuide();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [summary]);
+    }, [booking, hotel]);
 
     if (isGenerating) {
         return (
@@ -136,6 +136,85 @@ function TripAssistant({ summary }: { summary: WithId<ConfirmedBookingSummary> }
     return null;
 }
 
+function SuccessContent({ booking, hotel }: { booking: WithId<Booking>, hotel: WithId<Hotel> }) {
+    const { user } = useUser();
+    const checkInDate = normalizeTimestamp(booking.checkIn);
+    const checkOutDate = normalizeTimestamp(booking.checkOut);
+     return (
+        <div className="bg-muted/40 min-h-[calc(100vh-4rem)] flex items-center">
+            <div className="container mx-auto max-w-2xl py-12 px-4 md:px-6">
+                <Card className="shadow-lg">
+                    <CardHeader className="items-center text-center bg-green-50/50 dark:bg-green-900/10 pt-8">
+                        <PartyPopper className="h-12 w-12 text-primary" />
+                        <CardTitle className="text-3xl font-headline mt-4">Booking Confirmed!</CardTitle>
+                        <CardDescription className="max-w-md">
+                           Your Himalayan adventure awaits, {booking.customerName}. A confirmation email should arrive shortly.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-6 space-y-6">
+                        <Card className="bg-background">
+                            <CardHeader>
+                                <CardTitle className="text-xl">{hotel.name}</CardTitle>
+                                <CardDescription>{hotel.city}</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-2 text-sm">
+                                <p><strong className="text-foreground">Room:</strong> {booking.roomType}</p>
+                                <p><strong className="text-foreground">Check-in:</strong> {format(checkInDate, 'EEEE, dd MMMM yyyy')}</p>
+                                <p><strong className="text-foreground">Check-out:</strong> {format(checkOutDate, 'EEEE, dd MMMM yyyy')}</p>
+                                <p><strong className="text-foreground">Guests:</strong> {booking.guests}</p>
+                            </CardContent>
+                        </Card>
+
+                        <div className="rounded-lg border bg-background p-4 space-y-2">
+                             <div className="flex justify-between items-center">
+                                <span className="text-muted-foreground">Booking ID</span>
+                                <span className="font-mono text-xs">{booking.id}</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className="text-muted-foreground">Total Amount Paid</span>
+                                <span className="font-bold text-lg">{booking.totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}</span>
+                            </div>
+                             <div className="flex justify-between items-center">
+                                <span className="text-muted-foreground">Payment Status</span>
+                                <span className="font-semibold text-green-600 flex items-center gap-1"><CheckCircle className="h-4 w-4"/> Confirmed</span>
+                            </div>
+                        </div>
+                        
+                        <TripAssistant booking={booking} hotel={hotel} />
+
+                         {user?.isAnonymous && (
+                            <Card className="bg-blue-50 border-blue-200">
+                                <CardHeader className="flex-row items-center gap-4 space-y-0">
+                                    <UserPlus className="h-8 w-8 text-blue-600" />
+                                    <div>
+                                        <CardTitle className="text-lg text-blue-900">Save Your Booking!</CardTitle>
+                                        <CardDescription className="text-blue-800">Create an account to view this booking anytime and manage future trips.</CardDescription>
+                                    </div>
+                                </CardHeader>
+                                <CardContent>
+                                    <Button asChild className="w-full bg-blue-600 hover:bg-blue-700">
+                                        <Link href="/signup">Sign Up for Free</Link>
+                                    </Button>
+                                </CardContent>
+                            </Card>
+                        )}
+
+
+                         <div className="flex flex-col sm:flex-row gap-4">
+                            <Button className="w-full" asChild>
+                                <Link href="/my-bookings">{user?.isAnonymous ? 'Explore More Hotels' : 'View All My Bookings'}</Link>
+                            </Button>
+                            <Button className="w-full" variant="outline" asChild>
+                                <Link href="/">Back to Home</Link>
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+        </div>
+    );
+}
+
 export default function BookingSuccessPage() {
     const params = useParams();
     const firestore = useFirestore();
@@ -143,40 +222,56 @@ export default function BookingSuccessPage() {
     
     const { user, isLoading: isUserLoading } = useUser();
     
-    const [summaryBooking, setSummaryBooking] = useState<WithId<ConfirmedBookingSummary> | null>(null);
+    const [bookingSnapshot, setBookingSnapshot] = useState<DocumentSnapshot<Booking> | null>(null);
     const [pageStatus, setPageStatus] = useState<'loading' | 'success' | 'failed'>('loading');
 
+    const bookingRef = useMemoFirebase(() => {
+        if (!firestore || !user || !bookingId) return null;
+        return doc(firestore, 'users', user.uid, 'bookings', bookingId);
+    }, [firestore, user, bookingId]);
+    
+    const booking = useMemoFirebase(() => {
+        if (!bookingSnapshot || !bookingSnapshot.exists()) return null;
+        return { ...bookingSnapshot.data(), id: bookingSnapshot.id } as WithId<Booking>;
+    }, [bookingSnapshot]);
+
+    const hotelRef = useMemoFirebase(() => {
+        if (!firestore || !booking) return null;
+        return doc(firestore, 'hotels', booking.hotelId);
+    }, [firestore, booking]);
+    
+    const { data: hotel, isLoading: isHotelLoading } = useDoc<Hotel>(hotelRef);
+
+
     useEffect(() => {
-        // Guard against running before firebase is ready or if auth state is still resolving
-        if (isUserLoading || !firestore || !bookingId) {
+        if (!bookingRef) {
+             if (!isUserLoading) setPageStatus('failed'); // User not loaded or no booking ref
             return;
         }
 
-        const summaryBookingRef = doc(firestore, 'confirmedBookings', bookingId);
         let attempts = 0;
         const maxAttempts = 20; // Poll for 10 seconds
         const intervalTime = 500; // Poll every 0.5 seconds
 
         const pollForBooking = async () => {
             try {
-                const docSnap = await getDoc(summaryBookingRef);
-                if (docSnap.exists()) {
-                    setSummaryBooking({ id: docSnap.id, ...(docSnap.data() as ConfirmedBookingSummary) });
+                const docSnap = await getDoc(bookingRef);
+                if (docSnap.exists() && docSnap.data().status === 'CONFIRMED') {
+                    setBookingSnapshot(docSnap as DocumentSnapshot<Booking>);
                     setPageStatus('success');
                     return; // Stop polling
                 }
             } catch (error) {
-                console.error("Error polling for booking summary:", error);
+                console.error("Error polling for booking:", error);
             }
 
             attempts++;
             if (attempts >= maxAttempts) {
-                console.error(`Polling timed out for booking summary doc: ${bookingId}`);
+                console.error(`Polling timed out for booking: ${bookingId}`);
                 setPageStatus('failed');
             }
         };
 
-        // Start polling
         const poller = setInterval(() => {
             if (pageStatus === 'success' || pageStatus === 'failed') {
                 clearInterval(poller);
@@ -187,14 +282,11 @@ export default function BookingSuccessPage() {
         
         pollForBooking(); // Initial immediate check
 
-        // Cleanup
-        return () => {
-            clearInterval(poller);
-        };
+        return () => clearInterval(poller);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [firestore, bookingId, isUserLoading]);
+    }, [bookingRef, isUserLoading]);
 
-    const isLoading = pageStatus === 'loading';
+    const isLoading = pageStatus === 'loading' || (pageStatus === 'success' && (isUserLoading || isHotelLoading));
 
     if (isLoading) {
         return (
@@ -243,86 +335,9 @@ export default function BookingSuccessPage() {
         );
     }
     
-    if (pageStatus === 'success' && !summaryBooking) {
-        return notFound();
+    if (pageStatus === 'success' && booking && hotel) {
+        return <SuccessContent booking={booking} hotel={hotel} />;
     }
 
-    const checkInDate = normalizeTimestamp(summaryBooking!.checkIn);
-    const checkOutDate = normalizeTimestamp(summaryBooking!.checkOut);
-
-    return (
-        <div className="bg-muted/40 min-h-[calc(100vh-4rem)] flex items-center">
-            <div className="container mx-auto max-w-2xl py-12 px-4 md:px-6">
-                <Card className="shadow-lg">
-                    <CardHeader className="items-center text-center bg-green-50/50 dark:bg-green-900/10 pt-8">
-                        <PartyPopper className="h-12 w-12 text-primary" />
-                        <CardTitle className="text-3xl font-headline mt-4">Booking Confirmed!</CardTitle>
-                        <CardDescription className="max-w-md">
-                           Your Himalayan adventure awaits, {summaryBooking!.customerName}. A confirmation email should arrive shortly.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-6 space-y-6">
-                        <Card className="bg-background">
-                            <CardHeader>
-                                <CardTitle className="text-xl">{summaryBooking!.hotelName}</CardTitle>
-                                <CardDescription>{summaryBooking!.hotelCity}</CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-2 text-sm">
-                                <p><strong className="text-foreground">Room:</strong> {summaryBooking!.roomType}</p>
-                                <p><strong className="text-foreground">Check-in:</strong> {format(checkInDate, 'EEEE, dd MMMM yyyy')}</p>
-                                <p><strong className="text-foreground">Check-out:</strong> {format(checkOutDate, 'EEEE, dd MMMM yyyy')}</p>
-                                <p><strong className="text-foreground">Guests:</strong> {summaryBooking!.guests}</p>
-                            </CardContent>
-                        </Card>
-
-                        <div className="rounded-lg border bg-background p-4 space-y-2">
-                             <div className="flex justify-between items-center">
-                                <span className="text-muted-foreground">Booking ID</span>
-                                <span className="font-mono text-xs">{summaryBooking!.id}</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                                <span className="text-muted-foreground">Total Amount Paid</span>
-                                <span className="font-bold text-lg">{summaryBooking!.totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}</span>
-                            </div>
-                             <div className="flex justify-between items-center">
-                                <span className="text-muted-foreground">Payment Status</span>
-                                <span className="font-semibold text-green-600 flex items-center gap-1"><CheckCircle className="h-4 w-4"/> Confirmed</span>
-                            </div>
-                        </div>
-                        
-                        <TripAssistant summary={summaryBooking!} />
-
-                         {user?.isAnonymous && (
-                            <Card className="bg-blue-50 border-blue-200">
-                                <CardHeader className="flex-row items-center gap-4 space-y-0">
-                                    <UserPlus className="h-8 w-8 text-blue-600" />
-                                    <div>
-                                        <CardTitle className="text-lg text-blue-900">Save Your Booking!</CardTitle>
-                                        <CardDescription className="text-blue-800">Create an account to view this booking anytime and manage future trips.</CardDescription>
-                                    </div>
-                                </CardHeader>
-                                <CardContent>
-                                    <Button asChild className="w-full bg-blue-600 hover:bg-blue-700">
-                                        <Link href="/signup">Sign Up for Free</Link>
-                                    </Button>
-                                </CardContent>
-                            </Card>
-                        )}
-
-
-                         <div className="flex flex-col sm:flex-row gap-4">
-                            <Button className="w-full" asChild>
-                                <Link href="/my-bookings">{user?.isAnonymous ? 'Explore More Hotels' : 'View All My Bookings'}</Link>
-                            </Button>
-                            <Button className="w-full" variant="outline" asChild>
-                                <Link href="/">Back to Home</Link>
-                            </Button>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-        </div>
-    );
+    return notFound();
 }
-
-    
