@@ -42,10 +42,16 @@ service cloud.firestore {
           allow create, delete: if isAdmin();
           
           // Allow admins to update anything.
-          // Allow any authenticated user (including anonymous guests) to update ONLY the 'availableRooms' field.
-          // This uses the modern diff() method, which is robust and correctly handles atomic transactions.
+          // Allow any authenticated user to change the availableRooms count, but no other fields.
+          // This is a more explicit rule that avoids using .diff() in case of subtle issues with it.
           allow update: if isAdmin() || 
-                         (request.auth != null && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['availableRooms']));
+                         (request.auth != null &&
+                          request.resource.data.price == resource.data.price &&
+                          request.resource.data.capacity == resource.data.capacity &&
+                          request.resource.data.hotelId == resource.data.hotelId &&
+                          request.resource.data.id == resource.data.id &&
+                          request.resource.data.totalRooms == resource.data.totalRooms &&
+                          request.resource.data.type == resource.data.type);
         }
         
         match /reviews/{reviewId} {
