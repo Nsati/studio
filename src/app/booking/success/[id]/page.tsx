@@ -154,8 +154,8 @@ export default function BookingSuccessPage() {
 
         const summaryBookingRef = doc(firestore, 'confirmedBookings', bookingId);
         let attempts = 0;
-        const maxAttempts = 10; // Poll for 20 seconds
-        const intervalTime = 2000;
+        const maxAttempts = 20; // Poll for 10 seconds
+        const intervalTime = 500; // Poll every 0.5 seconds
 
         let poller: NodeJS.Timeout | null = null;
         
@@ -325,3 +325,5 @@ export default function BookingSuccessPage() {
         </div>
     );
 }
+
+    
