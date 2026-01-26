@@ -65,10 +65,11 @@ service cloud.firestore {
           
           // Allow admins to update anything.
           // Allow any authenticated user (for booking/cancelling) to update ONLY the 'availableRooms' field.
-          // This is now robust and won't fail on other field comparisons.
+          // This rule uses request.writeFields, which is a simpler and more direct way to check update operations.
           allow update: if isAdmin() || 
                          (request.auth != null &&
-                          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['availableRooms'])
+                          request.writeFields.size() == 1 &&
+                          request.writeFields[0] == 'availableRooms'
                          );
         }
         
@@ -103,3 +104,5 @@ service cloud.firestore {
     }
   }
 }
+
+    
