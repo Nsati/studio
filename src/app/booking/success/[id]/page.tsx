@@ -9,7 +9,7 @@ import { normalizeTimestamp } from '@/lib/firestore-utils';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-  CheckCircle, PartyPopper, UserPlus, Loader2, AlertCircle
+  CheckCircle, PartyPopper, UserPlus, Loader2, AlertCircle, ShieldCheck
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
@@ -71,7 +71,7 @@ function SuccessContent({ booking, isFinalized }: { booking: WithId<Booking>, is
                                 {isFinalized ? (
                                      <span className="font-semibold text-green-600 flex items-center gap-1"><CheckCircle className="h-4 w-4"/> Confirmed</span>
                                 ) : (
-                                     <span className="font-semibold text-amber-600">Finalizing...</span>
+                                     <span className="font-semibold text-green-600 flex items-center gap-1"><ShieldCheck className="h-4 w-4"/> Paid</span>
                                 )}
                             </div>
                         </div>
