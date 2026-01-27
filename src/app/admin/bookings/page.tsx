@@ -218,7 +218,14 @@ export default function BookingsPage() {
                                     }
                                 </TableCell>
                                 <TableCell>
-                                    <Badge variant={booking.status === 'CONFIRMED' ? 'default' : 'destructive'} className="capitalize">
+                                    <Badge 
+                                        variant={
+                                            booking.status === 'CONFIRMED' ? 'default' : 
+                                            booking.status === 'PENDING' ? 'secondary' : 
+                                            'destructive'
+                                        } 
+                                        className="capitalize"
+                                    >
                                         {booking.status.toLowerCase()}
                                     </Badge>
                                 </TableCell>

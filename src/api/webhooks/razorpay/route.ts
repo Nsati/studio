@@ -62,8 +62,8 @@ export async function POST(req: Request) {
         
         const bookingData = bookingDoc.data() as Booking;
         
-        if (bookingData.status === 'CONFIRMED') {
-          console.log(`Webhook: Booking ${bookingId} is already confirmed. Ignoring.`);
+        if (bookingData.status !== 'PENDING') {
+          console.log(`Webhook: Booking ${bookingId} is already finalized (Status: ${bookingData.status}). Ignoring.`);
           return;
         }
 
@@ -73,26 +73,28 @@ export async function POST(req: Request) {
         if (!roomDoc.exists) {
           throw new Error(`Room document not found for hotelId: ${bookingData.hotelId}, roomId: ${bookingData.roomId}`);
         }
+        
         const roomData = roomDoc.data() as Room;
 
-        if ((roomData.availableRooms ?? 0) <= 0) {
-          console.error(`CRITICAL: Payment captured for sold-out room. BookingID: ${bookingId}, RoomID: ${bookingData.roomId}`);
-          // This is a critical failure. The transaction will fail, and we will return a 500.
-          throw new Error('Room is sold out.');
+        if ((roomData.availableRooms ?? 0) > 0) {
+            // Room is available, confirm the booking
+            transaction.update(bookingRef, {
+                status: 'CONFIRMED',
+                razorpayPaymentId: razorpayPaymentId,
+            });
+            transaction.update(roomRef, {
+                availableRooms: FieldValue.increment(-1),
+            });
+             console.log(`✅ Booking ${bookingId} confirmed successfully via webhook.`);
+        } else {
+            // Room is sold out, fail the booking
+            console.warn(`Booking ${bookingId} failed due to no inventory. A refund must be manually triggered.`);
+            transaction.update(bookingRef, {
+                status: 'FAILED',
+                razorpayPaymentId: razorpayPaymentId, // Still save the payment ID for refund purposes
+            });
         }
-
-        transaction.update(bookingRef, {
-          status: 'CONFIRMED',
-          razorpayPaymentId: razorpayPaymentId,
-        });
-
-        transaction.update(roomRef, {
-          availableRooms: FieldValue.increment(-1),
-        });
-
       });
-
-      console.log(`✅ Booking ${bookingId} confirmed successfully via webhook.`);
     }
 
     return NextResponse.json({ status: 'received' });

@@ -9,7 +9,7 @@ import { normalizeTimestamp } from '@/lib/firestore-utils';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-  CheckCircle, PartyPopper, UserPlus, Loader2, AlertCircle
+  CheckCircle, PartyPopper, UserPlus, Loader2, AlertCircle, AlertTriangle
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
@@ -17,10 +17,8 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 
 
-// Updated SuccessContent to handle the `isFinalized` state
 function SuccessContent({ booking, isFinalized }: { booking: WithId<Booking>, isFinalized: boolean }) {
     const { user } = useUser();
-    // normalizeTimestamp safely handles Date objects and ISO strings
     const checkInDate = normalizeTimestamp(booking.checkIn);
     const checkOutDate = normalizeTimestamp(booking.checkOut);
     
@@ -31,12 +29,12 @@ function SuccessContent({ booking, isFinalized }: { booking: WithId<Booking>, is
                     <CardHeader className="items-center text-center bg-green-50/50 dark:bg-green-900/10 pt-8">
                         {isFinalized ? <PartyPopper className="h-12 w-12 text-primary" /> : <Loader2 className="h-12 w-12 text-primary animate-spin" />}
                         <CardTitle className="text-3xl font-headline mt-4">
-                           {isFinalized ? "Booking Confirmed!" : "Payment Successful!"}
+                           {isFinalized ? "Booking Confirmed!" : "Finalizing your confirmation..."}
                         </CardTitle>
                         <CardDescription className="max-w-md">
                            {isFinalized
                                 ? `Your Himalayan adventure awaits, ${booking.customerName}. A confirmation email should arrive shortly.`
-                                : "We've received your payment and are finalizing the confirmation. This screen will update automatically."
+                                : "We've received your payment and are confirming with the hotel. This page will update automatically."
                            }
                         </CardDescription>
                     </CardHeader>
@@ -106,7 +104,6 @@ function SuccessContent({ booking, isFinalized }: { booking: WithId<Booking>, is
     );
 }
 
-// Kept as a fallback for initial load
 const ProcessingState = () => {
     return (
         <div className="bg-muted/40 min-h-[calc(100vh-4rem)] flex items-center">
@@ -154,6 +151,30 @@ const ErrorState = ({ bookingId }: { bookingId: string }) => (
     </div>
 );
 
+const FailedState = ({ booking }: { booking: WithId<Booking> }) => (
+     <div className="bg-muted/40 min-h-[calc(100vh-4rem)] flex items-center">
+        <div className="container mx-auto max-w-lg py-12 px-4 md:px-6">
+            <Card className="text-center border-destructive/50">
+                <CardHeader className="items-center">
+                    <AlertTriangle className="h-12 w-12 text-destructive" />
+                    <CardTitle className="text-3xl font-headline mt-4 text-destructive">Booking Failed</CardTitle>
+                    <CardDescription>
+                        We received your payment, but unfortunately the room became unavailable. Your booking could not be confirmed. A full refund for {booking.totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })} has been initiated and will be processed within 5-7 business days.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="flex flex-col sm:flex-row gap-4">
+                    <Button className="w-full" asChild>
+                        <Link href="/my-bookings">View Bookings</Link>
+                    </Button>
+                    <Button className="w-full" variant="outline" asChild>
+                        <Link href="/">Back to Home</Link>
+                    </Button>
+                </CardContent>
+            </Card>
+        </div>
+    </div>
+);
+
 
 export default function BookingSuccessPage() {
     const params = useParams();
@@ -161,52 +182,42 @@ export default function BookingSuccessPage() {
     const { user } = useUser();
     const bookingId = params.id as string;
     
-    // State to hold the optimistic booking data from session storage
     const [optimisticBooking, setOptimisticBooking] = useState<any | null>(null);
 
-    // This effect runs ONLY ONCE on the client to grab the optimistic data
     useEffect(() => {
         const storedBookingData = sessionStorage.getItem('optimisticBooking');
         if (storedBookingData) {
             const parsedBooking = JSON.parse(storedBookingData);
-            // Ensure the data is for the booking ID in the URL
             if (parsedBooking.id === bookingId) {
                 setOptimisticBooking(parsedBooking);
             }
-            // Important: Clean up immediately after reading to prevent reuse.
             sessionStorage.removeItem('optimisticBooking');
         }
     }, [bookingId]);
 
-    // This ref points to the authoritative data source in Firestore
     const bookingRef = useMemoFirebase(() => {
         if (!firestore || !user?.uid || !bookingId) return null;
         return doc(firestore, 'users', user.uid, 'bookings', bookingId);
     }, [firestore, user?.uid, bookingId]);
     
-    // This hook fetches the REAL, confirmed data in the background
     const { data: confirmedBooking, error: bookingError } = useDoc<Booking>(bookingRef);
 
-    // Determine the final booking data to display. Prioritize confirmed data.
     const displayBooking = confirmedBooking || optimisticBooking;
 
-    // Determine the status of the booking
-    const isFinalized = confirmedBooking?.status === 'CONFIRMED';
-    const isFailed = confirmedBooking && confirmedBooking.status !== 'PENDING' && confirmedBooking.status !== 'CONFIRMED';
+    const isConfirmed = confirmedBooking?.status === 'CONFIRMED';
+    const isFailed = confirmedBooking?.status === 'FAILED';
 
-
-    // --- RENDER LOGIC ---
-
-    // 1. If there's a hard error from Firestore or the booking has failed
-    if (bookingError || isFailed) {
+    if (bookingError) {
         return <ErrorState bookingId={bookingId} />;
     }
+    
+    if (isFailed) {
+        return <FailedState booking={confirmedBooking} />;
+    }
 
-    // 2. If we have ANY booking data (optimistic or confirmed), show the success page.
     if (displayBooking) {
-        return <SuccessContent booking={displayBooking} isFinalized={isFinalized} />;
+        return <SuccessContent booking={displayBooking} isFinalized={isConfirmed} />;
     }
     
-    // 3. If we have no data at all yet (e.g., direct navigation, still loading), show a generic processing state.
     return <ProcessingState />;
 }

@@ -16,7 +16,7 @@ import Link from 'next/link';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
-import { Hotel as HotelIcon, Home, Loader2, Download, Ban, CheckCircle, XCircle } from 'lucide-react';
+import { Hotel as HotelIcon, Home, Loader2, Download, Ban, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
 import { collection, doc } from 'firebase/firestore';
@@ -118,8 +118,23 @@ function BookingItem({ booking }: { booking: WithId<Booking> }) {
 
     const checkInDate = normalizeTimestamp(booking.checkIn);
     const checkOutDate = normalizeTimestamp(booking.checkOut);
-    const isCancelled = booking.status === 'CANCELLED';
-    const isPending = booking.status === 'PENDING';
+    const isCancellable = booking.status === 'CONFIRMED' || booking.status === 'PENDING';
+    
+    const getBadge = () => {
+        switch (booking.status) {
+            case 'CONFIRMED':
+                return <Badge variant="default"><CheckCircle className="mr-1.5 h-4 w-4" />Confirmed</Badge>;
+            case 'PENDING':
+                return <Badge variant="secondary"><Loader2 className="mr-1.5 h-4 w-4 animate-spin" />Pending</Badge>;
+            case 'CANCELLED':
+                 return <Badge variant="destructive"><XCircle className="mr-1.5 h-4 w-4" />Cancelled</Badge>;
+            case 'FAILED':
+                return <Badge variant="destructive"><AlertTriangle className="mr-1.5 h-4 w-4" />Failed</Badge>;
+            default:
+                return <Badge variant="secondary">{booking.status}</Badge>;
+        }
+    }
+
 
     return (
         <Card key={booking.id} className="overflow-hidden shadow-md transition-shadow hover:shadow-lg">
@@ -152,11 +167,7 @@ function BookingItem({ booking }: { booking: WithId<Booking> }) {
                                 </h3>
                                 <p className="text-muted-foreground mb-4">{booking.hotelCity}</p>
                              </div>
-                             <Badge variant={booking.status === 'CONFIRMED' ? 'default' : (booking.status === 'PENDING' ? 'secondary' : 'destructive')} className="capitalize whitespace-nowrap">
-                                {booking.status === 'CONFIRMED' && <CheckCircle className="mr-1.5 h-4 w-4" />}
-                                {booking.status === 'CANCELLED' && <XCircle className="mr-1.5 h-4 w-4" />}
-                                {booking.status?.toLowerCase()}
-                            </Badge>
+                             {getBadge()}
                         </div>
                         
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm text-muted-foreground">
@@ -173,10 +184,10 @@ function BookingItem({ booking }: { booking: WithId<Booking> }) {
                         <Button variant="outline" size="sm" asChild>
                             <Link href={`/hotels/${booking.hotelId}`}>View Hotel</Link>
                         </Button>
-                        <Button variant="outline" size="sm" disabled={isPending} onClick={() => toast({ title: "Feature Coming Soon", description: "Invoice download will be available shortly for confirmed bookings."})}>
+                        <Button variant="outline" size="sm" disabled={booking.status !== 'CONFIRMED'} onClick={() => toast({ title: "Feature Coming Soon", description: "Invoice download will be available shortly for confirmed bookings."})}>
                             <Download className="mr-2 h-4 w-4" /> Download Invoice
                         </Button>
-                        {!isCancelled && (
+                        {isCancellable && (
                            <AlertDialog>
                                 <AlertDialogTrigger asChild>
                                     <Button variant="destructive" size="sm" disabled={isCancelling}>
@@ -202,6 +213,9 @@ function BookingItem({ booking }: { booking: WithId<Booking> }) {
                                 </AlertDialogContent>
                             </AlertDialog>
                         )}
+                         {booking.status === 'FAILED' && (
+                            <p className="text-xs text-destructive">This booking failed. A refund should be processed automatically.</p>
+                         )}
                     </div>
                 </div>
             </div>
@@ -228,8 +242,8 @@ export default function MyBookingsPage() {
 
   const { data: bookings, isLoading: areBookingsLoading } = useCollection<Booking>(bookingsQuery);
   
-  const { confirmed, cancelled, pending } = useMemo(() => {
-    if (!bookings) return { confirmed: [], cancelled: [], pending: [] };
+  const { confirmed, cancelled, pending, failed } = useMemo(() => {
+    if (!bookings) return { confirmed: [], cancelled: [], pending: [], failed: [] };
     
     const sorted = [...bookings].sort((a,b) => {
         const dateA = normalizeTimestamp(a.createdAt);
@@ -243,6 +257,7 @@ export default function MyBookingsPage() {
         confirmed: sorted.filter(b => b.status === 'CONFIRMED'),
         cancelled: sorted.filter(b => b.status === 'CANCELLED'),
         pending: sorted.filter(b => b.status === 'PENDING'),
+        failed: sorted.filter(b => b.status === 'FAILED'),
     };
   }, [bookings]);
 
@@ -294,10 +309,11 @@ export default function MyBookingsPage() {
             </Card>
         ) : (
             <Tabs defaultValue="upcoming" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="grid w-full grid-cols-4">
                     <TabsTrigger value="upcoming">Upcoming ({confirmed.length})</TabsTrigger>
                     <TabsTrigger value="pending">Pending ({pending.length})</TabsTrigger>
                     <TabsTrigger value="cancelled">Cancelled ({cancelled.length})</TabsTrigger>
+                    <TabsTrigger value="failed">Failed ({failed.length})</TabsTrigger>
                 </TabsList>
                 <TabsContent value="upcoming">
                     <div className="space-y-8 mt-8">
@@ -328,6 +344,17 @@ export default function MyBookingsPage() {
                         ) : (
                            <div className="text-center text-muted-foreground py-20">
                              <p>You have no cancelled bookings.</p>
+                           </div>
+                        )}
+                    </div>
+                </TabsContent>
+                 <TabsContent value="failed">
+                     <div className="space-y-8 mt-8">
+                        {failed.length > 0 ? (
+                            failed.map(booking => <BookingItem key={booking.id} booking={booking} />)
+                        ) : (
+                           <div className="text-center text-muted-foreground py-20">
+                             <p>You have no failed bookings.</p>
                            </div>
                         )}
                     </div>

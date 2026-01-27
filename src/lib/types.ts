@@ -49,7 +49,7 @@ export interface Booking {
   totalPrice: number;
   customerName: string;
   customerEmail: string;
-  status: 'CONFIRMED' | 'CANCELLED' | 'PENDING';
+  status: 'CONFIRMED' | 'CANCELLED' | 'PENDING' | 'FAILED';
   createdAt: Date;
   razorpayPaymentId?: string;
   couponCode?: string;
