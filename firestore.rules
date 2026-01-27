@@ -74,11 +74,5 @@ service cloud.firestore {
         allow read: if true;
         allow write: if isAdmin();
     }
-
-    match /confirmedBookings/{bookingId} {
-        allow read: if true;
-        allow create: if request.auth != null;
-        allow update, delete: if false;
-    }
   }
 }
