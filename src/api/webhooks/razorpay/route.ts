@@ -47,6 +47,7 @@ export async function POST(req: Request) {
 
       if (!bookingId || !userId) {
         console.warn(`Webhook received for payment ${paymentEntity.id} without a booking_id or user_id in notes.`);
+        // Return 200 OK because this is not a server error, we just can't process it.
         return NextResponse.json({ status: 'ok, missing notes' });
       }
 
@@ -76,6 +77,7 @@ export async function POST(req: Request) {
 
         if ((roomData.availableRooms ?? 0) <= 0) {
           console.error(`CRITICAL: Payment captured for sold-out room. BookingID: ${bookingId}, RoomID: ${bookingData.roomId}`);
+          // This is a critical failure. The transaction will fail, and we will return a 500.
           throw new Error('Room is sold out.');
         }
 
@@ -88,8 +90,6 @@ export async function POST(req: Request) {
           availableRooms: FieldValue.increment(-1),
         });
 
-        // The public summary document is no longer needed.
-        // The success page will read the main booking document directly.
       });
 
       console.log(`✅ Booking ${bookingId} confirmed successfully via webhook.`);
@@ -98,6 +98,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ status: 'received' });
   } catch (error: any) {
     console.error('Error processing Razorpay webhook:', error);
-    return NextResponse.json({ status: 'ok, transaction failed', error: error.message });
+    // Return a 500 status code to indicate failure, so Razorpay can retry.
+    return NextResponse.json({ status: 'error', message: error.message || 'An internal server error occurred.' }, { status: 500 });
   }
 }
