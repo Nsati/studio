@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Checkbox } from "@/components/ui/checkbox"
+import { Switch } from "@/components/ui/switch"
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -41,6 +42,8 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 const hotelImagePlaceholders = PlaceHolderImages.filter(p => p.id.startsWith('hotel-'));
 
 const allAmenities = ['wifi', 'parking', 'restaurant', 'bar', 'spa', 'pool', 'gym', 'mountain-view', 'garden', 'library', 'river-view', 'ghat', 'adventure', 'trekking', 'skiing', 'heritage', 'safari'];
+const allSpiritualAmenities = ['meditation-friendly', 'silent-zone', 'sunrise-view', 'temple-nearby', 'yoga-sessions'];
+
 
 const roomSchema = z.object({
   id: z.string().optional(), // Existing rooms will have an ID
@@ -62,6 +65,19 @@ const formSchema = z.object({
   amenities: z.array(z.string()).min(1, 'Please select at least one amenity.'),
   images: z.array(z.string()).min(1, 'Please select at least one image.'),
   rooms: z.array(roomSchema).min(1, 'Please add at least one room type.'),
+  // New feature fields
+  isVerifiedPahadiHost: z.boolean().default(false),
+  ecoPractices: z.object({
+    waterSaving: z.boolean().default(false),
+    plasticFree: z.boolean().default(false),
+    localSourcing: z.boolean().default(false),
+  }).default({ waterSaving: false, plasticFree: false, localSourcing: false }),
+  safetyInfo: z.object({
+    nearestHospital: z.string().optional(),
+    policeStation: z.string().optional(),
+    networkCoverage: z.enum(['good', 'average', 'poor', '']).optional(),
+  }).default({ nearestHospital: '', policeStation: '', networkCoverage: '' }),
+  spiritualAmenities: z.array(z.string()).default([]),
 });
 
 type EditHotelFormProps = {
@@ -90,6 +106,11 @@ export function EditHotelForm({ hotel, rooms: initialRooms }: EditHotelFormProps
       amenities: hotel.amenities,
       images: hotel.images,
       rooms: initialRooms.map(r => ({...r})), // Pass rooms with their IDs
+      // New feature fields
+      isVerifiedPahadiHost: hotel.isVerifiedPahadiHost || false,
+      ecoPractices: hotel.ecoPractices || { waterSaving: false, plasticFree: false, localSourcing: false },
+      safetyInfo: hotel.safetyInfo || { nearestHospital: '', policeStation: '', networkCoverage: '' },
+      spiritualAmenities: hotel.spiritualAmenities || [],
     },
   });
 
@@ -215,6 +236,7 @@ export function EditHotelForm({ hotel, rooms: initialRooms }: EditHotelFormProps
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        {/* === BASIC INFO === */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <FormField control={form.control} name="name" render={({ field }) => (
                 <FormItem>
@@ -236,7 +258,6 @@ export function EditHotelForm({ hotel, rooms: initialRooms }: EditHotelFormProps
                 </FormItem>
             )} />
         </div>
-        
         <FormField control={form.control} name="description" render={({ field }) => (
             <FormItem>
             <FormLabel>Description</FormLabel>
@@ -244,16 +265,13 @@ export function EditHotelForm({ hotel, rooms: initialRooms }: EditHotelFormProps
             <FormMessage />
             </FormItem>
         )} />
-
         <FormField control={form.control} name="address" render={({ field }) => (
             <FormItem>
-            <FormLabel>Full Address (Optional)</FormLabel>
+            <FormLabel>Full Address</FormLabel>
             <FormControl><Textarea placeholder="e.g. Mall Road, Near High Court, Nainital, Uttarakhand 263001" className="resize-y" {...field} /></FormControl>
-            <FormDescription>Used by the AI Arrival Assistant to provide directions.</FormDescription>
             <FormMessage />
             </FormItem>
         )} />
-        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <FormField control={form.control} name="rating" render={({ field }) => (
                 <FormItem>
@@ -272,54 +290,136 @@ export function EditHotelForm({ hotel, rooms: initialRooms }: EditHotelFormProps
             )} />
         </div>
 
+        <Separator />
+
+        {/* === UNIQUE FEATURES === */}
+        <div>
+            <h3 className="text-lg font-medium">Unique Features</h3>
+            <FormDescription>Add special details that make this hotel stand out.</FormDescription>
+        </div>
+        <FormField control={form.control} name="isVerifiedPahadiHost" render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                <div className="space-y-0.5">
+                    <FormLabel>Verified Pahadi Host</FormLabel>
+                    <FormDescription>
+                        Enable this badge for locally owned and operated properties.
+                    </FormDescription>
+                </div>
+                <FormControl>
+                    <Switch checked={field.value} onCheckedChange={field.onChange}/>
+                </FormControl>
+            </FormItem>
+        )} />
+        <FormField control={form.control} name="ecoPractices" render={() => (
+             <FormItem className="rounded-lg border p-3 shadow-sm">
+                <div className="space-y-0.5 mb-4">
+                    <FormLabel>Eco-Friendly Practices</FormLabel>
+                    <FormDescription>
+                        Select all eco-friendly practices the hotel follows.
+                    </FormDescription>
+                </div>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8">
+                    <FormField control={form.control} name="ecoPractices.waterSaving" render={({ field }) => (
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                            <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                            <FormLabel className="text-sm font-normal">Water Saving</FormLabel>
+                        </FormItem>
+                    )} />
+                     <FormField control={form.control} name="ecoPractices.plasticFree" render={({ field }) => (
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                            <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                            <FormLabel className="text-sm font-normal">Plastic-Free Initiative</FormLabel>
+                        </FormItem>
+                    )} />
+                     <FormField control={form.control} name="ecoPractices.localSourcing" render={({ field }) => (
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                            <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                            <FormLabel className="text-sm font-normal">Sources Locally</FormLabel>
+                        </FormItem>
+                    )} />
+                </div>
+             </FormItem>
+        )} />
+        <div className="p-3 border rounded-lg shadow-sm space-y-4">
+            <div className="space-y-0.5">
+                <FormLabel>Safety & Emergency Info</FormLabel>
+                <FormDescription>Provide details for traveler safety.</FormDescription>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                 <FormField control={form.control} name="safetyInfo.nearestHospital" render={({ field }) => (
+                    <FormItem>
+                        <FormLabel className="text-xs">Nearest Hospital</FormLabel>
+                        <FormControl><Input placeholder="e.g. BD Pandey Hospital (5km)" {...field} /></FormControl>
+                    </FormItem>
+                )} />
+                <FormField control={form.control} name="safetyInfo.policeStation" render={({ field }) => (
+                    <FormItem>
+                        <FormLabel className="text-xs">Police Station</FormLabel>
+                        <FormControl><Input placeholder="e.g. Mallital Thana (3km)" {...field} /></FormControl>
+                    </FormItem>
+                )} />
+                <FormField control={form.control} name="safetyInfo.networkCoverage" render={({ field }) => (
+                    <FormItem>
+                        <FormLabel className="text-xs">Mobile Network</FormLabel>
+                         <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl><SelectTrigger><SelectValue placeholder="Select network quality" /></SelectTrigger></FormControl>
+                            <SelectContent>
+                                <SelectItem value="good">Good</SelectItem>
+                                <SelectItem value="average">Average</SelectItem>
+                                <SelectItem value="poor">Poor / None</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </FormItem>
+                )} />
+            </div>
+        </div>
+
+        <Separator />
+
+        {/* === AMENITIES & IMAGES === */}
         <FormField control={form.control} name="amenities" render={() => (
             <FormItem>
-                <div className="mb-4"><FormLabel className="text-base">Amenities</FormLabel><FormDescription>Select all amenities that apply.</FormDescription></div>
+                <div className="mb-4"><FormLabel className="text-base">Standard Amenities</FormLabel><FormDescription>Select all standard amenities that apply.</FormDescription></div>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-2 border rounded-md">
                 {allAmenities.map((item) => (
-                    <FormField key={item} control={form.control} name="amenities" render={({ field }) => {
-                        return (
+                    <FormField key={item} control={form.control} name="amenities" render={({ field }) => (
                         <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                            <FormControl>
-                            <Checkbox
-                                checked={field.value?.includes(item)}
-                                onCheckedChange={(checked) => {
-                                return checked ? field.onChange([...(field.value || []), item]) : field.onChange((field.value || [])?.filter((value) => value !== item));
-                                }}
-                            />
-                            </FormControl>
+                            <FormControl><Checkbox checked={field.value?.includes(item)} onCheckedChange={(checked) => (checked ? field.onChange([...(field.value || []), item]) : field.onChange((field.value || [])?.filter((value) => value !== item)))}/></FormControl>
                             <FormLabel className="text-sm font-normal capitalize">{item.replace('-', ' ')}</FormLabel>
                         </FormItem>
-                        );
-                    }} />
+                    )} />
                 ))}
                 </div>
                 <FormMessage className="mt-2" />
             </FormItem>
         )} />
-
-        <Separator />
-        
+        <FormField control={form.control} name="spiritualAmenities" render={() => (
+            <FormItem>
+                <div className="mb-4"><FormLabel className="text-base">Spiritual & Wellness Amenities</FormLabel><FormDescription>Highlight features for spiritual and wellness travelers.</FormDescription></div>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-2 border rounded-md">
+                {allSpiritualAmenities.map((item) => (
+                    <FormField key={item} control={form.control} name="spiritualAmenities" render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                            <FormControl><Checkbox checked={field.value?.includes(item)} onCheckedChange={(checked) => (checked ? field.onChange([...(field.value || []), item]) : field.onChange((field.value || [])?.filter((value) => value !== item)))}/></FormControl>
+                            <FormLabel className="text-sm font-normal capitalize">{item.replace('-', ' ')}</FormLabel>
+                        </FormItem>
+                    )} />
+                ))}
+                </div>
+                <FormMessage className="mt-2" />
+            </FormItem>
+        )} />
         <FormField control={form.control} name="images" render={() => (
             <FormItem>
                 <div className="mb-4"><FormLabel className="text-base">Hotel Images</FormLabel><FormDescription>Select one or more images for the hotel gallery.</FormDescription></div>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-2 border rounded-md max-h-60 overflow-y-auto">
                     {hotelImagePlaceholders.map((item) => (
-                        <FormField key={item.id} control={form.control} name="images" render={({ field }) => {
-                            return (
+                        <FormField key={item.id} control={form.control} name="images" render={({ field }) => (
                             <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                                <FormControl>
-                                <Checkbox
-                                    checked={field.value?.includes(item.id)}
-                                    onCheckedChange={(checked) => {
-                                    return checked ? field.onChange([...(field.value || []), item.id]) : field.onChange((field.value || [])?.filter((value) => value !== item.id));
-                                    }}
-                                />
-                                </FormControl>
+                                <FormControl><Checkbox checked={field.value?.includes(item.id)} onCheckedChange={(checked) => (checked ? field.onChange([...(field.value || []), item.id]) : field.onChange((field.value || [])?.filter((value) => value !== item.id)))}/></FormControl>
                                 <FormLabel className="text-sm font-normal">{item.description}</FormLabel>
                             </FormItem>
-                            );
-                        }} />
+                        )} />
                     ))}
                 </div>
                 <FormMessage className="mt-2" />
@@ -328,12 +428,12 @@ export function EditHotelForm({ hotel, rooms: initialRooms }: EditHotelFormProps
 
         <Separator />
         
+        {/* === ROOMS === */}
         <div>
             <h3 className="text-lg font-medium">Room Types</h3>
             <FormDescription>Manage the rooms available in this hotel.</FormDescription>
             <FormField control={form.control} name="rooms" render={() => (<FormItem><FormMessage className="mt-2" /></FormItem>)} />
         </div>
-
         <div className="space-y-4">
           {roomFields.map((field, index) => (
             <Card key={field.id} className="p-4 bg-muted/30">
@@ -392,7 +492,6 @@ export function EditHotelForm({ hotel, rooms: initialRooms }: EditHotelFormProps
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isLoading ? 'Saving...' : 'Save Changes'}
             </Button>
-
             <AlertDialog>
                 <AlertDialogTrigger asChild>
                     <Button type="button" variant="destructive" disabled={isDeleting}>

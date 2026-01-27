@@ -9,6 +9,20 @@ export interface Hotel {
   rating: number;
   minPrice?: number;
   discount?: number;
+
+  // New Features for a Unique Experience
+  isVerifiedPahadiHost?: boolean;
+  ecoPractices?: {
+    waterSaving: boolean;
+    plasticFree: boolean;
+    localSourcing: boolean;
+  };
+  safetyInfo?: {
+    nearestHospital: string;
+    policeStation: string;
+    networkCoverage: 'good' | 'average' | 'poor' | '';
+  };
+  spiritualAmenities?: string[]; // e.g., 'meditation-friendly', 'silent-zone', 'sunrise-view', 'temple-nearby', 'yoga-sessions'
 }
 
 export interface Room {
@@ -77,7 +91,7 @@ export interface Review {
   userId: string;
   authorName: string;
   rating: number; // 1 to 5
-  title: string;
   text: string;
+  title: string;
   createdAt: Date;
 }

@@ -3,7 +3,7 @@
 
 import { notFound, useParams } from 'next/navigation';
 import Image from 'next/image';
-import { Star, MapPin, BedDouble } from 'lucide-react';
+import { Star, MapPin, BedDouble, Handshake, CheckCircle } from 'lucide-react';
 import React from 'react';
 
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -24,6 +24,8 @@ import { RoomBookingCard } from '@/components/hotel/RoomBookingCard';
 import { Button } from '@/components/ui/button';
 import Loading from './loading';
 import { WriteReviewForm } from '@/components/hotel/WriteReviewForm';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 
 export default function HotelPage() {
@@ -82,6 +84,11 @@ export default function HotelPage() {
   return (
     <div className="container mx-auto max-w-7xl py-8 px-4 md:px-6">
       <section className="mb-8">
+        {hotel.isVerifiedPahadiHost && (
+          <Badge className="mb-2 bg-green-100 text-green-800 border-green-200 hover:bg-green-100 text-base font-semibold py-1 px-3">
+              <Handshake className="mr-2 h-5 w-5" /> Verified Pahadi Host
+          </Badge>
+        )}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between">
             <h1 className="font-headline text-3xl font-bold md:text-4xl">{hotel.name}</h1>
             <Button onClick={handleScrollToBooking} className="mt-4 md:mt-0">
@@ -143,9 +150,24 @@ export default function HotelPage() {
             <h2 className="font-headline text-3xl font-bold mb-4">About this hotel</h2>
             <p className="text-foreground/80 leading-relaxed">{hotel.description}</p>
           </section>
-
+          
           <Separator />
 
+          {(hotel.safetyInfo && (hotel.safetyInfo.nearestHospital || hotel.safetyInfo.policeStation)) && (
+            <Card className="bg-blue-50 border-blue-200">
+              <CardHeader>
+                <CardTitle className="text-xl flex items-center gap-2 text-blue-900"><AmenityIcon amenity="hospital" className="h-6 w-6"/> Safety & Emergency Info</CardTitle>
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-blue-800">
+                {hotel.safetyInfo.nearestHospital && <div className="flex items-center gap-2"><AmenityIcon amenity="hospital" /><span>{hotel.safetyInfo.nearestHospital}</span></div>}
+                {hotel.safetyInfo.policeStation && <div className="flex items-center gap-2"><AmenityIcon amenity="police" /><span>{hotel.safetyInfo.policeStation}</span></div>}
+                {hotel.safetyInfo.networkCoverage && <div className="flex items-center gap-2"><AmenityIcon amenity="network" /><span>Network: <span className="font-semibold capitalize">{hotel.safetyInfo.networkCoverage}</span></span></div>}
+              </CardContent>
+            </Card>
+          )}
+
+          <Separator />
+          
           <section>
             <h2 className="font-headline text-3xl font-bold mb-6">Amenities</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
@@ -157,6 +179,31 @@ export default function HotelPage() {
               ))}
             </div>
           </section>
+
+          {hotel.spiritualAmenities && hotel.spiritualAmenities.length > 0 && (
+             <section>
+                <h3 className="font-headline text-2xl font-bold mb-6">Spiritual & Wellness</h3>
+                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+                    {hotel.spiritualAmenities.map((amenity) => (
+                        <div key={amenity} className="flex items-center gap-3">
+                        <AmenityIcon amenity={amenity} className="h-6 w-6 text-green-600" />
+                        <span className="capitalize">{amenity.replace('-', ' ')}</span>
+                        </div>
+                    ))}
+                </div>
+             </section>
+          )}
+
+          {hotel.ecoPractices && (hotel.ecoPractices.localSourcing || hotel.ecoPractices.plasticFree || hotel.ecoPractices.waterSaving) && (
+             <section>
+                <h3 className="font-headline text-2xl font-bold mb-6">Eco-Friendly Practices</h3>
+                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+                    {hotel.ecoPractices.waterSaving && <div className="flex items-center gap-3"><AmenityIcon amenity="water-saving" className="h-6 w-6 text-blue-600" /><span>Water Saving</span></div>}
+                    {hotel.ecoPractices.plasticFree && <div className="flex items-center gap-3"><AmenityIcon amenity="plastic-free" className="h-6 w-6 text-green-600" /><span>Plastic-Free</span></div>}
+                    {hotel.ecoPractices.localSourcing && <div className="flex items-center gap-3"><AmenityIcon amenity="local-sourcing" className="h-6 w-6 text-orange-600" /><span>Local Sourcing</span></div>}
+                </div>
+             </section>
+          )}
 
           {user && !user.isAnonymous && (
             <>
