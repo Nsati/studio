@@ -1,7 +1,7 @@
 'use client';
 import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
@@ -68,24 +68,19 @@ export default function AdminLayout({
   const { user, userProfile, isLoading } = useUser();
   const router = useRouter();
   const pathname = usePathname();
-  const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
-    if (!isLoading) {
-      if (!user) {
-        router.push('/login?redirect=/admin');
-      } else if (userProfile?.role !== 'admin') {
-        // Handled by the component render but could also redirect
-      }
-      setAuthChecked(true);
+    if (!isLoading && !user) {
+      router.push('/login?redirect=/admin');
     }
-  }, [user, userProfile, isLoading, router]);
+  }, [user, isLoading, router]);
 
-  if (!authChecked || isLoading) {
+
+  if (isLoading) {
     return <AdminLayoutSkeleton />;
   }
   
-  if (userProfile?.role !== 'admin') {
+  if (!user || userProfile?.role !== 'admin') {
       return <NotAdmin />;
   }
 

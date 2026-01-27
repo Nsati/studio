@@ -1,4 +1,3 @@
-
 'use client';
 import { useMemo, useState } from 'react';
 import { useFirestore, useUser, type WithId, useCollection, useMemoFirebase } from '@/firebase';
@@ -143,10 +142,15 @@ export default function BookingsPage() {
     const { userProfile, isLoading: isUserLoading } = useUser();
     const firestore = useFirestore();
 
+    // Defensively check for admin role before creating the query.
+    const isAdmin = userProfile?.role === 'admin';
     const bookingsQuery = useMemoFirebase(() => {
-        if (!firestore || userProfile?.role !== 'admin') return null;
-        return query(collectionGroup(firestore, 'bookings'));
-    }, [firestore, userProfile]);
+        if (isAdmin && firestore) {
+            return query(collectionGroup(firestore, 'bookings'));
+        }
+        return null;
+    }, [firestore, isAdmin]);
+
 
     const { data: bookingsData, isLoading: areBookingsLoading } = useCollection<Booking>(bookingsQuery);
 

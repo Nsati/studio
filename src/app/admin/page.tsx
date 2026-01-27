@@ -77,22 +77,31 @@ export default function AdminDashboard() {
     const { userProfile, isLoading: isUserLoading } = useUser();
     const firestore = useFirestore();
 
+    // Defensively check for admin role before creating the query.
+    const isAdmin = userProfile?.role === 'admin';
+
     const bookingsQuery = useMemoFirebase(() => {
-        if (!firestore || userProfile?.role !== 'admin') return null;
-        return query(collectionGroup(firestore, 'bookings'));
-    }, [firestore, userProfile]);
+        if (isAdmin && firestore) {
+            return query(collectionGroup(firestore, 'bookings'));
+        }
+        return null;
+    }, [firestore, isAdmin]);
     const { data: bookingsData, isLoading: areBookingsLoading, error: bookingsError } = useCollection<Booking>(bookingsQuery);
 
     const usersQuery = useMemoFirebase(() => {
-        if (!firestore || userProfile?.role !== 'admin') return null;
-        return collection(firestore, 'users');
-    }, [firestore, userProfile]);
+        if (isAdmin && firestore) {
+            return collection(firestore, 'users');
+        }
+        return null;
+    }, [firestore, isAdmin]);
     const { data: usersData, isLoading: areUsersLoading, error: usersError } = useCollection<UserProfile>(usersQuery);
 
     const hotelsQuery = useMemoFirebase(() => {
-        if (!firestore || userProfile?.role !== 'admin') return null;
-        return collection(firestore, 'hotels');
-    }, [firestore, userProfile]);
+        if (isAdmin && firestore) {
+            return collection(firestore, 'hotels');
+        }
+        return null;
+    }, [firestore, isAdmin]);
     const { data: hotelsData, isLoading: areHotelsLoading, error: hotelsError } = useCollection<HotelType>(hotelsQuery);
     
     const isLoading = isUserLoading || areBookingsLoading || areUsersLoading || areHotelsLoading;
