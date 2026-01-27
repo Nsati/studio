@@ -25,7 +25,6 @@ import {
   Sunrise,
   Wind,
   Church,
-  Yoga
 } from 'lucide-react';
 
 interface AmenityIconProps {
@@ -55,6 +54,7 @@ export function AmenityIcon({ amenity, className = 'h-5 w-5' }: AmenityIconProps
     case 'skiing': return <MountainSnow className={className} />;
     case 'heritage': return <Building2 className={className} />;
     case 'safari': return <TreePalm className={className}/>;
+    case 'yoga': return <PersonStanding className={className} />;
     
     // Eco Practices
     case 'watersaving':
@@ -70,7 +70,7 @@ export function AmenityIcon({ amenity, className = 'h-5 w-5' }: AmenityIconProps
     case 'network': return <Signal className={className} />;
     
     // Spiritual Amenities
-    case 'meditation-friendly': return <Yoga className={className} />;
+    case 'meditation-friendly': return <PersonStanding className={className} />;
     case 'silent-zone': return <Wind className={className} />;
     case 'sunrise-view': return <Sunrise className={className} />;
     case 'temple-nearby': return <Church className={className} />;
