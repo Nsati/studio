@@ -1,15 +1,49 @@
+'use client';
 
 import Image from 'next/image';
 import Link from 'next/link';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { dummyCities, dummyHotels, dummyTourPackages } from '@/lib/dummy-data';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { dummyCities, dummyTourPackages } from '@/lib/dummy-data';
 import { ArrowRight } from 'lucide-react';
 import { HotelCard } from '@/components/hotel/HotelCard';
 
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, limit, query } from 'firebase/firestore';
+import type { Hotel } from '@/lib/types';
+import { Skeleton } from '@/components/ui/skeleton';
+
+
+function FeaturedHotelsSkeleton() {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {Array.from({ length: 3 }).map((_, i) => (
+        <Card key={i}>
+          <Skeleton className="aspect-[4/3] w-full" />
+          <CardHeader>
+            <Skeleton className="h-6 w-3/4" />
+            <Skeleton className="h-4 w-1/2 mt-2" />
+          </CardHeader>
+          <CardFooter>
+            <Skeleton className="h-5 w-1/4" />
+          </CardFooter>
+        </Card>
+      ))}
+    </div>
+  )
+}
+
 export default function HomePage() {
   const heroImage = PlaceHolderImages.find((img) => img.id === 'hero');
+
+  const firestore = useFirestore();
+  const featuredHotelsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, 'hotels'), limit(3));
+  }, [firestore]);
+
+  const { data: featuredHotels, isLoading: areHotelsLoading } = useCollection<Hotel>(featuredHotelsQuery);
 
   return (
     <div>
@@ -91,11 +125,15 @@ export default function HomePage() {
               <Link href="/search">View All <ArrowRight className="ml-2 h-4 w-4" /></Link>
             </Button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {dummyHotels.slice(0, 3).map((hotel) => (
-              <HotelCard key={hotel.id} hotel={hotel} />
-            ))}
-          </div>
+          {areHotelsLoading ? (
+            <FeaturedHotelsSkeleton />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {featuredHotels?.map((hotel) => (
+                <HotelCard key={hotel.id} hotel={hotel} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
