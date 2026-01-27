@@ -294,18 +294,6 @@
             }
           ]
         }
-      },
-       {
-        "path": "/confirmedBookings/{bookingId}",
-        "definition": {
-          "description": "Stores temporary, public summaries of confirmed bookings for the success page. Documents have a TTL of 1 day.",
-          "params": [
-            {
-              "name": "bookingId",
-              "description": "The unique identifier of the booking."
-            }
-          ]
-        }
       }
     ],
     "reasoning": "The Firestore structure is designed to optimize for security, scalability, and real-time updates in the Uttarakhand Getaways hotel booking application. It follows the core design principles of Authorization Independence, Clarity of Intent, DBAC, and QAPs. Authorization Independence is achieved through denormalization, specifically by including relevant authorization data (like hotelId) in subcollections (like rooms and bookings). This avoids the need for `get()` calls in security rules. Structural Segregation is enforced by maintaining distinct collections for users, hotels, rooms, and bookings, each with homogeneous security requirements. Access Modeling leverages a 'userId' field within top-level collections like `bookings` to link data to users, enabling queries while still allowing for simple authorization rules. Global roles (DBAC) are implemented by having a 'role' field on the user document. QAPs are supported by the segregated structure. Listing hotels or rooms does not require filtering based on user roles; separate collections ensure the rules are not used as filters. Explicit State Modeling uses the `status` field in bookings to clearly represent the booking state (locked, confirmed, cancelled)."

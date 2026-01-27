@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { getFirebaseAdmin } from '@/firebase/admin';
-import type { Booking, Room, ConfirmedBookingSummary } from '@/lib/types';
+import type { Booking, Room } from '@/lib/types';
 import { FieldValue } from 'firebase-admin/firestore';
 
 export async function POST(req: Request) {
@@ -88,22 +88,8 @@ export async function POST(req: Request) {
           availableRooms: FieldValue.increment(-1),
         });
 
-        // Create a public summary document for the success page
-        const confirmedBookingSummaryRef = adminDb.doc(`confirmedBookings/${bookingId}`);
-        const summaryData: ConfirmedBookingSummary = {
-            hotelId: bookingData.hotelId,
-            hotelName: bookingData.hotelName || 'Hotel Name Unavailable',
-            hotelCity: bookingData.hotelCity || 'City Unavailable',
-            hotelAddress: bookingData.hotelAddress,
-            customerName: bookingData.customerName,
-            checkIn: bookingData.checkIn,
-            checkOut: bookingData.checkOut,
-            guests: bookingData.guests,
-            totalPrice: bookingData.totalPrice,
-            roomType: bookingData.roomType,
-            userId: bookingData.userId,
-        };
-        transaction.set(confirmedBookingSummaryRef, summaryData);
+        // The public summary document is no longer needed.
+        // The success page will read the main booking document directly.
       });
 
       console.log(`✅ Booking ${bookingId} confirmed successfully via webhook.`);

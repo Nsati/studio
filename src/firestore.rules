@@ -74,12 +74,5 @@ service cloud.firestore {
         allow read: if true;
         allow write: if isAdmin();
     }
-
-    match /confirmedBookings/{bookingId} {
-        allow read: if true;
-        // Writes should only happen from the server (webhook) via Admin SDK, which bypasses rules.
-        // Disallow all client-side writes.
-        allow write: if false;
-    }
   }
 }
