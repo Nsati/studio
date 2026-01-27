@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useParams } from 'next/navigation';
@@ -14,6 +13,7 @@ import {
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
 
 
 // Component for CONFIRMED state
@@ -96,7 +96,7 @@ function SuccessContent({ booking }: { booking: WithId<Booking> }) {
 }
 
 // Component for PENDING/LOADING state
-const ProcessingState = () => {
+const ProcessingState = ({ showDelayedMessage }: { showDelayedMessage: boolean }) => {
     return (
         <div className="bg-muted/40 min-h-[calc(100vh-4rem)] flex items-center">
             <div className="container mx-auto max-w-2xl py-12 px-4 md:px-6">
@@ -105,7 +105,10 @@ const ProcessingState = () => {
                         <Loader2 className="h-12 w-12 text-primary animate-spin" />
                         <CardTitle className="text-3xl font-headline mt-4">Processing Your Booking</CardTitle>
                         <CardDescription className="max-w-md">
-                           Your payment was successful! We are finalizing the confirmation. This page will update automatically.
+                           {showDelayedMessage
+                                ? "This is taking a bit longer than usual. Please don't worry, your booking is safe and will be confirmed shortly. You can also check 'My Bookings' in a moment."
+                                : "Your payment was successful! We are finalizing the confirmation. This page will update automatically."
+                           }
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="p-6 text-center">
@@ -150,6 +153,8 @@ export default function BookingSuccessPage() {
     const { user, isLoading: isUserLoading } = useUser();
     const bookingId = params.id as string;
     
+    const [showDelayedMessage, setShowDelayedMessage] = useState(false);
+
     const bookingRef = useMemoFirebase(() => {
         // Only create the ref if we have the user's UID.
         if (!firestore || !user?.uid || !bookingId) return null;
@@ -158,21 +163,38 @@ export default function BookingSuccessPage() {
     
     const { data: booking, isLoading: isBookingLoading, error: bookingError } = useDoc<Booking>(bookingRef);
 
-    // Show a loading state if we are waiting for the user or the initial booking data.
-    if (isUserLoading || (bookingRef && isBookingLoading && !booking)) {
-        return <ProcessingState />;
+    const isProcessing = isUserLoading || (bookingRef && isBookingLoading && !booking) || (booking && booking.status === 'PENDING');
+
+    useEffect(() => {
+        let timeoutId: NodeJS.Timeout | null = null;
+        if (isProcessing) {
+            // Set a timeout to show the delayed message
+            timeoutId = setTimeout(() => {
+                setShowDelayedMessage(true);
+            }, 10000); // 10 seconds
+        }
+
+        return () => {
+            // Clear the timeout if the component unmounts or the status changes
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
+        };
+    }, [isProcessing]);
+
+
+    if (isProcessing) {
+        return <ProcessingState showDelayedMessage={showDelayedMessage} />;
     }
     
     if (bookingError || !booking) {
         return <ErrorState bookingId={bookingId} />;
     }
     
-    // Once we have a booking document, we decide what to show based on its status.
     if (booking.status === 'CONFIRMED') {
         return <SuccessContent booking={booking} />;
     }
     
-    // If the status is PENDING, or any other state, we show the processing screen.
-    // The useDoc hook will continue listening and will re-render the page when the status changes.
-    return <ProcessingState />;
+    // Fallback for any other unexpected status (e.g. CANCELLED)
+    return <ProcessingState showDelayedMessage={showDelayedMessage} />;
 }
