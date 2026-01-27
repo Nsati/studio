@@ -22,17 +22,17 @@ function Calendar({
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4",
-        caption: "flex justify-between items-center pt-1 relative",
+        caption: "flex justify-start items-center pt-1 relative",
         caption_label: "text-sm font-medium",
-        nav: "space-x-1 flex items-center",
+        nav: "space-x-1 flex items-center ml-auto",
         nav_button: cn(
           buttonVariants({ variant: "outline" }),
           "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
         ),
         table: "w-full border-collapse",
-        head_row: "flex",
+        head_row: "flex w-full mt-4",
         head_cell:
-          "text-muted-foreground rounded-md h-9 w-9 font-normal text-[0.8rem] grid place-items-center",
+          "text-muted-foreground rounded-md w-9 h-9 font-normal text-[0.8rem] grid place-items-center",
         row: "flex w-full",
         cell: "h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
         day: cn(
@@ -54,8 +54,10 @@ function Calendar({
       formatters={{
         formatWeekdayName: (day) => day.toLocaleDateString('en-US', { weekday: 'narrow' })
       }}
-      iconLeft={<ChevronLeft className="h-4 w-4" />}
-      iconRight={<ChevronRight className="h-4 w-4" />}
+      components={{
+        iconLeft: () => <ChevronLeft className="h-4 w-4" />,
+        iconRight: () => <ChevronRight className="h-4 w-4" />,
+      }}
       {...props}
     />
   )
