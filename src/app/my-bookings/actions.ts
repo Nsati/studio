@@ -43,7 +43,7 @@ export async function cancelBookingAction(userId: string, bookingId: string): Pr
             if (bookingData.status === 'CONFIRMED') {
                 const roomRef = adminDb.doc(`hotels/${bookingData.hotelId}/rooms/${bookingData.roomId}`);
                 const roomDoc = await transaction.get(roomRef);
-                if (roomDoc.exists) {
+                if (roomDoc.exists) { // Corrected: .exists is a property on Admin SDK, not a function
                     transaction.update(roomRef, { availableRooms: FieldValue.increment(1) });
                 }
             }
