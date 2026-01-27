@@ -1,5 +1,5 @@
 'use client';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import {
   Card,
@@ -9,11 +9,10 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Hotel, Users2, BookOpen, IndianRupee, AlertCircle } from 'lucide-react';
-import { useUser, useCollection, useMemoFirebase, useFirestore } from '@/firebase';
+import { useUser } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
-import { collection, collectionGroup, query } from 'firebase/firestore';
-import type { Booking, Hotel as HotelType, UserProfile } from '@/lib/types';
 import { normalizeTimestamp } from '@/lib/firestore-utils';
+import { getAdminDashboardStats, type SerializableBooking, type SerializableHotel, type SerializableUserProfile } from './actions';
 
 
 const BookingChart = dynamic(() => import('@/components/admin/BookingChart'), {
@@ -75,37 +74,32 @@ function AdminErrorState({ error }: { error: Error }) {
 
 export default function AdminDashboard() {
     const { userProfile, isLoading: isUserLoading } = useUser();
-    const firestore = useFirestore();
-
-    // Defensively check for admin role before creating the query.
     const isAdmin = userProfile?.role === 'admin';
 
-    const bookingsQuery = useMemoFirebase(() => {
-        if (isAdmin && firestore) {
-            return query(collectionGroup(firestore, 'bookings'));
-        }
-        return null;
-    }, [firestore, isAdmin]);
-    const { data: bookingsData, isLoading: areBookingsLoading, error: bookingsError } = useCollection<Booking>(bookingsQuery);
+    const [stats, setStats] = useState<{
+        bookings: SerializableBooking[],
+        users: SerializableUserProfile[],
+        hotels: SerializableHotel[]
+    } | null>(null);
+    const [isLoadingStats, setIsLoadingStats] = useState(true);
+    const [error, setError] = useState<Error | null>(null);
 
-    const usersQuery = useMemoFirebase(() => {
-        if (isAdmin && firestore) {
-            return collection(firestore, 'users');
+    useEffect(() => {
+        if (isAdmin) {
+            setIsLoadingStats(true);
+            getAdminDashboardStats()
+                .then(setStats)
+                .catch(setError)
+                .finally(() => setIsLoadingStats(false));
+        } else if (!isUserLoading) {
+            setIsLoadingStats(false);
         }
-        return null;
-    }, [firestore, isAdmin]);
-    const { data: usersData, isLoading: areUsersLoading, error: usersError } = useCollection<UserProfile>(usersQuery);
-
-    const hotelsQuery = useMemoFirebase(() => {
-        if (isAdmin && firestore) {
-            return collection(firestore, 'hotels');
-        }
-        return null;
-    }, [firestore, isAdmin]);
-    const { data: hotelsData, isLoading: areHotelsLoading, error: hotelsError } = useCollection<HotelType>(hotelsQuery);
+    }, [isAdmin, isUserLoading]);
     
-    const isLoading = isUserLoading || areBookingsLoading || areUsersLoading || areHotelsLoading;
-    const error = bookingsError || usersError || hotelsError;
+    const isLoading = isUserLoading || isLoadingStats;
+    const bookingsData = stats?.bookings;
+    const usersData = stats?.users;
+    const hotelsData = stats?.hotels;
 
     const { totalRevenue, totalBookings, bookingsLastMonth } = useMemo(() => {
         if (!bookingsData) return { totalRevenue: 0, totalBookings: 0, bookingsLastMonth: 0 };

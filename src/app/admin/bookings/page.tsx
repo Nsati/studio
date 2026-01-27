@@ -1,11 +1,12 @@
 'use client';
-import { useMemo, useState } from 'react';
-import { useFirestore, useUser, type WithId, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, doc, runTransaction, collectionGroup, query } from 'firebase/firestore';
+import { useMemo, useState, useEffect } from 'react';
+import { useFirestore, useUser, type WithId } from '@/firebase';
+import { doc, runTransaction } from 'firebase/firestore';
 import type { Booking, Room } from '@/lib/types';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { normalizeTimestamp } from '@/lib/firestore-utils';
+import { getAdminAllBookings, type SerializableBooking } from './actions';
 
 import {
   Table,
@@ -46,7 +47,7 @@ function BookingRowSkeleton() {
     )
 }
 
-function CancelBookingAction({ booking, onBookingCancelled }: { booking: WithId<Booking>, onBookingCancelled: () => void }) {
+function CancelBookingAction({ booking, onBookingCancelled }: { booking: WithId<SerializableBooking>, onBookingCancelled: () => void }) {
     const firestore = useFirestore();
     const { toast } = useToast();
     const [isCancelling, setIsCancelling] = useState(false);
@@ -140,30 +141,36 @@ function CancelBookingAction({ booking, onBookingCancelled }: { booking: WithId<
 
 export default function BookingsPage() {
     const { userProfile, isLoading: isUserLoading } = useUser();
-    const firestore = useFirestore();
-
-    // Defensively check for admin role before creating the query.
     const isAdmin = userProfile?.role === 'admin';
-    const bookingsQuery = useMemoFirebase(() => {
-        if (isAdmin && firestore) {
-            return query(collectionGroup(firestore, 'bookings'));
+
+    const [bookings, setBookings] = useState<WithId<SerializableBooking>[] | null>(null);
+    const [areBookingsLoading, setAreBookingsLoading] = useState(true);
+
+    const fetchBookings = () => {
+        setAreBookingsLoading(true);
+        getAdminAllBookings()
+            .then(data => {
+                const sortedData = [...data].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+                setBookings(sortedData);
+            })
+            .catch(err => {
+                console.error("Failed to fetch admin bookings:", err);
+                setBookings([]); // Set to empty array on error
+            })
+            .finally(() => {
+                setAreBookingsLoading(false);
+            });
+    }
+
+    useEffect(() => {
+        if (isAdmin) {
+            fetchBookings();
+        } else if (!isUserLoading) {
+            setAreBookingsLoading(false);
+            setBookings([]);
         }
-        return null;
-    }, [firestore, isAdmin]);
+    }, [isAdmin, isUserLoading]);
 
-
-    const { data: bookingsData, isLoading: areBookingsLoading } = useCollection<Booking>(bookingsQuery);
-
-    const bookings = useMemo(() => {
-        if (!bookingsData) return null;
-        return [...bookingsData].sort((a, b) => {
-            const dateA = normalizeTimestamp(a.createdAt);
-            const dateB = normalizeTimestamp(b.createdAt);
-            if (isNaN(dateA.getTime())) return 1;
-            if (isNaN(dateB.getTime())) return -1;
-            return dateB.getTime() - dateA.getTime();
-        });
-    }, [bookingsData]);
 
     const isLoading = isUserLoading || areBookingsLoading;
 
@@ -178,7 +185,7 @@ export default function BookingsPage() {
        <Card>
         <CardHeader>
             <CardTitle>All Bookings</CardTitle>
-            <CardDescription>This is a real-time list of all bookings made across the platform.</CardDescription>
+            <CardDescription>A list of all bookings made across the platform. Refresh the page for the latest updates.</CardDescription>
         </CardHeader>
         <CardContent>
             <Table>
@@ -237,7 +244,7 @@ export default function BookingsPage() {
                                     {booking.totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
                                 </TableCell>
                                 <TableCell className="text-right">
-                                    <CancelBookingAction booking={booking} onBookingCancelled={() => {}} />
+                                    <CancelBookingAction booking={booking} onBookingCancelled={fetchBookings} />
                                 </TableCell>
                             </TableRow>
                         )

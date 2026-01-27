@@ -7,6 +7,7 @@ import type { WithId } from '@/firebase';
 
 // A serializable version of the booking to safely pass from server to client.
 export type SerializableBooking = Omit<Booking, 'checkIn' | 'checkOut' | 'createdAt'> & {
+    id: string;
     checkIn: string;
     checkOut: string;
     createdAt: string;
