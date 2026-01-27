@@ -35,14 +35,23 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardStats> {
         throw new Error(error || "Admin SDK not initialized");
     }
     
+    // Fetch collections. Remove orderBy from collectionGroup query to prevent missing index errors.
     const [bookingsSnapshot, usersSnapshot, hotelsSnapshot] = await Promise.all([
-        adminDb.collectionGroup('bookings').orderBy('createdAt', 'desc').get(),
+        adminDb.collectionGroup('bookings').get(),
         adminDb.collection('users').get(),
         adminDb.collection('hotels').get()
     ]);
 
     const totalUsers = usersSnapshot.size;
     const totalHotels = hotelsSnapshot.size;
+
+    // Sort bookings in-memory to ensure chronological order for recent bookings and charts.
+    const sortedDocs = bookingsSnapshot.docs.sort((a, b) => {
+        const dateA = (a.data().createdAt as any)?.toDate() || new Date(0);
+        const dateB = (b.data().createdAt as any)?.toDate() || new Date(0);
+        // Sort descending (newest first)
+        return dateB.getTime() - dateA.getTime();
+    });
 
     let totalRevenue = 0;
     let totalBookings = 0;
@@ -53,30 +62,30 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardStats> {
     const chartDataMap: Map<string, number> = new Map();
     const serializableBookings: SerializableBooking[] = [];
 
-    bookingsSnapshot.docs.forEach(doc => {
+    // Process the in-memory sorted documents
+    sortedDocs.forEach(doc => {
         const booking = doc.data() as Booking;
 
+        const createdAt = (booking.createdAt as any)?.toDate() || new Date(0);
+        
         if (booking.status === 'CONFIRMED') {
             totalRevenue += booking.totalPrice;
             totalBookings++;
             
-            const createdAt = (booking.createdAt as any)?.toDate();
-            if (createdAt && createdAt > oneMonthAgo) {
+            if (createdAt > oneMonthAgo) {
                 bookingsLastMonth++;
             }
             
-            if (createdAt) {
-                const day = createdAt.toISOString().split('T')[0];
-                chartDataMap.set(day, (chartDataMap.get(day) || 0) + booking.totalPrice);
-            }
+            const day = createdAt.toISOString().split('T')[0];
+            chartDataMap.set(day, (chartDataMap.get(day) || 0) + booking.totalPrice);
         }
 
         serializableBookings.push({
             ...(booking as any),
             id: doc.id,
-            checkIn: (booking.checkIn as any).toDate().toISOString(),
-            checkOut: (booking.checkOut as any).toDate().toISOString(),
-            createdAt: (booking.createdAt as any)?.toDate()?.toISOString() || new Date(0).toISOString(),
+            checkIn: ((booking.checkIn as any)?.toDate() || new Date(0)).toISOString(),
+            checkOut: ((booking.checkOut as any)?.toDate() || new Date(0)).toISOString(),
+            createdAt: createdAt.toISOString(),
         });
     });
 
@@ -84,6 +93,7 @@ export async function getAdminDashboardStats(): Promise<AdminDashboardStats> {
       .map(([date, total]) => ({ date, total }))
       .sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
       
+    // `serializableBookings` is already sorted descending by date.
     const recentBookings = serializableBookings.slice(0, 5);
     
     return { 

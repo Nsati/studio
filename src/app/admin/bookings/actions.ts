@@ -17,6 +17,7 @@ export type SerializableBooking = Omit<Booking, 'checkIn' | 'checkOut' | 'create
 /**
  * Fetches the 100 most recent bookings using the Firebase Admin SDK.
  * This ensures admins can reliably retrieve data without overloading the client.
+ * The query is modified to sort in-memory to prevent missing index errors.
  */
 export async function getAdminAllBookings(): Promise<WithId<SerializableBooking>[]> {
     const { adminDb, error } = getFirebaseAdmin();
@@ -25,16 +26,24 @@ export async function getAdminAllBookings(): Promise<WithId<SerializableBooking>
         throw new Error(error || "Admin SDK not initialized");
     }
     
-    const bookingsSnapshot = await adminDb.collectionGroup('bookings').orderBy('createdAt', 'desc').limit(100).get();
+    // Fetch without ordering to avoid index errors, then sort and limit in-memory.
+    const bookingsSnapshot = await adminDb.collectionGroup('bookings').get();
 
-    const bookings: WithId<SerializableBooking>[] = bookingsSnapshot.docs.map(doc => {
+    const sortedDocs = bookingsSnapshot.docs.sort((a, b) => {
+        const dateA = (a.data().createdAt as any)?.toDate() || new Date(0);
+        const dateB = (b.data().createdAt as any)?.toDate() || new Date(0);
+        return dateB.getTime() - dateA.getTime();
+    }).slice(0, 100); // Apply limit after sorting
+
+    const bookings: WithId<SerializableBooking>[] = sortedDocs.map(doc => {
         const data = doc.data() as Booking;
+        const createdAtDate = (data.createdAt as any)?.toDate() || new Date();
         return {
             ...(data as any),
             id: doc.id,
-            checkIn: (data.checkIn as any).toDate().toISOString(),
-            checkOut: (data.checkOut as any).toDate().toISOString(),
-            createdAt: (data.createdAt as any)?.toDate()?.toISOString() || new Date().toISOString(),
+            checkIn: ((data.checkIn as any)?.toDate() || new Date()).toISOString(),
+            checkOut: ((data.checkOut as any)?.toDate() || new Date()).toISOString(),
+            createdAt: createdAtDate.toISOString(),
         };
     });
 
