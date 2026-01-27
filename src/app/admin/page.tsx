@@ -11,8 +11,7 @@ import {
 import { Hotel, Users2, BookOpen, IndianRupee, AlertCircle } from 'lucide-react';
 import { useUser } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
-import { normalizeTimestamp } from '@/lib/firestore-utils';
-import { getAdminDashboardStats, type SerializableBooking, type SerializableHotel, type SerializableUserProfile } from './actions';
+import { getAdminDashboardStats, type AdminDashboardStats } from './actions';
 import { Alert, AlertTitle } from '@/components/ui/alert';
 
 
@@ -77,11 +76,7 @@ export default function AdminDashboard() {
     const { userProfile, isLoading: isUserLoading } = useUser();
     const isAdmin = userProfile?.role === 'admin';
 
-    const [stats, setStats] = useState<{
-        bookings: SerializableBooking[],
-        users: SerializableUserProfile[],
-        hotels: SerializableHotel[]
-    } | null>(null);
+    const [stats, setStats] = useState<AdminDashboardStats | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
 
@@ -97,42 +92,6 @@ export default function AdminDashboard() {
         }
     }, [isAdmin, isUserLoading]);
     
-    const bookingsData = stats?.bookings;
-    const usersData = stats?.users;
-    const hotelsData = stats?.hotels;
-
-    const { totalRevenue, totalBookings, bookingsLastMonth } = useMemo(() => {
-        if (!bookingsData) return { totalRevenue: 0, totalBookings: 0, bookingsLastMonth: 0 };
-        
-        const oneMonthAgo = new Date();
-        oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-
-        let revenue = 0;
-        let lastMonthCount = 0;
-        bookingsData.forEach(b => {
-            if (b.status === 'CONFIRMED') {
-                revenue += b.totalPrice;
-                const createdAt = normalizeTimestamp(b.createdAt);
-                if (!isNaN(createdAt.getTime()) && createdAt > oneMonthAgo) {
-                    lastMonthCount++;
-                }
-            }
-        });
-        
-        return { totalRevenue: revenue, totalBookings: bookingsData.filter(b => b.status === 'CONFIRMED').length, bookingsLastMonth: lastMonthCount };
-    }, [bookingsData]);
-    
-    const sortedBookings = useMemo(() => {
-        if (!bookingsData) return null;
-        return [...bookingsData]
-          .sort((a, b) => {
-            const dateA = normalizeTimestamp(a.createdAt);
-            const dateB = normalizeTimestamp(b.createdAt);
-            if (isNaN(dateA.getTime())) return 1;
-            if (isNaN(dateB.getTime())) return -1;
-            return dateB.getTime() - dateA.getTime();
-        });
-    }, [bookingsData]);
 
   return (
     <div className="space-y-6">
@@ -143,15 +102,15 @@ export default function AdminDashboard() {
         )}
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <StatCard title="Total Revenue" value={totalRevenue.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })} icon={IndianRupee} description="All-time revenue" isLoading={isLoading} />
-            <StatCard title="Confirmed Bookings" value={totalBookings} icon={BookOpen} description={`+${bookingsLastMonth} from last month`} isLoading={isLoading} />
-            <StatCard title="Hotels" value={hotelsData?.length || 0} icon={Hotel} description="Total active properties" isLoading={isLoading}/>
-            <StatCard title="Users" value={usersData?.length || 0} icon={Users2} description="Total registered users" isLoading={isLoading} />
+            <StatCard title="Total Revenue" value={(stats?.totalRevenue ?? 0).toLocaleString('en-IN', { style: 'currency', currency: 'INR' })} icon={IndianRupee} description="All-time revenue" isLoading={isLoading} />
+            <StatCard title="Confirmed Bookings" value={stats?.totalBookings ?? 0} icon={BookOpen} description={`+${stats?.bookingsLastMonth ?? 0} from last month`} isLoading={isLoading} />
+            <StatCard title="Hotels" value={stats?.totalHotels ?? 0} icon={Hotel} description="Total active properties" isLoading={isLoading}/>
+            <StatCard title="Users" value={stats?.totalUsers ?? 0} icon={Users2} description="Total registered users" isLoading={isLoading} />
         </div>
 
        <div className="grid gap-4 md:grid-cols-2">
-            <BookingChart bookings={sortedBookings?.filter(b => b.status === 'CONFIRMED') ?? null} />
-            <RecentBookings bookings={sortedBookings} />
+            <BookingChart chartData={stats?.chartData ?? null} />
+            <RecentBookings bookings={stats?.recentBookings ?? null} />
         </div>
     </div>
   );

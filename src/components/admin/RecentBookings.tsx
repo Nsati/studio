@@ -1,10 +1,9 @@
 
 'use client';
-import type { Booking } from '@/lib/types';
+import type { SerializableBooking } from '@/app/admin/actions';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import type { WithId } from '@/firebase';
 
-export default function RecentBookings({ bookings }: { bookings: WithId<Booking>[] | null }) {
+export default function RecentBookings({ bookings }: { bookings: SerializableBooking[] | null }) {
     return (
         <Card>
             <CardHeader>
@@ -12,7 +11,7 @@ export default function RecentBookings({ bookings }: { bookings: WithId<Booking>
             </CardHeader>
             <CardContent>
                  <div className="space-y-4">
-                    {bookings && bookings.slice(0, 5).map((booking) => (
+                    {bookings && bookings.map((booking) => (
                         <div key={booking.id} className="flex items-center">
                             <div className="ml-4 space-y-1">
                                 <p className="text-sm font-medium leading-none">{booking.customerName}</p>

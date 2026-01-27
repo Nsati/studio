@@ -11,45 +11,88 @@ export type SerializableBooking = Omit<Booking, 'checkIn' | 'checkOut' | 'create
     checkOut: string;
     createdAt: string;
 };
-export type SerializableUserProfile = WithId<UserProfile>;
-export type SerializableHotel = WithId<Hotel>;
 
+export type AdminChartData = { date: string; total: number }[];
+
+export type AdminDashboardStats = {
+    totalRevenue: number;
+    totalBookings: number;
+    bookingsLastMonth: number;
+    totalUsers: number;
+    totalHotels: number;
+    chartData: AdminChartData;
+    recentBookings: SerializableBooking[];
+};
 
 /**
- * Fetches all necessary data for the admin dashboard using the Firebase Admin SDK,
- * which bypasses all Firestore security rules.
+ * Fetches and computes all necessary stats for the admin dashboard on the server.
+ * This is more efficient as it reduces the data payload sent to the client.
  */
-export async function getAdminDashboardStats(): Promise<{
-    bookings: SerializableBooking[],
-    users: SerializableUserProfile[],
-    hotels: SerializableHotel[]
-}> {
+export async function getAdminDashboardStats(): Promise<AdminDashboardStats> {
     const { adminDb, error } = getFirebaseAdmin();
     if (error || !adminDb) {
         console.error("Admin dashboard error:", error);
-        // Throw an error that can be caught by the client
         throw new Error(error || "Admin SDK not initialized");
     }
     
     const [bookingsSnapshot, usersSnapshot, hotelsSnapshot] = await Promise.all([
-        adminDb.collectionGroup('bookings').get(),
+        adminDb.collectionGroup('bookings').orderBy('createdAt', 'desc').get(),
         adminDb.collection('users').get(),
         adminDb.collection('hotels').get()
     ]);
 
-    const bookings: SerializableBooking[] = bookingsSnapshot.docs.map(doc => {
-        const data = doc.data() as Booking;
-        return {
-            ...data,
+    const totalUsers = usersSnapshot.size;
+    const totalHotels = hotelsSnapshot.size;
+
+    let totalRevenue = 0;
+    let totalBookings = 0;
+    let bookingsLastMonth = 0;
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+    
+    const chartDataMap: Map<string, number> = new Map();
+    const serializableBookings: SerializableBooking[] = [];
+
+    bookingsSnapshot.docs.forEach(doc => {
+        const booking = doc.data() as Booking;
+
+        if (booking.status === 'CONFIRMED') {
+            totalRevenue += booking.totalPrice;
+            totalBookings++;
+            
+            const createdAt = (booking.createdAt as any)?.toDate();
+            if (createdAt && createdAt > oneMonthAgo) {
+                bookingsLastMonth++;
+            }
+            
+            if (createdAt) {
+                const day = createdAt.toISOString().split('T')[0];
+                chartDataMap.set(day, (chartDataMap.get(day) || 0) + booking.totalPrice);
+            }
+        }
+
+        serializableBookings.push({
+            ...(booking as any),
             id: doc.id,
-            checkIn: (data.checkIn as any).toDate().toISOString(),
-            checkOut: (data.checkOut as any).toDate().toISOString(),
-            createdAt: (data.createdAt as any)?.toDate()?.toISOString() || new Date(0).toISOString(),
-        };
+            checkIn: (booking.checkIn as any).toDate().toISOString(),
+            checkOut: (booking.checkOut as any).toDate().toISOString(),
+            createdAt: (booking.createdAt as any)?.toDate()?.toISOString() || new Date(0).toISOString(),
+        });
     });
 
-    const users: SerializableUserProfile[] = usersSnapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() as UserProfile) }));
-    const hotels: SerializableHotel[] = hotelsSnapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() as Hotel) }));
+    const chartData = Array.from(chartDataMap.entries())
+      .map(([date, total]) => ({ date, total }))
+      .sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      
+    const recentBookings = serializableBookings.slice(0, 5);
     
-    return { bookings, users, hotels };
+    return { 
+        totalRevenue, 
+        totalBookings, 
+        bookingsLastMonth, 
+        totalUsers, 
+        totalHotels,
+        chartData,
+        recentBookings,
+    };
 }

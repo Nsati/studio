@@ -1,32 +1,13 @@
 
 'use client';
-import { useMemo } from 'react';
-import type { Booking } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Bar, BarChart, ResponsiveContainer, XAxis } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { normalizeTimestamp } from '@/lib/firestore-utils';
-import type { WithId } from '@/firebase';
+import type { AdminChartData } from '@/app/admin/actions';
 
 
-export default function BookingChart({ bookings }: { bookings: WithId<Booking>[] | null }) {
-    const chartData = useMemo(() => {
-        if (!bookings) return [];
-        const data: { [key: string]: { date: string; total: number } } = {};
-        
-        bookings.forEach(booking => {
-            const date = normalizeTimestamp(booking.createdAt);
-            if (isNaN(date.getTime())) return; // Skip invalid dates
-            const day = date.toISOString().split('T')[0];
-            if (!data[day]) {
-                data[day] = { date: day, total: 0 };
-            }
-            data[day].total += booking.totalPrice;
-        });
-
-        return Object.values(data).sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    }, [bookings]);
-
+export default function BookingChart({ chartData }: { chartData: AdminChartData | null }) {
+    
     const chartConfig = {
       total: {
         label: "Revenue",
@@ -38,11 +19,11 @@ export default function BookingChart({ bookings }: { bookings: WithId<Booking>[]
         <Card>
             <CardHeader>
                 <CardTitle>Revenue Overview</CardTitle>
-                <CardDescription>Daily revenue from bookings.</CardDescription>
+                <CardDescription>Daily revenue from confirmed bookings.</CardDescription>
             </CardHeader>
             <CardContent>
                 <ChartContainer config={chartConfig} className="h-[200px] w-full">
-                    <BarChart accessibilityLayer data={chartData}>
+                    <BarChart accessibilityLayer data={chartData ?? []}>
                         <XAxis
                         dataKey="date"
                         tickLine={false}

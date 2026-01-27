@@ -156,8 +156,8 @@ export default function BookingsPage() {
         setError(null);
         getAdminAllBookings()
             .then(data => {
-                const sortedData = [...data].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-                setBookings(sortedData);
+                // The data is already sorted by date from the server action
+                setBookings(data);
             })
             .catch(err => {
                 console.error("Failed to fetch admin bookings:", err);
@@ -221,7 +221,7 @@ export default function BookingsPage() {
        <Card>
         <CardHeader>
             <CardTitle>All Bookings</CardTitle>
-            <CardDescription>A list of all bookings made across the platform. Refresh the page for the latest updates.</CardDescription>
+            <CardDescription>A list of the 100 most recent bookings. Refresh the page for the latest updates.</CardDescription>
         </CardHeader>
         <CardContent>
             {error && (
