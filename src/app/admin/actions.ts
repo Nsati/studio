@@ -27,8 +27,8 @@ export async function getAdminDashboardStats(): Promise<{
     const { adminDb, error } = getFirebaseAdmin();
     if (error || !adminDb) {
         console.error("Admin dashboard error:", error);
-        // Return empty arrays to prevent client-side crashes, but the error is logged.
-        return { bookings: [], users: [], hotels: [] };
+        // Throw an error that can be caught by the client
+        throw new Error(error || "Admin SDK not initialized");
     }
     
     const [bookingsSnapshot, usersSnapshot, hotelsSnapshot] = await Promise.all([

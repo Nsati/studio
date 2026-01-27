@@ -22,7 +22,7 @@ export async function getAdminAllBookings(): Promise<WithId<SerializableBooking>
     const { adminDb, error } = getFirebaseAdmin();
     if (error || !adminDb) {
         console.error("Admin bookings error:", error);
-        return [];
+        throw new Error(error || "Admin SDK not initialized");
     }
     
     const bookingsSnapshot = await adminDb.collectionGroup('bookings').get();

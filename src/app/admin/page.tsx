@@ -13,6 +13,7 @@ import { useUser } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
 import { normalizeTimestamp } from '@/lib/firestore-utils';
 import { getAdminDashboardStats, type SerializableBooking, type SerializableHotel, type SerializableUserProfile } from './actions';
+import { Alert, AlertTitle } from '@/components/ui/alert';
 
 
 const BookingChart = dynamic(() => import('@/components/admin/BookingChart'), {
@@ -57,15 +58,15 @@ function AdminErrorState({ error }: { error: Error }) {
                     Admin Panel Error
                 </CardTitle>
                 <CardDescription className="text-destructive">
-                    The admin panel could not load all data. This may be due to a permissions issue.
+                    The admin panel could not load all data. This may be due to a permissions issue or server configuration problem.
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <pre className="text-xs text-destructive-foreground bg-destructive/20 p-4 rounded-md overflow-x-auto">
-                    <code>
-                        {error.message}
-                    </code>
-                </pre>
+                <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Error Details</AlertTitle>
+                    <p className="text-xs">{error.message}</p>
+                </Alert>
             </CardContent>
         </Card>
     )
@@ -81,22 +82,21 @@ export default function AdminDashboard() {
         users: SerializableUserProfile[],
         hotels: SerializableHotel[]
     } | null>(null);
-    const [isLoadingStats, setIsLoadingStats] = useState(true);
+    const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
 
     useEffect(() => {
         if (isAdmin) {
-            setIsLoadingStats(true);
+            setIsLoading(true);
             getAdminDashboardStats()
                 .then(setStats)
                 .catch(setError)
-                .finally(() => setIsLoadingStats(false));
+                .finally(() => setIsLoading(false));
         } else if (!isUserLoading) {
-            setIsLoadingStats(false);
+            setIsLoading(false);
         }
     }, [isAdmin, isUserLoading]);
     
-    const isLoading = isUserLoading || isLoadingStats;
     const bookingsData = stats?.bookings;
     const usersData = stats?.users;
     const hotelsData = stats?.hotels;

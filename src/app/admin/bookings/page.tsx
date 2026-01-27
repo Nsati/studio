@@ -31,7 +31,9 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { Loader2, Ban } from 'lucide-react';
+import { Loader2, Ban, AlertCircle } from 'lucide-react';
+import { Alert, AlertTitle } from '@/components/ui/alert';
+
 
 function BookingRowSkeleton() {
     return (
@@ -52,6 +54,8 @@ function CancelBookingAction({ booking, onBookingCancelled }: { booking: WithId<
     const { toast } = useToast();
     const [isCancelling, setIsCancelling] = useState(false);
 
+    // This action still runs on the client, but it's a targeted write operation on a single
+    // booking, which is allowed by security rules for admins, so it's less prone to race conditions.
     const handleCancel = async () => {
         if (!firestore || !booking.id) return;
 
@@ -144,10 +148,12 @@ export default function BookingsPage() {
     const isAdmin = userProfile?.role === 'admin';
 
     const [bookings, setBookings] = useState<WithId<SerializableBooking>[] | null>(null);
-    const [areBookingsLoading, setAreBookingsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     const fetchBookings = () => {
-        setAreBookingsLoading(true);
+        setIsLoading(true);
+        setError(null);
         getAdminAllBookings()
             .then(data => {
                 const sortedData = [...data].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -155,10 +161,11 @@ export default function BookingsPage() {
             })
             .catch(err => {
                 console.error("Failed to fetch admin bookings:", err);
+                setError(err.message || "An unknown error occurred.");
                 setBookings([]); // Set to empty array on error
             })
             .finally(() => {
-                setAreBookingsLoading(false);
+                setIsLoading(false);
             });
     }
 
@@ -166,16 +173,45 @@ export default function BookingsPage() {
         if (isAdmin) {
             fetchBookings();
         } else if (!isUserLoading) {
-            setAreBookingsLoading(false);
+            // If the user is loaded and not an admin, stop loading.
+            setIsLoading(false);
             setBookings([]);
         }
     }, [isAdmin, isUserLoading]);
 
 
-    const isLoading = isUserLoading || areBookingsLoading;
-
-    if (isUserLoading || !userProfile) {
-        return null;
+    if (isUserLoading) {
+        return (
+             <div className="space-y-6">
+                <h1 className="font-headline text-3xl font-bold">Booking Management</h1>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>All Bookings</CardTitle>
+                        <CardDescription>A list of all bookings made across the platform.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Booking ID</TableHead>
+                                    <TableHead>Customer</TableHead>
+                                    <TableHead>Hotel</TableHead>
+                                    <TableHead>Dates</TableHead>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead>Total Price</TableHead>
+                                    <TableHead className="text-right">Actions</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                <BookingRowSkeleton />
+                                <BookingRowSkeleton />
+                                <BookingRowSkeleton />
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
+            </div>
+        );
     }
 
 
@@ -188,6 +224,13 @@ export default function BookingsPage() {
             <CardDescription>A list of all bookings made across the platform. Refresh the page for the latest updates.</CardDescription>
         </CardHeader>
         <CardContent>
+            {error && (
+                <Alert variant="destructive" className="mb-4">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Error Fetching Bookings</AlertTitle>
+                    <p>{error}</p>
+                </Alert>
+            )}
             <Table>
                 <TableHeader>
                     <TableRow>
@@ -208,7 +251,7 @@ export default function BookingsPage() {
                             <BookingRowSkeleton />
                         </>
                     )}
-                    {bookings && bookings.map(booking => {
+                    {!isLoading && bookings && bookings.map(booking => {
                         const checkIn = normalizeTimestamp(booking.checkIn);
                         const checkOut = normalizeTimestamp(booking.checkOut);
                         return (
@@ -251,7 +294,7 @@ export default function BookingsPage() {
                     })}
                 </TableBody>
             </Table>
-            {!isLoading && bookings?.length === 0 && (
+            {!isLoading && bookings?.length === 0 && !error && (
                 <div className="text-center text-muted-foreground p-8">
                     No bookings found yet.
                 </div>
