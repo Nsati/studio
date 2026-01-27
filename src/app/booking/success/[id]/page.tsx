@@ -100,8 +100,6 @@ export default function BookingSuccessPage() {
     const firestore = useFirestore();
     const bookingId = params.id as string;
     
-    const [timedOut, setTimedOut] = useState(false);
-
     // This ref is much simpler, no user dependency
     const summaryRef = useMemoFirebase(() => {
         if (!firestore || !bookingId) return null;
@@ -110,20 +108,9 @@ export default function BookingSuccessPage() {
     
     const { data: bookingSummary, isLoading: isSummaryLoading } = useDoc<ConfirmedBookingSummary>(summaryRef);
 
-    useEffect(() => {
-        // If the listener is still loading after 15 seconds, we'll time out.
-        if (isSummaryLoading) {
-            const timer = setTimeout(() => {
-                if (!bookingSummary) { // Check again inside timeout
-                    setTimedOut(true);
-                }
-            }, 15000);
-            return () => clearTimeout(timer);
-        }
-    }, [isSummaryLoading, bookingSummary]);
-
-    if (isSummaryLoading && !timedOut) {
-        // Show loading spinner while we wait for the doc
+    if (isSummaryLoading) {
+        // Show loading spinner while we wait for the doc from the webhook.
+        // We will no longer time out; we'll wait as long as it takes.
         return (
             <div className="bg-muted/40 min-h-[calc(100vh-4rem)] flex items-center">
                 <div className="container mx-auto max-w-lg py-12 px-4 md:px-6">
@@ -136,7 +123,7 @@ export default function BookingSuccessPage() {
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
-                             <p className="text-sm text-muted-foreground">Please do not refresh or close this page.</p>
+                             <p className="text-sm text-muted-foreground">This may take up to a minute. Please do not refresh or close this page.</p>
                         </CardContent>
                     </Card>
                 </div>
@@ -145,16 +132,16 @@ export default function BookingSuccessPage() {
     }
     
     if (!bookingSummary) {
-        // This renders if the doc is not found after loading, or if we timed out
+        // This renders ONLY if useDoc finishes loading and finds nothing (i.e., the webhook failed).
         return (
             <div className="bg-muted/40 min-h-[calc(100vh-4rem)] flex items-center">
                 <div className="container mx-auto max-w-lg py-12 px-4 md:px-6">
-                    <Card className="text-center border-amber-500">
+                    <Card className="text-center border-destructive/50">
                         <CardHeader className="items-center">
-                            <AlertCircle className="h-12 w-12 text-amber-500" />
-                            <CardTitle className="text-3xl font-headline mt-4 text-amber-700">Confirmation Pending</CardTitle>
+                            <AlertCircle className="h-12 w-12 text-destructive" />
+                            <CardTitle className="text-3xl font-headline mt-4 text-destructive">Confirmation Error</CardTitle>
                             <CardDescription>
-                                We received your payment, but we're still finalizing the confirmation due to high traffic. Please check "My Bookings" in a few minutes, or contact support if the issue persists.
+                                We received your payment, but there was an issue finalizing your booking confirmation. Please contact support with your Booking ID ({bookingId}) or check "My Bookings" in a few minutes.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="flex flex-col sm:flex-row gap-4">
