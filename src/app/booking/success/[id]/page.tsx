@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useFirestore, useUser, useDoc, useMemoFirebase, type WithId } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import type { Booking } from '@/lib/types';
@@ -15,6 +15,7 @@ import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { BookingSuccessSkeleton } from './BookingSuccessSkeleton';
 
 
 function SuccessContent({ booking, isFinalized }: { booking: WithId<Booking>, isFinalized: boolean }) {
@@ -27,14 +28,18 @@ function SuccessContent({ booking, isFinalized }: { booking: WithId<Booking>, is
             <div className="container mx-auto max-w-2xl py-12 px-4 md:px-6">
                 <Card className="shadow-lg">
                     <CardHeader className="items-center text-center bg-green-50/50 dark:bg-green-900/10 pt-8">
-                        {isFinalized ? <PartyPopper className="h-12 w-12 text-primary" /> : <Loader2 className="h-12 w-12 text-primary animate-spin" />}
+                        {isFinalized ? (
+                            <PartyPopper className="h-12 w-12 text-primary" />
+                        ) : (
+                            <CheckCircle className="h-12 w-12 text-green-600" />
+                        )}
                         <CardTitle className="text-3xl font-headline mt-4">
-                           {isFinalized ? "Booking Confirmed!" : "Finalizing your confirmation..."}
+                           {isFinalized ? "Booking Confirmed!" : "Payment Successful!"}
                         </CardTitle>
                         <CardDescription className="max-w-md">
                            {isFinalized
-                                ? `Your Himalayan adventure awaits, ${booking.customerName}. A confirmation email should arrive shortly.`
-                                : "We've received your payment and are confirming your booking. This page will update automatically."
+                                ? `Your Himalayan adventure awaits, ${booking.customerName}. A confirmation email has been sent.`
+                                : "We've received your payment. Your booking is being finalized and will be confirmed shortly."
                            }
                         </CardDescription>
                     </CardHeader>
@@ -66,7 +71,7 @@ function SuccessContent({ booking, isFinalized }: { booking: WithId<Booking>, is
                                 {isFinalized ? (
                                      <span className="font-semibold text-green-600 flex items-center gap-1"><CheckCircle className="h-4 w-4"/> Confirmed</span>
                                 ) : (
-                                     <span className="font-semibold text-amber-600 flex items-center gap-1"><Loader2 className="h-4 w-4 animate-spin" /> Finalizing...</span>
+                                     <span className="font-semibold text-amber-600">Finalizing...</span>
                                 )}
                             </div>
                         </div>
@@ -176,7 +181,7 @@ export default function BookingSuccessPage() {
         return doc(firestore, 'users', user.uid, 'bookings', bookingId);
     }, [firestore, user?.uid, bookingId]);
     
-    const { data: confirmedBooking, error: bookingError } = useDoc<Booking>(bookingRef);
+    const { data: confirmedBooking, error: bookingError, isLoading: isBookingLoading } = useDoc<Booking>(bookingRef);
 
     const displayBooking = confirmedBooking || optimisticBooking;
 
@@ -186,6 +191,10 @@ export default function BookingSuccessPage() {
         return <ErrorState bookingId={bookingId} />;
     }
     
+    if (isBookingLoading && !displayBooking) {
+        return <BookingSuccessSkeleton />
+    }
+
     if (displayBooking) {
         return <SuccessContent booking={displayBooking} isFinalized={isConfirmed} />;
     }
