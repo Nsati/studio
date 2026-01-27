@@ -1,3 +1,4 @@
+
 'use client';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -86,7 +87,6 @@ export function EditTourPackageForm({ tourPackage }: EditTourPackageFormProps) {
             title: 'Error',
             description: 'Could not update the tour package. Please try again.',
         });
-    } finally {
         setIsLoading(false);
     }
   }
