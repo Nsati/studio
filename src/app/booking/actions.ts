@@ -45,14 +45,27 @@ export async function initiateBookingAndCreateOrder(
       // Decrement inventory
       transaction.update(roomRef, { availableRooms: FieldValue.increment(-1) });
 
-      // Create PENDING booking
-      const newBooking: Booking = {
-        ...(bookingData as any),
-        checkIn: Timestamp.fromDate(new Date(bookingData.checkIn)),
-        checkOut: Timestamp.fromDate(new Date(bookingData.checkOut)),
+      // Create PENDING booking by explicitly mapping fields.
+      // This is safer than spreading `bookingData` which might contain `undefined` or unexpected fields.
+      const newBooking = {
+        userId: bookingData.userId,
+        hotelId: bookingData.hotelId,
+        hotelName: bookingData.hotelName,
+        hotelCity: bookingData.hotelCity,
+        hotelAddress: bookingData.hotelAddress,
+        roomId: bookingData.roomId,
+        roomType: bookingData.roomType,
+        checkIn: Timestamp.fromDate(new Date(bookingData.checkIn as any)),
+        checkOut: Timestamp.fromDate(new Date(bookingData.checkOut as any)),
+        guests: bookingData.guests,
+        totalPrice: bookingData.totalPrice,
+        customerName: bookingData.customerName,
+        customerEmail: bookingData.customerEmail,
         status: 'PENDING',
-        createdAt: FieldValue.serverTimestamp() as any,
+        createdAt: FieldValue.serverTimestamp(),
+        ...(bookingData.couponCode && { couponCode: bookingData.couponCode }),
       };
+      
       transaction.set(bookingRef, newBooking);
     });
 
