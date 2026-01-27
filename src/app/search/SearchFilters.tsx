@@ -4,10 +4,10 @@ import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { collection } from 'firebase/firestore';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-
+import { format } from 'date-fns';
+import { DateRange } from 'react-day-picker';
 import type { City } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -16,109 +16,143 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
-import { Search, Info, Calendar, Users } from 'lucide-react';
-import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Search, MapPin, Calendar, Users } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
-
+import { cn } from '@/lib/utils';
 
 export function SearchFilters() {
-  const firestore = useFirestore();
-  
-  const citiesQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return collection(firestore, 'cities');
-  }, [firestore]);
-  
-  const { data: citiesFromDB, isLoading: isLoadingCities } = useCollection<City>(citiesQuery);
+    const firestore = useFirestore();
 
-  const cities = useMemoFirebase(() => {
-    return (citiesFromDB || []).sort((a, b) => a.name.localeCompare(b.name));
-  }, [citiesFromDB]);
-  
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const pathname = usePathname();
+    const citiesQuery = useMemoFirebase(() => {
+        if (!firestore) return null;
+        return collection(firestore, 'cities');
+    }, [firestore]);
 
-  const [city, setCity] = useState(searchParams.get('city') || 'All');
-  
-  useEffect(() => {
-    setCity(searchParams.get('city') || 'All');
-  }, [searchParams]);
+    const { data: citiesFromDB, isLoading: isLoadingCities } = useCollection<City>(citiesQuery);
 
-  const createQueryString = (params: Record<string, string | null>) => {
-    const newSearchParams = new URLSearchParams();
-    for (const [key, value] of Object.entries(params)) {
-        if (value) {
-            newSearchParams.set(key, value);
+    const cities = useMemoFirebase(() => {
+        return (citiesFromDB || []).sort((a, b) => a.name.localeCompare(b.name));
+    }, [citiesFromDB]);
+
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const pathname = usePathname();
+
+    const [city, setCity] = useState(searchParams.get('city') || 'All');
+    const [dates, setDates] = useState<DateRange | undefined>();
+    const [guests, setGuests] = useState(searchParams.get('guests') || '2');
+    
+    useEffect(() => {
+        setCity(searchParams.get('city') || 'All');
+        setGuests(searchParams.get('guests') || '2');
+        const checkIn = searchParams.get('checkIn');
+        const checkOut = searchParams.get('checkOut');
+        if (checkIn && checkOut) {
+            setDates({
+                from: new Date(checkIn),
+                to: new Date(checkOut)
+            });
         }
-    }
-    return newSearchParams.toString();
-  };
-  
-  const handleFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    router.push(`${pathname}?${createQueryString({ city: city === 'All' ? null : city })}`);
-  }
-  
-  return (
-     <aside className="w-full lg:w-1/4 lg:pr-8">
-      <Card>
-        <CardContent className="p-4">
-          <form className="space-y-6" onSubmit={handleFormSubmit}>
-            <div className="space-y-2">
-              <Label htmlFor="location" className="text-lg font-semibold">
-                Location
-              </Label>
-              <Select value={city} onValueChange={setCity} disabled={isLoadingCities}>
-                <SelectTrigger id="location">
-                  <SelectValue placeholder={isLoadingCities ? "Loading cities..." : "Select a city"} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="All">All Locations</SelectItem>
-                  {cities?.map((c) => (
-                    <SelectItem key={c.id} value={c.name}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <TooltipProvider>
-                <div className="space-y-4 border-t pt-4">
-                     <div className="flex items-center justify-between">
-                        <Label className="text-lg font-semibold text-muted-foreground">
-                            Filter by Date &amp; Guests
-                        </Label>
-                        <Tooltip>
-                            <TooltipTrigger><Info className="h-4 w-4 text-muted-foreground" /></TooltipTrigger>
-                            <TooltipContent>
-                                <p>This feature is coming soon!</p>
-                            </TooltipContent>
-                        </Tooltip>
-                    </div>
-                    <div className="space-y-2 opacity-50">
-                        <Label htmlFor="checkin" className="flex items-center gap-2"><Calendar className="h-4 w-4" /> Check-in</Label>
-                        <Input id="checkin" type="date" disabled />
-                    </div>
-                     <div className="space-y-2 opacity-50">
-                        <Label htmlFor="checkout" className="flex items-center gap-2"><Calendar className="h-4 w-4" /> Check-out</Label>
-                        <Input id="checkout" type="date" disabled />
-                    </div>
-                     <div className="space-y-2 opacity-50">
-                        <Label htmlFor="guests" className="flex items-center gap-2"><Users className="h-4 w-4" /> Guests</Label>
-                        <Input id="guests" type="number" min="1" placeholder="2" disabled />
-                    </div>
-                </div>
-            </TooltipProvider>
+    }, [searchParams]);
 
-            <Button type="submit" className="w-full text-lg h-12 bg-accent text-accent-foreground hover:bg-accent/90">
-              <Search className="mr-2 h-4 w-4" />
-              Search
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-    </aside>
-  );
+    const createQueryString = (params: Record<string, string | null>) => {
+        const newSearchParams = new URLSearchParams(searchParams.toString());
+        for (const [key, value] of Object.entries(params)) {
+            if (value) {
+                newSearchParams.set(key, value);
+            } else {
+                newSearchParams.delete(key);
+            }
+        }
+        return newSearchParams.toString();
+    };
+
+    const handleFormSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        router.push(`${pathname}?${createQueryString({
+            city: city === 'All' ? null : city,
+            guests,
+            checkIn: dates?.from ? format(dates.from, 'yyyy-MM-dd') : null,
+            checkOut: dates?.to ? format(dates.to, 'yyyy-MM-dd') : null,
+        })}`);
+    }
+
+    return (
+        <Card className="w-full">
+            <CardContent className="p-2">
+                <form onSubmit={handleFormSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1fr,1fr,1fr,auto] items-center gap-2">
+                    {/* Location */}
+                    <div className="flex items-center gap-2 lg:border-r lg:pr-2">
+                        <MapPin className="h-5 w-5 text-muted-foreground ml-2" />
+                        <Select value={city} onValueChange={setCity} disabled={isLoadingCities}>
+                            <SelectTrigger className="w-full border-0 shadow-none focus:ring-0">
+                                <SelectValue placeholder={isLoadingCities ? "Loading..." : "Select Location"} />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="All">All Locations</SelectItem>
+                                {cities?.map((c) => (
+                                    <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    {/* Dates */}
+                    <div className="flex items-center gap-2 lg:border-r lg:pr-2">
+                        <Calendar className="h-5 w-5 text-muted-foreground ml-2" />
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    className={cn("w-full justify-start text-left font-normal shadow-none hover:bg-transparent", !dates && "text-muted-foreground")}
+                                >
+                                    {dates?.from ? (
+                                        dates.to ? (
+                                            <>
+                                                {format(dates.from, 'LLL dd')} - {format(dates.to, 'LLL dd')}
+                                            </>
+                                        ) : format(dates.from, 'LLL dd, y')
+                                    ) : (
+                                        <span>Pick dates</span>
+                                    )}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                                <CalendarComponent
+                                    initialFocus
+                                    mode="range"
+                                    defaultMonth={dates?.from}
+                                    selected={dates}
+                                    onSelect={setDates}
+                                    numberOfMonths={1}
+                                    disabled={{ before: new Date() }}
+                                />
+                            </PopoverContent>
+                        </Popover>
+                    </div>
+
+                    {/* Guests */}
+                    <div className="flex items-center gap-2">
+                        <Users className="h-5 w-5 text-muted-foreground ml-2" />
+                         <Input 
+                            type="number" 
+                            placeholder="Guests" 
+                            min="1"
+                            value={guests}
+                            onChange={(e) => setGuests(e.target.value)}
+                            className="border-0 shadow-none focus-visible:ring-0"
+                        />
+                    </div>
+                    
+                    {/* Button */}
+                    <Button type="submit" size="lg" className="h-full w-full lg:w-auto">
+                        <Search className="mr-2 h-4 w-4" />
+                        Search
+                    </Button>
+                </form>
+            </CardContent>
+        </Card>
+    );
 }
