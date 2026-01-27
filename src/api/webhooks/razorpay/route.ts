@@ -55,44 +55,15 @@ export async function POST(req: Request) {
 
       await adminDb.runTransaction(async (transaction) => {
         const bookingDoc = await transaction.get(bookingRef);
-
-        if (!bookingDoc.exists) {
-          throw new Error(`Booking document not found for ID: ${bookingId}`);
-        }
         
-        const bookingData = bookingDoc.data() as Booking;
-        
-        if (bookingData.status !== 'PENDING') {
-          console.log(`Webhook: Booking ${bookingId} is already finalized (Status: ${bookingData.status}). Ignoring.`);
-          return;
-        }
-
-        const roomRef = adminDb.doc(`hotels/${bookingData.hotelId}/rooms/${bookingData.roomId}`);
-        const roomDoc = await transaction.get(roomRef);
-
-        if (!roomDoc.exists) {
-          throw new Error(`Room document not found for hotelId: ${bookingData.hotelId}, roomId: ${bookingData.roomId}`);
-        }
-        
-        const roomData = roomDoc.data() as Room;
-
-        if ((roomData.availableRooms ?? 0) > 0) {
-            // Room is available, confirm the booking
+        if (bookingDoc.exists && bookingDoc.data()?.status === 'PENDING') {
             transaction.update(bookingRef, {
                 status: 'CONFIRMED',
                 razorpayPaymentId: razorpayPaymentId,
             });
-            transaction.update(roomRef, {
-                availableRooms: FieldValue.increment(-1),
-            });
              console.log(`✅ Booking ${bookingId} confirmed successfully via webhook.`);
         } else {
-            // Room is sold out, fail the booking
-            console.warn(`Booking ${bookingId} failed due to no inventory. A refund must be manually triggered.`);
-            transaction.update(bookingRef, {
-                status: 'FAILED',
-                razorpayPaymentId: razorpayPaymentId, // Still save the payment ID for refund purposes
-            });
+             console.log(`Webhook: Booking ${bookingId} was not in PENDING state. Ignoring.`);
         }
       });
     }

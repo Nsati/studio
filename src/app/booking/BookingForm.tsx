@@ -5,7 +5,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, useRouter, notFound } from 'next/navigation';
 import Image from 'next/image';
 import { differenceInDays, format, parse } from 'date-fns';
-import { createRazorpayOrder } from '@/app/booking/actions';
+import { initiateBookingAndCreateOrder, cancelInitiatedBooking } from '@/app/booking/actions';
 import { signInAnonymously } from 'firebase/auth';
 import type { Hotel, Room, Booking, Promotion } from '@/lib/types';
 import { useFirestore, useAuth, useUser, useDoc, useCollection, useMemoFirebase, type WithId } from '@/firebase';
@@ -175,19 +175,9 @@ export function BookingForm() {
                 return;
             }
         }
-        
-        if (!firestore) {
-            toast({ variant: 'destructive', title: 'Database not available' });
-            setIsBooking(false);
-            return;
-        }
 
         try {
-            // Step 1: Create the PENDING booking document on the client.
-            const bookingId = `booking_${Date.now()}_${userIdForBooking!.substring(0, 5)}`;
-            const bookingRef = doc(firestore, 'users', userIdForBooking, 'bookings', bookingId);
-            
-            const pendingBookingData: Booking = {
+            const bookingPayload = {
                 userId: userIdForBooking,
                 hotelId: hotel.id,
                 hotelName: hotel.name,
@@ -195,30 +185,27 @@ export function BookingForm() {
                 hotelAddress: hotel.address || '',
                 roomId: room.id,
                 roomType: room.type,
-                checkIn: Timestamp.fromDate(checkIn),
-                checkOut: Timestamp.fromDate(checkOut),
+                checkIn: checkIn.toISOString(),
+                checkOut: checkOut.toISOString(),
                 guests: parseInt(guests),
                 totalPrice: totalPrice,
                 customerName: customerDetails.name,
                 customerEmail: customerDetails.email,
-                status: 'PENDING',
-                createdAt: Timestamp.now(),
                 ...(couponDiscount > 0 && { couponCode: couponCode }),
             };
-
-            await setDoc(bookingRef, pendingBookingData);
-
-            // Step 2: Call server action to get a Razorpay order, passing the userId.
-            const orderResponse = await createRazorpayOrder(totalPrice, bookingId, userIdForBooking);
-
-            if (!orderResponse.success || !orderResponse.order) {
-                toast({ variant: 'destructive', title: 'Payment Error', description: orderResponse.error || 'Could not initiate payment.', duration: 8000 });
+    
+            // Step 1: Call the new server action to initiate everything
+            const response = await initiateBookingAndCreateOrder(bookingPayload as any);
+    
+            if (!response.success || !response.order || !response.keyId || !response.bookingId) {
+                toast({ variant: 'destructive', title: 'Booking Failed', description: response.error || 'Could not initiate booking.', duration: 8000 });
                 setIsBooking(false);
                 return;
             }
-            const { order, keyId } = orderResponse;
             
-            // Step 3: Open Razorpay checkout.
+            const { order, keyId, bookingId } = response;
+            
+            // Step 2: Open Razorpay checkout.
             const options = {
                 key: keyId,
                 amount: order.amount,
@@ -227,38 +214,29 @@ export function BookingForm() {
                 description: `Booking for ${hotel.name}`,
                 order_id: order.id,
                 handler: async (response: any) => {
-                    // Confirmation is handled by the webhook, but we give instant feedback.
-                    toast({ title: "Payment Received!", description: "Finalizing your booking..." });
-
-                    // Optimistic UI: Store booking details for instant success page display.
-                    const optimisticBooking = {
-                        ...pendingBookingData,
-                        id: bookingId,
-                        // Convert Timestamps to ISO strings for JSON serialization
-                        checkIn: (pendingBookingData.checkIn as any).toDate().toISOString(),
-                        checkOut: (pendingBookingData.checkOut as any).toDate().toISOString(),
-                        createdAt: (pendingBookingData.createdAt as any).toDate().toISOString(),
-                    };
-                    sessionStorage.setItem('optimisticBooking', JSON.stringify(optimisticBooking));
-
+                    toast({ title: "Payment Received!", description: "Redirecting to confirmation page..." });
                     router.push(`/booking/success/${bookingId}`);
                 },
                 prefill: { name: customerDetails.name, email: customerDetails.email },
                 theme: { color: "#388E3C" },
                 modal: {
-                    ondismiss: () => {
+                    ondismiss: async () => {
                         setIsBooking(false);
-                        toast({ variant: 'destructive', title: 'Payment Cancelled', description: 'You cancelled the payment process.' });
+                        toast({ variant: 'destructive', title: 'Payment Cancelled', description: 'Releasing the room back to inventory...' });
+                        // Call the cleanup action
+                        if(userIdForBooking) {
+                            await cancelInitiatedBooking(userIdForBooking, bookingId);
+                        }
                     }
                 }
             };
-
+    
             const rzp = new window.Razorpay(options);
             rzp.open();
-
+    
         } catch (error: any) {
-             console.error("Client-side booking initialization failed:", error);
-             toast({ variant: 'destructive', title: 'Booking Error', description: 'Could not create initial booking document. Please try again.' });
+             console.error("Client-side booking initiation failed:", error);
+             toast({ variant: 'destructive', title: 'Booking Error', description: 'An unexpected error occurred. Please try again.' });
              setIsBooking(false);
         }
     };
