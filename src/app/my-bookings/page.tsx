@@ -78,6 +78,7 @@ function BookingItem({ booking }: { booking: WithId<Booking> }) {
     const { toast } = useToast();
     const [isCancelling, setIsCancelling] = useState(false);
 
+    // Fetch hotel data primarily for the image, as other details are on the booking.
     const hotelRef = useMemoFirebase(() => {
         if (!firestore) return null;
         return doc(firestore, 'hotels', booking.hotelId);
@@ -112,20 +113,8 @@ function BookingItem({ booking }: { booking: WithId<Booking> }) {
     if (isLoading) {
         return <BookingItemSkeleton />;
     }
-
-    if (!hotel) {
-        return (
-            <Card className="p-4 border-destructive">
-                <p className="font-bold text-destructive">Hotel data not found for this booking.</p>
-                <p className="text-sm text-muted-foreground">The hotel might have been removed.</p>
-                <p className="mt-2 font-mono text-xs">Booking ID: {booking.id}</p>
-            </Card>
-        )
-    }
     
-    const hotelImage = PlaceHolderImages.find(
-        (img) => img.id === hotel.images[0]
-    );
+    const hotelImage = hotel ? PlaceHolderImages.find((img) => img.id === hotel.images[0]) : null;
 
     const checkInDate = normalizeTimestamp(booking.checkIn);
     const checkOutDate = normalizeTimestamp(booking.checkOut);
@@ -137,7 +126,7 @@ function BookingItem({ booking }: { booking: WithId<Booking> }) {
             <div className="flex flex-col md:flex-row">
                 {/* Column 1: Image */}
                 <div className="relative w-full aspect-video md:w-1/3 md:aspect-auto flex-shrink-0">
-                    {hotelImage ? (
+                    {hotelImage && hotel ? (
                         <Image
                             src={hotelImage.imageUrl}
                             alt={hotel.name}
@@ -159,9 +148,9 @@ function BookingItem({ booking }: { booking: WithId<Booking> }) {
                         <div className="flex justify-between items-start">
                              <div>
                                 <h3 className="font-headline text-xl sm:text-2xl font-bold hover:text-primary">
-                                    <Link href={`/hotels/${hotel.id}`}>{hotel.name}</Link>
+                                    <Link href={`/hotels/${booking.hotelId}`}>{booking.hotelName}</Link>
                                 </h3>
-                                <p className="text-muted-foreground mb-4">{hotel.city}</p>
+                                <p className="text-muted-foreground mb-4">{booking.hotelCity}</p>
                              </div>
                              <Badge variant={booking.status === 'CONFIRMED' ? 'default' : (booking.status === 'PENDING' ? 'secondary' : 'destructive')} className="capitalize whitespace-nowrap">
                                 {booking.status === 'CONFIRMED' && <CheckCircle className="mr-1.5 h-4 w-4" />}
@@ -182,7 +171,7 @@ function BookingItem({ booking }: { booking: WithId<Booking> }) {
 
                     <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 mt-6">
                         <Button variant="outline" size="sm" asChild>
-                            <Link href={`/hotels/${hotel.id}`}>View Hotel</Link>
+                            <Link href={`/hotels/${booking.hotelId}`}>View Hotel</Link>
                         </Button>
                         <Button variant="outline" size="sm" disabled={isPending} onClick={() => toast({ title: "Feature Coming Soon", description: "Invoice download will be available shortly for confirmed bookings."})}>
                             <Download className="mr-2 h-4 w-4" /> Download Invoice
@@ -199,7 +188,7 @@ function BookingItem({ booking }: { booking: WithId<Booking> }) {
                                     <AlertDialogHeader>
                                         <AlertDialogTitle>Are you sure you want to cancel?</AlertDialogTitle>
                                         <AlertDialogDescription>
-                                            This will permanently cancel your booking for {hotel.name}. 
+                                            This will permanently cancel your booking for {booking.hotelName}. 
                                             Any applicable refund will be processed within 5-7 business days.
                                             This action cannot be undone.
                                         </AlertDialogDescription>

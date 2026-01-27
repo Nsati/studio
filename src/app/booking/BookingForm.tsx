@@ -195,14 +195,14 @@ export function BookingForm() {
                 hotelAddress: hotel.address || '',
                 roomId: room.id,
                 roomType: room.type,
-                checkIn: checkIn,
-                checkOut: checkOut,
+                checkIn: Timestamp.fromDate(checkIn),
+                checkOut: Timestamp.fromDate(checkOut),
                 guests: parseInt(guests),
                 totalPrice: totalPrice,
                 customerName: customerDetails.name,
                 customerEmail: customerDetails.email,
                 status: 'PENDING',
-                createdAt: Timestamp.now().toDate(),
+                createdAt: Timestamp.now(),
                 ...(couponDiscount > 0 && { couponCode: couponCode }),
             };
 
@@ -291,7 +291,7 @@ export function BookingForm() {
                 </div>
 
                 <div className="space-y-6">
-                    <h2 className="font-headline text-2xl font-bold md:text-3xl">Confirm & Book</h2>
+                    <h2 className="font-headline text-2xl font-bold md:text-3xl">Confirm &amp; Book</h2>
                     <Card>
                         <CardHeader>
                             <CardTitle>Guest Details</CardTitle>

@@ -1,3 +1,4 @@
+
 'use client';
 import { useMemo, useState } from 'react';
 import { useFirestore, useUser, type WithId, useCollection, useMemoFirebase } from '@/firebase';
@@ -37,9 +38,9 @@ function BookingRowSkeleton() {
         <TableRow>
             <TableCell><Skeleton className="h-4 w-32" /></TableCell>
             <TableCell><Skeleton className="h-4 w-48" /></TableCell>
+            <TableCell><Skeleton className="h-4 w-40" /></TableCell>
             <TableCell><Skeleton className="h-4 w-24" /></TableCell>
             <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-            <TableCell><Skeleton className="h-4 w-16" /></TableCell>
             <TableCell><Skeleton className="h-4 w-20" /></TableCell>
             <TableCell className="text-right"><Skeleton className="h-9 w-24" /></TableCell>
         </TableRow>
@@ -181,9 +182,9 @@ export default function BookingsPage() {
                     <TableRow>
                         <TableHead>Booking ID</TableHead>
                         <TableHead>Customer</TableHead>
+                        <TableHead>Hotel</TableHead>
                         <TableHead>Dates</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead>Hotel ID</TableHead>
                         <TableHead>Total Price</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
@@ -207,6 +208,10 @@ export default function BookingsPage() {
                                     <div className="text-sm text-muted-foreground">{booking.customerEmail}</div>
                                 </TableCell>
                                 <TableCell>
+                                    <div className="font-medium">{booking.hotelName}</div>
+                                    <div className="text-sm text-muted-foreground">{booking.hotelCity}</div>
+                                </TableCell>
+                                <TableCell>
                                     {checkIn && checkOut && !isNaN(checkIn.getTime()) && !isNaN(checkOut.getTime())
                                       ? `${format(checkIn, 'MMM dd')} - ${format(checkOut, 'MMM dd, yyyy')}`
                                       : 'Invalid Dates'
@@ -217,7 +222,6 @@ export default function BookingsPage() {
                                         {booking.status.toLowerCase()}
                                     </Badge>
                                 </TableCell>
-                                <TableCell className="font-mono text-xs">{booking.hotelId}</TableCell>
                                 <TableCell>
                                     {booking.totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
                                 </TableCell>
