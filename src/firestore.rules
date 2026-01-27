@@ -4,37 +4,34 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     function isAdmin() {
-      // This function depends on the simple, non-recursive 'allow get' rule below.
-      // It allows this function to securely read the user's role document.
+      // This function securely reads the user's role document.
+      // The get() call bypasses other security rules, so it doesn't need a separate allow rule.
       return request.auth != null 
              && exists(/databases/$(database)/documents/users/$(request.auth.uid)) 
              && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
     match /users/{userId} {
-      // A user can get their OWN document. This is non-recursive and makes isAdmin() work.
-      allow get: if request.auth.uid == userId;
+      // Rule combination:
+      // A user can get their own document. An admin can get any.
+      // An admin can list all users.
+      // A user can create their own document (signup). An admin can also create user docs.
+      // A user can update their own doc (but not their role). An admin can update any doc.
+      // Only an admin can delete a user doc.
+      allow get: if request.auth.uid == userId || isAdmin();
+      allow list: if isAdmin();
+      allow create: if request.auth.uid == userId || isAdmin();
+      allow update: if (request.auth.uid == userId && request.resource.data.role == resource.data.role) || isAdmin();
+      allow delete: if isAdmin();
 
-      // A user can create their own user document during signup.
-      allow create: if request.auth.uid == userId;
-      
-      // A user can update their OWN document, but CANNOT change their role.
-      allow update: if request.auth.uid == userId 
-                     && request.resource.data.role == resource.data.role;
-
-      // Admins have broader permissions on user documents.
-      allow get, list, update, delete: if isAdmin();
-      
       match /bookings/{bookingId} {
         allow read: if request.auth.uid == userId || isAdmin();
         
-        // A user can create their own booking, but it must be in a PENDING state.
-        // This is required for the client-side pre-payment step.
-        allow create: if request.auth.uid == userId && request.resource.data.status == 'PENDING';
+        // A user can create their own booking in a PENDING state.
+        // Admins are also allowed to do this.
+        allow create: if (request.auth.uid == userId && request.resource.data.status == 'PENDING') || isAdmin();
         
-        // Users can no longer update bookings directly (confirm/cancel).
-        // This must be done via server actions or webhooks using the Admin SDK.
-        // Admins can still update bookings.
+        // Only the server (via Admin SDK) or an Admin should confirm/cancel bookings.
         allow update, delete: if isAdmin();
       }
     }
