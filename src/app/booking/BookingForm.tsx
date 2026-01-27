@@ -227,9 +227,20 @@ export function BookingForm() {
                 description: `Booking for ${hotel.name}`,
                 order_id: order.id,
                 handler: async (response: any) => {
-                    // Confirmation is now handled by the webhook.
-                    // Just inform the user and redirect.
-                    toast({ title: "Payment Received!", description: "Finalizing your booking... You will be redirected shortly." });
+                    // Confirmation is handled by the webhook, but we give instant feedback.
+                    toast({ title: "Payment Received!", description: "Finalizing your booking..." });
+
+                    // Optimistic UI: Store booking details for instant success page display.
+                    const optimisticBooking = {
+                        ...pendingBookingData,
+                        id: bookingId,
+                        // Convert Timestamps to ISO strings for JSON serialization
+                        checkIn: (pendingBookingData.checkIn as any).toDate().toISOString(),
+                        checkOut: (pendingBookingData.checkOut as any).toDate().toISOString(),
+                        createdAt: (pendingBookingData.createdAt as any).toDate().toISOString(),
+                    };
+                    sessionStorage.setItem('optimisticBooking', JSON.stringify(optimisticBooking));
+
                     router.push(`/booking/success/${bookingId}`);
                 },
                 prefill: { name: customerDetails.name, email: customerDetails.email },
