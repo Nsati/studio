@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
 
+// Component for CONFIRMED state
 function SuccessContent({ booking }: { booking: WithId<Booking> }) {
     const { user } = useUser();
     const checkInDate = normalizeTimestamp(booking.checkIn);
@@ -94,20 +95,61 @@ function SuccessContent({ booking }: { booking: WithId<Booking> }) {
     );
 }
 
-const LoadingState = () => (
+// Component for PENDING state
+const ProcessingState = ({ booking }: { booking: WithId<Booking> }) => {
+    const checkInDate = normalizeTimestamp(booking.checkIn);
+    const checkOutDate = normalizeTimestamp(booking.checkOut);
+    return (
+        <div className="bg-muted/40 min-h-[calc(100vh-4rem)] flex items-center">
+            <div className="container mx-auto max-w-2xl py-12 px-4 md:px-6">
+                <Card className="shadow-lg">
+                    <CardHeader className="items-center text-center bg-blue-50/50 dark:bg-blue-900/10 pt-8">
+                        <Loader2 className="h-12 w-12 text-primary animate-spin" />
+                        <CardTitle className="text-3xl font-headline mt-4">Processing Your Booking</CardTitle>
+                        <CardDescription className="max-w-md">
+                           Your payment was successful! We are finalizing the confirmation. This page will update automatically, or you can check "My Bookings" shortly.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-6 space-y-6">
+                        <Card className="bg-background opacity-80">
+                            <CardHeader>
+                                <CardTitle className="text-xl">{booking.hotelName}</CardTitle>
+                                <CardDescription>{booking.hotelCity}</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-2 text-sm">
+                                <p><strong className="text-foreground">Check-in:</strong> {format(checkInDate, 'EEEE, dd MMMM yyyy')}</p>
+                                <p><strong className="text-foreground">Check-out:</strong> {format(checkOutDate, 'EEEE, dd MMMM yyyy')}</p>
+                                <p><strong className="text-foreground">Booking ID:</strong> <span className="font-mono text-xs">{booking.id}</span></p>
+                            </CardContent>
+                        </Card>
+
+                        <div className="flex flex-col sm:flex-row gap-4">
+                            <Button className="w-full" asChild>
+                                <Link href="/my-bookings">Go to My Bookings</Link>
+                            </Button>
+                            <Button className="w-full" variant="outline" asChild>
+                                <Link href="/">Explore More</Link>
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+        </div>
+    )
+};
+
+// Loading state for the initial doc fetch
+const InitialLoadingState = () => (
     <div className="bg-muted/40 min-h-[calc(100vh-4rem)] flex items-center">
         <div className="container mx-auto max-w-lg py-12 px-4 md:px-6">
             <Card className="text-center">
                 <CardHeader className="items-center">
                     <Loader2 className="h-12 w-12 text-primary animate-spin" />
-                    <CardTitle className="text-3xl font-headline mt-4">Finalizing Your Confirmation</CardTitle>
+                    <CardTitle className="text-3xl font-headline mt-4">Loading Booking Details</CardTitle>
                     <CardDescription>
-                        Your payment was successful! Please wait a moment while we confirm your booking with the hotel.
+                        Just a moment...
                     </CardDescription>
                 </CardHeader>
-                <CardContent>
-                     <p className="text-sm text-muted-foreground">This may take up to a minute. Please do not refresh or close this page.</p>
-                </CardContent>
             </Card>
         </div>
     </div>
@@ -119,9 +161,9 @@ const ErrorState = ({ bookingId }: { bookingId: string }) => (
             <Card className="text-center border-destructive/50">
                 <CardHeader className="items-center">
                     <AlertCircle className="h-12 w-12 text-destructive" />
-                    <CardTitle className="text-3xl font-headline mt-4 text-destructive">Confirmation Error</CardTitle>
+                    <CardTitle className="text-3xl font-headline mt-4 text-destructive">Booking Retrieval Error</CardTitle>
                     <CardDescription>
-                        We received your payment, but there was an issue retrieving your booking confirmation. This can sometimes happen if the server is slow. Please contact support with your Booking ID ({bookingId}) or check "My Bookings" again in a few minutes.
+                        We received your payment, but there was an issue retrieving your booking details. Please contact support with your Booking ID ({bookingId}) or check "My Bookings".
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col sm:flex-row gap-4">
@@ -144,7 +186,6 @@ export default function BookingSuccessPage() {
     const { user, isLoading: isUserLoading } = useUser();
     const bookingId = params.id as string;
     
-    // New ref: listens to the original booking document.
     const bookingRef = useMemoFirebase(() => {
         if (!firestore || !user?.uid || !bookingId) return null;
         return doc(firestore, 'users', user.uid, 'bookings', bookingId);
@@ -152,21 +193,20 @@ export default function BookingSuccessPage() {
     
     const { data: booking, isLoading: isBookingLoading, error: bookingError } = useDoc<Booking>(bookingRef);
 
-    // The page is loading if we are still waiting for the user or the booking document.
     if (isUserLoading || isBookingLoading) {
-        return <LoadingState />;
+        return <InitialLoadingState />;
     }
     
-    // If we have an error, or we finished loading but have no booking data, show error.
     if (bookingError || !booking) {
         return <ErrorState bookingId={bookingId} />;
     }
     
-    // If the booking status is still PENDING, continue to show the loading state.
-    if (booking.status === 'PENDING') {
-        return <LoadingState />;
+    switch (booking.status) {
+        case 'CONFIRMED':
+            return <SuccessContent booking={booking} />;
+        case 'PENDING':
+            return <ProcessingState booking={booking} />;
+        default:
+            return <ErrorState bookingId={bookingId} />;
     }
-
-    // Success! The booking is confirmed.
-    return <SuccessContent booking={booking} />;
 }
