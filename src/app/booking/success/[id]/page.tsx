@@ -13,24 +13,33 @@ import {
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { BookingSuccessSkeleton } from './BookingSuccessSkeleton';
 
-
-// Component for CONFIRMED state
+// This unified component handles both the "Finalizing" and "Confirmed" states.
 function SuccessContent({ booking }: { booking: WithId<Booking> }) {
     const { user } = useUser();
     const checkInDate = normalizeTimestamp(booking.checkIn);
     const checkOutDate = normalizeTimestamp(booking.checkOut);
+    const isConfirmed = booking.status === 'CONFIRMED';
     
      return (
         <div className="bg-muted/40 min-h-[calc(100vh-4rem)] flex items-center">
             <div className="container mx-auto max-w-2xl py-12 px-4 md:px-6">
                 <Card className="shadow-lg">
                     <CardHeader className="items-center text-center bg-green-50/50 dark:bg-green-900/10 pt-8">
-                        <PartyPopper className="h-12 w-12 text-primary" />
-                        <CardTitle className="text-3xl font-headline mt-4">Booking Confirmed!</CardTitle>
+                        {isConfirmed ? (
+                             <PartyPopper className="h-12 w-12 text-primary" />
+                        ) : (
+                             <Loader2 className="h-12 w-12 text-primary animate-spin" />
+                        )}
+                        <CardTitle className="text-3xl font-headline mt-4">
+                           {isConfirmed ? "Booking Confirmed!" : "Finalizing Confirmation..."}
+                        </CardTitle>
                         <CardDescription className="max-w-md">
-                           Your Himalayan adventure awaits, {booking.customerName}. A confirmation email should arrive shortly.
+                           {isConfirmed 
+                                ? `Your Himalayan adventure awaits, ${booking.customerName}. A confirmation email will arrive shortly.`
+                                : `Your payment was successful! We're just confirming with the hotel. This should only take a moment.`
+                           }
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="p-6 space-y-6">
@@ -57,12 +66,16 @@ function SuccessContent({ booking }: { booking: WithId<Booking> }) {
                                 <span className="font-bold text-lg">{booking.totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}</span>
                             </div>
                              <div className="flex justify-between items-center">
-                                <span className="text-muted-foreground">Payment Status</span>
-                                <span className="font-semibold text-green-600 flex items-center gap-1"><CheckCircle className="h-4 w-4"/> Confirmed</span>
+                                <span className="text-muted-foreground">Confirmation Status</span>
+                                {isConfirmed ? (
+                                     <span className="font-semibold text-green-600 flex items-center gap-1"><CheckCircle className="h-4 w-4"/> Confirmed</span>
+                                ) : (
+                                     <span className="font-semibold text-blue-600 flex items-center gap-1"><Loader2 className="h-4 w-4 animate-spin"/> Finalizing...</span>
+                                )}
                             </div>
                         </div>
                         
-                         {user?.isAnonymous && (
+                         {user?.isAnonymous && isConfirmed && (
                             <Card className="bg-blue-50 border-blue-200">
                                 <CardHeader className="flex-row items-center gap-4 space-y-0">
                                     <UserPlus className="h-8 w-8 text-blue-600" />
@@ -95,33 +108,6 @@ function SuccessContent({ booking }: { booking: WithId<Booking> }) {
     );
 }
 
-// Component for PENDING/LOADING state
-const ProcessingState = ({ showDelayedMessage }: { showDelayedMessage: boolean }) => {
-    return (
-        <div className="bg-muted/40 min-h-[calc(100vh-4rem)] flex items-center">
-            <div className="container mx-auto max-w-2xl py-12 px-4 md:px-6">
-                <Card className="shadow-lg">
-                    <CardHeader className="items-center text-center bg-blue-50/50 dark:bg-blue-900/10 pt-8">
-                        <Loader2 className="h-12 w-12 text-primary animate-spin" />
-                        <CardTitle className="text-3xl font-headline mt-4">Processing Your Booking</CardTitle>
-                        <CardDescription className="max-w-md">
-                           {showDelayedMessage
-                                ? "This is taking a bit longer than usual. Please don't worry, your booking is safe and will be confirmed shortly. You can also check 'My Bookings' in a moment."
-                                : "Your payment was successful! We are finalizing the confirmation. This page will update automatically."
-                           }
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-6 text-center">
-                         <Button className="w-full" asChild>
-                            <Link href="/my-bookings">Go to My Bookings</Link>
-                        </Button>
-                    </CardContent>
-                </Card>
-            </div>
-        </div>
-    )
-};
-
 const ErrorState = ({ bookingId }: { bookingId: string }) => (
      <div className="bg-muted/40 min-h-[calc(100vh-4rem)] flex items-center">
         <div className="container mx-auto max-w-lg py-12 px-4 md:px-6">
@@ -130,7 +116,7 @@ const ErrorState = ({ bookingId }: { bookingId: string }) => (
                     <AlertCircle className="h-12 w-12 text-destructive" />
                     <CardTitle className="text-3xl font-headline mt-4 text-destructive">Booking Retrieval Error</CardTitle>
                     <CardDescription>
-                        We could not retrieve your booking details. This might be a temporary issue. Please contact support with your Booking ID ({bookingId}) or check "My Bookings".
+                        We received your payment, but there was an issue retrieving your booking details. Please contact support with your Booking ID ({bookingId}) or check "My Bookings" in a few minutes.
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col sm:flex-row gap-4">
@@ -152,49 +138,23 @@ export default function BookingSuccessPage() {
     const firestore = useFirestore();
     const { user, isLoading: isUserLoading } = useUser();
     const bookingId = params.id as string;
-    
-    const [showDelayedMessage, setShowDelayedMessage] = useState(false);
 
     const bookingRef = useMemoFirebase(() => {
-        // Only create the ref if we have the user's UID.
         if (!firestore || !user?.uid || !bookingId) return null;
         return doc(firestore, 'users', user.uid, 'bookings', bookingId);
     }, [firestore, user?.uid, bookingId]);
     
     const { data: booking, isLoading: isBookingLoading, error: bookingError } = useDoc<Booking>(bookingRef);
 
-    const isProcessing = isUserLoading || (bookingRef && isBookingLoading && !booking) || (booking && booking.status === 'PENDING');
-
-    useEffect(() => {
-        let timeoutId: NodeJS.Timeout | null = null;
-        if (isProcessing) {
-            // Set a timeout to show the delayed message
-            timeoutId = setTimeout(() => {
-                setShowDelayedMessage(true);
-            }, 10000); // 10 seconds
-        }
-
-        return () => {
-            // Clear the timeout if the component unmounts or the status changes
-            if (timeoutId) {
-                clearTimeout(timeoutId);
-            }
-        };
-    }, [isProcessing]);
-
-
-    if (isProcessing) {
-        return <ProcessingState showDelayedMessage={showDelayedMessage} />;
+    if (isUserLoading || (bookingRef && isBookingLoading)) {
+        return <BookingSuccessSkeleton />;
     }
     
     if (bookingError || !booking) {
         return <ErrorState bookingId={bookingId} />;
     }
     
-    if (booking.status === 'CONFIRMED') {
-        return <SuccessContent booking={booking} />;
-    }
-    
-    // Fallback for any other unexpected status (e.g. CANCELLED)
-    return <ProcessingState showDelayedMessage={showDelayedMessage} />;
+    // Always render the SuccessContent component once the booking doc is available.
+    // It will internally handle the visual difference between PENDING and CONFIRMED.
+    return <SuccessContent booking={booking} />;
 }
