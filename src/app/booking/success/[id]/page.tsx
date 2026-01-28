@@ -17,7 +17,7 @@ import Link from 'next/link';
 import { BookingSuccessSkeleton } from './BookingSuccessSkeleton';
 
 
-function SuccessContent({ booking, isFinalized }: { booking: WithId<Booking>, isFinalized: boolean }) {
+function SuccessContent({ booking }: { booking: WithId<Booking> }) {
     const { user } = useUser();
     const checkInDate = normalizeTimestamp(booking.checkIn);
     const checkOutDate = normalizeTimestamp(booking.checkOut);
@@ -27,19 +27,12 @@ function SuccessContent({ booking, isFinalized }: { booking: WithId<Booking>, is
             <div className="container mx-auto max-w-2xl py-12 px-4 md:px-6">
                 <Card className="shadow-lg">
                     <CardHeader className="items-center text-center bg-green-50/50 dark:bg-green-900/10 pt-8">
-                        {isFinalized ? (
-                            <PartyPopper className="h-12 w-12 text-primary" />
-                        ) : (
-                            <CheckCircle className="h-12 w-12 text-green-600" />
-                        )}
+                        <PartyPopper className="h-12 w-12 text-primary" />
                         <CardTitle className="text-3xl font-headline mt-4">
-                           {isFinalized ? "Booking Confirmed!" : "Payment Successful!"}
+                           Booking Confirmed!
                         </CardTitle>
                         <CardDescription className="max-w-md">
-                           {isFinalized
-                                ? `Your Himalayan adventure awaits, ${booking.customerName}. A confirmation email has been sent.`
-                                : "We've received your payment. Your booking is being finalized and will be confirmed shortly."
-                           }
+                           {`Your Himalayan adventure awaits, ${booking.customerName}. A confirmation email has been sent.`}
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="p-6 space-y-6">
@@ -67,15 +60,11 @@ function SuccessContent({ booking, isFinalized }: { booking: WithId<Booking>, is
                             </div>
                              <div className="flex justify-between items-center">
                                 <span className="text-muted-foreground">Confirmation Status</span>
-                                {isFinalized ? (
-                                     <span className="font-semibold text-green-600 flex items-center gap-1"><CheckCircle className="h-4 w-4"/> Confirmed</span>
-                                ) : (
-                                     <span className="font-semibold text-green-600 flex items-center gap-1"><ShieldCheck className="h-4 w-4"/> Paid</span>
-                                )}
+                                <span className="font-semibold text-green-600 flex items-center gap-1"><CheckCircle className="h-4 w-4"/> Confirmed</span>
                             </div>
                         </div>
                         
-                         {user?.isAnonymous && isFinalized && (
+                         {user?.isAnonymous && (
                             <Card className="bg-blue-50 border-blue-200">
                                 <CardHeader className="flex-row items-center gap-4 space-y-0">
                                     <UserPlus className="h-8 w-8 text-blue-600" />
@@ -107,29 +96,6 @@ function SuccessContent({ booking, isFinalized }: { booking: WithId<Booking>, is
         </div>
     );
 }
-
-const ProcessingState = () => {
-    return (
-        <div className="bg-muted/40 min-h-[calc(100vh-4rem)] flex items-center">
-            <div className="container mx-auto max-w-2xl py-12 px-4 md:px-6">
-                <Card className="shadow-lg">
-                    <CardHeader className="items-center text-center bg-blue-50/50 dark:bg-blue-900/10 pt-8">
-                        <Loader2 className="h-12 w-12 text-primary animate-spin" />
-                        <CardTitle className="text-3xl font-headline mt-4">Loading Booking Details</CardTitle>
-                        <CardDescription className="max-w-md">
-                           Just a moment while we fetch your booking information...
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-6 text-center">
-                         <Button className="w-full" asChild>
-                            <Link href="/my-bookings">Go to My Bookings</Link>
-                        </Button>
-                    </CardContent>
-                </Card>
-            </div>
-        </div>
-    )
-};
 
 const ErrorState = ({ bookingId }: { bookingId: string }) => (
      <div className="bg-muted/40 min-h-[calc(100vh-4rem)] flex items-center">
@@ -175,14 +141,17 @@ export default function BookingSuccessPage() {
         return <ErrorState bookingId={bookingId} />;
     }
     
-    if (isBookingLoading && !booking) {
+    // Show skeleton while loading OR while the booking is still pending.
+    // The useDoc hook will automatically re-render when the status changes to CONFIRMED.
+    if (isBookingLoading || (booking && !isConfirmed)) {
         return <BookingSuccessSkeleton />
     }
 
-    if (booking) {
-        return <SuccessContent booking={booking} isFinalized={isConfirmed} />;
+    // Only show the final success content when the booking is confirmed.
+    if (booking && isConfirmed) {
+        return <SuccessContent booking={booking} />;
     }
     
-    // This state is reached if the booking is not found after loading.
-    return <ProcessingState />;
+    // Fallback state if booking is not found after loading.
+    return <ErrorState bookingId={bookingId} />;
 }
