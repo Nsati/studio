@@ -38,7 +38,7 @@ export function HotelCard({ hotel }: HotelCardProps) {
   return (
     <Link href={`/hotels/${hotel.id}`} className="group block [perspective:1000px]">
       <Card className="h-full overflow-hidden transition-all duration-500 [transform-style:preserve-3d] group-hover:shadow-2xl group-hover:[transform:rotateY(-10deg)] border-border">
-        <CardContent className="p-0 relative w-full aspect-[4/3]">
+        <CardContent className="p-0 relative w-full aspect-[4/5]">
             {imageUrl ? (
               <Image
                 src={imageUrl}

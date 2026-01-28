@@ -226,7 +226,7 @@ export default function HotelPage() {
       </div>
       
        {/* Sticky Footer for Mobile */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t p-3 shadow-[0_-2px_10px_rgba(0,0,0,0.1)] flex items-center justify-between gap-4">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-lg border-t p-3 shadow-[0_-2px_10px_rgba(0,0,0,0.1)] flex items-center justify-between gap-4">
         <div>
           {minPrice !== null && minPrice > 0 ? (
              <div>
