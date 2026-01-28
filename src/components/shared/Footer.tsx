@@ -1,46 +1,62 @@
 'use client';
 
-import { Facebook, Twitter, Instagram, Mail, Phone, Hotel } from 'lucide-react';
+import { Facebook, Twitter, Instagram } from 'lucide-react';
 import Link from 'next/link';
+import { Logo } from './Logo';
 
 const footerLinks = {
   'Explore': [
-    { label: 'Hotels', href: '/search' },
-    { label: 'Cities', href: '/#cities' },
-    { label: 'My Bookings', href: '/my-bookings' },
+    { label: 'Find a Hotel', href: '/search' },
+    { label: 'Tour Packages', href: '/tour-packages' },
+    { label: 'Destinations', href: '/#cities' },
+    { label: 'Vibe Match™', href: '/vibe-match' },
   ],
-  'Company': [
+  'For You': [
+    { label: 'My Bookings', href: '/my-bookings' },
+    { label: 'Create Account', href: '/signup' },
     { label: 'About Us', href: '/about' },
-    { label: 'Careers', href: '#' },
-    { label: 'Blog', href: '#' },
+  ],
+  'Support': [
     { label: 'Terms of Service', href: '/terms' },
     { label: 'Privacy Policy', href: '/privacy' },
+    { label: 'Contact Support', href: 'mailto:support@uttarakhandgetaways.com' },
   ],
 };
 
 
 export default function Footer() {
   return (
-    <footer className="border-t bg-secondary/50">
+    <footer className="border-t bg-background">
       <div className="container py-12 md:py-16">
-        <div className="grid grid-cols-2 gap-12 md:grid-cols-5">
-            <div className="col-span-2">
-                <div className="flex flex-col items-start gap-4">
-                    <Link href="/" className="flex items-center gap-2">
-                        <Hotel className="h-7 w-7 text-primary" />
-                        <span className="font-headline text-2xl font-bold text-foreground">
-                            Uttarakhand Getaways
-                        </span>
-                    </Link>
-                    <p className="max-w-xs text-sm text-muted-foreground">
-                    Your gateway to the serene beauty of the Himalayas. Book your unforgettable stay with us.
-                    </p>
+        <div className="grid grid-cols-2 gap-8 md:grid-cols-5">
+            {/* Branding Section */}
+            <div className="col-span-2 flex flex-col items-start gap-4">
+                <Link href="/" className="flex items-center gap-3">
+                    <Logo />
+                    <span className="font-headline text-xl font-bold text-foreground">
+                        Uttarakhand Getaways
+                    </span>
+                </Link>
+                <p className="max-w-xs text-sm text-muted-foreground">
+                  Your gateway to serene stays in the heart of the Himalayas.
+                </p>
+                <div className="flex items-center gap-4 mt-4">
+                  <a href="#" aria-label="Facebook" className="text-muted-foreground transition-colors hover:text-primary">
+                    <Facebook className="h-5 w-5" />
+                  </a>
+                  <a href="#" aria-label="Twitter" className="text-muted-foreground transition-colors hover:text-primary">
+                    <Twitter className="h-5 w-5" />
+                  </a>
+                  <a href="#" aria-label="Instagram" className="text-muted-foreground transition-colors hover:text-primary">
+                    <Instagram className="h-5 w-5" />
+                  </a>
                 </div>
             </div>
 
+            {/* Link Sections */}
             {Object.entries(footerLinks).map(([title, links]) => (
                 <div key={title} className="col-span-1">
-                    <h3 className="font-headline text-lg font-semibold mb-4">{title}</h3>
+                    <h3 className="font-headline text-base font-semibold mb-4">{title}</h3>
                     <ul className="space-y-3">
                         {links.map(link => (
                             <li key={link.label}>
@@ -52,39 +68,12 @@ export default function Footer() {
                     </ul>
                 </div>
             ))}
-
-            <div className="col-span-2 md:col-span-1">
-                 <h3 className="font-headline text-lg font-semibold mb-4">Support</h3>
-                 <ul className="space-y-3">
-                    <li>
-                        <a href="mailto:support@uttarakhandgetaways.com" className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary">
-                           <Mail className="h-4 w-4" /> support@uttarakhandgetaways.com
-                        </a>
-                    </li>
-                    <li>
-                        <a href="tel:+919876543210" className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary">
-                           <Phone className="h-4 w-4" /> +91-987-654-3210
-                        </a>
-                    </li>
-                 </ul>
-            </div>
         </div>
         
-        <div className="mt-12 border-t pt-8 flex flex-col sm:flex-row items-center justify-between">
-            <p className="text-sm text-muted-foreground">
+        <div className="mt-12 border-t pt-8">
+            <p className="text-center text-sm text-muted-foreground">
                 © {new Date().getFullYear()} Uttarakhand Getaways. All rights reserved.
             </p>
-            <div className="flex items-center gap-4 mt-4 sm:mt-0">
-              <Link href="#" aria-label="Facebook">
-                <Facebook className="h-5 w-5 text-muted-foreground transition-colors hover:text-primary" />
-              </Link>
-              <Link href="#" aria-label="Twitter">
-                <Twitter className="h-5 w-5 text-muted-foreground transition-colors hover:text-primary" />
-              </Link>
-              <Link href="#" aria-label="Instagram">
-                <Instagram className="h-5 w-5 text-muted-foreground transition-colors hover:text-primary" />
-              </Link>
-            </div>
         </div>
       </div>
     </footer>
