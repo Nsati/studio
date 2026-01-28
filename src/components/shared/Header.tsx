@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useUser, useAuth } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { useRouter, usePathname } from 'next/navigation';
-import { User, LogOut, LayoutDashboard, Book, Menu } from 'lucide-react';
+import { User, LogOut, LayoutDashboard, Book, Menu, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -26,6 +26,7 @@ import { Logo } from './Logo';
 
 const navLinks = [
   { href: '/', label: 'Home' },
+  { href: '/vibe-match', label: 'Vibe Match™' },
   { href: '/search', label: 'Hotels' },
   { href: '/tour-packages', label: 'Tour Packages' },
   { href: '/about', label: 'About Us' },
@@ -126,12 +127,15 @@ export default function Header() {
                     key={link.href}
                     href={link.href}
                     className={cn(
-                        "rounded-full px-4 py-1.5 text-sm font-medium transition-colors hover:text-foreground",
+                        "rounded-full px-3 py-1.5 text-sm font-medium transition-colors flex items-center gap-1",
                         pathname === link.href
                         ? "bg-background text-foreground shadow-sm"
-                        : "text-muted-foreground"
+                        : link.href === '/vibe-match'
+                        ? "text-accent-foreground bg-accent hover:bg-accent/90"
+                        : "text-muted-foreground hover:text-foreground"
                     )}
                     >
+                    {link.href === '/vibe-match' && <Sparkles className="h-4 w-4" />}
                     {link.label}
                     </Link>
                 ))}
@@ -163,12 +167,14 @@ export default function Header() {
                             <Link
                               href={link.href}
                               className={cn(
-                                "transition-colors hover:text-primary",
+                                "transition-colors hover:text-primary flex items-center gap-2",
                                 pathname === link.href
                                   ? "text-primary"
-                                  : "text-muted-foreground"
+                                  : "text-muted-foreground",
+                                link.href === '/vibe-match' && "font-bold text-accent"
                               )}
                             >
+                              {link.href === '/vibe-match' && <Sparkles className="h-5 w-5" />}
                               {link.label}
                             </Link>
                           </SheetClose>
