@@ -32,7 +32,7 @@ function SearchResults() {
   if (isLoading) {
       return (
         <div className="flex-1">
-             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {Array.from({ length: 6 }).map((_, i) => (
                     <Card key={i} className="p-0">
                         <CardContent className="p-0">
@@ -61,7 +61,7 @@ function SearchResults() {
             </p>
         </div>
       {hotels && hotels.length > 0 ? (
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {hotels.map((hotel) => (
             <HotelCard key={hotel.id} hotel={hotel} />
           ))}

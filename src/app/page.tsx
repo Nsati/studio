@@ -18,10 +18,10 @@ import { SearchFilters } from './search/SearchFilters';
 
 function FeaturedHotelsSkeleton() {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {Array.from({ length: 3 }).map((_, i) => (
         <Card key={i}>
-          <Skeleton className="aspect-[4/3] w-full" />
+          <Skeleton className="aspect-video w-full" />
           <CardHeader>
             <Skeleton className="h-6 w-3/4" />
             <Skeleton className="h-4 w-1/2 mt-2" />
@@ -63,7 +63,7 @@ export default function HomePage() {
         )}
         <div className="absolute inset-0 bg-black/50" />
         <div className="relative z-10 p-4 flex flex-col items-center w-full max-w-4xl mx-auto">
-          <h1 className="text-4xl font-bold md:text-5xl lg:text-6xl" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.7)' }}>
+          <h1 className="text-4xl font-bold md:text-5xl lg:text-6xl font-heading" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.7)' }}>
             Your Himalayan Escape
           </h1>
           <p className="mt-4 max-w-2xl mx-auto text-lg md:text-xl" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.7)' }}>
@@ -102,7 +102,7 @@ export default function HomePage() {
                     />
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                  <h3 className="absolute bottom-3 left-3 text-lg font-bold text-white">
+                  <h3 className="absolute bottom-3 left-3 text-lg font-bold text-white font-heading">
                     {city.name}
                   </h3>
                 </Link>
@@ -127,7 +127,7 @@ export default function HomePage() {
           {areHotelsLoading ? (
             <FeaturedHotelsSkeleton />
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {featuredHotels?.map((hotel) => (
                 <HotelCard key={hotel.id} hotel={hotel} />
               ))}
@@ -148,7 +148,7 @@ export default function HomePage() {
                 <Link href="/tour-packages">View All <ArrowRight className="ml-2 h-4 w-4" /></Link>
               </Button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {dummyTourPackages.slice(0, 3).map((pkg) => {
               const pkgImage = PlaceHolderImages.find(img => img.id === pkg.image);
               return (

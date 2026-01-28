@@ -5,7 +5,7 @@ import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { collection } from 'firebase/firestore';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { format } from 'date-fns';
-import { DateRange } from 'react-day-picker';
+import type { DateRange } from 'react-day-picker';
 import type { Hotel } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import {
@@ -21,7 +21,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { Separator } from '@/components/ui/separator';
 
 export function SearchFilters() {
     const firestore = useFirestore();
@@ -97,12 +96,12 @@ export function SearchFilters() {
     return (
         <Card className="w-full shadow-lg bg-background/80 backdrop-blur-sm border-white/20">
             <CardContent className="p-2">
-                <form onSubmit={handleFormSubmit} className="grid grid-cols-1 md:grid-cols-[1fr,1fr,0.5fr,auto] lg:grid-cols-[2fr,2fr,1fr,auto] items-stretch gap-0">
+                <form onSubmit={handleFormSubmit} className="flex flex-col md:flex-row items-center gap-2">
                     {/* Location */}
-                    <div className="flex items-center gap-2 pr-2">
-                        <MapPin className="h-5 w-5 text-muted-foreground ml-2" />
+                    <div className="flex items-center gap-2 px-3 py-2 w-full flex-1 bg-background rounded-md border">
+                        <MapPin className="h-5 w-5 text-muted-foreground" />
                         <Select value={city} onValueChange={setCity} disabled={isLoadingHotels}>
-                            <SelectTrigger className="w-full font-medium text-base border-0 bg-transparent focus:ring-0 focus:ring-offset-0 shadow-none">
+                            <SelectTrigger className="w-full font-medium text-base border-0 bg-transparent focus:ring-0 shadow-none p-0 h-auto focus:ring-offset-0">
                                 <SelectValue placeholder={isLoadingHotels ? "Loading..." : "Select Location"} />
                             </SelectTrigger>
                             <SelectContent>
@@ -114,16 +113,14 @@ export function SearchFilters() {
                         </Select>
                     </div>
 
-                    <Separator orientation="vertical" className="h-auto" />
-
                     {/* Dates */}
-                    <div className="flex items-center gap-2 px-2">
-                        <CalendarIcon className="h-5 w-5 text-muted-foreground ml-2" />
+                    <div className="flex items-center gap-2 px-3 py-2 w-full flex-1 bg-background rounded-md border">
+                        <CalendarIcon className="h-5 w-5 text-muted-foreground" />
                         <Popover>
                             <PopoverTrigger asChild>
                                 <Button
                                     variant="ghost"
-                                    className={cn("w-full justify-start text-left font-medium hover:bg-transparent px-2 text-base", !dates && "text-muted-foreground")}
+                                    className={cn("w-full justify-start text-left font-medium hover:bg-transparent p-0 h-auto text-base focus-visible:ring-0 focus-visible:ring-offset-0", !dates && "text-muted-foreground")}
                                 >
                                     {dates?.from ? (
                                         dates.to ? (
@@ -150,23 +147,20 @@ export function SearchFilters() {
                         </Popover>
                     </div>
 
-                    <Separator orientation="vertical" className="h-auto" />
-
                     {/* Guests */}
-                    <div className="flex items-center gap-2 pl-2">
-                        <Users className="h-5 w-5 text-muted-foreground ml-2" />
+                    <div className="flex items-center gap-2 px-3 py-2 w-full flex-1 md:flex-none md:w-32 bg-background rounded-md border">
+                        <Users className="h-5 w-5 text-muted-foreground" />
                         <Input 
                             type="number" 
                             placeholder="Guests" 
                             min="1"
                             value={guests}
                             onChange={(e) => setGuests(e.target.value)}
-                            className="font-medium text-base border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
+                            className="font-medium text-base border-0 bg-transparent focus-visible:ring-0 p-0 h-auto shadow-none focus-visible:ring-offset-0"
                         />
                     </div>
                     
-                    {/* Button */}
-                    <Button type="submit" size="lg" className="h-full w-full rounded-md text-base">
+                    <Button type="submit" size="lg" className="h-full w-full md:w-auto px-6 text-base">
                         <Search className="mr-2 h-4 w-4" />
                         Search
                     </Button>

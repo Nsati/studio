@@ -38,7 +38,7 @@ export function HotelCard({ hotel }: HotelCardProps) {
   return (
     <Link href={`/hotels/${hotel.id}`} className="group block">
       <Card className="h-full overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-        <CardContent className="p-0 relative w-full aspect-[4/3]">
+        <CardContent className="p-0 relative w-full aspect-video">
             {imageUrl ? (
               <Image
                 src={imageUrl}
@@ -46,7 +46,7 @@ export function HotelCard({ hotel }: HotelCardProps) {
                 data-ai-hint={imageHint}
                 fill
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                className="object-cover transition-transform duration-300 group-hover:scale-105"
+                className="object-cover transition-transform duration-300 group-hover:scale-103"
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-muted">
@@ -59,8 +59,8 @@ export function HotelCard({ hotel }: HotelCardProps) {
                 </Badge>
             )}
         </CardContent>
-        <CardHeader className="p-4">
-          <CardTitle className="text-xl leading-tight group-hover:text-primary">
+        <CardHeader className="p-3">
+          <CardTitle className="text-lg leading-tight group-hover:text-primary">
             {hotel.name}
           </CardTitle>
           <CardDescription className="flex items-center gap-1.5 pt-1">
@@ -68,12 +68,12 @@ export function HotelCard({ hotel }: HotelCardProps) {
             {hotel.city}
           </CardDescription>
         </CardHeader>
-        <CardFooter className="flex justify-between items-end p-4 pt-0">
+        <CardFooter className="flex justify-between items-end p-3 pt-0">
           {hotel.minPrice && hotel.minPrice > 0 ? (
             <div>
               <span className="text-xs text-muted-foreground">Starts from</span>
               <div className="flex items-baseline gap-2">
-                <p className="font-bold text-xl text-primary">
+                <p className="font-bold text-lg text-primary">
                   {discountedMinPrice?.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}
                 </p>
                 {hotel.discount && hotel.discount > 0 && (
