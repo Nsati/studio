@@ -5,7 +5,11 @@ import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, useRouter, notFound } from 'next/navigation';
 import Image from 'next/image';
 import { differenceInDays, format, parse } from 'date-fns';
-import { initiateBookingAndCreateOrder, cancelInitiatedBooking } from '@/app/booking/actions';
+import { 
+    initiateBookingAndCreateOrder, 
+    cancelInitiatedBooking,
+    verifyPaymentAndUpdateBooking 
+} from '@/app/booking/actions';
 import { signInAnonymously } from 'firebase/auth';
 import type { Hotel, Room, Booking, Promotion } from '@/lib/types';
 import { useFirestore, useAuth, useUser, useDoc, useCollection, useMemoFirebase, type WithId } from '@/firebase';
@@ -194,7 +198,7 @@ export function BookingForm() {
                 ...(couponDiscount > 0 && { couponCode: couponCode }),
             };
     
-            // Step 1: Call the new server action to initiate everything
+            // Step 1: Call the server action to create a PENDING booking and Razorpay order.
             const response = await initiateBookingAndCreateOrder(bookingPayload as any);
     
             if (!response.success || !response.order || !response.keyId || !response.bookingId) {
@@ -213,12 +217,37 @@ export function BookingForm() {
                 name: "Uttarakhand Getaways",
                 description: `Booking for ${hotel.name}`,
                 order_id: order.id,
-                handler: async (response: any) => {
-                    toast({ title: "Payment Received!", description: "Redirecting to confirmation page..." });
+                handler: async (paymentResponse: any) => {
+                    setIsBooking(true); // Keep spinner active during verification
+                    toast({ title: "Payment Received!", description: "Verifying and confirming your booking..." });
+                    
+                    const verificationResult = await verifyPaymentAndUpdateBooking({
+                        razorpay_order_id: paymentResponse.razorpay_order_id,
+                        razorpay_payment_id: paymentResponse.razorpay_payment_id,
+                        razorpay_signature: paymentResponse.razorpay_signature,
+                        userId: userIdForBooking!,
+                        bookingId: bookingId,
+                    });
+
+                    if (verificationResult.success) {
+                        toast({
+                            title: "Booking Confirmed!",
+                            description: "Redirecting to your confirmation...",
+                        });
+                    } else {
+                        // This toast informs the user but doesn't cause panic. The webhook will act as a fallback.
+                        toast({
+                            title: "Payment Verification In Progress",
+                            description: verificationResult.error || "We've received your payment. Your booking will be confirmed shortly in 'My Bookings'.",
+                            variant: "default", // Not 'destructive' to avoid user panic
+                            duration: 8000,
+                        });
+                    }
+                    // Always redirect to the success page, which will show the latest status.
                     router.push(`/booking/success/${bookingId}`);
                 },
                 prefill: { name: customerDetails.name, email: customerDetails.email },
-                theme: { color: "#388E3C" },
+                theme: { color: "#125C41" }, // Updated to match Forest Green theme
                 modal: {
                     ondismiss: async () => {
                         setIsBooking(false);
