@@ -2,7 +2,9 @@
 /**
  * @fileOverview The AI flow for the Devbhoomi Vibe Match™ feature.
  *
- * - getVibeSuggestion - A function that calls the AI to get a travel suggestion.
+ * - getVibeMatchSuggestionAction - A Server Action that calls the AI to get a travel suggestion.
+ * - VibeMatchInput - The input type for the user's preferences.
+ * - VibeMatchOutput - The structured travel recommendation returned by the AI.
  */
 
 import { ai } from '@/ai/genkit';
@@ -11,6 +13,15 @@ import {
     VibeMatchOutputSchema
 } from '@/app/vibe-match/schema';
 import type { VibeMatchInput, VibeMatchOutput } from '@/app/vibe-match/schema';
+
+export type { VibeMatchInput, VibeMatchOutput };
+
+// Type for the server action's return value
+type VibeMatchResult = {
+    success: boolean;
+    data: VibeMatchOutput | null;
+    error?: string;
+}
 
 // The AI Prompt that defines the "Devbhoomi Dost" persona
 const suggestionPrompt = ai.definePrompt({
@@ -52,20 +63,17 @@ const vibeMatchFlow = ai.defineFlow(
   }
 );
 
-
 /**
- * Calls the Vibe Match AI flow to get a travel suggestion.
+ * The Server Action that is called from the client.
  * @param input The user's travel preferences.
- * @returns A structured travel recommendation.
+ * @returns A result object containing the AI's suggestion or an error.
  */
-export async function getVibeSuggestion(input: VibeMatchInput): Promise<VibeMatchOutput> {
-  return vibeMatchFlow(input);
-}
-);
-      }
-      return output;
+export async function getVibeMatchSuggestionAction(input: VibeMatchInput): Promise<VibeMatchResult> {
+    try {
+        const suggestion = await vibeMatchFlow(input);
+        return { success: true, data: suggestion };
+    } catch (error: any) {
+        console.error("Vibe Match Action Error:", error);
+        return { success: false, data: null, error: "Sorry, I couldn't come up with a suggestion right now. Please try again." };
     }
-  );
-  
-  return vibeMatchFlow(input);
 }

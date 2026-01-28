@@ -8,11 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { getVibeMatchSuggestionAction } from "./actions";
+import { getVibeMatchSuggestionAction, type VibeMatchOutput } from "@/ai/flows/vibe-match-flow";
 import { Loader2, Sparkles, Wand2, ThumbsUp, MapPin, Hotel, Calendar, Shield, Mountain } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { VibeMatchInputSchema, type VibeMatchOutput } from "./schema";
+import { VibeMatchInputSchema } from "./schema";
 
 
 function ResultSkeleton() {
