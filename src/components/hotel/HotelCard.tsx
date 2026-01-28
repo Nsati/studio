@@ -45,8 +45,8 @@ export function HotelCard({ hotel }: HotelCardProps) {
                 alt={hotel.name}
                 data-ai-hint={imageHint}
                 fill
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                className="object-cover"
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                className="object-cover transition-transform duration-300 group-hover:scale-105"
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-muted">
@@ -54,16 +54,16 @@ export function HotelCard({ hotel }: HotelCardProps) {
               </div>
             )}
              {hotel.discount && hotel.discount > 0 && (
-                <Badge className="absolute top-2 right-2 bg-accent text-accent-foreground border-accent text-sm">
+                <Badge variant="destructive" className="absolute top-3 right-3 text-sm">
                     {hotel.discount}% OFF
                 </Badge>
             )}
         </CardContent>
         <CardHeader className="p-4">
-          <CardTitle className="font-headline text-xl leading-tight group-hover:text-primary">
+          <CardTitle className="text-xl leading-tight group-hover:text-primary">
             {hotel.name}
           </CardTitle>
-          <CardDescription className="flex items-center gap-1 pt-1">
+          <CardDescription className="flex items-center gap-1.5 pt-1">
             <MapPin className="h-4 w-4" />
             {hotel.city}
           </CardDescription>
@@ -73,7 +73,7 @@ export function HotelCard({ hotel }: HotelCardProps) {
             <div>
               <span className="text-xs text-muted-foreground">Starts from</span>
               <div className="flex items-baseline gap-2">
-                <p className="font-bold text-lg text-primary">
+                <p className="font-bold text-xl text-primary">
                   {discountedMinPrice?.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}
                 </p>
                 {hotel.discount && hotel.discount > 0 && (
@@ -89,8 +89,8 @@ export function HotelCard({ hotel }: HotelCardProps) {
                  <p className="text-sm font-semibold text-muted-foreground">Not available</p>
             </div>
           )}
-          <Badge>
-            <Star className="h-4 w-4 fill-current mr-1" />
+          <Badge variant="outline" className="font-semibold text-base">
+            <Star className="h-4 w-4 fill-amber-400 text-amber-400 mr-1.5" />
             <span>{hotel.rating}</span>
           </Badge>
         </CardFooter>

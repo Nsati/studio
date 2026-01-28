@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { dummyCities, dummyTourPackages } from '@/lib/dummy-data';
 import { ArrowRight } from 'lucide-react';
 import { HotelCard } from '@/components/hotel/HotelCard';
@@ -13,6 +13,7 @@ import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, limit, query } from 'firebase/firestore';
 import type { Hotel } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { SearchFilters } from './search/SearchFilters';
 
 
 function FeaturedHotelsSkeleton() {
@@ -25,9 +26,9 @@ function FeaturedHotelsSkeleton() {
             <Skeleton className="h-6 w-3/4" />
             <Skeleton className="h-4 w-1/2 mt-2" />
           </CardHeader>
-          <CardFooter>
+          <div className="p-4 pt-0">
             <Skeleton className="h-5 w-1/4" />
-          </CardFooter>
+          </div>
         </Card>
       ))}
     </div>
@@ -48,7 +49,7 @@ export default function HomePage() {
   return (
     <div>
       {/* Hero Section */}
-      <section className="relative h-[60vh] min-h-[400px] w-full flex items-center justify-center text-center text-white">
+      <section className="relative h-[60vh] min-h-[450px] w-full flex items-center justify-center text-center text-white">
         {heroImage && (
           <Image
             src={heroImage.imageUrl}
@@ -60,27 +61,25 @@ export default function HomePage() {
             priority
           />
         )}
-        <div className="absolute inset-0 bg-black/60" />
-        <div className="relative z-10 p-4">
-          <h1 className="font-headline text-4xl font-bold md:text-6xl lg:text-7xl">
+        <div className="absolute inset-0 bg-black/50" />
+        <div className="relative z-10 p-4 flex flex-col items-center w-full max-w-4xl mx-auto">
+          <h1 className="text-4xl font-bold md:text-5xl lg:text-6xl" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.7)' }}>
             Your Himalayan Escape
           </h1>
-          <p className="mt-4 max-w-2xl mx-auto text-lg md:text-xl">
+          <p className="mt-4 max-w-2xl mx-auto text-lg md:text-xl" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.7)' }}>
             Discover serene hotels and breathtaking views in the heart of Uttarakhand.
           </p>
-          <div className="mt-8">
-            <Button asChild size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
-              <Link href="/search">Find Your Stay</Link>
-            </Button>
+          <div className="mt-8 w-full">
+            <SearchFilters />
           </div>
         </div>
       </section>
 
       {/* Featured Cities Section */}
-      <section id="cities" className="py-16 bg-muted/40">
+      <section id="cities" className="py-16 bg-muted">
         <div className="container mx-auto">
           <div className="text-center mb-12">
-            <h2 className="font-headline text-3xl font-bold">Explore by City</h2>
+            <h2 className="text-3xl font-bold">Explore by City</h2>
             <p className="text-muted-foreground mt-2 max-w-xl mx-auto">From tranquil lakes to spiritual hubs, find your perfect destination.</p>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
@@ -90,7 +89,7 @@ export default function HomePage() {
                 <Link
                   key={city.id}
                   href={`/search?city=${city.name}`}
-                  className="group relative block aspect-square overflow-hidden rounded-lg"
+                  className="group relative block aspect-square overflow-hidden rounded-lg shadow-sm"
                 >
                   {cityImage && (
                     <Image
@@ -102,8 +101,8 @@ export default function HomePage() {
                       className="object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                  <h3 className="absolute bottom-3 left-3 font-headline text-lg font-bold text-white">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                  <h3 className="absolute bottom-3 left-3 text-lg font-bold text-white">
                     {city.name}
                   </h3>
                 </Link>
@@ -118,7 +117,7 @@ export default function HomePage() {
         <div className="container mx-auto">
           <div className="flex justify-between items-center mb-12">
             <div>
-              <h2 className="font-headline text-3xl font-bold">Featured Stays</h2>
+              <h2 className="text-3xl font-bold">Featured Stays</h2>
               <p className="text-muted-foreground mt-2">Handpicked hotels for an unforgettable experience.</p>
             </div>
             <Button variant="outline" asChild>
@@ -138,11 +137,11 @@ export default function HomePage() {
       </section>
 
        {/* Tour Packages Section */}
-       <section className="py-16 bg-muted/40">
+       <section className="py-16 bg-muted">
         <div className="container mx-auto">
           <div className="flex justify-between items-center mb-12">
              <div>
-                <h2 className="font-headline text-3xl font-bold">Curated Tour Packages</h2>
+                <h2 className="text-3xl font-bold">Curated Tour Packages</h2>
                 <p className="text-muted-foreground mt-2">All-inclusive journeys to explore the best of Uttarakhand.</p>
               </div>
                <Button variant="outline" asChild>
@@ -159,7 +158,7 @@ export default function HomePage() {
                       {pkgImage && <Image src={pkgImage.imageUrl} alt={pkg.title} fill className="object-cover" />}
                     </CardContent>
                     <CardHeader>
-                      <CardTitle className="font-headline text-xl leading-tight group-hover:text-primary">{pkg.title}</CardTitle>
+                      <CardTitle className="text-xl leading-tight group-hover:text-primary">{pkg.title}</CardTitle>
                       <CardDescription>{pkg.duration}</CardDescription>
                     </CardHeader>
                   </Card>
@@ -169,7 +168,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
     </div>
   );
 }

@@ -107,13 +107,13 @@ export default function Header() {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b bg-background">
+    <header className="sticky top-0 z-40 w-full border-b bg-background/80 backdrop-blur-sm">
       <div className="container flex h-16 items-center justify-between">
         {/* Left Side: Logo */}
         <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center gap-3">
                 <Logo />
-                <span className="hidden font-bold font-headline text-lg sm:inline-block">
+                <span className="hidden font-bold text-lg sm:inline-block">
                     Uttarakhand Getaways
                 </span>
             </Link>
@@ -121,18 +121,17 @@ export default function Header() {
         
         {/* Center: Desktop Navigation */}
         <div className="hidden md:flex">
-            <nav className="flex items-center gap-1 rounded-full bg-muted/50 p-1">
+            <nav className="flex items-center gap-6">
                 {navLinks.map((link) => (
                     <Link
                     key={link.href}
                     href={link.href}
                     className={cn(
-                        "rounded-full px-3 py-1.5 text-sm font-medium transition-colors flex items-center gap-1",
+                        "text-sm font-medium transition-colors flex items-center gap-1.5",
                         pathname === link.href
-                        ? "bg-background text-foreground shadow-sm"
-                        : link.href === '/vibe-match'
-                        ? "text-accent-foreground bg-accent hover:bg-accent/90"
-                        : "text-muted-foreground hover:text-foreground"
+                        ? "text-primary"
+                        : "text-muted-foreground hover:text-foreground",
+                         link.href === '/vibe-match' && "text-accent-foreground bg-accent hover:bg-accent/90 rounded-full px-3 py-1"
                     )}
                     >
                     {link.href === '/vibe-match' && <Sparkles className="h-4 w-4" />}
@@ -157,7 +156,7 @@ export default function Header() {
                         <SheetClose asChild>
                           <Link href="/" className="flex items-center gap-3 mb-6">
                             <Logo />
-                            <span className="font-bold font-headline text-lg">
+                            <span className="font-bold text-lg">
                               Uttarakhand Getaways
                             </span>
                           </Link>

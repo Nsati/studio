@@ -19,7 +19,7 @@
     --secondary: 210 20% 90%;
     --secondary-foreground: 20 5% 30%;
 
-    --muted: 210 20% 90%;
+    --muted: 210 20% 96%; /* Softer Grey */
     --muted-foreground: 210 10% 45%;
 
     --accent: 205 90% 58%; /* Sky Blue */
@@ -51,7 +51,7 @@
     --secondary: 210 10% 25%;
     --secondary-foreground: 60 10% 95%;
 
-    --muted: 210 10% 25%;
+    --muted: 210 10% 20%;
     --muted-foreground: 210 10% 65%;
 
     --accent: 205 90% 68%;
@@ -74,6 +74,6 @@
     @apply bg-background text-foreground;
   }
   h1, h2, h3, h4, h5, h6 {
-    @apply font-heading;
+    @apply font-sans font-bold;
   }
 }
