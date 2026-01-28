@@ -218,6 +218,7 @@ export function BookingForm() {
                 description: `Booking for ${hotel.name}`,
                 order_id: order.id,
                 handler: async (paymentResponse: any) => {
+                    // This handler is the PRIMARY verification path.
                     setIsBooking(true); 
                     toast({ title: "Payment Received!", description: "Verifying and confirming your booking..." });
                     
@@ -234,20 +235,24 @@ export function BookingForm() {
                             title: "Booking Confirmed!",
                             description: "Redirecting to your confirmation...",
                         });
+                        // Redirect to the success page, the backend is now updated.
+                        router.push(`/booking/success/${bookingId}`);
                     } else {
                         toast({
                             title: "Payment Verification In Progress",
-                            description: verificationResult.error || "We've received your payment. Your booking will be confirmed shortly in 'My Bookings'.",
+                            description: verificationResult.error || "We've received your payment. Your booking will be confirmed shortly in 'My Bookings' via our backup system.",
                             variant: "default",
                             duration: 8000,
                         });
+                        // Redirect anyway, the success page will listen for the update.
+                        router.push(`/booking/success/${bookingId}`);
                     }
-                    router.push(`/booking/success/${bookingId}`);
                 },
                 prefill: { name: customerDetails.name, email: customerDetails.email },
                 theme: { color: "#388E3C" }, 
                 modal: {
                     ondismiss: async () => {
+                        // User closed the payment window. Revert the PENDING booking.
                         setIsBooking(false);
                         toast({ variant: 'destructive', title: 'Payment Cancelled', description: 'Releasing the room back to inventory...' });
                         if(userIdForBooking) {
@@ -259,6 +264,8 @@ export function BookingForm() {
     
             const rzp = new window.Razorpay(options);
             rzp.open();
+            // Set isBooking to false here, because Razorpay is now open. The handler will manage the state from now on.
+            setIsBooking(false);
     
         } catch (error: any) {
              console.error("Client-side booking initiation failed:", error);

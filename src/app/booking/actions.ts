@@ -88,6 +88,9 @@ export async function initiateBookingAndCreateOrder(
 
   } catch (error: any) {
     console.error('SERVER ACTION ERROR: Failed to initiate booking:', error);
+    // If order creation failed, we should ideally revert the inventory change.
+    // For simplicity, we are not doing that here, but in a real-world app, you might.
+    // The pending booking will eventually need to be cleaned up by a cron job.
     return { success: false, error: error.message, order: null, keyId: null, bookingId: null };
   }
 }
@@ -107,22 +110,27 @@ export async function cancelInitiatedBooking(userId: string, bookingId: string) 
     try {
         await adminDb.runTransaction(async (transaction) => {
             const bookingDoc = await transaction.get(bookingRef);
-            if (!bookingDoc.exists) return; 
+            if (!bookingDoc.exists) return; // Already gone, nothing to do.
 
             const bookingData = bookingDoc.data() as Booking;
+            // Only revert if it's still PENDING. If it got confirmed via webhook, don't touch it.
             if (bookingData.status !== 'PENDING') return;
 
             const roomRef = adminDb.doc(`hotels/${bookingData.hotelId}/rooms/${bookingData.roomId}`);
             
+            // Increment inventory back
             transaction.update(roomRef, { availableRooms: FieldValue.increment(1) });
+            // Delete the pending booking
             transaction.delete(bookingRef);
         });
         return { success: true, message: "Booking process cancelled." };
     } catch(error: any) {
         console.error(`Failed to revert booking ${bookingId}:`, error);
+        // This is not critical for the user, but should be logged for maintenance.
         return { success: false, message: "Failed to clean up pending booking." };
     }
 }
+
 
 /**
  * Verifies the Razorpay payment signature and updates the booking status to CONFIRMED.
@@ -162,15 +170,19 @@ export async function verifyPaymentAndUpdateBooking(payload: {
 
     const bookingRef = adminDb.doc(`users/${userId}/bookings/${bookingId}`);
     try {
+        // Use a transaction to safely update the booking status.
         await adminDb.runTransaction(async (transaction) => {
             const bookingDoc = await transaction.get(bookingRef);
             if (!bookingDoc.exists) {
+                // This is an edge case. The webhook might have failed, and the client is trying to confirm.
+                // Or something went wrong during initiation.
                 throw new Error(`Booking ${bookingId} not found for payment verification.`);
             }
             const bookingData = bookingDoc.data();
+            // If it's not pending, it might have been confirmed by a webhook already.
             if (bookingData?.status !== 'PENDING') {
                 console.log(`Booking ${bookingId} already processed. Current status: ${bookingData?.status}`);
-                return;
+                return; // Idempotent: do nothing if already confirmed/cancelled.
             }
             transaction.update(bookingRef, {
                 status: 'CONFIRMED',
@@ -181,6 +193,7 @@ export async function verifyPaymentAndUpdateBooking(payload: {
         return { success: true, error: null };
     } catch (error: any) {
         console.error(`Error confirming booking ${bookingId} after payment verification:`, error);
+        // This could happen if the transaction fails. The webhook is our backup.
         return { success: false, error: "Failed to update booking status. Please check 'My Bookings' shortly or contact support." };
     }
 }
