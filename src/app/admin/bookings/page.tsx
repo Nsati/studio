@@ -1,12 +1,11 @@
 'use client';
 import { useMemo, useState, useEffect } from 'react';
-import { useFirestore, useUser, type WithId } from '@/firebase';
-import { doc, runTransaction } from 'firebase/firestore';
-import type { Booking, Room } from '@/lib/types';
+import { useUser, type WithId } from '@/firebase';
+import type { Booking } from '@/lib/types';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { normalizeTimestamp } from '@/lib/firestore-utils';
-import { getAdminAllBookings, type SerializableBooking } from './actions';
+import { getAdminAllBookings, adminCancelBooking, type SerializableBooking } from './actions';
 
 import {
   Table,
@@ -50,67 +49,27 @@ function BookingRowSkeleton() {
 }
 
 function CancelBookingAction({ booking, onBookingCancelled }: { booking: WithId<SerializableBooking>, onBookingCancelled: () => void }) {
-    const firestore = useFirestore();
     const { toast } = useToast();
     const [isCancelling, setIsCancelling] = useState(false);
 
-    // This action still runs on the client, but it's a targeted write operation on a single
-    // booking, which is allowed by security rules for admins, so it's less prone to race conditions.
     const handleCancel = async () => {
-        if (!firestore || !booking.id) return;
-
         setIsCancelling(true);
-        const bookingRef = doc(firestore, 'users', booking.userId, 'bookings', booking.id);
+        const result = await adminCancelBooking(booking.userId, booking.id);
 
-        try {
-            await runTransaction(firestore, async (transaction) => {
-                const bookingDoc = await transaction.get(bookingRef);
-                if (!bookingDoc.exists()) {
-                    throw new Error("Booking does not exist.");
-                }
-                
-                const bookingData = bookingDoc.data() as Booking;
-
-                if (bookingData.status === 'CANCELLED') {
-                    toast({
-                        variant: "destructive",
-                        title: "Already Cancelled",
-                        description: "This booking has already been cancelled.",
-                    });
-                    return;
-                }
-                
-                if (bookingData.status === 'CONFIRMED') {
-                    const roomRef = doc(firestore, 'hotels', booking.hotelId, 'rooms', booking.roomId);
-                    const roomDoc = await transaction.get(roomRef);
-                    if (roomDoc.exists()) {
-                        const roomData = roomDoc.data() as Room;
-                        const newAvailableRooms = (roomData.availableRooms ?? 0) + 1;
-                         if (newAvailableRooms <= roomData.totalRooms) {
-                            transaction.update(roomRef, { availableRooms: newAvailableRooms });
-                        }
-                    }
-                }
-                
-                transaction.update(bookingRef, { status: 'CANCELLED' });
-            });
-
+        if (result.success) {
             toast({
                 title: 'Booking Cancelled',
                 description: `Booking ID ${booking.id} has been successfully cancelled.`,
             });
             onBookingCancelled();
-
-        } catch (error: any) {
-            console.error("Cancellation failed:", error);
-            toast({
+        } else {
+             toast({
                 variant: "destructive",
                 title: "Cancellation Failed",
-                description: error.message || "Could not cancel the booking. Please check Firestore rules and transaction logic.",
+                description: result.message,
             });
-        } finally {
-            setIsCancelling(false);
         }
+        setIsCancelling(false);
     };
 
     const isCancelled = booking.status === 'CANCELLED';
