@@ -3,7 +3,7 @@
 
 import { notFound, useParams } from 'next/navigation';
 import Image from 'next/image';
-import { Star, MapPin, BedDouble, Handshake, CheckCircle } from 'lucide-react';
+import { Star, MapPin, BedDouble, Handshake } from 'lucide-react';
 import React from 'react';
 
 import { PlaceHolderImages } from '@/lib/placeholder-images';
