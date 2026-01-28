@@ -1,9 +1,8 @@
+'use server';
 /**
  * @fileOverview The AI flow for the Devbhoomi Vibe Match™ feature.
  *
  * - getVibeSuggestion - A function that calls the AI to get a travel suggestion.
- * - VibeMatchInput - The input type for the user's preferences.
- * - VibeMatchOutput - The structured travel recommendation returned by the AI.
  */
 
 import { ai } from '@/ai/genkit';
@@ -12,8 +11,6 @@ import {
     VibeMatchOutputSchema
 } from '@/app/vibe-match/schema';
 import type { VibeMatchInput, VibeMatchOutput } from '@/app/vibe-match/schema';
-
-export type { VibeMatchInput, VibeMatchOutput };
 
 // The AI Prompt that defines the "Devbhoomi Dost" persona
 const suggestionPrompt = ai.definePrompt({
@@ -62,5 +59,13 @@ const vibeMatchFlow = ai.defineFlow(
  * @returns A structured travel recommendation.
  */
 export async function getVibeSuggestion(input: VibeMatchInput): Promise<VibeMatchOutput> {
+  return vibeMatchFlow(input);
+}
+);
+      }
+      return output;
+    }
+  );
+  
   return vibeMatchFlow(input);
 }
