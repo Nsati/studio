@@ -1,11 +1,12 @@
+
 'use client';
 
 import Image from 'next/image';
 import Link from 'next/link';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { dummyCities, dummyTourPackages } from '@/lib/dummy-data';
+import { Card, CardHeader } from '@/components/ui/card';
+import { dummyCities } from '@/lib/dummy-data';
 import { ArrowRight } from 'lucide-react';
 import { HotelCard } from '@/components/hotel/HotelCard';
 
@@ -13,15 +14,15 @@ import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, limit, query } from 'firebase/firestore';
 import type { Hotel } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
-import { SearchFilters } from './search/SearchFilters';
+import { SearchFilters } from '@/app/search/SearchFilters';
 
 
 function FeaturedHotelsSkeleton() {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {Array.from({ length: 3 }).map((_, i) => (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      {Array.from({ length: 4 }).map((_, i) => (
         <Card key={i}>
-          <Skeleton className="aspect-video w-full" />
+          <Skeleton className="aspect-[4/3] w-full" />
           <CardHeader>
             <Skeleton className="h-6 w-3/4" />
             <Skeleton className="h-4 w-1/2 mt-2" />
@@ -41,15 +42,15 @@ export default function HomePage() {
   const firestore = useFirestore();
   const featuredHotelsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-    return query(collection(firestore, 'hotels'), limit(3));
+    return query(collection(firestore, 'hotels'), limit(4));
   }, [firestore]);
 
   const { data: featuredHotels, isLoading: areHotelsLoading } = useCollection<Hotel>(featuredHotelsQuery);
 
   return (
-    <div>
+    <div className="pb-16 md:pb-0">
       {/* Hero Section */}
-      <section className="relative h-[60vh] min-h-[450px] w-full flex items-center justify-center text-center text-white">
+      <section className="relative h-[60vh] min-h-[500px] w-full flex items-center justify-center text-center text-white">
         {heroImage && (
           <Image
             src={heroImage.imageUrl}
@@ -63,20 +64,20 @@ export default function HomePage() {
         )}
         <div className="absolute inset-0 bg-black/50" />
         <div className="relative z-10 p-4 flex flex-col items-center w-full max-w-4xl mx-auto">
-          <h1 className="text-4xl font-bold md:text-5xl lg:text-6xl font-heading" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.7)' }}>
+          <h1 className="text-4xl font-bold md:text-5xl lg:text-6xl" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.7)' }}>
             Your Himalayan Escape
           </h1>
           <p className="mt-4 max-w-2xl mx-auto text-lg md:text-xl" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.7)' }}>
             Discover serene hotels and breathtaking views in the heart of Uttarakhand.
           </p>
-          <div className="mt-8 w-full">
+          <div className="mt-8 w-full bg-background/20 backdrop-blur-sm p-3 rounded-lg">
             <SearchFilters />
           </div>
         </div>
       </section>
 
       {/* Featured Cities Section */}
-      <section id="cities" className="py-16 bg-muted">
+      <section id="cities" className="py-16 bg-muted/50">
         <div className="container mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold">Explore by City</h2>
@@ -102,7 +103,7 @@ export default function HomePage() {
                     />
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                  <h3 className="absolute bottom-3 left-3 text-lg font-bold text-white font-heading">
+                  <h3 className="absolute bottom-3 left-3 text-lg font-bold text-white">
                     {city.name}
                   </h3>
                 </Link>
@@ -127,7 +128,7 @@ export default function HomePage() {
           {areHotelsLoading ? (
             <FeaturedHotelsSkeleton />
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {featuredHotels?.map((hotel) => (
                 <HotelCard key={hotel.id} hotel={hotel} />
               ))}
@@ -137,7 +138,7 @@ export default function HomePage() {
       </section>
 
        {/* Tour Packages Section */}
-       <section className="py-16 bg-muted">
+       <section className="py-16 bg-muted/50">
         <div className="container mx-auto">
           <div className="flex justify-between items-center mb-12">
              <div>
@@ -148,18 +149,18 @@ export default function HomePage() {
                 <Link href="/tour-packages">View All <ArrowRight className="ml-2 h-4 w-4" /></Link>
               </Button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {dummyTourPackages.slice(0, 3).map((pkg) => {
               const pkgImage = PlaceHolderImages.find(img => img.id === pkg.image);
               return (
                 <Link key={pkg.id} href="/tour-packages" className="group block">
                   <Card className="h-full overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-                    <CardContent className="p-0 relative w-full aspect-video">
+                    <div className="p-0 relative w-full aspect-[16/9]">
                       {pkgImage && <Image src={pkgImage.imageUrl} alt={pkg.title} fill className="object-cover" />}
-                    </CardContent>
+                    </div>
                     <CardHeader>
-                      <CardTitle className="text-xl leading-tight group-hover:text-primary">{pkg.title}</CardTitle>
-                      <CardDescription>{pkg.duration}</CardDescription>
+                      <h3 className="text-xl font-semibold leading-tight group-hover:text-primary">{pkg.title}</h3>
+                      <p className="text-muted-foreground !mt-1">{pkg.duration}</p>
                     </CardHeader>
                   </Card>
                 </Link>

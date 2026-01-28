@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -15,6 +16,8 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import { AmenityIcon } from './AmenityIcon';
 
 interface HotelCardProps {
   hotel: Hotel & { id: string };
@@ -38,7 +41,7 @@ export function HotelCard({ hotel }: HotelCardProps) {
   return (
     <Link href={`/hotels/${hotel.id}`} className="group block">
       <Card className="h-full overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-        <CardContent className="p-0 relative w-full aspect-video">
+        <CardContent className="p-0 relative w-full aspect-[4/3]">
             {imageUrl ? (
               <Image
                 src={imageUrl}
@@ -59,8 +62,8 @@ export function HotelCard({ hotel }: HotelCardProps) {
                 </Badge>
             )}
         </CardContent>
-        <CardHeader className="p-3">
-          <CardTitle className="text-lg leading-tight group-hover:text-primary">
+        <CardHeader className="p-4">
+          <CardTitle className="text-xl leading-tight group-hover:text-primary">
             {hotel.name}
           </CardTitle>
           <CardDescription className="flex items-center gap-1.5 pt-1">
@@ -68,7 +71,7 @@ export function HotelCard({ hotel }: HotelCardProps) {
             {hotel.city}
           </CardDescription>
         </CardHeader>
-        <CardFooter className="flex justify-between items-end p-3 pt-0">
+        <CardFooter className="flex justify-between items-end p-4 pt-0">
           {hotel.minPrice && hotel.minPrice > 0 ? (
             <div>
               <span className="text-xs text-muted-foreground">Starts from</span>
@@ -89,10 +92,24 @@ export function HotelCard({ hotel }: HotelCardProps) {
                  <p className="text-sm font-semibold text-muted-foreground">Not available</p>
             </div>
           )}
-          <Badge variant="outline" className="font-semibold text-base">
-            <Star className="h-4 w-4 fill-amber-400 text-amber-400 mr-1.5" />
-            <span>{hotel.rating}</span>
-          </Badge>
+          <div className="flex items-center gap-3">
+              {hotel.amenities?.slice(0, 2).map((amenity) => (
+                <TooltipProvider key={amenity}>
+                    <Tooltip>
+                        <TooltipTrigger>
+                            <AmenityIcon amenity={amenity} className="h-5 w-5 text-muted-foreground" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p className="capitalize">{amenity.replace('-', ' ')}</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+            ))}
+            <Badge variant="outline" className="font-semibold">
+              <Star className="h-4 w-4 fill-amber-400 text-amber-400 mr-1.5" />
+              <span>{hotel.rating}</span>
+            </Badge>
+          </div>
         </CardFooter>
       </Card>
     </Link>
