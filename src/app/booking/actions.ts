@@ -47,7 +47,6 @@ export async function initiateBookingAndCreateOrder(
       transaction.update(roomRef, { availableRooms: FieldValue.increment(-1) });
 
       // Create PENDING booking by explicitly mapping fields.
-      // This is safer than spreading `bookingData` which might contain `undefined` or unexpected fields.
       const newBooking = {
         userId: bookingData.userId,
         hotelId: bookingData.hotelId,
@@ -89,7 +88,6 @@ export async function initiateBookingAndCreateOrder(
 
   } catch (error: any) {
     console.error('SERVER ACTION ERROR: Failed to initiate booking:', error);
-    // No need to revert transaction here, as it automatically rolls back on error.
     return { success: false, error: error.message, order: null, keyId: null, bookingId: null };
   }
 }
@@ -109,23 +107,19 @@ export async function cancelInitiatedBooking(userId: string, bookingId: string) 
     try {
         await adminDb.runTransaction(async (transaction) => {
             const bookingDoc = await transaction.get(bookingRef);
-            if (!bookingDoc.exists) return; // Already processed or never existed
+            if (!bookingDoc.exists) return; 
 
             const bookingData = bookingDoc.data() as Booking;
-            // Only revert PENDING bookings. Don't touch confirmed ones.
             if (bookingData.status !== 'PENDING') return;
 
             const roomRef = adminDb.doc(`hotels/${bookingData.hotelId}/rooms/${bookingData.roomId}`);
             
-            // Increment inventory
             transaction.update(roomRef, { availableRooms: FieldValue.increment(1) });
-            // Delete the pending booking
             transaction.delete(bookingRef);
         });
         return { success: true, message: "Booking process cancelled." };
     } catch(error: any) {
         console.error(`Failed to revert booking ${bookingId}:`, error);
-        // This is a best-effort cleanup. If it fails, a cron job would be the next-level solution.
         return { success: false, message: "Failed to clean up pending booking." };
     }
 }
@@ -155,7 +149,6 @@ export async function verifyPaymentAndUpdateBooking(payload: {
 
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, userId, bookingId } = payload;
     
-    // Step 1: Verify the signature from Razorpay
     const body = razorpay_order_id + "|" + razorpay_payment_id;
     const expectedSignature = crypto
         .createHmac("sha256", keySecret)
@@ -167,17 +160,14 @@ export async function verifyPaymentAndUpdateBooking(payload: {
         return { success: false, error: "Invalid payment signature. Confirmation failed." };
     }
 
-    // Step 2: Signature is valid, update the booking in a transaction to ensure atomicity
     const bookingRef = adminDb.doc(`users/${userId}/bookings/${bookingId}`);
     try {
         await adminDb.runTransaction(async (transaction) => {
             const bookingDoc = await transaction.get(bookingRef);
             if (!bookingDoc.exists) {
-                // This is a critical error, implies something went wrong in the initiation step.
                 throw new Error(`Booking ${bookingId} not found for payment verification.`);
             }
             const bookingData = bookingDoc.data();
-            // This check makes the operation idempotent. If webhook runs first, this will do nothing.
             if (bookingData?.status !== 'PENDING') {
                 console.log(`Booking ${bookingId} already processed. Current status: ${bookingData?.status}`);
                 return;
@@ -191,8 +181,6 @@ export async function verifyPaymentAndUpdateBooking(payload: {
         return { success: true, error: null };
     } catch (error: any) {
         console.error(`Error confirming booking ${bookingId} after payment verification:`, error);
-        // If this fails, the webhook is our backup. We don't return an error to the user that causes panic.
-        // The success page will reflect the PENDING status and the webhook will hopefully resolve it.
         return { success: false, error: "Failed to update booking status. Please check 'My Bookings' shortly or contact support." };
     }
 }

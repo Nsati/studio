@@ -218,7 +218,7 @@ export function BookingForm() {
                 description: `Booking for ${hotel.name}`,
                 order_id: order.id,
                 handler: async (paymentResponse: any) => {
-                    setIsBooking(true); // Keep spinner active during verification
+                    setIsBooking(true); 
                     toast({ title: "Payment Received!", description: "Verifying and confirming your booking..." });
                     
                     const verificationResult = await verifyPaymentAndUpdateBooking({
@@ -235,24 +235,21 @@ export function BookingForm() {
                             description: "Redirecting to your confirmation...",
                         });
                     } else {
-                        // This toast informs the user but doesn't cause panic. The webhook will act as a fallback.
                         toast({
                             title: "Payment Verification In Progress",
                             description: verificationResult.error || "We've received your payment. Your booking will be confirmed shortly in 'My Bookings'.",
-                            variant: "default", // Not 'destructive' to avoid user panic
+                            variant: "default",
                             duration: 8000,
                         });
                     }
-                    // Always redirect to the success page, which will show the latest status.
                     router.push(`/booking/success/${bookingId}`);
                 },
                 prefill: { name: customerDetails.name, email: customerDetails.email },
-                theme: { color: "#125C41" }, // Updated to match Forest Green theme
+                theme: { color: "#388E3C" }, 
                 modal: {
                     ondismiss: async () => {
                         setIsBooking(false);
                         toast({ variant: 'destructive', title: 'Payment Cancelled', description: 'Releasing the room back to inventory...' });
-                        // Call the cleanup action
                         if(userIdForBooking) {
                             await cancelInitiatedBooking(userIdForBooking, bookingId);
                         }

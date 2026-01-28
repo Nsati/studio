@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Playfair_Display, PT_Sans } from 'next/font/google';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import Header from '@/components/shared/Header';
@@ -7,21 +7,21 @@ import Footer from '@/components/shared/Footer';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 
-const fontSans = Inter({
+const fontSans = PT_Sans({
   subsets: ['latin'],
+  weight: ['400', '700'],
   variable: '--font-sans',
 });
 
-const fontHeading = Inter({
+const fontHeading = Playfair_Display({
   subsets: ['latin'],
-  weight: ['400', '700'],
   variable: '--font-heading',
 });
 
 
 export const metadata: Metadata = {
-  title: 'Himalayan Retreats',
-  description: 'Book your dream getaway in the mountains.',
+  title: 'Uttarakhand Getaways',
+  description: 'Book your dream getaway in the mountains of Uttarakhand.',
 };
 
 export default function RootLayout({

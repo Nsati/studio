@@ -19,7 +19,7 @@ module.exports = {
     extend: {
       fontFamily: {
         sans: ['var(--font-sans)', ...fontFamily.sans],
-        heading: ['var(--font-heading)', ...fontFamily.sans],
+        heading: ['var(--font-heading)', ...fontFamily.serif],
       },
       colors: {
         background: 'hsl(var(--background))',
