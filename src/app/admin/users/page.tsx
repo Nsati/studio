@@ -12,82 +12,24 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useToast } from '@/hooks/use-toast';
-import { updateUserRole } from './actions';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 function UserRowSkeleton() {
     return (
         <TableRow>
-            <TableCell><Skeleton className="h-4 w-48" /></TableCell>
             <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+            <TableCell><Skeleton className="h-4 w-48" /></TableCell>
             <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-            <TableCell className="text-right"><Skeleton className="h-10 w-28" /></TableCell>
+            <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+            <TableCell className="text-right"><Skeleton className="h-9 w-20" /></TableCell>
         </TableRow>
     )
 }
-
-function RoleSelector({ user }: { user: WithId<UserProfile> }) {
-    const { user: currentUser } = useUser();
-    const { toast } = useToast();
-    const [isUpdating, setIsUpdating] = useState(false);
-    
-    const handleRoleChange = async (newRole: 'user' | 'admin') => {
-        if (!currentUser) return;
-        // Prevent users from changing their own role to avoid self-lockout
-        if (user.uid === currentUser.uid) {
-            toast({
-                variant: 'destructive',
-                title: 'Action Forbidden',
-                description: 'You cannot change your own role.',
-            });
-            return;
-        }
-
-        setIsUpdating(true);
-        
-        const result = await updateUserRole(user.uid, newRole);
-
-        if (result.success) {
-            toast({
-                title: 'Role Updated',
-                description: `${user.displayName || user.email}'s role has been changed to ${newRole}.`
-            });
-        } else {
-             toast({
-                variant: 'destructive',
-                title: 'Update Failed',
-                description: result.message,
-            });
-        }
-        setIsUpdating(false);
-    };
-
-    return (
-         <Select 
-            defaultValue={user.role} 
-            onValueChange={(value: 'user' | 'admin') => handleRoleChange(value)}
-            disabled={isUpdating}
-        >
-            <SelectTrigger className="w-[120px]">
-                <SelectValue placeholder="Select role" />
-            </SelectTrigger>
-            <SelectContent>
-                <SelectItem value="user">User</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
-            </SelectContent>
-        </Select>
-    )
-}
-
 
 export default function UsersPage() {
     const firestore = useFirestore();
@@ -109,7 +51,7 @@ export default function UsersPage() {
     <div className="space-y-6">
       <div>
         <h1 className="font-headline text-3xl font-bold">User & Role Management</h1>
-        <p className="text-muted-foreground">View users and manage their access roles.</p>
+        <p className="text-muted-foreground">View users and manage their access roles and details.</p>
       </div>
       <Card>
         <CardHeader>
@@ -124,8 +66,9 @@ export default function UsersPage() {
                     <TableRow>
                         <TableHead>Display Name</TableHead>
                         <TableHead>Email</TableHead>
-                        <TableHead>User ID</TableHead>
-                        <TableHead className="text-right">Role</TableHead>
+                        <TableHead>Role</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -140,9 +83,16 @@ export default function UsersPage() {
                         <TableRow key={user.uid}>
                             <TableCell className="font-medium">{user.displayName || '(No Name)'}</TableCell>
                             <TableCell className="text-muted-foreground">{user.email}</TableCell>
-                            <TableCell className="font-mono text-xs">{user.uid}</TableCell>
+                            <TableCell>
+                                <Badge variant={user.role === 'admin' ? 'default' : 'secondary'} className="capitalize">{user.role}</Badge>
+                            </TableCell>
+                            <TableCell>
+                                <Badge variant={user.status === 'active' ? 'outline' : 'destructive'} className={cn("capitalize", user.status === 'active' && 'border-green-600 text-green-600')}>{user.status}</Badge>
+                            </TableCell>
                             <TableCell className="text-right">
-                                <RoleSelector user={user} />
+                               <Button asChild variant="outline" size="sm">
+                                    <Link href={`/admin/users/${user.uid}/edit`}>Edit</Link>
+                               </Button>
                             </TableCell>
                         </TableRow>
                     ))}

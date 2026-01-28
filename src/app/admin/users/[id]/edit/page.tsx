@@ -45,7 +45,7 @@ function EditUserPageSkeleton() {
       <div className="space-y-6">
           <Skeleton className="h-9 w-1/3 mb-2" />
           <Skeleton className="h-5 w-1/2 mb-8" />
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-2">
             <StatCard title="Total Revenue" isLoading={true} icon={IndianRupee} />
             <StatCard title="Total Bookings" isLoading={true} icon={BookOpen} />
           </div>
@@ -133,7 +133,7 @@ export default function EditUserPage() {
         return <EditUserPageSkeleton />;
     }
 
-    if (error) {
+    if (error || !user) {
         return notFound();
     }
 
@@ -141,19 +141,19 @@ export default function EditUserPage() {
         <div className="space-y-6">
             <div>
                 <h1 className="font-headline text-3xl font-bold">Manage User</h1>
-                <p className="text-muted-foreground">Editing profile for &quot;{user?.displayName}&quot;.</p>
+                <p className="text-muted-foreground">Editing profile for &quot;{user.displayName}&quot; ({user.email}).</p>
             </div>
             
             <div className="grid gap-4 md:grid-cols-2">
                 <StatCard 
                     title="Lifetime Revenue" 
-                    value={(user?.totalRevenue ?? 0).toLocaleString('en-IN', { style: 'currency', currency: 'INR' })} 
+                    value={(user.totalRevenue).toLocaleString('en-IN', { style: 'currency', currency: 'INR' })} 
                     icon={IndianRupee} 
                     isLoading={isLoading} 
                 />
                 <StatCard 
-                    title="Total Bookings" 
-                    value={user?.totalBookings ?? 0}
+                    title="Total Confirmed Bookings" 
+                    value={user.totalBookings}
                     icon={BookOpen} 
                     isLoading={isLoading} 
                 />
@@ -162,7 +162,7 @@ export default function EditUserPage() {
             <Card>
                 <CardHeader>
                     <CardTitle>Edit User Details</CardTitle>
-                    <CardDescription>Changes made here will be permanent.</CardDescription>
+                    <CardDescription>Changes made here will be permanent and will reflect across the app.</CardDescription>
                 </CardHeader>
                 <CardContent className="pt-6">
                     <Form {...form}>
