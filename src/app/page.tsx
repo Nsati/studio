@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader } from '@/components/ui/card';
-import { dummyCities } from '@/lib/dummy-data';
+import { dummyCities, dummyTourPackages } from '@/lib/dummy-data';
 import { ArrowRight } from 'lucide-react';
 import { HotelCard } from '@/components/hotel/HotelCard';
 
