@@ -9,13 +9,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { getVibeMatchSuggestionAction } from "./actions";
-import { VibeMatchInputSchema, type VibeMatchOutput } from "@/ai/flows/vibe-match-flow";
+import { type VibeMatchOutput } from "@/ai/flows/vibe-match-flow";
 import { Loader2, Sparkles, Wand2, ThumbsUp, MapPin, Hotel, Calendar, Shield, Mountain } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 
 
-const formSchema = VibeMatchInputSchema;
+const formSchema = z.object({
+    travelVibe: z.enum(['peace', 'adventure']),
+    travelerType: z.enum(['solo', 'couple', 'family']),
+    atmosphere: z.enum(['spiritual', 'away_from_crowd']),
+});
 
 function ResultSkeleton() {
     return (
