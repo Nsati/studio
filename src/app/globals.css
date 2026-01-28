@@ -5,22 +5,22 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 20 5% 30%;
+    --foreground: 222.2 47.4% 11.2%; /* Stronger text color */
 
     --card: 0 0% 100%;
-    --card-foreground: 20 5% 30%;
+    --card-foreground: 222.2 47.4% 11.2%; /* Stronger text color */
 
     --popover: 0 0% 100%;
-    --popover-foreground: 20 5% 30%;
+    --popover-foreground: 222.2 47.4% 11.2%; /* Stronger text color */
 
     --primary: 151 41% 29%; /* Forest Green */
     --primary-foreground: 0 0% 100%;
 
     --secondary: 210 20% 90%;
-    --secondary-foreground: 20 5% 30%;
+    --secondary-foreground: 222.2 47.4% 11.2%; /* Stronger text color */
 
     --muted: 210 20% 96%; /* Softer Grey */
-    --muted-foreground: 210 10% 45%;
+    --muted-foreground: 215.4 16.3% 46.9%; /* Stronger muted text color */
 
     --accent: 205 90% 58%; /* Sky Blue */
     --accent-foreground: 0 0% 100%;
