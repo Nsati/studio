@@ -9,17 +9,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { getVibeMatchSuggestionAction } from "./actions";
-import { type VibeMatchOutput } from "@/ai/flows/vibe-match-flow";
 import { Loader2, Sparkles, Wand2, ThumbsUp, MapPin, Hotel, Calendar, Shield, Mountain } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { VibeMatchInputSchema, type VibeMatchOutput } from "./schema";
 
-
-const formSchema = z.object({
-    travelVibe: z.enum(['peace', 'adventure']),
-    travelerType: z.enum(['solo', 'couple', 'family']),
-    atmosphere: z.enum(['spiritual', 'away_from_crowd']),
-});
 
 function ResultSkeleton() {
     return (
@@ -116,8 +110,8 @@ export default function VibeMatchPage() {
     const [result, setResult] = useState<VibeMatchOutput | null>(null);
     const [error, setError] = useState<string | null>(null);
 
-    const form = useForm<z.infer<typeof formSchema>>({
-        resolver: zodResolver(formSchema),
+    const form = useForm<z.infer<typeof VibeMatchInputSchema>>({
+        resolver: zodResolver(VibeMatchInputSchema),
         defaultValues: {
             travelVibe: "peace",
             travelerType: "couple",
@@ -125,7 +119,7 @@ export default function VibeMatchPage() {
         },
     });
 
-    const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    const onSubmit = async (values: z.infer<typeof VibeMatchInputSchema>) => {
         setIsLoading(true);
         setResult(null);
         setError(null);
@@ -164,7 +158,7 @@ export default function VibeMatchPage() {
                                 <CardContent>
                                     <Controller
                                         control={form.control}
-                                        name={q.name as keyof z.infer<typeof formSchema>}
+                                        name={q.name as keyof z.infer<typeof VibeMatchInputSchema>}
                                         render={({ field }) => (
                                             <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="space-y-2">
                                                 {q.options.map(opt => (
