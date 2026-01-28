@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    --background: 48 33% 94%; /* Light beige */
+    --background: 0 0% 100%;
     --foreground: 20 5% 30%;
 
     --card: 0 0% 100%;
@@ -22,7 +22,7 @@
     --muted: 210 20% 90%;
     --muted-foreground: 210 10% 45%;
 
-    --accent: 27 82% 53%; /* Earthy Orange */
+    --accent: 205 90% 58%; /* Sky Blue */
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
@@ -30,7 +30,7 @@
 
     --border: 210 15% 88%;
     --input: 210 15% 88%;
-    --ring: 27 82% 53%; /* Earthy Orange for ring */
+    --ring: 205 90% 58%; /* Sky Blue for ring */
 
     --radius: 0.5rem;
   }
@@ -54,15 +54,15 @@
     --muted: 210 10% 25%;
     --muted-foreground: 210 10% 65%;
 
-    --accent: 27 82% 63%;
-    --accent-foreground: 27 82% 15%;
+    --accent: 205 90% 68%;
+    --accent-foreground: 205 90% 15%;
 
     --destructive: 0 62.8% 50.6%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 210 10% 25%;
     --input: 210 10% 25%;
-    --ring: 27 82% 63%;
+    --ring: 205 90% 68%;
   }
 }
 
