@@ -4,6 +4,8 @@ import { useMemo, useState } from 'react';
 import { useFirestore, useCollection, useUser, useMemoFirebase, type WithId } from '@/firebase';
 import { collection, doc, updateDoc } from 'firebase/firestore';
 import type { UserProfile } from '@/lib/types';
+import Link from 'next/link';
+
 import {
   Table,
   TableBody,
@@ -12,81 +14,22 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { Edit } from 'lucide-react';
+
 
 function UserRowSkeleton() {
     return (
         <TableRow>
-            <TableCell><Skeleton className="h-4 w-48" /></TableCell>
             <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+            <TableCell><Skeleton className="h-4 w-48" /></TableCell>
             <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-            <TableCell className="text-right"><Skeleton className="h-10 w-28" /></TableCell>
+            <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+            <TableCell className="text-right"><Skeleton className="h-9 w-20" /></TableCell>
         </TableRow>
-    )
-}
-
-function RoleSelector({ user }: { user: WithId<UserProfile> }) {
-    const { user: currentUser } = useUser();
-    const firestore = useFirestore();
-    const { toast } = useToast();
-    const [isUpdating, setIsUpdating] = useState(false);
-    
-    const handleRoleChange = async (newRole: 'user' | 'admin') => {
-        if (!firestore || !currentUser) return;
-        // Prevent users from changing their own role to avoid self-lockout
-        if (user.uid === currentUser.uid) {
-            toast({
-                variant: 'destructive',
-                title: 'Action Forbidden',
-                description: 'You cannot change your own role.',
-            });
-            return;
-        }
-
-        setIsUpdating(true);
-        const userRef = doc(firestore, 'users', user.uid);
-        
-        try {
-            await updateDoc(userRef, { role: newRole });
-            toast({
-                title: 'Role Updated',
-                description: `${user.displayName || user.email}'s role has been changed to ${newRole}.`
-            });
-        } catch(error: any) {
-             console.error("Error updating role:", error);
-             toast({
-                variant: 'destructive',
-                title: 'Update Failed',
-                description: error.message || 'Could not update role. Check Firestore rules.',
-            });
-        } finally {
-            setIsUpdating(false);
-        }
-    };
-
-    return (
-         <Select 
-            defaultValue={user.role} 
-            onValueChange={(value: 'user' | 'admin') => handleRoleChange(value)}
-            disabled={isUpdating}
-        >
-            <SelectTrigger className="w-[120px]">
-                <SelectValue placeholder="Select role" />
-            </SelectTrigger>
-            <SelectContent>
-                <SelectItem value="user">User</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
-            </SelectContent>
-        </Select>
     )
 }
 
@@ -104,14 +47,15 @@ export default function UsersPage() {
 
     const users = useMemo(() => {
         if (!usersData) return null;
-        return [...usersData].sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''));
+        // Sort users by display name, handling cases where it might be missing
+        return [...usersData].sort((a, b) => (a.displayName || a.email).localeCompare(b.displayName || b.email));
     }, [usersData]);
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="font-headline text-3xl font-bold">User & Role Management</h1>
-        <p className="text-muted-foreground">View users and manage their access roles.</p>
+        <p className="text-muted-foreground">View users and manage their access roles and details.</p>
       </div>
       <Card>
         <CardHeader>
@@ -126,8 +70,9 @@ export default function UsersPage() {
                     <TableRow>
                         <TableHead>Display Name</TableHead>
                         <TableHead>Email</TableHead>
-                        <TableHead>User ID</TableHead>
-                        <TableHead className="text-right">Role</TableHead>
+                        <TableHead>Role</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -142,9 +87,18 @@ export default function UsersPage() {
                         <TableRow key={user.uid}>
                             <TableCell className="font-medium">{user.displayName || '(No Name)'}</TableCell>
                             <TableCell className="text-muted-foreground">{user.email}</TableCell>
-                            <TableCell className="font-mono text-xs">{user.uid}</TableCell>
+                            <TableCell>
+                                <Badge variant={user.role === 'admin' ? 'default' : 'secondary'} className="capitalize">{user.role}</Badge>
+                            </TableCell>
+                             <TableCell>
+                                <Badge variant={user.status === 'active' ? 'secondary' : 'destructive'} className="capitalize">{user.status}</Badge>
+                            </TableCell>
                             <TableCell className="text-right">
-                                <RoleSelector user={user} />
+                                <Button variant="outline" size="sm" asChild>
+                                    <Link href={`/admin/users/${user.uid}/edit`}>
+                                        <Edit className="mr-2 h-3 w-3"/> Edit
+                                    </Link>
+                                </Button>
                             </TableCell>
                         </TableRow>
                     ))}
