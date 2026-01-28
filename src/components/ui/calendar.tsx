@@ -29,7 +29,7 @@ function Calendar({
           buttonVariants({ variant: "outline" }),
           "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
         ),
-        table: "w-full border-collapse",
+        table: "w-full border-collapse space-y-1",
         head_row: "flex w-full",
         head_cell:
           "text-muted-foreground rounded-md w-9 h-9 font-normal text-[0.8rem] grid place-items-center",
@@ -53,10 +53,6 @@ function Calendar({
       }}
       formatters={{
         formatWeekdayName: (day) => day.toLocaleDateString('en-US', { weekday: 'narrow' })
-      }}
-      components={{
-        IconLeft: ChevronLeft,
-        IconRight: ChevronRight,
       }}
       {...props}
     />

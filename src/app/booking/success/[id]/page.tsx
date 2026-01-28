@@ -14,7 +14,6 @@ import {
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
 import { BookingSuccessSkeleton } from './BookingSuccessSkeleton';
 
 
@@ -162,42 +161,28 @@ export default function BookingSuccessPage() {
     const firestore = useFirestore();
     const { user } = useUser();
     const bookingId = params.id as string;
-    
-    const [optimisticBooking, setOptimisticBooking] = useState<any | null>(null);
-
-    useEffect(() => {
-        const storedBookingData = sessionStorage.getItem('optimisticBooking');
-        if (storedBookingData) {
-            const parsedBooking = JSON.parse(storedBookingData);
-            if (parsedBooking.id === bookingId) {
-                setOptimisticBooking(parsedBooking);
-            }
-            sessionStorage.removeItem('optimisticBooking');
-        }
-    }, [bookingId]);
 
     const bookingRef = useMemoFirebase(() => {
         if (!firestore || !user?.uid || !bookingId) return null;
         return doc(firestore, 'users', user.uid, 'bookings', bookingId);
     }, [firestore, user?.uid, bookingId]);
     
-    const { data: confirmedBooking, error: bookingError, isLoading: isBookingLoading } = useDoc<Booking>(bookingRef);
+    const { data: booking, error: bookingError, isLoading: isBookingLoading } = useDoc<Booking>(bookingRef);
 
-    const displayBooking = confirmedBooking || optimisticBooking;
-
-    const isConfirmed = confirmedBooking?.status === 'CONFIRMED';
+    const isConfirmed = booking?.status === 'CONFIRMED';
     
     if (bookingError) {
         return <ErrorState bookingId={bookingId} />;
     }
     
-    if (isBookingLoading && !displayBooking) {
+    if (isBookingLoading && !booking) {
         return <BookingSuccessSkeleton />
     }
 
-    if (displayBooking) {
-        return <SuccessContent booking={displayBooking} isFinalized={isConfirmed} />;
+    if (booking) {
+        return <SuccessContent booking={booking} isFinalized={isConfirmed} />;
     }
     
+    // This state is reached if the booking is not found after loading.
     return <ProcessingState />;
 }
