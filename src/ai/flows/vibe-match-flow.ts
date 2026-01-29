@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview The AI flow for the Devbhoomi Vibe Match™ feature.
@@ -28,12 +27,11 @@ type VibeMatchResult = {
 const suggestionPrompt = ai.definePrompt({
   name: 'vibeMatchPrompt',
   input: { schema: VibeMatchInputSchema },
-  // NOTE: The output schema is intentionally removed here. We will perform
-  // manual parsing in the flow to make it more robust against minor
-  // formatting errors from the LLM.
+  // By providing the output schema, we instruct the model to return a valid JSON object.
+  output: { schema: VibeMatchOutputSchema },
   prompt: `You are "Devbhoomi Dost," a friendly local travel guide from Uttarakhand. Your tone is warm, friendly, and like a local dost (friend).
 
-A traveler has given you their preferences. Your task is to act as their trusted guide and suggest the perfect Uttarakhand trip.
+A traveler has given you their preferences. Your task is to act as their trusted guide and suggest the perfect Uttarakhand trip based on their vibe.
 
 ## Traveler's Vibe
 - **Mood:** {{{travelVibe}}}
@@ -44,29 +42,13 @@ A traveler has given you their preferences. Your task is to act as their trusted
 1.  **Analyze the Vibe:** Based on the traveler's mood, pick ONE perfect primary destination.
     -   If the mood is 'peace', think of serene, offbeat places like Mukteshwar, Kanatal, or Chopta.
     -   If the mood is 'adventure', think of action-packed places like Rishikesh (rafting) or Auli (skiing).
-2.  **Craft the Response:** Create a JSON object with the following fields:
+2.  **Craft the Response:** Create a JSON object with the fields defined in the output schema.
     -   \`suggestedLocation\`: The single best destination you chose.
     -   \`reasoning\`: Explain why this place is a great match. Sound like a friend giving advice. You can also mention 1-2 alternative places here if you like.
     -   \`accommodationType\`: Suggest a suitable type of stay. This can be budget-friendly, mid-range, or luxury (e.g., "Riverside Camp", "Cozy Homestay", "Luxury Boutique Hotel").
     -   \`silentZoneScore\`: A score from 0 (very busy) to 10 (total peace).
     -   \`bestTimeToVisit\`: The best months to visit.
     -   \`devtaConnectTip\`: **ONLY** if the atmosphere is 'spiritual', add a unique tip about a local temple or ritual. Otherwise, omit this field.
-
-## CRITICAL: Output Format
-- Your entire response MUST be a single, valid JSON object.
-- Do NOT include any text, markdown (\`\`\`json), or any characters before or after the JSON object.
-- \`silentZoneScore\` must be an integer.
-
-## Example
-If the input is for a spiritual vibe, your output should look like this (but with your own creative suggestions):
-{
-  "suggestedLocation": "Jageshwar",
-  "reasoning": "Dost, for a spiritual soul like you who loves peace, Jageshwar is perfect! It has this amazing, ancient temple complex surrounded by beautiful deodar forests. It's a place for real peace. You could also check out Mukteshwar for similar vibes.",
-  "accommodationType": "Serene Ashram Stay",
-  "silentZoneScore": 9,
-  "bestTimeToVisit": "October to April",
-  "devtaConnectTip": "Try meditating at the Dandeshwar temple complex. It's even older and quieter than the main Jageshwar group."
-}
 `,
 });
 
@@ -78,32 +60,22 @@ const vibeMatchFlow = ai.defineFlow(
     outputSchema: VibeMatchOutputSchema,
   },
   async (input) => {
-    const llmResponse = await suggestionPrompt(input);
-    const rawText = llmResponse.text;
-
+    // This implementation is more robust as it relies on Genkit's built-in
+    // JSON parsing and validation by leveraging the output schema in the prompt.
     try {
-      // Sometimes the model wraps the JSON in markdown ```json ... ```. This regex extracts the JSON object.
-      const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        throw new Error('No JSON object found in the AI response.');
-      }
-      const jsonString = jsonMatch[0];
-      const parsedJson = JSON.parse(jsonString);
-
-      // Validate the parsed JSON against our Zod schema.
-      // This will also coerce types (e.g., string numbers to actual numbers) and remove extra fields.
-      const validatedOutput = VibeMatchOutputSchema.parse(parsedJson);
-      return validatedOutput;
-      
+        const { output } = await suggestionPrompt(input);
+        if (!output) {
+             throw new Error('AI did not return a valid suggestion object.');
+        }
+        return output;
     } catch (e: any) {
-      console.error('AI Vibe Match: Failed to parse or validate AI response.', {
-        error: e.message,
-        rawResponse: rawText,
-      });
-      // This error will be caught by the server action, which will then show a friendly message to the user.
-      throw new Error(
-        'The AI returned a suggestion in an unexpected format. Please try again.'
-      );
+         console.error('AI Vibe Match: Failed to generate or parse AI response.', {
+            error: e.message,
+         });
+         // Propagate a user-friendly error to the server action.
+         throw new Error(
+            'The AI could not generate a valid suggestion. Please try again.'
+        );
     }
   }
 );
