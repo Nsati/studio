@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview The AI flow for the Devbhoomi Vibe Match™ feature.
@@ -31,7 +30,7 @@ const suggestionPrompt = ai.definePrompt({
   // By providing the output schema, we instruct the model to return a valid JSON object.
   output: { schema: VibeMatchOutputSchema },
   config: {
-    model: 'gemini-1.5-pro-latest',
+    model: 'gemini-pro', // Changed model to a more stable and reliable one
   },
   prompt: `You are "Devbhoomi Dost," a friendly local travel guide from Uttarakhand, India. Your tone is warm, friendly, and like a local dost (friend).
 
@@ -67,23 +66,16 @@ const vibeMatchFlow = ai.defineFlow(
     outputSchema: VibeMatchOutputSchema,
   },
   async (input) => {
-    // This implementation is more robust as it relies on Genkit's built-in
-    // JSON parsing and validation by leveraging the output schema in the prompt.
-    try {
-        const { output } = await suggestionPrompt(input);
-        if (!output) {
-             throw new Error('AI did not return a valid suggestion object.');
-        }
-        return output;
-    } catch (e: any) {
-         console.error('AI Vibe Match: Failed to generate or parse AI response.', {
-            error: e.message,
-         });
-         // Propagate a user-friendly error to the server action.
-         throw new Error(
-            'The AI could not generate a valid suggestion. Please try again.'
-        );
+    const { output } = await suggestionPrompt(input);
+    
+    if (!output) {
+      // This is a safety net. Genkit's `definePrompt` with an `output` schema
+      // should handle validation, but if the model returns something completely
+      // empty or unparsable, the output will be null.
+      throw new Error('AI failed to produce a valid suggestion.');
     }
+    
+    return output;
   }
 );
 
