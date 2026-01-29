@@ -94,78 +94,76 @@ export function SearchFilters() {
     }
 
     return (
-        <Card className="w-full shadow-lg bg-background/80 backdrop-blur-sm border-white/20">
-            <CardContent className="p-2">
-                <form onSubmit={handleFormSubmit} className="flex flex-col md:flex-row items-center gap-2">
-                    {/* Location */}
-                    <div className="flex items-center gap-2 px-3 py-2 w-full flex-1 bg-background rounded-md border">
-                        <MapPin className="h-5 w-5 text-muted-foreground" />
-                        <Select value={city} onValueChange={setCity} disabled={isLoadingHotels}>
-                            <SelectTrigger className="w-full font-medium text-base border-0 bg-transparent focus:ring-0 shadow-none p-0 h-auto focus:ring-offset-0">
-                                <SelectValue placeholder={isLoadingHotels ? "Loading..." : "Select Location"} />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="All">All Locations</SelectItem>
-                                {cities?.map((c) => (
-                                    <SelectItem key={c} value={c}>{c}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
+        <div className="w-full">
+            <form onSubmit={handleFormSubmit} className="flex flex-col md:flex-row items-center gap-2 bg-background/80 backdrop-blur-sm rounded-lg p-2 border-white/20 shadow-lg">
+                {/* Location */}
+                <div className="flex items-center gap-2 px-3 py-2 w-full flex-1 bg-background rounded-md border">
+                    <MapPin className="h-5 w-5 text-muted-foreground" />
+                    <Select value={city} onValueChange={setCity} disabled={isLoadingHotels}>
+                        <SelectTrigger className="w-full font-medium text-base border-0 bg-transparent focus:ring-0 shadow-none p-0 h-auto focus:ring-offset-0">
+                            <SelectValue placeholder={isLoadingHotels ? "Loading..." : "Select Location"} />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="All">All Locations</SelectItem>
+                            {cities?.map((c) => (
+                                <SelectItem key={c} value={c}>{c}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
 
-                    {/* Dates */}
-                    <div className="flex items-center gap-2 px-3 py-2 w-full flex-1 bg-background rounded-md border">
-                        <CalendarIcon className="h-5 w-5 text-muted-foreground" />
-                        <Popover>
-                            <PopoverTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    className={cn("w-full justify-start text-left font-medium hover:bg-transparent p-0 h-auto text-base focus-visible:ring-0 focus-visible:ring-offset-0", !dates && "text-muted-foreground")}
-                                >
-                                    {dates?.from ? (
-                                        dates.to ? (
-                                            <>
-                                                {format(dates.from, 'LLL dd, y')} - {format(dates.to, 'LLL dd, y')}
-                                            </>
-                                        ) : format(dates.from, 'LLL dd, y')
-                                    ) : (
-                                        <span>Pick dates</span>
-                                    )}
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                                <CalendarComponent
-                                    initialFocus
-                                    mode="range"
-                                    defaultMonth={dates?.from}
-                                    selected={dates}
-                                    onSelect={setDates}
-                                    numberOfMonths={2}
-                                    disabled={{ before: new Date() }}
-                                />
-                            </PopoverContent>
-                        </Popover>
-                    </div>
+                {/* Dates */}
+                <div className="flex items-center gap-2 px-3 py-2 w-full flex-1 bg-background rounded-md border">
+                    <CalendarIcon className="h-5 w-5 text-muted-foreground" />
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                className={cn("w-full justify-start text-left font-medium hover:bg-transparent p-0 h-auto text-base focus-visible:ring-0 focus-visible:ring-offset-0", !dates && "text-muted-foreground")}
+                            >
+                                {dates?.from ? (
+                                    dates.to ? (
+                                        <>
+                                            {format(dates.from, 'LLL dd, y')} - {format(dates.to, 'LLL dd, y')}
+                                        </>
+                                    ) : format(dates.from, 'LLL dd, y')
+                                ) : (
+                                    <span>Pick dates</span>
+                                )}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                            <CalendarComponent
+                                initialFocus
+                                mode="range"
+                                defaultMonth={dates?.from}
+                                selected={dates}
+                                onSelect={setDates}
+                                numberOfMonths={2}
+                                disabled={{ before: new Date() }}
+                            />
+                        </PopoverContent>
+                    </Popover>
+                </div>
 
-                    {/* Guests */}
-                    <div className="flex items-center gap-2 px-3 py-2 w-full flex-1 md:flex-none md:w-32 bg-background rounded-md border">
-                        <Users className="h-5 w-5 text-muted-foreground" />
-                        <Input 
-                            type="number" 
-                            placeholder="Guests" 
-                            min="1"
-                            value={guests}
-                            onChange={(e) => setGuests(e.target.value)}
-                            className="font-medium text-base border-0 bg-transparent focus-visible:ring-0 p-0 h-auto shadow-none focus-visible:ring-offset-0"
-                        />
-                    </div>
-                    
-                    <Button type="submit" size="lg" className="h-full w-full md:w-auto px-6 text-base">
-                        <Search className="mr-2 h-4 w-4" />
-                        Search
-                    </Button>
-                </form>
-            </CardContent>
-        </Card>
+                {/* Guests */}
+                <div className="flex items-center gap-2 px-3 py-2 w-full flex-1 md:flex-none md:w-32 bg-background rounded-md border">
+                    <Users className="h-5 w-5 text-muted-foreground" />
+                    <Input 
+                        type="number" 
+                        placeholder="Guests" 
+                        min="1"
+                        value={guests}
+                        onChange={(e) => setGuests(e.target.value)}
+                        className="font-medium text-base border-0 bg-transparent focus-visible:ring-0 p-0 h-auto shadow-none focus-visible:ring-offset-0"
+                    />
+                </div>
+                
+                <Button type="submit" size="lg" className="h-full w-full md:w-auto px-6 text-base">
+                    <Search className="mr-2 h-4 w-4" />
+                    Search
+                </Button>
+            </form>
+        </div>
     );
 }

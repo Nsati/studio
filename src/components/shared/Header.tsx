@@ -131,7 +131,7 @@ export default function Header() {
                         pathname === link.href
                         ? "text-primary"
                         : "text-muted-foreground hover:text-foreground",
-                         link.href === '/vibe-match' && "text-accent-foreground bg-accent hover:bg-accent/90 rounded-full px-3 py-1"
+                         link.href === '/vibe-match' && "font-bold text-accent-foreground bg-accent hover:bg-accent/90 rounded-full px-4 py-2"
                     )}
                     >
                     {link.href === '/vibe-match' && <Sparkles className="h-4 w-4" />}

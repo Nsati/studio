@@ -56,7 +56,7 @@ function SearchResults() {
             <h1 className="font-headline text-3xl font-bold">
                 {city && city !== 'All' ? `Hotels in ${city}` : 'All Hotels'}
             </h1>
-            <p className="text-muted-foreground mt-1">
+            <p className="text-muted-foreground mt-1 font-sans">
                 {hotels ? `${hotels.length} properties found.` : 'Finding the best stays for you...'}
             </p>
         </div>
@@ -68,7 +68,7 @@ function SearchResults() {
         </div>
       ) : (
         <div className="flex h-64 items-center justify-center rounded-lg border-2 border-dashed">
-          <p className="text-muted-foreground">No hotels found for the selected filters.</p>
+          <p className="text-muted-foreground font-sans">No hotels found for the selected filters.</p>
         </div>
       )}
     </div>
@@ -79,7 +79,11 @@ export default function SearchPage() {
   return (
     <div className="container mx-auto max-w-7xl py-8 px-4 md:px-6">
       <div className="flex flex-col gap-8">
-        <SearchFilters />
+        <Card>
+            <CardContent className="p-2">
+                <SearchFilters />
+            </CardContent>
+        </Card>
         <Suspense fallback={<Loading />}>
           <SearchResults />
         </Suspense>

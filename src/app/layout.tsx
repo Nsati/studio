@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { PT_Sans } from 'next/font/google';
+import { PT_Sans, Playfair_Display } from 'next/font/google';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import Header from '@/components/shared/Header';
@@ -11,6 +11,12 @@ const fontSans = PT_Sans({
   subsets: ['latin'],
   weight: ['400', '700'],
   variable: '--font-sans',
+});
+
+const fontHeading = Playfair_Display({
+  subsets: ['latin'],
+  weight: ['400', '700'],
+  variable: '--font-heading',
 });
 
 export const metadata: Metadata = {
@@ -25,7 +31,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${fontSans.variable} font-sans bg-background text-foreground`}>
+      <body className={`${fontSans.variable} ${fontHeading.variable} font-sans bg-background text-foreground`}>
         <FirebaseClientProvider>
           <FirebaseErrorListener />
           <Header />

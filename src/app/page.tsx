@@ -67,10 +67,10 @@ export default function HomePage() {
           <h1 className="text-4xl font-bold md:text-5xl lg:text-6xl" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.7)' }}>
             Your Himalayan Escape
           </h1>
-          <p className="mt-4 max-w-2xl mx-auto text-lg md:text-xl" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.7)' }}>
+          <p className="mt-4 max-w-2xl mx-auto text-lg md:text-xl font-sans" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.7)' }}>
             Discover serene hotels and breathtaking views in the heart of Uttarakhand.
           </p>
-          <div className="mt-8 w-full bg-background/20 backdrop-blur-sm p-3 rounded-lg">
+          <div className="mt-8 w-full p-3">
             <SearchFilters />
           </div>
         </div>
@@ -81,7 +81,7 @@ export default function HomePage() {
         <div className="container mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold">Explore by City</h2>
-            <p className="text-muted-foreground mt-2 max-w-xl mx-auto">From tranquil lakes to spiritual hubs, find your perfect destination.</p>
+            <p className="text-muted-foreground mt-2 max-w-xl mx-auto font-sans">From tranquil lakes to spiritual hubs, find your perfect destination.</p>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
             {dummyCities.map((city) => {
@@ -119,7 +119,7 @@ export default function HomePage() {
           <div className="flex justify-between items-center mb-12">
             <div>
               <h2 className="text-3xl font-bold">Featured Stays</h2>
-              <p className="text-muted-foreground mt-2">Handpicked hotels for an unforgettable experience.</p>
+              <p className="text-muted-foreground mt-2 font-sans">Handpicked hotels for an unforgettable experience.</p>
             </div>
             <Button variant="outline" asChild>
               <Link href="/search">View All <ArrowRight className="ml-2 h-4 w-4" /></Link>
@@ -143,7 +143,7 @@ export default function HomePage() {
           <div className="flex justify-between items-center mb-12">
              <div>
                 <h2 className="text-3xl font-bold">Curated Tour Packages</h2>
-                <p className="text-muted-foreground mt-2">All-inclusive journeys to explore the best of Uttarakhand.</p>
+                <p className="text-muted-foreground mt-2 font-sans">All-inclusive journeys to explore the best of Uttarakhand.</p>
               </div>
                <Button variant="outline" asChild>
                 <Link href="/tour-packages">View All <ArrowRight className="ml-2 h-4 w-4" /></Link>
@@ -160,7 +160,7 @@ export default function HomePage() {
                     </div>
                     <CardHeader>
                       <h3 className="text-xl font-semibold leading-tight group-hover:text-primary">{pkg.title}</h3>
-                      <p className="text-muted-foreground !mt-1">{pkg.duration}</p>
+                      <p className="text-muted-foreground !mt-1 font-sans">{pkg.duration}</p>
                     </CardHeader>
                   </Card>
                 </Link>
