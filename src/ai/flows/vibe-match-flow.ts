@@ -48,7 +48,7 @@ A traveler has given you their preferences. Your task is to act as their trusted
     -   \`accommodationType\`: Suggest a suitable type of stay. This can be budget-friendly, mid-range, or luxury (e.g., "Riverside Camp", "Cozy Homestay", "Luxury Boutique Hotel").
     -   \`silentZoneScore\`: A score from 0 (very busy) to 10 (total peace).
     -   \`bestTimeToVisit\`: The best months to visit.
-    -   \`devtaConnectTip\`: **ONLY** if the atmosphere is 'spiritual', add a unique tip about a local temple or ritual. Otherwise, omit this field.
+    -   \`devtaConnectTip\`: If the atmosphere is 'spiritual', add a unique tip about a local temple or ritual. Otherwise, this MUST be an empty string ("").
 `,
 });
 

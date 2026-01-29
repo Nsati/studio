@@ -13,6 +13,6 @@ export const VibeMatchOutputSchema = z.object({
   accommodationType: z.string().describe('The type of stay recommended. e.g., "Cozy Homestay", "Luxury Resort", "Riverside Camp".'),
   silentZoneScore: z.coerce.number().min(0).max(10).describe('A score from 0 (very crowded) to 10 (absolute silence and peace).'),
   bestTimeToVisit: z.string().describe('A short suggestion for the best months to visit. e.g., "September to November".'),
-  devtaConnectTip: z.string().optional().describe('A spiritual tip or insight if the user selected a spiritual vibe. e.g., "Visit the ancient Kartik Swami temple nearby for a powerful experience."'),
+  devtaConnectTip: z.string().describe('A spiritual tip if the user selected a spiritual vibe. Otherwise, an empty string. e.g., "Visit the ancient Kartik Swami temple nearby for a powerful experience."'),
 });
 export type VibeMatchOutput = z.infer<typeof VibeMatchOutputSchema>;
