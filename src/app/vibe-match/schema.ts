@@ -11,7 +11,7 @@ export const VibeMatchOutputSchema = z.object({
   suggestedLocation: z.string().describe('The primary location suggestion. e.g., "Kanatal" or "Chopta".'),
   reasoning: z.string().describe('A friendly and concise reason why this location is perfect for the user.'),
   accommodationType: z.string().describe('The type of stay recommended. e.g., "Cozy Homestay", "Luxury Resort", "Riverside Camp".'),
-  silentZoneScore: z.number().min(0).max(10).describe('A score from 0 (very crowded) to 10 (absolute silence and peace).'),
+  silentZoneScore: z.coerce.number().min(0).max(10).describe('A score from 0 (very crowded) to 10 (absolute silence and peace).'),
   bestTimeToVisit: z.string().describe('A short suggestion for the best months to visit. e.g., "September to November".'),
   devtaConnectTip: z.string().optional().describe('A spiritual tip or insight if the user selected a spiritual vibe. e.g., "Visit the ancient Kartik Swami temple nearby for a powerful experience."'),
 });
