@@ -87,17 +87,6 @@ function ResultDisplay({ result }: { result: VibeMatchOutput }) {
                            <p className="font-semibold text-lg">{result.bestTimeToVisit}</p>
                         </CardContent>
                     </Card>
-                    {result.devtaConnectTip && (
-                        <Card className="sm:col-span-2 bg-amber-50 border-amber-200">
-                             <CardHeader className="flex-row items-center gap-3 space-y-0">
-                                <Shield className="h-6 w-6 text-amber-600" />
-                                <CardTitle className="text-lg text-amber-900">Devta Connect Tip</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-amber-800">{result.devtaConnectTip}</p>
-                            </CardContent>
-                        </Card>
-                    )}
                 </div>
 
             </CardContent>
