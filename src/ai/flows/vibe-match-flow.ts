@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview The AI flow for the Devbhoomi Vibe Match™ feature.
@@ -27,7 +28,9 @@ type VibeMatchResult = {
 const suggestionPrompt = ai.definePrompt({
   name: 'vibeMatchPrompt',
   input: { schema: VibeMatchInputSchema },
-  output: { schema: VibeMatchOutputSchema },
+  // NOTE: The output schema is intentionally removed here. We will perform
+  // manual parsing in the flow to make it more robust against minor
+  // formatting errors from the LLM.
   prompt: `You are "Devbhoomi Dost," a master travel guide for Uttarakhand.
 A traveler has provided their preferences. Your task is to return a single, perfect travel suggestion in a valid JSON format.
 
@@ -74,15 +77,36 @@ const vibeMatchFlow = ai.defineFlow(
     outputSchema: VibeMatchOutputSchema,
   },
   async (input) => {
-    const { output } = await suggestionPrompt(input);
-    if (!output) {
+    const llmResponse = await suggestionPrompt(input);
+    const rawText = llmResponse.text;
+
+    try {
+      // Sometimes the model wraps the JSON in markdown ```json ... ```. This regex extracts the JSON object.
+      const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error('No JSON object found in the AI response.');
+      }
+      const jsonString = jsonMatch[0];
+      const parsedJson = JSON.parse(jsonString);
+
+      // Validate the parsed JSON against our Zod schema.
+      // This will also coerce types (e.g., string numbers to actual numbers) and remove extra fields.
+      const validatedOutput = VibeMatchOutputSchema.parse(parsedJson);
+      return validatedOutput;
+      
+    } catch (e: any) {
+      console.error('AI Vibe Match: Failed to parse or validate AI response.', {
+        error: e.message,
+        rawResponse: rawText,
+      });
+      // This error will be caught by the server action, which will then show a friendly message to the user.
       throw new Error(
-        'The AI could not generate a suggestion. Please try again.'
+        'The AI returned a suggestion in an unexpected format. Please try again.'
       );
     }
-    return output;
   }
 );
+
 
 /**
  * The Server Action that is called from the client.
