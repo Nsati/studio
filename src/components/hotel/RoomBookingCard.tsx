@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { BedDouble, Calendar as CalendarIcon, AlertCircle, TrendingDown } from 'lucide-react';
+import { BedDouble, Calendar as CalendarIcon, AlertCircle, TrendingDown, HelpCircle } from 'lucide-react';
 import { differenceInDays, format, add } from 'date-fns';
 import type { DateRange } from 'react-day-picker';
 import { useRouter } from 'next/navigation';
@@ -251,6 +251,9 @@ export function RoomBookingCard({ hotel, rooms, isLoadingRooms }: { hotel: WithI
             </Button>
           </div>
         )}
+         <div className="text-center text-sm text-muted-foreground space-y-2 mt-2">
+            <p className="text-xs flex items-center justify-center gap-2"><HelpCircle className="h-4 w-4" />Need help? Email us at <a href="mailto:nsati09@gmail.com" className="font-semibold text-primary hover:underline">nsati09@gmail.com</a></p>
+        </div>
       </CardContent>
     </Card>
   );

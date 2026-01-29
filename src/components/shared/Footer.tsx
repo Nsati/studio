@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Facebook, Twitter, Instagram } from 'lucide-react';
@@ -19,7 +20,7 @@ const footerLinks = {
   'Support': [
     { label: 'Terms of Service', href: '/terms' },
     { label: 'Privacy Policy', href: '/privacy' },
-    { label: 'Contact Support', href: 'mailto:support@uttarakhandgetaways.com' },
+    { label: 'Contact Us', href: '/contact' },
   ],
 };
 

@@ -429,7 +429,7 @@ export function BookingForm() {
                             <ShieldCheck className="h-4 w-4 text-green-600" />
                             <span>100% Secure Payments</span>
                         </div>
-                        <p className="text-xs flex items-center justify-center gap-2"><HelpCircle className="h-4 w-4" />Need help? Email us at <a href="mailto:support@uttarakhandgetaways.com" className="font-semibold text-primary hover:underline">support@uttarakhandgetaways.com</a></p>
+                        <p className="text-xs flex items-center justify-center gap-2"><HelpCircle className="h-4 w-4" />Need help? Email us at <a href="mailto:nsati09@gmail.com" className="font-semibold text-primary hover:underline">nsati09@gmail.com</a></p>
                     </div>
                 </div>
             </div>
