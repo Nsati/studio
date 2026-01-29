@@ -20,6 +20,8 @@ const footerLinks = {
   'Support': [
     { label: 'Terms of Service', href: '/terms' },
     { label: 'Privacy Policy', href: '/privacy' },
+    { label: 'Refund Policy', href: '/refund-policy' },
+    { label: 'Shipping Policy', href: '/shipping-policy' },
     { label: 'Contact Us', href: '/contact' },
   ],
 };

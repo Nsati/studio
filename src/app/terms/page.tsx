@@ -15,7 +15,9 @@ export default function TermsPage() {
         </section>
         <section>
           <h2 className="text-xl font-semibold text-foreground mb-2">3. Cancellations and Refunds</h2>
-          <p>Cancellation policies vary by hotel and are displayed during the booking process. You can cancel your booking from the "My Bookings" page. Any refunds, if applicable, will be processed within 7-10 business days as per the hotel's policy. Uttarakhand Getaways is a facilitator. For any disputes or queries regarding cancellations and refunds, please contact our support team at <a href="mailto:nsati09@gmail.com" className="text-primary hover:underline">nsati09@gmail.com</a> or call us at <a href="tel:+916399902725" className="text-primary hover:underline">+91 6399902725</a>.</p>
+          <p>
+            Our cancellation and refund policies are detailed on a separate page. Please review our complete <a href="/refund-policy" className="text-primary font-semibold hover:underline">Cancellations & Refund Policy</a> for full details on how to cancel a booking and refund eligibility.
+          </p>
         </section>
         <section>
           <h2 className="text-xl font-semibold text-foreground mb-2">4. User Accounts</h2>
