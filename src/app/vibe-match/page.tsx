@@ -3,16 +3,19 @@ import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import Link from 'next/link';
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { getVibeMatchSuggestionAction, type VibeMatchOutput } from "@/ai/flows/vibe-match-flow";
-import { Loader2, Sparkles, Wand2, ThumbsUp, MapPin, Hotel, Calendar, Shield, Mountain } from "lucide-react";
+import { Loader2, Sparkles, Wand2, ThumbsUp, Hotel, Calendar, Mountain, Heart, Users, Wind, Search } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { VibeMatchInputSchema } from "./schema";
+import { Form, FormControl, FormItem, FormLabel } from "@/components/ui/form";
+import { cn } from "@/lib/utils";
 
 
 function ResultSkeleton() {
@@ -88,6 +91,13 @@ function ResultDisplay({ result }: { result: VibeMatchOutput }) {
                         </CardContent>
                     </Card>
                 </div>
+                
+                <Button asChild size="lg" className="w-full mt-6">
+                    <Link href={`/search?city=${result.suggestedLocation}`}>
+                        <Search className="mr-2 h-5 w-5" />
+                        Find Hotels in {result.suggestedLocation}
+                    </Link>
+                </Button>
 
             </CardContent>
         </Card>
@@ -122,9 +132,9 @@ export default function VibeMatchPage() {
     };
 
     const questions = [
-        { name: "travelVibe", label: "What kind of vibe are you looking for?", options: [{value: "peace", label: "Peace & Relaxation"}, {value: "adventure", label: "Adventure & Thrills"}] },
-        { name: "travelerType", label: "Who are you traveling with?", options: [{value: "solo", label: "Solo"}, {value: "couple", label: "Couple"}, {value: "family", label: "Family"}] },
-        { name: "atmosphere", label: "What's your preferred atmosphere?", options: [{value: "spiritual", label: "Spiritual & Cultural"}, {value: "away_from_crowd", label: "Away from the Crowds"}] },
+        { name: "travelVibe", label: "What's your travel vibe?", options: [{value: "peace", label: "Peace & Relaxation"}, {value: "adventure", label: "Adventure & Thrills"}], icon: Heart },
+        { name: "travelerType", label: "Who are you traveling with?", options: [{value: "solo", label: "Solo"}, {value: "couple", label: "Couple"}, {value: "family", label: "Family"}], icon: Users },
+        { name: "atmosphere", label: "What kind of atmosphere do you prefer?", options: [{value: "spiritual", label: "Spiritual & Cultural"}, {value: "away_from_crowd", label: "Away from Crowds"}], icon: Wind },
     ];
 
     return (
@@ -137,38 +147,59 @@ export default function VibeMatchPage() {
             </div>
             
             <div className="flex flex-col items-center gap-12">
-                <form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-8">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {questions.map(q => (
-                             <Card key={q.name} className="h-full">
-                                <CardHeader>
-                                    <CardTitle className="text-lg">{q.label}</CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <Controller
-                                        control={form.control}
-                                        name={q.name as keyof z.infer<typeof VibeMatchInputSchema>}
-                                        render={({ field }) => (
-                                            <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="space-y-2">
-                                                {q.options.map(opt => (
-                                                     <div key={opt.value} className="flex items-center space-x-2">
-                                                        <RadioGroupItem value={opt.value} id={`${q.name}-${opt.value}`} />
-                                                        <Label htmlFor={`${q.name}-${opt.value}`}>{opt.label}</Label>
-                                                    </div>
+                 <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-8">
+                        <Card>
+                            <CardContent className="p-6 space-y-8">
+                                {questions.map((q) => (
+                                    <div key={q.name}>
+                                        <FormLabel className="text-base font-semibold flex items-center gap-3 mb-4">
+                                            <q.icon className="h-6 w-6 text-primary" />
+                                            {q.label}
+                                        </FormLabel>
+                                        <Controller
+                                            control={form.control}
+                                            name={q.name as keyof z.infer<typeof VibeMatchInputSchema>}
+                                            render={({ field }) => (
+                                                <RadioGroup
+                                                onValueChange={field.onChange}
+                                                defaultValue={field.value}
+                                                className="grid grid-cols-2 lg:grid-cols-4 gap-4"
+                                                >
+                                                {q.options.map((opt) => (
+                                                    <FormItem key={opt.value}>
+                                                        <FormControl>
+                                                          <RadioGroupItem
+                                                            value={opt.value}
+                                                            id={`${q.name}-${opt.value}`}
+                                                            className="sr-only peer"
+                                                          />
+                                                        </FormControl>
+                                                        <Label
+                                                            htmlFor={`${q.name}-${opt.value}`}
+                                                            className={cn(
+                                                                "flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer",
+                                                                "peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                                                            )}
+                                                        >
+                                                            <span className="text-center font-semibold">{opt.label}</span>
+                                                        </Label>
+                                                    </FormItem>
                                                 ))}
-                                            </RadioGroup>
-                                        )}
-                                    />
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
+                                                </RadioGroup>
+                                            )}
+                                        />
+                                    </div>
+                                ))}
+                            </CardContent>
+                        </Card>
 
-                    <Button type="submit" size="lg" className="w-full h-14 text-lg" disabled={isLoading}>
-                        {isLoading ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : <Wand2 className="mr-2 h-6 w-6" />}
-                        {isLoading ? "Finding your vibe..." : "Find My Devbhoomi Escape"}
-                    </Button>
-                </form>
+                        <Button type="submit" size="lg" className="w-full h-14 text-lg" disabled={isLoading}>
+                            {isLoading ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : <Wand2 className="mr-2 h-6 w-6" />}
+                            {isLoading ? "Finding your vibe..." : "Find My Devbhoomi Escape"}
+                        </Button>
+                    </form>
+                </Form>
 
                 {isLoading && <ResultSkeleton />}
                 
