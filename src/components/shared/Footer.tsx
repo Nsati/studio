@@ -36,7 +36,7 @@ export default function Footer() {
             <div className="col-span-2 flex flex-col items-start gap-4">
                 <Link href="/" className="flex items-center gap-3">
                     <Logo />
-                    <span className="font-headline text-xl font-bold text-foreground">
+                    <span className="font-heading text-xl font-bold text-foreground">
                         Uttarakhand Getaways
                     </span>
                 </Link>
@@ -59,7 +59,7 @@ export default function Footer() {
             {/* Link Sections */}
             {Object.entries(footerLinks).map(([title, links]) => (
                 <div key={title} className="col-span-1">
-                    <h3 className="font-headline text-base font-semibold mb-4">{title}</h3>
+                    <h3 className="text-base font-semibold mb-4">{title}</h3>
                     <ul className="space-y-3">
                         {links.map(link => (
                             <li key={link.label}>

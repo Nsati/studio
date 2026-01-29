@@ -2,7 +2,7 @@
 export default function ShippingPolicyPage() {
   return (
     <div className="container mx-auto max-w-4xl py-12 px-4 md:px-6">
-      <h1 className="font-headline text-3xl font-bold mb-8">Shipping Policy</h1>
+      <h1 className="text-3xl font-bold mb-8">Shipping Policy</h1>
       <div className="space-y-6 text-muted-foreground">
         <section>
           <h2 className="text-xl font-semibold text-foreground mb-2">Applicability</h2>
