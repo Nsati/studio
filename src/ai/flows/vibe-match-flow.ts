@@ -44,6 +44,8 @@ Your task:
 4.  Give the location a "Silent Zone Score" from 0 (total tourist chaos) to 10 (pure Himalayan silence).
 5.  Suggest the best months to visit.
 6.  If the user's desired atmosphere is 'spiritual', provide a 'Devta Connect Tip' - a short, insightful tip about a local temple, ritual, or spiritual spot that isn't widely known.
+
+IMPORTANT: Your final response must be a valid JSON object that perfectly adheres to the defined output schema. Do not include any text before or after the JSON object.
 `,
 });
 
