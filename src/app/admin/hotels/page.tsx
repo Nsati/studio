@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Skeleton } from '@/components/ui/skeleton';
 import { PlusCircle, Star, MapPin, Eye } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { BulkUploadHotelsDialog } from '@/components/admin/BulkUploadHotelsDialog';
 
 function HotelGridSkeleton() {
     return (
@@ -99,6 +100,7 @@ export default function HotelsPage() {
                     </p>
                 </div>
                  <div className="flex gap-2">
+                    <BulkUploadHotelsDialog />
                     <Button asChild>
                         <Link href="/admin/hotels/new">
                             <PlusCircle className="mr-2 h-4 w-4" />

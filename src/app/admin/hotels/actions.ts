@@ -1,0 +1,112 @@
+
+'use server';
+
+import { getFirebaseAdmin } from '@/firebase/admin';
+import type { Hotel, Room } from '@/lib/types';
+import { writeBatch } from 'firebase-admin/firestore';
+import slugify from 'slugify';
+import { z } from 'zod';
+
+// Zod schema for a single row of the CSV
+export const HotelUploadSchema = z.object({
+    name: z.string().min(3),
+    city: z.string().min(1),
+    description: z.string().min(10),
+    address: z.string().optional(),
+    rating: z.coerce.number().min(1).max(5),
+    discount: z.coerce.number().min(0).max(100).optional(),
+    amenities: z.string(), // comma separated
+    images: z.string(), // comma separated
+    // Optional Room 1
+    room_1_type: z.enum(['Standard', 'Deluxe', 'Suite']).optional(),
+    room_1_price: z.coerce.number().positive().optional(),
+    room_1_capacity: z.coerce.number().positive().int().optional(),
+    room_1_total: z.coerce.number().positive().int().optional(),
+    // Optional Room 2
+    room_2_type: z.enum(['Standard', 'Deluxe', 'Suite']).optional(),
+    room_2_price: z.coerce.number().positive().optional(),
+    room_2_capacity: z.coerce.number().positive().int().optional(),
+    room_2_total: z.coerce.number().positive().int().optional(),
+    // Optional Room 3
+    room_3_type: z.enum(['Standard', 'Deluxe', 'Suite']).optional(),
+    room_3_price: z.coerce.number().positive().optional(),
+    room_3_capacity: z.coerce.number().positive().int().optional(),
+    room_3_total: z.coerce.number().positive().int().optional(),
+});
+
+export type HotelUploadData = z.infer<typeof HotelUploadSchema>;
+
+export async function bulkUploadHotels(hotelsData: HotelUploadData[]): Promise<{ success: boolean; message: string }> {
+    const { adminDb, error } = getFirebaseAdmin();
+    if (error || !adminDb) {
+        console.error("Bulk upload error:", error);
+        return { success: false, message: error || "Admin SDK not initialized" };
+    }
+
+    const batch = adminDb.batch();
+
+    try {
+        for (const hotel of hotelsData) {
+            // Validate each row
+            const validation = HotelUploadSchema.safeParse(hotel);
+            if (!validation.success) {
+                throw new Error(`Invalid data for hotel "${hotel.name}": ${validation.error.message}`);
+            }
+
+            const hotelId = slugify(hotel.name, { lower: true, strict: true });
+            const hotelRef = adminDb.collection('hotels').doc(hotelId);
+
+            const rooms: Omit<Room, 'hotelId' | 'availableRooms'>[] = [];
+            
+            // Process up to 3 rooms
+            for (let i = 1; i <= 3; i++) {
+                const type = hotel[`room_${i}_type` as keyof typeof hotel];
+                const price = hotel[`room_${i}_price` as keyof typeof hotel];
+                const capacity = hotel[`room_${i}_capacity` as keyof typeof hotel];
+                const totalRooms = hotel[`room_${i}_total` as keyof typeof hotel];
+
+                if (type && price && capacity && totalRooms) {
+                    rooms.push({ type, price, capacity, totalRooms });
+                }
+            }
+
+            if (rooms.length === 0) {
+                 throw new Error(`Hotel "${hotel.name}" must have at least one valid room definition.`);
+            }
+
+            const minPrice = Math.min(...rooms.map(r => r.price));
+
+            const hotelDoc: Hotel = {
+                name: hotel.name,
+                city: hotel.city,
+                description: hotel.description,
+                address: hotel.address || '',
+                rating: hotel.rating,
+                discount: hotel.discount || 0,
+                amenities: hotel.amenities.split(',').map(a => a.trim()).filter(Boolean),
+                images: hotel.images.split(',').map(i => i.trim()).filter(Boolean),
+                minPrice,
+            };
+
+            batch.set(hotelRef, hotelDoc);
+
+            for (const room of rooms) {
+                const roomId = slugify(`${hotel.name} ${room.type} ${Math.random().toString(36).substring(2, 7)}`, { lower: true, strict: true });
+                const roomRef = hotelRef.collection('rooms').doc(roomId);
+                const roomDoc: Room = {
+                    ...room,
+                    hotelId,
+                    availableRooms: room.totalRooms,
+                };
+                batch.set(roomRef, roomDoc);
+            }
+        }
+
+        await batch.commit();
+        return { success: true, message: `Successfully uploaded ${hotelsData.length} hotels.` };
+
+    } catch (e: any) {
+        console.error("Failed to bulk upload hotels:", e);
+        return { success: false, message: e.message || 'An unexpected error occurred during upload.' };
+    }
+}
