@@ -23,14 +23,17 @@ type VibeMatchResult = {
   error?: string;
 };
 
-// The AI Prompt that defines the "Devbhoomi Dost" persona
+// The AI Prompt that defines the "Devbhoomi Dost" persona.
+// We ask for JSON output but do NOT provide a schema here. We will parse and validate the raw text response ourselves.
+// This is more robust against minor formatting errors from the LLM.
 const suggestionPrompt = ai.definePrompt({
   name: 'vibeMatchPrompt',
   input: { schema: VibeMatchInputSchema },
-  // By providing the output schema, we instruct the model to return a valid JSON object.
-  output: { schema: VibeMatchOutputSchema },
   config: {
     model: 'gemini-pro',
+    response: {
+      format: 'json',
+    },
   },
   prompt: `You are "Devbhoomi Dost," a friendly local travel guide from Uttarakhand, India. Your tone is warm, friendly, and like a local dost (friend).
 
@@ -43,7 +46,7 @@ A traveler has given you their preferences. Your task is to act as their trusted
 
 ## Your Instructions
 1.  **Analyze the Vibe:** Based on the traveler's preferences, pick ONE perfect primary destination in Uttarakhand.
-2.  **Craft the Response:** Create a JSON object with the fields defined in the output schema.
+2.  **Craft the Response:** Your entire response MUST be a single, valid JSON object with the following fields:
     -   \`suggestedLocation\`: The single best destination you chose.
     -   \`reasoning\`: In a friendly tone, explain why this place is a great match. Mention 1-2 alternative places.
     -   \`accommodationType\`: Suggest a suitable type of stay (e.g., "Riverside Camp", "Cozy Homestay", "Luxury Boutique Hotel").
@@ -52,7 +55,7 @@ A traveler has given you their preferences. Your task is to act as their trusted
     -   \`devtaConnectTip\`: If the atmosphere is 'spiritual', add a unique tip about a local temple or ritual. **Otherwise, this MUST be an empty string ("").**
 
 ## IMPORTANT
-Your entire response MUST be a single, valid JSON object that strictly conforms to the output schema. Do NOT include any text, commentary, or markdown backticks before or after the JSON object.
+Your entire response MUST be a single, valid JSON object. Do NOT include any text, commentary, or markdown backticks (like \`\`\`json) before or after the JSON object.
 
 ## Example Response
 {
@@ -66,6 +69,26 @@ Your entire response MUST be a single, valid JSON object that strictly conforms 
 `,
 });
 
+/**
+ * Helper function to find and extract a JSON object from a string.
+ * It can handle JSON wrapped in markdown code fences (```json ... ```) or just plain JSON.
+ * @param str The string to search for JSON in.
+ * @returns The extracted JSON string, or null if not found.
+ */
+function extractJson(str: string): string | null {
+  // Regex to find JSON block, optionally wrapped in markdown ```json ... ```
+  const jsonRegex = /```json\s*([\s\S]*?)\s*```|({[\s\S]*})/;
+  const match = str.match(jsonRegex);
+
+  if (match) {
+    // Return the first non-null capturing group
+    return match[1] || match[2];
+  }
+
+  return null;
+}
+
+
 // The Genkit flow that orchestrates the AI call
 const vibeMatchFlow = ai.defineFlow(
   {
@@ -74,16 +97,44 @@ const vibeMatchFlow = ai.defineFlow(
     outputSchema: VibeMatchOutputSchema,
   },
   async (input) => {
-    const { output } = await suggestionPrompt(input);
-    
-    if (!output) {
-      // This is a safety net. Genkit's `definePrompt` with an `output` schema
-      // should handle validation, but if the model returns something completely
-      // empty or unparsable, the output will be null.
-      throw new Error('AI failed to produce a valid suggestion.');
+    // Get the raw LLM response
+    const llmResponse = await suggestionPrompt(input);
+    const rawText = llmResponse.text;
+
+    if (!rawText) {
+      throw new Error('AI returned an empty response.');
     }
     
-    return output;
+    // Find and extract the JSON part of the response
+    const jsonString = extractJson(rawText);
+
+    if (!jsonString) {
+      console.error('Vibe Match Flow Error: Could not find JSON in the AI response.', { rawText });
+      throw new Error('The AI returned a response in an unexpected format.');
+    }
+
+    try {
+      // Parse the extracted JSON string
+      const parsedJson = JSON.parse(jsonString);
+
+      // Validate the parsed object against our Zod schema
+      const validationResult = VibeMatchOutputSchema.safeParse(parsedJson);
+
+      if (!validationResult.success) {
+        console.error('Vibe Match Flow Error: AI response failed Zod validation.', {
+            errors: validationResult.error.flatten(),
+            response: parsedJson
+        });
+        throw new Error('The AI returned data in the wrong structure.');
+      }
+      
+      // If everything is successful, return the validated data
+      return validationResult.data;
+
+    } catch (e) {
+      console.error('Vibe Match Flow Error: Failed to parse JSON from the AI response.', { jsonString, error: e });
+      throw new Error('The AI returned a malformed JSON response.');
+    }
   }
 );
 
