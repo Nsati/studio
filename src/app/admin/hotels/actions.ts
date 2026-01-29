@@ -3,7 +3,6 @@
 
 import { getFirebaseAdmin } from '@/firebase/admin';
 import type { Hotel, Room } from '@/lib/types';
-import { writeBatch } from 'firebase-admin/firestore';
 import slugify from 'slugify';
 import { z } from 'zod';
 
