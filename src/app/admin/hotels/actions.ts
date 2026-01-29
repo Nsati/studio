@@ -45,12 +45,14 @@ export async function bulkUploadHotels(hotelsData: HotelUploadData[]): Promise<{
     const batch = adminDb.batch();
 
     try {
-        for (const hotel of hotelsData) {
+        for (const hotelData of hotelsData) {
             // Validate each row
-            const validation = HotelUploadSchema.safeParse(hotel);
+            const validation = HotelUploadSchema.safeParse(hotelData);
             if (!validation.success) {
-                throw new Error(`Invalid data for hotel "${hotel.name}": ${validation.error.message}`);
+                throw new Error(`Invalid data for hotel "${hotelData.name}": ${validation.error.message}`);
             }
+
+            const hotel = validation.data; // Use the validated data with correct types
 
             const hotelId = slugify(hotel.name, { lower: true, strict: true });
             const hotelRef = adminDb.collection('hotels').doc(hotelId);
@@ -59,10 +61,10 @@ export async function bulkUploadHotels(hotelsData: HotelUploadData[]): Promise<{
             
             // Process up to 3 rooms
             for (let i = 1; i <= 3; i++) {
-                const type = hotel[`room_${i}_type` as keyof typeof hotel];
-                const price = hotel[`room_${i}_price` as keyof typeof hotel];
-                const capacity = hotel[`room_${i}_capacity` as keyof typeof hotel];
-                const totalRooms = hotel[`room_${i}_total` as keyof typeof hotel];
+                const type = hotel[`room_${i}_type` as 'room_1_type' | 'room_2_type' | 'room_3_type'];
+                const price = hotel[`room_${i}_price` as 'room_1_price' | 'room_2_price' | 'room_3_price'];
+                const capacity = hotel[`room_${i}_capacity` as 'room_1_capacity' | 'room_2_capacity' | 'room_3_capacity'];
+                const totalRooms = hotel[`room_${i}_total` as 'room_1_total' | 'room_2_total' | 'room_3_total'];
 
                 if (type && price && capacity && totalRooms) {
                     rooms.push({ type, price, capacity, totalRooms });
