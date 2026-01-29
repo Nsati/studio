@@ -24,16 +24,14 @@ type VibeMatchResult = {
 };
 
 // The AI Prompt that defines the "Devbhoomi Dost" persona.
-// We ask for JSON output but do NOT provide a schema here. We will parse and validate the raw text response ourselves.
-// This is more robust against minor formatting errors from the LLM.
+// By providing an `output.schema`, we instruct Genkit to handle the JSON formatting and validation.
+// This is far more reliable than manually parsing JSON from a text response.
 const suggestionPrompt = ai.definePrompt({
   name: 'vibeMatchPrompt',
   input: { schema: VibeMatchInputSchema },
+  output: { schema: VibeMatchOutputSchema },
   config: {
     model: 'gemini-pro',
-    response: {
-      format: 'json',
-    },
   },
   prompt: `You are "Devbhoomi Dost," a friendly local travel guide from Uttarakhand, India. Your tone is warm, friendly, and like a local dost (friend).
 
@@ -44,52 +42,13 @@ A traveler has given you their preferences. Your task is to act as their trusted
 - **Company:** {{{travelerType}}}
 - **Preference:** {{{atmosphere}}}
 
-## Your Instructions
-1.  **Analyze the Vibe:** Based on the traveler's preferences, pick ONE perfect primary destination in Uttarakhand.
-2.  **Craft the Response:** Your entire response MUST be a single, valid JSON object with the following fields:
-    -   \`suggestedLocation\`: The single best destination you chose.
-    -   \`reasoning\`: In a friendly tone, explain why this place is a great match. Mention 1-2 alternative places.
-    -   \`accommodationType\`: Suggest a suitable type of stay (e.g., "Riverside Camp", "Cozy Homestay", "Luxury Boutique Hotel").
-    -   \`silentZoneScore\`: A score from 0 (very busy) to 10 (total peace). This must be a number.
-    -   \`bestTimeToVisit\`: The best months to visit (e.g., "September to November").
-    -   \`devtaConnectTip\`: If the atmosphere is 'spiritual', add a unique tip about a local temple or ritual. **Otherwise, this MUST be an empty string ("").**
-
-## IMPORTANT
-Your entire response MUST be a single, valid JSON object. Do NOT include any text, commentary, or markdown backticks (like \`\`\`json) before or after the JSON object.
-
-## Example Response
-{
-  "suggestedLocation": "Mukteshwar",
-  "reasoning": "Mukteshwar is perfect for peace! It's a quiet town with amazing Himalayan views, away from the usual tourist rush. You can just relax and enjoy the nature. For a change, you could also visit Kanatal or Chopta.",
-  "accommodationType": "Cozy Homestay",
-  "silentZoneScore": 9,
-  "bestTimeToVisit": "October to June",
-  "devtaConnectTip": ""
-}
+Based on this, generate a response that matches the provided JSON output schema. The Zod schema descriptions will guide you on what to put in each field.
 `,
 });
 
-/**
- * Helper function to find and extract a JSON object from a string.
- * It can handle JSON wrapped in markdown code fences (```json ... ```) or just plain JSON.
- * @param str The string to search for JSON in.
- * @returns The extracted JSON string, or null if not found.
- */
-function extractJson(str: string): string | null {
-  // Regex to find JSON block, optionally wrapped in markdown ```json ... ```
-  const jsonRegex = /```json\s*([\s\S]*?)\s*```|({[\s\S]*})/;
-  const match = str.match(jsonRegex);
 
-  if (match) {
-    // Return the first non-null capturing group
-    return match[1] || match[2];
-  }
-
-  return null;
-}
-
-
-// The Genkit flow that orchestrates the AI call
+// The Genkit flow that orchestrates the AI call.
+// This is now much simpler as Genkit handles the structured output automatically.
 const vibeMatchFlow = ai.defineFlow(
   {
     name: 'vibeMatchFlow',
@@ -97,44 +56,14 @@ const vibeMatchFlow = ai.defineFlow(
     outputSchema: VibeMatchOutputSchema,
   },
   async (input) => {
-    // Get the raw LLM response
-    const llmResponse = await suggestionPrompt(input);
-    const rawText = llmResponse.text;
+    const { output } = await suggestionPrompt(input);
 
-    if (!rawText) {
-      throw new Error('AI returned an empty response.');
+    if (!output) {
+      throw new Error('AI returned an empty or invalid suggestion.');
     }
     
-    // Find and extract the JSON part of the response
-    const jsonString = extractJson(rawText);
-
-    if (!jsonString) {
-      console.error('Vibe Match Flow Error: Could not find JSON in the AI response.', { rawText });
-      throw new Error('The AI returned a response in an unexpected format.');
-    }
-
-    try {
-      // Parse the extracted JSON string
-      const parsedJson = JSON.parse(jsonString);
-
-      // Validate the parsed object against our Zod schema
-      const validationResult = VibeMatchOutputSchema.safeParse(parsedJson);
-
-      if (!validationResult.success) {
-        console.error('Vibe Match Flow Error: AI response failed Zod validation.', {
-            errors: validationResult.error.flatten(),
-            response: parsedJson
-        });
-        throw new Error('The AI returned data in the wrong structure.');
-      }
-      
-      // If everything is successful, return the validated data
-      return validationResult.data;
-
-    } catch (e) {
-      console.error('Vibe Match Flow Error: Failed to parse JSON from the AI response.', { jsonString, error: e });
-      throw new Error('The AI returned a malformed JSON response.');
-    }
+    // The output is already parsed and validated by Genkit against VibeMatchOutputSchema
+    return output;
   }
 );
 
@@ -152,6 +81,7 @@ export async function getVibeMatchSuggestionAction(
     return { success: true, data: suggestion };
   } catch (error: any) {
     console.error('Vibe Match Action Error:', error);
+    // Provide a user-friendly error message
     return {
       success: false,
       data: null,
