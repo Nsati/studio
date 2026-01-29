@@ -42,8 +42,9 @@ export async function cancelBookingAction(userId: string, bookingId: string): Pr
             // If the booking was confirmed, we need to release the room inventory.
             if (bookingData.status === 'CONFIRMED') {
                 const roomRef = adminDb.doc(`hotels/${bookingData.hotelId}/rooms/${bookingData.roomId}`);
+                // Check if room exists before trying to update it
                 const roomDoc = await transaction.get(roomRef);
-                if (roomDoc.exists) { // Corrected: .exists is a property on Admin SDK, not a function
+                if (roomDoc.exists) {
                     transaction.update(roomRef, { availableRooms: FieldValue.increment(1) });
                 }
             }

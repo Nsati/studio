@@ -63,7 +63,7 @@ export interface Booking {
   totalPrice: number;
   customerName: string;
   customerEmail: string;
-  status: 'CONFIRMED' | 'CANCELLED' | 'PENDING' | 'FAILED';
+  status: 'CONFIRMED' | 'CANCELLED' | 'PENDING';
   createdAt: Date;
   razorpayPaymentId?: string;
   couponCode?: string;
