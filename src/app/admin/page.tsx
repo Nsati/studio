@@ -1,28 +1,11 @@
+
 'use client';
-import { useMemo, useState, useEffect } from 'react';
-import dynamic from 'next/dynamic';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Hotel, Users2, BookOpen, IndianRupee, AlertCircle } from 'lucide-react';
-import { useUser } from '@/firebase';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Hotel, Users2, BookOpen, IndianRupee } from 'lucide-react';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection } from 'firebase/firestore';
+import type { Hotel as HotelType, UserProfile, Booking } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
-import { getAdminDashboardStats, type AdminDashboardStats } from './actions';
-import { Alert, AlertTitle } from '@/components/ui/alert';
-
-
-const BookingChart = dynamic(() => import('@/components/admin/BookingChart'), {
-  ssr: false,
-  loading: () => <Card><CardHeader><Skeleton className="h-6 w-3/4" /></CardHeader><CardContent><Skeleton className="h-[200px] w-full" /></CardContent></Card>,
-});
-
-const RecentBookings = dynamic(() => import('@/components/admin/RecentBookings'), {
-  loading: () => <Card><CardHeader><Skeleton className="h-6 w-3/4" /></CardHeader><CardContent className="space-y-4"><Skeleton className="h-10 w-full" /><Skeleton className="h-10 w-full" /></CardContent></Card>,
-});
 
 function StatCard({ title, value, icon: Icon, description, isLoading }: any) {
     return (
@@ -48,70 +31,52 @@ function StatCard({ title, value, icon: Icon, description, isLoading }: any) {
     )
 }
 
-function AdminErrorState({ error }: { error: Error }) {
-    return (
-        <Card className="col-span-full bg-destructive/10 border-destructive/20">
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-destructive">
-                    <AlertCircle className="h-6 w-6" />
-                    Admin Panel Error
-                </CardTitle>
-                <CardDescription className="text-destructive">
-                    The admin panel could not load all data. This may be due to a permissions issue or server configuration problem.
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                <Alert variant="destructive">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertTitle>Error Details</AlertTitle>
-                    <p className="text-xs">{error.message}</p>
-                </Alert>
-            </CardContent>
-        </Card>
-    )
-}
-
 
 export default function AdminDashboard() {
-    const { userProfile, isLoading: isUserLoading } = useUser();
-    const isAdmin = userProfile?.role === 'admin';
+  const firestore = useFirestore();
 
-    const [stats, setStats] = useState<AdminDashboardStats | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<Error | null>(null);
+  const hotelsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'hotels');
+  }, [firestore]);
+  const { data: hotels, isLoading: isLoadingHotels } = useCollection<HotelType>(hotelsQuery);
+  
+  const usersQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'users');
+  }, [firestore]);
+  const { data: users, isLoading: isLoadingUsers } = useCollection<UserProfile>(usersQuery);
+  
+  // Note: collectionGroup queries like this require an index in Firestore.
+  // This might fail if the index hasn't been created.
+  const bookingsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'bookings');
+  }, [firestore]);
+  const { data: bookings, isLoading: isLoadingBookings } = useCollection<Booking>(bookingsQuery);
 
-    useEffect(() => {
-        if (isAdmin) {
-            setIsLoading(true);
-            getAdminDashboardStats()
-                .then(setStats)
-                .catch(setError)
-                .finally(() => setIsLoading(false));
-        } else if (!isUserLoading) {
-            setIsLoading(false);
-        }
-    }, [isAdmin, isUserLoading]);
-    
+  const isLoading = isLoadingHotels || isLoadingUsers || isLoadingBookings;
 
   return (
     <div className="space-y-6">
       <h1 className="font-headline text-3xl font-bold">Admin Dashboard</h1>
 
-        {error && (
-            <AdminErrorState error={error} />
-        )}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <StatCard title="Total Revenue" value="₹--,--,---" icon={IndianRupee} description="Revenue calculation pending" isLoading={isLoading} />
+        <StatCard title="Confirmed Bookings" value={bookings?.filter(b => b.status === 'CONFIRMED').length ?? 0} icon={BookOpen} description="Total confirmed bookings" isLoading={isLoading} />
+        <StatCard title="Hotels" value={hotels?.length ?? 0} icon={Hotel} description="Total active properties" isLoading={isLoading}/>
+        <StatCard title="Users" value={users?.length ?? 0} icon={Users2} description="Total registered users" isLoading={isLoading} />
+      </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <StatCard title="Total Revenue" value={(stats?.totalRevenue ?? 0).toLocaleString('en-IN', { style: 'currency', currency: 'INR' })} icon={IndianRupee} description="All-time revenue" isLoading={isLoading} />
-            <StatCard title="Confirmed Bookings" value={stats?.totalBookings ?? 0} icon={BookOpen} description={`+${stats?.bookingsLastMonth ?? 0} from last month`} isLoading={isLoading} />
-            <StatCard title="Hotels" value={stats?.totalHotels ?? 0} icon={Hotel} description="Total active properties" isLoading={isLoading}/>
-            <StatCard title="Users" value={stats?.totalUsers ?? 0} icon={Users2} description="Total registered users" isLoading={isLoading} />
-        </div>
-
-       <div className="grid gap-4 md:grid-cols-2">
-            <BookingChart chartData={stats?.chartData ?? null} />
-            <RecentBookings bookings={stats?.recentBookings ?? null} />
-        </div>
+       <Card>
+        <CardHeader>
+            <CardTitle>Welcome</CardTitle>
+            <CardDescription>More dashboard widgets coming soon!</CardDescription>
+        </CardHeader>
+        <CardContent>
+            <p>You can manage hotels, users, and more from the sidebar.</p>
+        </CardContent>
+       </Card>
     </div>
   );
 }

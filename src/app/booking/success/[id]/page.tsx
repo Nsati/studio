@@ -9,7 +9,7 @@ import { normalizeTimestamp } from '@/lib/firestore-utils';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-  CheckCircle, PartyPopper, UserPlus, Loader2, AlertCircle, ShieldCheck
+  CheckCircle, PartyPopper, UserPlus, AlertCircle
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
@@ -135,20 +135,15 @@ export default function BookingSuccessPage() {
     
     const { data: booking, error: bookingError, isLoading: isBookingLoading } = useDoc<Booking>(bookingRef);
 
-    const isConfirmed = booking?.status === 'CONFIRMED';
-    
     if (bookingError) {
         return <ErrorState bookingId={bookingId} />;
     }
     
-    // Show skeleton while loading OR while the booking is still pending.
-    // The useDoc hook will automatically re-render when the status changes to CONFIRMED.
-    if (isBookingLoading || (booking && !isConfirmed)) {
+    if (isBookingLoading) {
         return <BookingSuccessSkeleton />
     }
 
-    // Only show the final success content when the booking is confirmed.
-    if (booking && isConfirmed) {
+    if (booking) {
         return <SuccessContent booking={booking} />;
     }
     
