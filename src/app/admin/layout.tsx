@@ -4,8 +4,9 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { LayoutDashboard, Hotel, Users2, Tag, LogOut, ExternalLink, Map, BookOpen } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { useEffect } from 'react';
 
 const navItems = [
     { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
@@ -39,12 +40,21 @@ export default function AdminLayout({
 }) {
   const { user, isLoading } = useUser();
   const pathname = usePathname();
+  const router = useRouter();
 
-  // UNRESTRICTED SHELL: Always render the sidebar and container.
-  // Firestore security rules (Synchronous Bypass) will handle actual data protection.
-  if (isLoading && !user) {
+  // Redirect unauthenticated users to login
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push('/login?redirect=' + pathname);
+    }
+  }, [user, isLoading, router, pathname]);
+
+  if (isLoading) {
     return <AdminLayoutSkeleton />;
   }
+
+  // If not loading but no user, we are redirecting, so show nothing
+  if (!user) return null;
 
   return (
     <div className="flex min-h-screen bg-muted/20">

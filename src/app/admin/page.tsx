@@ -11,7 +11,8 @@ import {
   Loader2, 
   TrendingUp, 
   Activity, 
-  ArrowUpRight 
+  ArrowUpRight,
+  Fingerprint
 } from 'lucide-react';
 import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
 import { collection, collectionGroup, query, orderBy, limit } from 'firebase/firestore';
@@ -67,23 +68,24 @@ export default function AdminDashboard() {
 
   // Basic collections
   const hotelsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
+    if (!firestore || !user) return null;
     return collection(firestore, 'hotels');
-  }, [firestore]);
+  }, [firestore, user]);
   const { data: hotels, isLoading: isLoadingHotels } = useCollection<HotelType>(hotelsQuery);
   
   const usersQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
+    if (!firestore || !user) return null;
     return collection(firestore, 'users');
-  }, [firestore]);
+  }, [firestore, user]);
   const { data: users, isLoading: isLoadingUsers } = useCollection<UserProfile>(usersQuery);
   
   // Critical Global Query: collectionGroup('bookings')
+  // This query triggers the "Data Connection Blocked" error if firestore.rules are not synchronous.
   const bookingsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
+    if (!firestore || !user) return null;
     // Authorized via Synchronous Bypass in firestore.rules
     return query(collectionGroup(firestore, 'bookings'), orderBy('createdAt', 'desc'), limit(10));
-  }, [firestore]);
+  }, [firestore, user]);
   const { data: bookings, isLoading: isLoadingBookings, error: bookingsError } = useCollection<Booking>(bookingsQuery);
 
   const isLoading = isLoadingHotels || isLoadingUsers || isLoadingBookings;
@@ -219,24 +221,24 @@ export default function AdminDashboard() {
         </Card>
 
         <div className="space-y-10">
-            {/* System Identity Section */}
+            {/* System Info Section */}
             <Card className="rounded-[3rem] shadow-apple border-black/5 bg-primary text-white overflow-hidden relative group">
                 <CardHeader className="p-10">
-                    <CardTitle className="text-3xl font-black tracking-tight">System Info</CardTitle>
+                    <CardTitle className="text-3xl font-black tracking-tight">System Identity</CardTitle>
                     <CardDescription className="text-white/70 font-bold uppercase text-[10px] tracking-widest mt-2">Env: Superuser Production</CardDescription>
                 </CardHeader>
                 <CardContent className="px-10 pb-10 space-y-6">
                     <div className="flex justify-between items-center py-3 border-b border-white/10">
-                        <span className="text-[10px] font-black uppercase tracking-widest">Auth Bypass</span>
-                        <Badge className="bg-green-400 text-green-900 border-0 font-black text-[8px] px-3 py-0.5">ENABLED</Badge>
+                        <span className="text-[10px] font-black uppercase tracking-widest">Master Auth</span>
+                        <Badge className="bg-green-400 text-green-900 border-0 font-black text-[8px] px-3 py-0.5 uppercase">Enabled</Badge>
                     </div>
                     <div className="flex justify-between items-center py-3 border-b border-white/10">
                         <span className="text-[10px] font-black uppercase tracking-widest">Rules Mode</span>
-                        <Badge className="bg-green-400 text-green-900 border-0 font-black text-[8px] px-3 py-0.5">SYNCHRONOUS</Badge>
+                        <Badge className="bg-green-400 text-green-900 border-0 font-black text-[8px] px-3 py-0.5 uppercase">Synchronous</Badge>
                     </div>
                     <div className="flex justify-between items-center py-3">
-                        <span className="text-[10px] font-black uppercase tracking-widest">Database Sync</span>
-                        <Badge className="bg-green-400 text-green-900 border-0 font-black text-[8px] px-3 py-0.5">REAL-TIME</Badge>
+                        <span className="text-[10px] font-black uppercase tracking-widest">Live Sync</span>
+                        <Badge className="bg-green-400 text-green-900 border-0 font-black text-[8px] px-3 py-0.5 uppercase">Real-time</Badge>
                     </div>
                 </CardContent>
             </Card>
@@ -251,9 +253,8 @@ export default function AdminDashboard() {
                             <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Active Admin</p>
                             <p className="text-sm font-bold truncate text-primary">{user?.email || 'mistrikumar42@gmail.com'}</p>
                         </div>
-                        <div>
-                            <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Internal UID</p>
-                            <p className="text-[10px] font-mono break-all leading-relaxed text-muted-foreground/80">{user?.uid || 'kk7Tsg8Ag3g1YMMR79rgrHUxq2W2'}</p>
+                        <div className="flex items-center gap-2 text-[9px] font-black text-muted-foreground uppercase tracking-widest pt-2 border-t border-black/5">
+                            <Fingerprint className="h-3 w-3" /> UID: {user?.uid?.substring(0, 8)}...
                         </div>
                     </div>
                 </CardContent>

@@ -3,17 +3,17 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // --- 1. THE GOD-MODE BYPASS (100% SYNCHRONOUS) ---
-    // This evaluates instantly from the Auth Token (No DB lookup).
-    // Authorized Emails: mistrikumar42@gmail.com, nsati09@gmail.com
+    // This evaluates instantly from the Auth Token (No DB lookup required).
+    // Using .lower() to prevent case-sensitivity issues with emails.
     function isMasterAdmin() {
       return request.auth != null && (
-        request.auth.token.email in ['mistrikumar42@gmail.com', 'nsati09@gmail.com'] ||
+        request.auth.token.email.lower() in ['mistrikumar42@gmail.com', 'nsati09@gmail.com'] ||
         request.auth.uid == 'kk7Tsg8Ag3g1YMMR79rgrHUxq2W2'
       );
     }
 
     // UNIVERSAL BYPASS: Full access for master admins to EVERYTHING.
-    // This recursive wildcard must stay at the top for synchronous bypass.
+    // This recursive wildcard MUST stay at the top for index-free query authorization.
     match /{allPaths=**} {
       allow read, write: if isMasterAdmin();
     }
@@ -21,6 +21,7 @@ service cloud.firestore {
     // --- 2. EXPLICIT COLLECTION GROUP RULES ---
     // Required for global queries like collectionGroup('bookings') to function.
     match /{path=**}/bookings/{bookingId} {
+      // Allow master admin or owner
       allow list: if isMasterAdmin() || (request.auth != null && request.query.limit <= 100);
       allow get: if isMasterAdmin() || (request.auth != null && (resource == null || resource.data.userId == request.auth.uid));
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
