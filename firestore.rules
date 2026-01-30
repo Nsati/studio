@@ -15,7 +15,7 @@ service cloud.firestore {
     }
 
     // User Data & Bookings
-    // Extremely permissive for the user's own path to ensure guest bookings work
+    // Highly permissive for the owner to ensure guest/anonymous bookings work flawlessly
     match /users/{userId} {
       allow read, write: if isAuthenticated() && request.auth.uid == userId;
       
@@ -36,7 +36,7 @@ service cloud.firestore {
 
         match /rooms/{roomId} {
           allow read: if true;
-          // Crucial: Allow any authenticated user to update availability during booking
+          // Crucial: Allow any authenticated user (including anonymous) to update availability during booking
           allow update: if isAuthenticated();
           allow write: if isAdmin();
         }

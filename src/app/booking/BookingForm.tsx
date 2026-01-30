@@ -17,7 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, Calendar, Users, BedDouble, ArrowLeft, Tag, ShieldCheck, HelpCircle } from 'lucide-react';
+import { Loader2, Calendar, Users, BedDouble, ArrowLeft, Tag, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 import { BookingFormSkeleton } from './BookingFormSkeleton';
 
@@ -157,8 +157,8 @@ export function BookingForm() {
             return;
         }
         
-        let userIdForBooking = user?.uid;
-        if (!userIdForBooking) {
+        let currentAuthUser = user;
+        if (!currentAuthUser) {
             if (!auth) {
                  toast({ variant: 'destructive', title: 'Authentication service not available' });
                  setIsBooking(false);
@@ -166,7 +166,7 @@ export function BookingForm() {
             }
             try {
                 const userCredential = await signInAnonymously(auth);
-                userIdForBooking = userCredential.user.uid;
+                currentAuthUser = userCredential.user;
             } catch (error) {
                 console.error("Anonymous sign-in failed:", error);
                 toast({ variant: 'destructive', title: 'Guest Checkout Failed', description: 'Could not proceed. Please try again.' });
@@ -175,6 +175,7 @@ export function BookingForm() {
             }
         }
         
+        const userIdForBooking = currentAuthUser.uid;
         const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
         if (!keyId) {
             toast({ variant: "destructive", title: "Payment Gateway Error", description: "Razorpay Key ID is not configured." });
@@ -191,13 +192,18 @@ export function BookingForm() {
             description: `Booking for ${hotel.name}`,
             handler: async (response: any) => {
                 try {
-                    const bookingId = `booking_${Date.now()}_${userIdForBooking!.substring(0, 5)}`;
-                    const bookingRef = doc(firestore, 'users', userIdForBooking!, 'bookings', bookingId);
+                    const bookingId = `booking_${Date.now()}_${userIdForBooking.substring(0, 5)}`;
+                    const bookingRef = doc(firestore, 'users', userIdForBooking, 'bookings', bookingId);
                     const roomRef = doc(firestore, 'hotels', hotelId, 'rooms', roomId);
 
                     await runTransaction(firestore, async (transaction) => {
                         const roomDoc = await transaction.get(roomRef);
-                        if (!roomDoc.exists() || (roomDoc.data().availableRooms ?? 0) <= 0) {
+                        if (!roomDoc.exists()) {
+                            throw new Error("Room details not found.");
+                        }
+                        
+                        const currentAvailable = roomDoc.data().availableRooms ?? 0;
+                        if (currentAvailable <= 0) {
                             throw new Error("Sorry, this room just got sold out!");
                         }
                         
@@ -206,7 +212,7 @@ export function BookingForm() {
                         });
                         
                         const bookingPayload: Booking = {
-                            userId: userIdForBooking!,
+                            userId: userIdForBooking,
                             hotelId,
                             hotelName: hotel.name,
                             hotelCity: hotel.city,
@@ -232,11 +238,11 @@ export function BookingForm() {
                     router.push(`/booking/success/${bookingId}`);
 
                 } catch (err: any) {
-                     console.error("Booking Confirmation Error:", err);
+                     console.error("Booking Transaction Error:", err);
                      toast({
                         variant: "destructive",
                         title: "Booking Confirmation Failed",
-                        description: err.message || "Could not confirm your booking after payment. Please contact support.",
+                        description: err.message || "Could not confirm your booking. Please check your permissions or contact support.",
                     });
                 } finally {
                     setIsBooking(false);
