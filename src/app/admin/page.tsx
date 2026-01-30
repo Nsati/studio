@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Hotel, Users2, BookOpen, IndianRupee, TrendingUp, ShieldCheck, Loader2 } from 'lucide-react';
 import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
@@ -50,6 +50,15 @@ export default function AdminDashboard() {
   const firestore = useFirestore();
   const { user } = useUser();
 
+  useEffect(() => {
+    if (user) {
+      console.log("--- ADMIN DEBUG ---");
+      console.log("AUTH UID:", user.uid);
+      console.log("AUTH EMAIL:", user.email);
+      console.log("QUERY TYPE: collectionGroup('bookings')");
+    }
+  }, [user]);
+
   // Queries
   const hotelsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -97,7 +106,7 @@ export default function AdminDashboard() {
                     <Loader2 className="h-4 w-4 animate-spin" /> Permission Error
                 </CardTitle>
                 <CardDescription className="text-destructive/80 text-xs">
-                    Accessing global bookings failed. Ensure rules allow collectionGroup queries for {user?.email}.
+                    Accessing global bookings failed. Ensure rules allow collectionGroup queries for {user?.email}. Check console for debug logs.
                 </CardDescription>
             </CardHeader>
         </Card>
