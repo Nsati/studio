@@ -168,7 +168,7 @@ export default function HomePage() {
                           src={pkgImage.imageUrl} 
                           alt={pkg.title} 
                           fill 
-                          className="object-cover transition-transform duration-[2000ms] group-hover:scale-110" 
+                          className="object-cover transition-transform duration-2000 group-hover:scale-110" 
                         />
                       )}
                       <div className="absolute top-10 right-10 px-6 py-3 glass-morphism rounded-full text-[10px] font-black uppercase tracking-widest text-primary shadow-sm">

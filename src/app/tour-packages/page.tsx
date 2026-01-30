@@ -55,7 +55,7 @@ export default function TourPackagesPage() {
                                     src={pkgImage.imageUrl}
                                     alt={pkg.title}
                                     fill
-                                    className="object-cover transition-transform duration-[2000ms] group-hover:scale-110"
+                                    className="object-cover transition-transform duration-2000 group-hover:scale-110"
                                 />
                             )}
                             <div className="absolute top-8 right-8 px-5 py-2 glass-morphism rounded-full flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary shadow-sm">
@@ -132,7 +132,7 @@ export default function TourPackagesPage() {
                     src="https://images.unsplash.com/photo-1548957175-84f0f9af659e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080"
                     alt="Pahadi Life"
                     fill
-                    className="object-cover transition-transform duration-[3000ms] group-hover:scale-110"
+                    className="object-cover transition-transform duration-3000 group-hover:scale-110"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent" />
                 <div className="absolute bottom-16 left-16 right-16">

@@ -112,7 +112,7 @@ function BookingItem({ booking }: { booking: WithId<Booking> }) {
               src={hotelImage}
               alt={booking.hotelName}
               fill
-              className="object-cover transition-transform duration-[2000ms] group-hover:scale-110"
+              className="object-cover transition-transform duration-2000 group-hover:scale-110"
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center bg-muted">

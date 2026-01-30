@@ -75,6 +75,10 @@ module.exports = {
       transitionTimingFunction: {
         'apple-ease': 'cubic-bezier(0.4, 0, 0.2, 1)',
       },
+      transitionDuration: {
+        '2000': '2000ms',
+        '3000': '3000ms',
+      },
     },
   },
   plugins: [require('tailwindcss-animate')],

@@ -89,20 +89,20 @@ export default function HotelPage() {
       <div className="container mx-auto px-6 mb-24">
         <div className="grid grid-cols-4 grid-rows-2 gap-4 h-[500px] md:h-[750px] rounded-[4rem] overflow-hidden shadow-apple-deep">
             <div className="col-span-2 row-span-2 relative group cursor-pointer">
-                <Image src={hotel.images[0]?.startsWith('http') ? hotel.images[0] : (PlaceHolderImages.find(i => i.id === hotel.images[0])?.imageUrl || '')} alt="Primary" fill className="object-cover transition-transform duration-[2000ms] group-hover:scale-105" priority />
+                <Image src={hotel.images[0]?.startsWith('http') ? hotel.images[0] : (PlaceHolderImages.find(i => i.id === hotel.images[0])?.imageUrl || '')} alt="Primary" fill className="object-cover transition-transform duration-2000 group-hover:scale-105" priority />
             </div>
             <div className="col-span-1 row-span-1 relative group cursor-pointer">
-                <Image src={hotel.images[1]?.startsWith('http') ? hotel.images[1] : (PlaceHolderImages.find(i => i.id === hotel.images[1])?.imageUrl || '')} alt="Gallery 1" fill className="object-cover transition-transform duration-[2000ms] group-hover:scale-105" />
+                <Image src={hotel.images[1]?.startsWith('http') ? hotel.images[1] : (PlaceHolderImages.find(i => i.id === hotel.images[1])?.imageUrl || '')} alt="Gallery 1" fill className="object-cover transition-transform duration-2000 group-hover:scale-105" />
             </div>
             <div className="col-span-1 row-span-1 relative group cursor-pointer">
-                <Image src={hotel.images[2]?.startsWith('http') ? hotel.images[2] : (PlaceHolderImages.find(i => i.id === hotel.images[2])?.imageUrl || '')} alt="Gallery 2" fill className="object-cover transition-transform duration-[2000ms] group-hover:scale-105" />
+                <Image src={hotel.images[2]?.startsWith('http') ? hotel.images[2] : (PlaceHolderImages.find(i => i.id === hotel.images[2])?.imageUrl || '')} alt="Gallery 2" fill className="object-cover transition-transform duration-2000 group-hover:scale-105" />
             </div>
             <div className="col-span-1 row-span-1 relative group cursor-pointer">
-                <Image src={hotel.images[3]?.startsWith('http') ? hotel.images[3] : (PlaceHolderImages.find(i => i.id === hotel.images[3])?.imageUrl || '')} alt="Gallery 3" fill className="object-cover transition-transform duration-[2000ms] group-hover:scale-105" />
+                <Image src={hotel.images[3]?.startsWith('http') ? hotel.images[3] : (PlaceHolderImages.find(i => i.id === hotel.images[3])?.imageUrl || '')} alt="Gallery 3" fill className="object-cover transition-transform duration-2000 group-hover:scale-105" />
             </div>
             <div className="col-span-1 row-span-1 relative group cursor-pointer bg-primary">
                 {hotel.images.length > 4 ? (
-                    <Image src={hotel.images[4]?.startsWith('http') ? hotel.images[4] : (PlaceHolderImages.find(i => i.id === hotel.images[4])?.imageUrl || '')} alt="Gallery 4" fill className="object-cover opacity-40 transition-transform duration-[2000ms] group-hover:scale-105" />
+                    <Image src={hotel.images[4]?.startsWith('http') ? hotel.images[4] : (PlaceHolderImages.find(i => i.id === hotel.images[4])?.imageUrl || '')} alt="Gallery 4" fill className="object-cover opacity-40 transition-transform duration-2000 group-hover:scale-105" />
                 ) : null}
                 <div className="absolute inset-0 flex items-center justify-center text-white font-black tracking-[0.2em] text-xs uppercase bg-black/20 backdrop-blur-sm group-hover:bg-black/40 transition-all duration-500">
                     View All Photos
