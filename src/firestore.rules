@@ -3,8 +3,8 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // --- 1. GLOBAL HELPERS (MUST BE SYNCHRONOUS) ---
-    // collectionGroup queries do NOT support asynchronous database lookups (get() calls).
-    // Authorization must be determined purely from request.auth tokens.
+    // collectionGroup queries do NOT support asynchronous database lookups (get() calls) for authorization.
+    // Authorization must be determined purely from request.auth tokens for 'list' operations.
     function isAuthenticated() {
       return request.auth != null;
     }
@@ -17,17 +17,17 @@ service cloud.firestore {
     }
 
     // --- 2. COLLECTION GROUP RULES (TOP LEVEL REQUIRED) ---
-    // Recursive wildcard {path=**} is mandatory for collectionGroup('bookings') to match results.
+    // Recursive wildcard {path=**} is mandatory for collectionGroup('bookings') to match correctly.
     match /{path=**}/bookings/{bookingId} {
       
-      // Admin can list all bookings. Normal users can list only if they have a userId filter.
-      // Firestore enforces that the query filter must match the security rule constraints.
+      // Admin can list all bookings globally.
+      // Normal users can list only if the query includes a filter: .where('userId', '==', uid)
       allow list: if isMasterAdmin() || (
         isAuthenticated() && 
-        (request.resource == null || request.resource.data.userId == request.auth.uid)
+        (resource == null || resource.data.userId == request.auth.uid)
       );
 
-      // Single document access
+      // Single document access (get)
       allow get: if isMasterAdmin() || (
         isAuthenticated() && (
           (resource == null) || 
@@ -35,6 +35,7 @@ service cloud.firestore {
         )
       );
 
+      // Write operations
       allow write: if isMasterAdmin() || (
         isAuthenticated() && (
           (resource == null) || 
