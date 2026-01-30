@@ -3,27 +3,31 @@
 import { getFirebaseAdmin } from '@/firebase/admin';
 
 /**
- * @fileOverview High-performance Admin Analytics & Data Aggregation.
- * Executes on the server using Admin SDK to bypass security rules safely.
+ * @fileOverview High-performance Admin Analytics with Strict Serialization.
+ * Returns a structured object to prevent Next.js render errors in production.
  */
 
-// Helper to convert any Firestore value into a safe serializable string/number
-const serialize = (val: any) => {
-    if (!val) return null;
+// Strict serializer to ensure ONLY JSON-compatible data leaves the server
+const safeSerialize = (val: any) => {
+    if (val === null || val === undefined) return null;
     if (typeof val.toDate === 'function') return val.toDate().toISOString();
     if (val instanceof Date) return val.toISOString();
+    if (typeof val === 'object') {
+        // If it's a Firestore reference or complex object, don't pass it to client
+        return null;
+    }
     return val;
 };
 
 export async function getAdminDashboardStats() {
-  const { adminDb, error } = getFirebaseAdmin();
-  if (error || !adminDb) {
-      console.error("[ADMIN ACTION] SDK Error:", error);
-      throw new Error(error || 'Failed to connect to Firebase Admin.');
+  const { adminDb, error: sdkError } = getFirebaseAdmin();
+  
+  if (sdkError || !adminDb) {
+      return { success: false, error: sdkError || 'Firebase Admin not connected.' };
   }
 
   try {
-    // Parallel fetching for high performance
+    // Fetch data in parallel
     const [bookingsSnap, hotelsSnap, usersSnap] = await Promise.all([
       adminDb.collectionGroup('bookings').limit(100).get(),
       adminDb.collection('hotels').get(),
@@ -41,13 +45,13 @@ export async function getAdminDashboardStats() {
         roomType: data.roomType || '',
         totalPrice: Number(data.totalPrice) || 0,
         status: data.status || 'PENDING',
-        checkIn: serialize(data.checkIn),
-        checkOut: serialize(data.checkOut),
-        createdAt: serialize(data.createdAt),
+        checkIn: safeSerialize(data.checkIn),
+        checkOut: safeSerialize(data.checkOut),
+        createdAt: safeSerialize(data.createdAt),
       };
     });
 
-    // Memory-side sorting to avoid Firestore Index requirements for collectionGroups
+    // Memory-side sorting
     bookings.sort((a: any, b: any) => {
       const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
       const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
@@ -58,23 +62,26 @@ export async function getAdminDashboardStats() {
     const totalRevenue = confirmedBookings.reduce((acc: number, b: any) => acc + (Number(b.totalPrice) || 0), 0);
 
     return {
-      stats: {
-        totalRevenue,
-        confirmedCount: confirmedBookings.length,
-        hotelCount: hotelsSnap.size,
-        userCount: usersSnap.size,
-      },
-      recentBookings: bookings.slice(0, 10),
+      success: true,
+      data: {
+        stats: {
+          totalRevenue,
+          confirmedCount: confirmedBookings.length,
+          hotelCount: hotelsSnap.size,
+          userCount: usersSnap.size,
+        },
+        recentBookings: bookings.slice(0, 10),
+      }
     };
   } catch (e: any) {
     console.error('[ADMIN ANALYTICS] Fetch Failure:', e.message);
-    throw new Error('Data retrieval failed. Check if collectionGroup indices are required in Firebase Console.');
+    return { success: false, error: e.message };
   }
 }
 
 export async function getAllBookingsForAdmin() {
-  const { adminDb, error } = getFirebaseAdmin();
-  if (error || !adminDb) throw new Error(error || 'Platform link failure.');
+  const { adminDb, error: sdkError } = getFirebaseAdmin();
+  if (sdkError || !adminDb) return { success: false, error: sdkError };
 
   try {
     const snap = await adminDb.collectionGroup('bookings').get();
@@ -89,20 +96,22 @@ export async function getAllBookingsForAdmin() {
         roomType: data.roomType || '',
         totalPrice: Number(data.totalPrice) || 0,
         status: data.status || 'PENDING',
-        checkIn: serialize(data.checkIn),
-        checkOut: serialize(data.checkOut),
-        createdAt: serialize(data.createdAt),
+        checkIn: safeSerialize(data.checkIn),
+        checkOut: safeSerialize(data.checkOut),
+        createdAt: safeSerialize(data.createdAt),
         guests: data.guests || 1
       };
     });
 
-    return bookings.sort((a: any, b: any) => {
+    bookings.sort((a: any, b: any) => {
       const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
       const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
       return dateB - dateA;
     });
+
+    return { success: true, data: bookings };
   } catch (e: any) {
     console.error('[ADMIN INVENTORY] Retrieval Failure:', e.message);
-    throw new Error('Inventory sync failed.');
+    return { success: false, error: e.message };
   }
 }

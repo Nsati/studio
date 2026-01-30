@@ -67,11 +67,15 @@ export default function AdminDashboard() {
     setIsLoading(true);
     setError(null);
     try {
-      const result = await getAdminDashboardStats();
-      setData(result);
+      const response = await getAdminDashboardStats();
+      if (response.success) {
+        setData(response.data);
+      } else {
+        setError(response.error || "Failed to fetch dashboard metrics.");
+      }
     } catch (err: any) {
       console.error("[DASHBOARD] Sync Error:", err);
-      setError(err.message || "Cloud metrics could not be synchronized.");
+      setError("Network error: Could not connect to the cloud environment.");
     } finally {
       setIsLoading(false);
     }
