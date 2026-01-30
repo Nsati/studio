@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -199,12 +198,12 @@ export function BookingForm() {
                     await runTransaction(firestore, async (transaction) => {
                         const roomDoc = await transaction.get(roomRef);
                         if (!roomDoc.exists()) {
-                            throw new Error("Room details not found.");
+                            throw new Error("Room details not found in database.");
                         }
                         
                         const currentAvailable = roomDoc.data().availableRooms ?? 0;
                         if (currentAvailable <= 0) {
-                            throw new Error("Sorry, this room just got sold out!");
+                            throw new Error("Sorry, this room just got sold out while you were paying!");
                         }
                         
                         transaction.update(roomRef, {
@@ -241,8 +240,8 @@ export function BookingForm() {
                      console.error("Booking Transaction Error:", err);
                      toast({
                         variant: "destructive",
-                        title: "Booking Confirmation Failed",
-                        description: err.message || "Could not confirm your booking. Please check your permissions or contact support.",
+                        title: "Booking Persistence Failed",
+                        description: err.message || "Could not save your booking. Please contact support with your Payment ID.",
                     });
                 } finally {
                     setIsBooking(false);
@@ -256,7 +255,7 @@ export function BookingForm() {
             modal: {
                 ondismiss: () => {
                     setIsBooking(false);
-                    toast({ variant: 'destructive', title: 'Payment Cancelled', description: 'Your booking was not completed.' });
+                    toast({ variant: 'destructive', title: 'Payment Cancelled', description: 'Your transaction was not completed.' });
                 }
             }
         };

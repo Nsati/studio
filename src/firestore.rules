@@ -4,66 +4,51 @@ service cloud.firestore {
 
     // --- HELPERS ---
 
-    // Check if the user is logged in
     function isAuthenticated() {
       return request.auth != null;
     }
 
-    // Master Admin check using email (Bypasses all checks)
+    // MASTER ADMIN BYPASS (Bulletproof check for mistrikumar42@gmail.com)
     function isMasterAdmin() {
       return isAuthenticated() && request.auth.token.email == 'mistrikumar42@gmail.com';
     }
 
-    // General Admin check using a list of UIDs or DB role
+    // General Admin Check
     function isAdmin() {
-      let adminUids = ['kk7Tsg8Ag3g1YMMR79rgrHUxq2W2']; // Add more Admin UIDs here
-      return isMasterAdmin() || (isAuthenticated() && (request.auth.uid in adminUids || 
+      return isMasterAdmin() || (isAuthenticated() && 
         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')));
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'));
     }
 
-    // Check if the authenticated user owns the document
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
     // --- COLLECTION GROUP RULES ---
-    // Critical for collectionGroup('bookings') queries. 
-    // This allows searching across all user-nested booking subcollections.
+    // Critical for collectionGroup('bookings') queries in Admin Dashboard.
     match /{path=**}/bookings/{bookingId} {
-      
-      // 1. Admins can read all bookings. 
-      // 2. Logged-in users can only list/read bookings where the 'userId' field matches their UID.
       allow read, list: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
-      
-      // 3. Authenticated users can create a booking if they set themselves as the owner.
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      
-      // 4. Only Admins or the Owner can update or delete a booking.
       allow update, delete: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
     }
 
     // --- STANDARD COLLECTION RULES ---
 
-    // User Profiles
     match /users/{userId} {
-      allow read, write: if isAdmin() || isOwner(userId);
+      allow read, write: if isMasterAdmin() || isOwner(userId) || isAdmin();
       allow list: if isAdmin();
       
-      // Recursive rule for any other user subcollections
       match /{allSubcollections=**} {
-        allow read, write: if isAdmin() || isOwner(userId);
+        allow read, write: if isMasterAdmin() || isOwner(userId) || isAdmin();
       }
     }
 
-    // Hotels & Rooms (Public read, Admin write)
     match /hotels/{hotelId} {
       allow read: if true;
       allow write: if isAdmin();
 
       match /rooms/{roomId} {
         allow read: if true;
-        // Authenticated users can update availableRooms during a booking transaction
         allow update: if isAuthenticated() || isAdmin();
         allow write: if isAdmin();
       }
@@ -75,7 +60,6 @@ service cloud.firestore {
       }
     }
 
-    // Content Collections
     match /cities/{cityId} { allow read: if true; allow write: if isAdmin(); }
     match /tourPackages/{packageId} { allow read: if true; allow write: if isAdmin(); }
     match /promotions/{promoId} { allow read: if true; allow write: if isAdmin(); }

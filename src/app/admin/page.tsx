@@ -54,9 +54,10 @@ export default function AdminDashboard() {
   
   const bookingsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
+    // Using collectionGroup to aggregate all bookings from all users
     return query(collectionGroup(firestore, 'bookings'), orderBy('createdAt', 'desc'));
   }, [firestore]);
-  const { data: bookings, isLoading: isLoadingBookings } = useCollection<Booking>(bookingsQuery);
+  const { data: bookings, isLoading: isLoadingBookings, error: bookingsError } = useCollection<Booking>(bookingsQuery);
 
   const isLoading = isLoadingHotels || isLoadingUsers || isLoadingBookings;
 
@@ -75,12 +76,18 @@ export default function AdminDashboard() {
         </div>
       </div>
 
+      {bookingsError && (
+        <div className="p-4 bg-destructive/10 text-destructive rounded-2xl text-xs font-mono">
+          PERMISSION ERROR: {bookingsError.message}. Ensure collection group indexes are created in Firebase Console.
+        </div>
+      )}
+
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <StatCard 
             title="Total Revenue" 
             value={totalRevenue.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })} 
             icon={IndianRupee} 
-            description="Lifetime earnings" 
+            description="Confirmed bookings" 
             isLoading={isLoading} 
             trend="+12%"
         />
@@ -115,7 +122,7 @@ export default function AdminDashboard() {
                 <div className="flex justify-between items-center">
                     <div>
                         <CardTitle className="text-xl font-black tracking-tight">Recent Reservations</CardTitle>
-                        <CardDescription>Latest bookings across the platform.</CardDescription>
+                        <CardDescription>Latest activity across the platform.</CardDescription>
                     </div>
                     <Badge variant="outline" className="rounded-full font-black uppercase text-[9px] tracking-widest">Live Feed</Badge>
                 </div>
@@ -173,7 +180,7 @@ export default function AdminDashboard() {
                     <CardDescription className="text-white/70 font-bold uppercase text-[10px] tracking-widest mt-2">Revenue Analytics</CardDescription>
                 </CardHeader>
                 <CardContent className="px-8 pb-8 space-y-4 relative z-10">
-                    <p className="text-sm font-medium text-white/80 leading-relaxed">Your business has seen a 12% increase in confirmed bookings compared to last month.</p>
+                    <p className="text-sm font-medium text-white/80 leading-relaxed">Your business has seen a steady increase in confirmed bookings this season.</p>
                     <div className="pt-4 border-t border-white/10 flex justify-between items-center">
                         <span className="text-[10px] font-black uppercase tracking-widest">Avg. Order Value</span>
                         <span className="text-lg font-black tracking-tighter">₹14,500</span>
