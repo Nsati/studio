@@ -66,13 +66,13 @@ export default function AdminDashboard() {
   
   const bookingsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-    // collectionGroup query for global summary
+    // collectionGroup query for global summary - depends on /{path=**}/bookings rules
     return query(collectionGroup(firestore, 'bookings'), orderBy('createdAt', 'desc'));
   }, [firestore]);
   
   const { data: bookings, isLoading: isLoadingBookings, error: bookingsError } = useCollection<Booking>(bookingsQuery);
 
-  // Stats
+  // Stats calculation
   const isLoading = isLoadingHotels || isLoadingUsers || isLoadingBookings;
   const confirmedBookings = bookings?.filter(b => b.status === 'CONFIRMED') || [];
   const totalRevenue = confirmedBookings.reduce((acc, b) => acc + (b.totalPrice || 0), 0) || 0;
@@ -96,8 +96,8 @@ export default function AdminDashboard() {
                 <CardTitle className="text-sm font-bold text-destructive flex items-center gap-2">
                     <Loader2 className="h-4 w-4 animate-spin" /> Permission Syncing...
                 </CardTitle>
-                <CardDescription className="text-destructive/80">
-                    If this persists, please ensure your account mistrikumar42@gmail.com is correctly logged in.
+                <CardDescription className="text-destructive/80 text-xs">
+                    Accessing global collectionGroup('bookings'). Please ensure your account mistrikumar42@gmail.com is authorized.
                 </CardDescription>
             </CardHeader>
         </Card>
@@ -169,10 +169,14 @@ export default function AdminDashboard() {
                                 <TableRow key={booking.id} className="hover:bg-muted/10 transition-colors">
                                     <TableCell className="px-8 py-4">
                                         <div className="font-bold text-sm">{booking.customerName}</div>
-                                        <div className="text-[10px] text-muted-foreground font-black tracking-widest uppercase">{format(normalizeTimestamp(booking.createdAt), 'dd MMM, HH:mm')}</div>
+                                        <div className="text-[10px] text-muted-foreground font-black tracking-widest uppercase">
+                                            {format(normalizeTimestamp(booking.createdAt), 'dd MMM, HH:mm')}
+                                        </div>
                                     </TableCell>
                                     <TableCell className="py-4 font-medium text-muted-foreground text-sm">{booking.hotelName}</TableCell>
-                                    <TableCell className="py-4 font-black text-primary text-sm">{booking.totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}</TableCell>
+                                    <TableCell className="py-4 font-black text-primary text-sm">
+                                        {booking.totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}
+                                    </TableCell>
                                     <TableCell className="px-8 py-4 text-right">
                                         <Badge className={cn(
                                             "rounded-full font-black uppercase text-[9px] tracking-widest px-3",
@@ -201,7 +205,7 @@ export default function AdminDashboard() {
                     <CardDescription className="text-white/70 font-bold uppercase text-[10px] tracking-widest mt-2">Revenue Pulse</CardDescription>
                 </CardHeader>
                 <CardContent className="px-8 pb-8 space-y-4">
-                    <p className="text-sm font-medium text-white/80 leading-relaxed">Bookings are showing a steady upward trend this season. Focus on Nainital properties.</p>
+                    <p className="text-sm font-medium text-white/80 leading-relaxed">Bookings are showing a steady upward trend this season. Focus on Nainital properties for marketing.</p>
                     <div className="pt-4 border-t border-white/10 flex justify-between items-center">
                         <span className="text-[10px] font-black uppercase tracking-widest">Expected Growth</span>
                         <span className="text-lg font-black tracking-tighter">+18%</span>

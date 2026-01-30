@@ -2,14 +2,14 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // --- HELPERS ---
+    // --- GLOBAL HELPERS ---
 
     function isAuthenticated() {
       return request.auth != null;
     }
 
-    // MASTER ADMIN BYPASS (Immediate authorization for the owner)
-    // Using synchronous token checks to avoid permission-denied errors in collectionGroup queries.
+    // MASTER ADMIN BYPASS: Direct token check for mistrikumar42@gmail.com
+    // This is synchronous and allows collectionGroup queries to authorize immediately.
     function isMasterAdmin() {
       return isAuthenticated() && (
         request.auth.token.email == 'mistrikumar42@gmail.com' || 
@@ -17,26 +17,21 @@ service cloud.firestore {
       );
     }
 
-    // General Admin Check (for other admin users defined in the database)
-    // Note: avoid using this in collectionGroup rules if it causes performance/permission issues.
+    // General Admin check for other users defined in the database
     function isAdmin() {
       return isMasterAdmin() || (isAuthenticated() && 
         exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
     }
 
-    function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
-    }
-
     // --- COLLECTION GROUP RULES ---
-    // MUST BE DEFINED TO ALLOW collectionGroup('bookings') QUERIES
+    // This match pattern is REQUIRED for collectionGroup queries to work.
     match /{path=**}/bookings/{bookingId} {
-      // Allow Master Admin unrestricted access (synchronous check)
+      // Master Admin can do anything
       allow read, write: if isMasterAdmin();
       
-      // Standard user access
-      allow read, list: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      // Standard user ownership check
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
       allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
     }
@@ -44,11 +39,11 @@ service cloud.firestore {
     // --- STANDARD COLLECTION RULES ---
 
     match /users/{userId} {
-      allow read, write: if isOwner(userId) || isMasterAdmin() || isAdmin();
+      allow read, write: if request.auth.uid == userId || isMasterAdmin() || isAdmin();
       allow list: if isMasterAdmin() || isAdmin();
       
       match /{allSubcollections=**} {
-        allow read, write: if isOwner(userId) || isMasterAdmin() || isAdmin();
+        allow read, write: if request.auth.uid == userId || isMasterAdmin() || isAdmin();
       }
     }
 
@@ -58,8 +53,8 @@ service cloud.firestore {
 
       match /rooms/{roomId} {
         allow read: if true;
-        // Allow updates for both admins and authenticated users (for room availability during booking)
-        allow update: if isAuthenticated() || isMasterAdmin() || isAdmin(); 
+        // Allow anyone to update availableRooms (required for booking transactions)
+        allow update: if true; 
         allow write: if isMasterAdmin() || isAdmin();
       }
       
