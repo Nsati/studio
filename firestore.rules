@@ -8,27 +8,29 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Robust Admin check: checks for role field OR explicit super-admin email
+    // Robust Admin check: prioritizing the specific super-admin email for zero-latency access
     function isAdmin() {
       return isAuthenticated() && (
+        request.auth.token.email == 'mistrikumar42@gmail.com' ||
         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') ||
-        request.auth.token.email == 'mistrikumar42@gmail.com'
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
       );
     }
 
-    // --- Collection Group Rules (Must be at top level for collectionGroup queries) ---
+    // --- COLLECTION GROUP RULES (CRITICAL for Admin Dashboard) ---
+    // This allows collectionGroup('bookings') queries to work across the whole database
     match /{path=**}/bookings/{bookingId} {
-        // Allow users to see their own bookings
-        // Allow admins to list ALL bookings (Crucial for Admin Dashboard)
         allow read, list: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
         allow create: if isAuthenticated();
         allow update, delete: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
     }
 
-    // User Data
+    // User Data & Profiles
     match /users/{userId} {
       allow read, write: if isAuthenticated() && request.auth.uid == userId;
+      
+      // Allow admins to list all users for the management panel
+      allow list: if isAdmin();
       
       match /{allSubcollections=**} {
         allow read, write: if isAuthenticated() && request.auth.uid == userId;

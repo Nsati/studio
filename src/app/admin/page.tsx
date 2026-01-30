@@ -3,7 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Hotel, Users2, BookOpen, IndianRupee } from 'lucide-react';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, collectionGroup, limit, query } from 'firebase/firestore';
+import { collection, collectionGroup, query } from 'firebase/firestore';
 import type { Hotel as HotelType, UserProfile, Booking } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -48,7 +48,6 @@ export default function AdminDashboard() {
   const { data: users, isLoading: isLoadingUsers } = useCollection<UserProfile>(usersQuery);
   
   // FIXED: Using collectionGroup to query bookings across all user documents.
-  // This requires a Firestore index for 'bookings' collection group.
   const bookingsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return collectionGroup(firestore, 'bookings');
@@ -70,11 +69,11 @@ export default function AdminDashboard() {
 
        <Card>
         <CardHeader>
-            <CardTitle>Welcome</CardTitle>
-            <CardDescription>Everything is looking good!</CardDescription>
+            <CardTitle>Admin Access Active</CardTitle>
+            <CardDescription>Verified access for mistrikumar42@gmail.com</CardDescription>
         </CardHeader>
         <CardContent>
-            <p className="text-muted-foreground">You can manage hotels, users, and promotions from the sidebar. Collection Group queries for bookings are now active.</p>
+            <p className="text-muted-foreground">You can manage hotels, users, and promotions from the sidebar. If you see index errors, please click the link provided by Firebase in the browser console to create required composite indexes.</p>
         </CardContent>
        </Card>
     </div>
