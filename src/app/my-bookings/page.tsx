@@ -1,15 +1,11 @@
-
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useFirestore, useUser, useCollection, useDoc, useMemoFirebase, type WithId } from '@/firebase';
 import type { Booking, Hotel } from '@/lib/types';
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
 } from '@/components/ui/card';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -27,12 +23,14 @@ import {
   Compass,
   CheckCircle2,
   Clock,
-  XCircle
+  XCircle,
+  Inbox
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
 import { collection, doc } from 'firebase/firestore';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 
 function StatusBadge({ status }: { status: string }) {
@@ -102,14 +100,12 @@ function BookingItem({ booking }: { booking: WithId<Booking> }) {
 
   const hotelImage = hotel ? PlaceHolderImages.find((img) => img.id === hotel.images[0])?.imageUrl || hotel.images[0] : null;
 
-  // Formatting dates safely
   const checkInDate = booking.checkIn instanceof Date ? booking.checkIn : (booking.checkIn as any).toDate?.() || new Date();
   const checkOutDate = booking.checkOut instanceof Date ? booking.checkOut : (booking.checkOut as any).toDate?.() || new Date();
   
   return (
     <Card className="group overflow-hidden rounded-[3rem] border-black/5 bg-white shadow-apple-deep transition-all duration-700 hover:-translate-y-1">
       <div className="flex flex-col md:flex-row">
-        {/* Column 1: Immersive Image */}
         <div className="relative w-full aspect-[4/3] md:w-2/5 md:aspect-auto flex-shrink-0 overflow-hidden">
           {hotelImage ? (
             <Image
@@ -129,7 +125,6 @@ function BookingItem({ booking }: { booking: WithId<Booking> }) {
           </div>
         </div>
 
-        {/* Column 2: Refined Details */}
         <div className="flex flex-col flex-grow justify-between p-8 lg:p-12">
           <div className="space-y-8">
             <div className="space-y-2">
@@ -181,16 +176,36 @@ function BookingItem({ booking }: { booking: WithId<Booking> }) {
             <Button variant="ghost" size="lg" className="rounded-full h-14 px-8 font-black uppercase text-[10px] tracking-widest hover:bg-primary/5 text-muted-foreground" disabled>
               <Download className="mr-2 h-4 w-4" /> E-Voucher
             </Button>
-            {booking.status === 'CONFIRMED' && (
-                <Button variant="ghost" size="lg" className="rounded-full h-14 px-8 font-black uppercase text-[10px] tracking-widest text-destructive hover:bg-destructive/5 ml-auto" disabled>
-                    Modify
-                </Button>
-            )}
           </div>
         </div>
       </div>
     </Card>
   );
+}
+
+function EmptyState({ title, description, showButton = true }: { title: string, description: string, showButton?: boolean }) {
+    return (
+        <div className="relative py-24 text-center overflow-hidden">
+            <div className="relative z-10 space-y-8 max-w-lg mx-auto">
+                <div className="mx-auto h-24 w-24 bg-muted/50 rounded-full flex items-center justify-center">
+                    <Inbox className="h-10 w-10 text-muted-foreground/40" />
+                </div>
+                <div className="space-y-3">
+                    <h2 className="text-3xl font-black tracking-tight">{title}</h2>
+                    <p className="text-muted-foreground text-lg font-medium leading-relaxed px-4">
+                        {description}
+                    </p>
+                </div>
+                {showButton && (
+                    <Button asChild size="lg" className="rounded-full px-12 h-16 bg-primary hover:bg-primary/90 text-lg font-black shadow-xl shadow-primary/20 transition-all active:scale-95">
+                        <Link href="/search">
+                            Explore The Collection <ArrowRight className="ml-3 h-5 w-5" />
+                        </Link>
+                    </Button>
+                )}
+            </div>
+        </div>
+    )
 }
 
 
@@ -211,6 +226,15 @@ export default function MyBookingsPage() {
   }, [firestore, user]);
 
   const { data: bookings, isLoading: areBookingsLoading } = useCollection<Booking>(bookingsQuery);
+
+  const stats = useMemo(() => {
+    const data = {
+        confirmed: bookings?.filter(b => b.status === 'CONFIRMED') || [],
+        pending: bookings?.filter(b => b.status === 'PENDING') || [],
+        cancelled: bookings?.filter(b => b.status === 'CANCELLED') || []
+    };
+    return data;
+  }, [bookings]);
 
   const isLoading = isUserLoading || areBookingsLoading;
 
@@ -250,41 +274,50 @@ export default function MyBookingsPage() {
                 )}
             </div>
 
-            {bookings && bookings.length > 0 ? (
-                <div className="space-y-16">
-                    {bookings.map(booking => (
-                        <BookingItem key={booking.id} booking={booking} />
-                    ))}
+            <Tabs defaultValue="confirmed" className="space-y-12">
+                <div className="flex justify-center">
+                    <TabsList className="h-16 p-1.5 bg-muted/30 rounded-full border border-black/5 backdrop-blur-sm">
+                        <TabsTrigger value="confirmed" className="rounded-full px-10 data-[state=active]:bg-white data-[state=active]:shadow-apple font-black text-xs uppercase tracking-widest">
+                            Confirmed <span className="ml-2 opacity-40">{stats.confirmed.length}</span>
+                        </TabsTrigger>
+                        <TabsTrigger value="pending" className="rounded-full px-10 data-[state=active]:bg-white data-[state=active]:shadow-apple font-black text-xs uppercase tracking-widest">
+                            Pending <span className="ml-2 opacity-40">{stats.pending.length}</span>
+                        </TabsTrigger>
+                        <TabsTrigger value="cancelled" className="rounded-full px-10 data-[state=active]:bg-white data-[state=active]:shadow-apple font-black text-xs uppercase tracking-widest">
+                            Cancelled <span className="ml-2 opacity-40">{stats.cancelled.length}</span>
+                        </TabsTrigger>
+                    </TabsList>
                 </div>
-            ) : (
-                <div className="relative py-32 text-center overflow-hidden">
-                    <div className="absolute inset-0 z-0 flex items-center justify-center opacity-[0.03]">
-                        <Mountain className="h-[500px] w-[500px] text-primary rotate-12" />
-                    </div>
-                    <div className="relative z-10 space-y-8 max-w-lg mx-auto">
-                        <div className="mx-auto h-24 w-24 bg-muted/50 rounded-full flex items-center justify-center">
-                            <Compass className="h-10 w-10 text-muted-foreground" />
-                        </div>
-                        <div className="space-y-3">
-                            <h2 className="text-4xl font-black tracking-tight">The Library is Empty</h2>
-                            <p className="text-muted-foreground text-lg font-medium leading-relaxed px-4">
-                                Your next great Himalayan story is waiting to be written. Let's find your perfect mountain retreat.
-                            </p>
-                        </div>
-                        <Button asChild size="lg" className="rounded-full px-12 h-16 bg-primary hover:bg-primary/90 text-lg font-black shadow-xl shadow-primary/20 transition-all active:scale-95">
-                            <Link href="/search">
-                                Explore The Collection <ArrowRight className="ml-3 h-5 w-5" />
-                            </Link>
-                        </Button>
-                    </div>
-                </div>
-            )}
+
+                <TabsContent value="confirmed" className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    {stats.confirmed.length > 0 ? (
+                        stats.confirmed.map(booking => <BookingItem key={booking.id} booking={booking} />)
+                    ) : (
+                        <EmptyState title="No Active Journeys" description="You haven't scheduled any Himalayan retreats yet. Let's find your first one." />
+                    )}
+                </TabsContent>
+
+                <TabsContent value="pending" className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    {stats.pending.length > 0 ? (
+                        stats.pending.map(booking => <BookingItem key={booking.id} booking={booking} />)
+                    ) : (
+                        <EmptyState title="Clear Skies" description="No pending reservations found. Everything is in order." showButton={false} />
+                    )}
+                </TabsContent>
+
+                <TabsContent value="cancelled" className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    {stats.cancelled.length > 0 ? (
+                        stats.cancelled.map(booking => <BookingItem key={booking.id} booking={booking} />)
+                    ) : (
+                        <EmptyState title="No Cancellations" description="None of your bookings have been cancelled. That's great!" showButton={false} />
+                    )}
+                </TabsContent>
+            </Tabs>
         </div>
     </div>
   );
 }
 
-// Simple Helper Icon
 function Mountain(props: any) {
     return (
         <svg
