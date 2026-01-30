@@ -9,7 +9,7 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // MASTER ADMIN BYPASS
+    // MASTER ADMIN BYPASS (Immediate authorization for the owner)
     function isMasterAdmin() {
       return isAuthenticated() && (
         request.auth.token.email == 'mistrikumar42@gmail.com' || 
@@ -17,7 +17,7 @@ service cloud.firestore {
       );
     }
 
-    // 1. GLOBAL MASTER ADMIN OVERRIDE
+    // 1. GLOBAL MASTER ADMIN OVERRIDE - MUST BE FIRST
     match /{allPaths=**} {
       allow read, write: if isMasterAdmin();
     }

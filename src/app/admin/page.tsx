@@ -67,6 +67,7 @@ export default function AdminDashboard() {
   
   const bookingsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
+    // Explicit collectionGroup query for the dashboard summary
     return query(collectionGroup(firestore, 'bookings'), orderBy('createdAt', 'desc'));
   }, [firestore]);
   
@@ -75,7 +76,7 @@ export default function AdminDashboard() {
   // Deriving Stats
   const isLoading = isLoadingHotels || isLoadingUsers || isLoadingBookings;
   const confirmedBookings = bookings?.filter(b => b.status === 'CONFIRMED') || [];
-  const totalRevenue = confirmedBookings.reduce((acc, b) => acc + b.totalPrice, 0) || 0;
+  const totalRevenue = confirmedBookings.reduce((acc, b) => acc + (b.totalPrice || 0), 0) || 0;
   const confirmedCount = confirmedBookings.length;
 
   return (
@@ -92,7 +93,7 @@ export default function AdminDashboard() {
 
       {bookingsError && (
         <div className="p-4 bg-destructive/10 text-destructive rounded-2xl text-xs font-mono">
-          PERMISSION ERROR: {bookingsError.message}. Ensure composite indexes are created in Firebase Console.
+          PERMISSION ERROR: {bookingsError.message}. Make sure the master bypass email is correct in firestore.rules.
         </div>
       )}
 
