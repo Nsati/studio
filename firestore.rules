@@ -3,13 +3,9 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions for clarity and reuse
+    // Helper functions
     function isAuthenticated() {
       return request.auth != null;
-    }
-
-    function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
     }
 
     function isAdmin() {
@@ -18,17 +14,17 @@ service cloud.firestore {
              && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
-    // User Profile & Bookings Rules
-    // This allows both regular users and anonymous guests to manage their own data
+    // User Data & Bookings
+    // Extremely permissive for the user's own path to ensure guest bookings work
     match /users/{userId} {
-      allow read, write: if isOwner(userId) || isAdmin();
+      allow read, write: if isAuthenticated() && request.auth.uid == userId;
       
-      match /bookings/{bookingId} {
-        allow read, write: if isOwner(userId) || isAdmin();
+      match /{allSubcollections=**} {
+        allow read, write: if isAuthenticated() && request.auth.uid == userId;
       }
     }
 
-    // Global Bookings Read for Admin (Collection Group Query support)
+    // Collection Group for Admin
     match /{path=**}/bookings/{bookingId} {
         allow list: if isAdmin();
     }
@@ -40,7 +36,7 @@ service cloud.firestore {
 
         match /rooms/{roomId} {
           allow read: if true;
-          // Crucial for booking: Allow any authenticated user to decrement room count
+          // Crucial: Allow any authenticated user to update availability during booking
           allow update: if isAuthenticated();
           allow write: if isAdmin();
         }
@@ -52,7 +48,7 @@ service cloud.firestore {
         }
     }
 
-    // Other Content Collections
+    // Content Collections
     match /cities/{cityId} {
         allow read: if true;
         allow write: if isAdmin();
