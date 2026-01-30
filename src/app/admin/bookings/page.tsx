@@ -83,8 +83,7 @@ export default function BookingsAdminPage() {
                 </CardTitle>
                 <CardDescription className="text-destructive/80 font-medium">
                     The query <code>collectionGroup('bookings')</code> was rejected. 
-                    <br/>Authenticated as: <strong>{user?.email}</strong>
-                    <br/>Action: Check if Firebase Security Rules are correctly matching <code>{'{path=**}/bookings/{bookingId}'}</code>.
+                    Authenticated as: <strong>{user?.email}</strong>
                 </CardDescription>
             </CardHeader>
         </Card>

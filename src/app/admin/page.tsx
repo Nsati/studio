@@ -50,11 +50,6 @@ export default function AdminDashboard() {
   const firestore = useFirestore();
   const { user } = useUser();
 
-  // NUCLEAR DEBUG LOGS
-  console.log("--- ADMIN DASHBOARD RENDER ---");
-  console.log("AUTH UID:", user?.uid);
-  console.log("AUTH EMAIL:", user?.email);
-
   // Queries
   const hotelsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -70,7 +65,6 @@ export default function AdminDashboard() {
   
   const bookingsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-    console.log("🔥 Fetching collectionGroup('bookings')...");
     return query(collectionGroup(firestore, 'bookings'), orderBy('createdAt', 'desc'), limit(50));
   }, [firestore]);
   const { data: bookings, isLoading: isLoadingBookings, error: bookingsError } = useCollection<Booking>(bookingsQuery);
@@ -105,8 +99,7 @@ export default function AdminDashboard() {
                     <Loader2 className="h-5 w-5 animate-spin" /> Authorization Constraint
                 </CardTitle>
                 <CardDescription className="text-destructive/80 font-medium">
-                    Accessing global bookings failed. Ensure Firestore Security Rules for <code>collectionGroup('bookings')</code> are published. 
-                    User: <code>{user?.email}</code>
+                    Accessing global bookings failed. User: <code>{user?.email}</code>
                 </CardDescription>
             </CardHeader>
         </Card>
