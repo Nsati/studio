@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -34,6 +33,16 @@ import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } f
 import { doc, setDoc } from 'firebase/firestore';
 import type { UserProfile } from '@/lib/types';
 import { Separator } from '@/components/ui/separator';
+
+/**
+ * @fileOverview Production-ready Signup with Google Integration (Frontend)
+ * 
+ * Features:
+ * - Robust Google OAuth 2.0 Integration
+ * - Server-side profile verification & creation
+ * - Advanced error handling for popup blocks and config issues
+ * - Themed UI following PRD guidelines
+ */
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
@@ -72,14 +81,11 @@ export function SignupForm() {
     setServerError('');
 
     try {
-      // 1. Trigger Google OAuth
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
       
-      // 2. Get secure JWT (ID Token)
       const idToken = await result.user.getIdToken(true);
 
-      // 3. Verify and sync with backend
       const response = await fetch('/api/auth/verify-token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -94,34 +100,38 @@ export function SignupForm() {
 
       toast({
         title: 'Signup Successful!',
-        description: `Welcome to the family, ${data.user.displayName}!`,
+        description: `Welcome to the Uttarakhand Getaways family, ${data.user.displayName}!`,
       });
       
       router.push('/my-bookings');
-    } catch (error: any) {
-      console.error("Google signup error:", error);
+    } catch (err: any) {
+      console.error("[AUTH ERROR]", err.code, err.message);
       
-      // Handle browser blocking the popup
-      if (error.code === 'auth/popup-blocked') {
-        toast({
-          variant: 'destructive',
-          title: 'Popup Blocked',
-          description: 'Please allow popups for this website in your browser settings to sign up with Google.',
-        });
+      let title = "Auth Error";
+      let description = err.message || "Signup failed. Please try again.";
+
+      if (err.code === 'auth/popup-blocked') {
+        title = "Popup Blocked";
+        description = "Please allow popups for this site in your browser settings to sign up with Google.";
+      } else if (err.code === 'auth/popup-closed-by-user') {
+        title = "Signup Cancelled";
+        description = "The Google sign-in window was closed.";
+      } else if (err.code === 'auth/unauthorized-domain') {
+        title = "Config Error";
+        description = "This domain is not authorized. Please check your Firebase settings.";
+      } else if (err.code === 'auth/operation-not-allowed') {
+        title = "Provider Error";
+        description = "Google provider is not enabled in Firebase Console.";
       }
-      // Handle the user closing the popup manually
-      else if (error.code === 'auth/popup-closed-by-user') {
-        toast({
-          title: 'Signup Cancelled',
-          description: 'The Google sign-in window was closed before completion.',
-        });
-      } else {
-        setServerError(error.message || 'Could not sign up with Google. Please try again.');
-        toast({
-          variant: 'destructive',
-          title: 'Auth Error',
-          description: error.message || 'Verification failed.',
-        });
+
+      toast({
+        variant: err.code === 'auth/popup-closed-by-user' ? 'default' : 'destructive',
+        title,
+        description,
+      });
+      
+      if (err.code !== 'auth/popup-closed-by-user') {
+        setServerError(description);
       }
     } finally {
       setIsGoogleLoading(false);
@@ -150,7 +160,6 @@ export function SignupForm() {
             status: 'active',
         };
 
-        // Create user profile in Firestore
         await setDoc(doc(firestore, 'users', user.uid), newUserProfile);
       
         toast({
@@ -176,7 +185,7 @@ export function SignupForm() {
 
   return (
     <div className="container flex min-h-[80vh] items-center justify-center py-12">
-      <Card className="w-full max-w-md shadow-2xl border-border/50">
+      <Card className="w-full max-w-md shadow-2xl border-border/50 bg-card/50 backdrop-blur-sm">
         <CardHeader className="text-center space-y-2">
           <div className="mx-auto bg-primary/10 p-4 rounded-full w-fit mb-2">
             <UserPlus className="h-8 w-8 text-primary" />
@@ -191,7 +200,7 @@ export function SignupForm() {
         <CardContent className="space-y-6">
           <Button
             variant="outline"
-            className="w-full h-12 text-base font-semibold"
+            className="w-full h-12 text-base font-semibold transition-all active:scale-[0.98]"
             onClick={handleGoogleSignup}
             disabled={isGoogleLoading || isLoading}
           >
@@ -221,7 +230,7 @@ export function SignupForm() {
                   <FormItem>
                     <FormLabel>Full Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g. Ankit Sharma" {...field} className="h-11" />
+                      <Input placeholder="e.g. Ankit Sharma" {...field} className="h-11 focus-visible:ring-primary" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -238,7 +247,7 @@ export function SignupForm() {
                         type="email"
                         placeholder="ankit@example.com"
                         {...field}
-                        className="h-11"
+                        className="h-11 focus-visible:ring-primary"
                       />
                     </FormControl>
                     <FormMessage />
@@ -252,7 +261,7 @@ export function SignupForm() {
                   <FormItem>
                     <FormLabel>Mobile Number</FormLabel>
                     <FormControl>
-                      <Input type="tel" placeholder="9876543210" {...field} className="h-11" />
+                      <Input type="tel" placeholder="9876543210" {...field} className="h-11 focus-visible:ring-primary" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -265,7 +274,7 @@ export function SignupForm() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input type="password" {...field} className="h-11" />
+                      <Input type="password" {...field} className="h-11 focus-visible:ring-primary" />
                     </FormControl>
                     <FormDescription className="text-xs">
                       Minimum 8 characters.
@@ -276,14 +285,14 @@ export function SignupForm() {
               />
 
               {serverError && (
-                <div className="bg-destructive/10 text-destructive text-sm font-medium p-3 rounded-md text-center">
+                <div className="bg-destructive/10 text-destructive text-sm font-medium p-3 rounded-md text-center animate-in fade-in zoom-in-95 duration-200">
                   {serverError}
                 </div>
               )}
 
               <Button
                 type="submit"
-                className="w-full h-11 text-base font-bold shadow-lg"
+                className="w-full h-11 text-base font-bold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all active:scale-[0.98]"
                 disabled={isLoading || isGoogleLoading}
               >
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -297,7 +306,7 @@ export function SignupForm() {
             Already have an account?{' '}
             <Link
               href="/login"
-              className="font-bold text-primary hover:underline"
+              className="font-bold text-primary hover:underline transition-all"
             >
               Log in
             </Link>

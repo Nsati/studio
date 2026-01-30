@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -26,9 +25,9 @@ import { Separator } from '@/components/ui/separator';
  * 
  * Features:
  * - Google OAuth 2.0 Integration
- * - Secure JWT (ID Token) retrieval
+ * - Robust Error Handling (Unauthorized domains, Disabled providers, Popup issues)
  * - Backend verification sync
- * - Graceful error handling (e.g. popup blocked/closed by user)
+ * - Themed UI following PRD guidelines
  */
 
 export function LoginForm() {
@@ -44,7 +43,7 @@ export function LoginForm() {
   const [error, setError] = useState('');
 
   /**
-   * Handles the Google Login flow
+   * Handles the Google Login flow with comprehensive error checking
    */
   const handleGoogleLogin = async () => {
     if (!auth) return;
@@ -52,17 +51,14 @@ export function LoginForm() {
     setError('');
 
     try {
-      // 1. TRIGGER GOOGLE OAUTH
       const provider = new GoogleAuthProvider();
       provider.addScope('profile');
       provider.addScope('email');
       
       const result = await signInWithPopup(auth, provider);
       
-      // 2. GET SECURE JWT (ID Token)
       const idToken = await result.user.getIdToken(true);
 
-      // 3. BACKEND VERIFICATION (API Route)
       const response = await fetch('/api/auth/verify-token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -75,39 +71,43 @@ export function LoginForm() {
         throw new Error(data.error || 'Identity verification failed on server');
       }
 
-      // 4. REDIRECT ON SUCCESS
       toast({ 
         title: 'Login Successful!', 
-        description: `Welcome to the mountains, ${data.user.displayName}!` 
+        description: `Welcome back to the Himalayas, ${data.user.displayName}!` 
       });
 
       const redirect = searchParams.get('redirect');
       router.push(redirect || '/my-bookings');
 
     } catch (err: any) {
-      console.error("[GOOGLE LOGIN ERROR]", err);
+      console.error("[AUTH ERROR]", err.code, err.message);
       
-      // Handle browser blocking the popup
+      let title = "Authentication Error";
+      let description = err.message || "Could not verify your identity.";
+
+      // Handle specific Firebase Auth errors based on Step 6 of our guide
       if (err.code === 'auth/popup-blocked') {
-        toast({
-          variant: 'destructive',
-          title: 'Popup Blocked',
-          description: 'Please allow popups for this website in your browser settings to sign in with Google.',
-        });
+        title = "Popup Blocked";
+        description = "Please allow popups for this site in your browser settings to sign in with Google.";
+      } else if (err.code === 'auth/popup-closed-by-user') {
+        title = "Login Cancelled";
+        description = "The Google sign-in window was closed before completion.";
+      } else if (err.code === 'auth/unauthorized-domain') {
+        title = "Configuration Error";
+        description = "This domain is not authorized for Google Sign-in. Please contact admin.";
+      } else if (err.code === 'auth/operation-not-allowed') {
+        title = "Provider Disabled";
+        description = "Google sign-in is currently disabled in the console.";
       }
-      // Handle the user closing the popup manually
-      else if (err.code === 'auth/popup-closed-by-user') {
-        toast({
-          title: 'Login Cancelled',
-          description: 'The Google sign-in window was closed before completion.',
-        });
-      } else {
-        setError(err.message || 'Google Login failed. Please try again.');
-        toast({
-          variant: 'destructive',
-          title: 'Authentication Error',
-          description: err.message || 'Could not verify your identity.',
-        });
+
+      toast({
+        variant: err.code === 'auth/popup-closed-by-user' ? 'default' : 'destructive',
+        title,
+        description,
+      });
+      
+      if (err.code !== 'auth/popup-closed-by-user') {
+        setError(description);
       }
     } finally {
       setIsGoogleLoading(false);
