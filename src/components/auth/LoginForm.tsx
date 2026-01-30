@@ -28,7 +28,7 @@ import { Separator } from '@/components/ui/separator';
  * - Google OAuth 2.0 Integration
  * - Secure JWT (ID Token) retrieval
  * - Backend verification sync
- * - Graceful error handling (e.g. popup closed by user)
+ * - Graceful error handling (e.g. popup closed/blocked by user)
  */
 
 export function LoginForm() {
@@ -87,8 +87,16 @@ export function LoginForm() {
     } catch (err: any) {
       console.error("[GOOGLE LOGIN ERROR]", err);
       
-      // Handle the specific case where the user closes the popup manually
-      if (err.code === 'auth/popup-closed-by-user') {
+      // Handle browser blocking the popup
+      if (err.code === 'auth/popup-blocked') {
+        toast({
+          variant: 'destructive',
+          title: 'Popup Blocked',
+          description: 'Please allow popups for this website in your browser settings to sign in with Google.',
+        });
+      }
+      // Handle the user closing the popup manually
+      else if (err.code === 'auth/popup-closed-by-user') {
         toast({
           title: 'Login Cancelled',
           description: 'The Google sign-in window was closed before completion.',

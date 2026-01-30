@@ -101,8 +101,16 @@ export function SignupForm() {
     } catch (error: any) {
       console.error("Google signup error:", error);
       
-      // Handle the specific case where the user closes the popup manually
-      if (error.code === 'auth/popup-closed-by-user') {
+      // Handle browser blocking the popup
+      if (error.code === 'auth/popup-blocked') {
+        toast({
+          variant: 'destructive',
+          title: 'Popup Blocked',
+          description: 'Please allow popups for this website in your browser settings to sign up with Google.',
+        });
+      }
+      // Handle the user closing the popup manually
+      else if (error.code === 'auth/popup-closed-by-user') {
         toast({
           title: 'Signup Cancelled',
           description: 'The Google sign-up window was closed before completion.',
