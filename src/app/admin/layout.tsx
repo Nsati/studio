@@ -1,14 +1,13 @@
 'use client';
 import { useUser } from '@/firebase';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
-import { LayoutDashboard, Hotel, Users2, Tag, LogOut, ExternalLink, Map, BookOpen } from 'lucide-react';
+import { LayoutDashboard, Hotel, Users2, Tag, LogOut, ExternalLink, Map, BookOpen, Loader2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
-import { usePathname } from 'next/navigation';
 
 const navItems = [
     { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
@@ -70,7 +69,7 @@ export default function AdminLayout({
   const router = useRouter();
   const pathname = usePathname();
 
-  // Bulletproof bypass for the master email and UID
+  // Master Admin Override
   const isAdminEmail = user?.email === 'mistrikumar42@gmail.com';
   const isAdminUid = user?.uid === 'kk7Tsg8Ag3g1YMMR79rgrHUxq2W2';
   const hasAdminRole = userProfile?.role === 'admin';
@@ -81,7 +80,6 @@ export default function AdminLayout({
       router.push('/login?redirect=/admin');
     }
   }, [user, isLoading, router]);
-
 
   if (isLoading) {
     return <AdminLayoutSkeleton />;

@@ -36,7 +36,6 @@ function StatCard({ title, value, icon: Icon, description, isLoading, trend }: a
     )
 }
 
-
 export default function AdminDashboard() {
   const firestore = useFirestore();
 
@@ -54,15 +53,15 @@ export default function AdminDashboard() {
   
   const bookingsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-    // Using collectionGroup to aggregate all bookings from all users
     return query(collectionGroup(firestore, 'bookings'), orderBy('createdAt', 'desc'));
   }, [firestore]);
   const { data: bookings, isLoading: isLoadingBookings, error: bookingsError } = useCollection<Booking>(bookingsQuery);
 
   const isLoading = isLoadingHotels || isLoadingUsers || isLoadingBookings;
 
-  const totalRevenue = bookings?.filter(b => b.status === 'CONFIRMED').reduce((acc, b) => acc + b.totalPrice, 0) || 0;
-  const confirmedCount = bookings?.filter(b => b.status === 'CONFIRMED').length ?? 0;
+  const confirmedBookings = bookings?.filter(b => b.status === 'CONFIRMED') || [];
+  const totalRevenue = confirmedBookings.reduce((acc, b) => acc + b.totalPrice, 0) || 0;
+  const confirmedCount = confirmedBookings.length;
 
   return (
     <div className="space-y-10">
@@ -171,16 +170,15 @@ export default function AdminDashboard() {
             </CardContent>
         </Card>
 
-        {/* System Health / Quick Info */}
+        {/* System Info */}
         <div className="space-y-8">
             <Card className="rounded-[2rem] shadow-apple border-black/5 bg-primary text-white overflow-hidden relative">
-                <div className="absolute top-0 right-0 p-8 opacity-10"><TrendingUp className="h-32 w-32" /></div>
                 <CardHeader className="p-8">
-                    <CardTitle className="text-2xl font-black tracking-tight leading-tight">Growth Insight</CardTitle>
+                    <CardTitle className="text-2xl font-black tracking-tight">Growth Insight</CardTitle>
                     <CardDescription className="text-white/70 font-bold uppercase text-[10px] tracking-widest mt-2">Revenue Analytics</CardDescription>
                 </CardHeader>
-                <CardContent className="px-8 pb-8 space-y-4 relative z-10">
-                    <p className="text-sm font-medium text-white/80 leading-relaxed">Your business has seen a steady increase in confirmed bookings this season.</p>
+                <CardContent className="px-8 pb-8 space-y-4">
+                    <p className="text-sm font-medium text-white/80 leading-relaxed">Confirmed bookings are up by 5% this week.</p>
                     <div className="pt-4 border-t border-white/10 flex justify-between items-center">
                         <span className="text-[10px] font-black uppercase tracking-widest">Avg. Order Value</span>
                         <span className="text-lg font-black tracking-tighter">₹14,500</span>
@@ -200,10 +198,6 @@ export default function AdminDashboard() {
                     <div className="flex items-center justify-between">
                         <span className="text-xs font-bold text-muted-foreground">Payment Gateway</span>
                         <Badge className="bg-green-500/10 text-green-600 border-0">Razorpay Live</Badge>
-                    </div>
-                    <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-muted-foreground">AI Assistant</span>
-                        <Badge className="bg-green-500/10 text-green-600 border-0">Ready</Badge>
                     </div>
                 </CardContent>
             </Card>

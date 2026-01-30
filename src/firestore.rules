@@ -9,7 +9,6 @@ service cloud.firestore {
     }
 
     // MASTER ADMIN BYPASS (Immediate authorization for the owner)
-    // Uses both email and UID for 100% reliability
     function isMasterAdmin() {
       return isAuthenticated() && (
         request.auth.token.email == 'mistrikumar42@gmail.com' || 
@@ -17,7 +16,7 @@ service cloud.firestore {
       );
     }
 
-    // General Admin Check (Registered admins in the database)
+    // General Admin Check
     function isAdmin() {
       return isMasterAdmin() || (isAuthenticated() && 
         exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
@@ -28,24 +27,16 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
-    // --- COLLECTION GROUP RULES (MUST BE AT TOP LEVEL) ---
+    // --- COLLECTION GROUP RULES ---
     
-    // This rule allows collectionGroup('bookings') queries to work across the whole DB.
     match /{path=**}/bookings/{bookingId} {
-      // 1. Master Admin and registered Admins can list and read ALL bookings globally.
-      // 2. Normal users can only list/read their own bookings.
       allow read, list: if isMasterAdmin() || isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
-      
-      // Allow creation if the userId in the data matches the authenticated user
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      
-      // Allow updates/deletes for admins or owners
       allow update, delete: if isMasterAdmin() || isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
     }
 
     // --- STANDARD COLLECTION RULES ---
 
-    // User Profiles
     match /users/{userId} {
       allow read, write: if isMasterAdmin() || isOwner(userId) || isAdmin();
       allow list: if isMasterAdmin() || isAdmin();
@@ -55,15 +46,12 @@ service cloud.firestore {
       }
     }
 
-    // Hotels & Rooms (Public Read, Admin Write)
     match /hotels/{hotelId} {
       allow read: if true;
       allow write: if isMasterAdmin() || isAdmin();
 
       match /rooms/{roomId} {
         allow read: if true;
-        // MUST allow update for all authenticated users (including anonymous) 
-        // to manage inventory during a booking transaction.
         allow update: if isAuthenticated() || isMasterAdmin() || isAdmin(); 
         allow write: if isMasterAdmin() || isAdmin();
       }
@@ -75,7 +63,6 @@ service cloud.firestore {
       }
     }
 
-    // Generic rules for other collections
     match /cities/{cityId} { allow read: if true; allow write: if isMasterAdmin() || isAdmin(); }
     match /tourPackages/{packageId} { allow read: if true; allow write: if isMasterAdmin() || isAdmin(); }
     match /promotions/{promoId} { allow read: if true; allow write: if isMasterAdmin() || isAdmin(); }
