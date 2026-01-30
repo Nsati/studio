@@ -3,7 +3,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // --- 1. GLOBAL HELPERS (MUST BE SYNCHRONOUS) ---
-    // Note: collectionGroup queries do NOT support asynchronous database lookups (get() calls).
+    // collectionGroup queries do NOT support asynchronous database lookups (get() calls).
     // Authorization must be determined purely from request.auth tokens.
     function isAuthenticated() {
       return request.auth != null;
