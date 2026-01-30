@@ -1,13 +1,11 @@
+
 'use client';
 
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { useAuth, useFirestore } from '@/firebase';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
-import type { UserProfile } from '@/lib/types';
-
+import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { useAuth } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -20,15 +18,20 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Chrome } from 'lucide-react';
+import { Loader2, Chrome, Mail } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+
+/**
+ * @fileOverview Production-ready Login with Google Integration
+ */
 
 export function LoginForm() {
   const auth = useAuth();
-  const firestore = useFirestore();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
+  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -36,37 +39,47 @@ export function LoginForm() {
   const [error, setError] = useState('');
 
   const handleGoogleLogin = async () => {
-    if (!auth || !firestore) return;
+    if (!auth) return;
     setIsGoogleLoading(true);
     setError('');
 
     try {
+      // 1. Client-side Google OAuth
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
-      const user = result.user;
+      
+      // 2. Get the secure ID Token (JWT)
+      const idToken = await result.user.getIdToken();
 
-      // Check if user profile exists, if not create it (auto-registration on first login)
-      const userDocRef = doc(firestore, 'users', user.uid);
-      const userDocSnap = await getDoc(userDocRef);
+      // 3. Call the "Backend" API for verification & DB sync
+      const response = await fetch('/api/auth/verify-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken }),
+      });
 
-      if (!userDocSnap.exists()) {
-        const newUserProfile: UserProfile = {
-          uid: user.uid,
-          displayName: user.displayName || 'Guest User',
-          email: user.email || '',
-          mobile: '', // Google doesn't always provide mobile, user can update later
-          role: 'user',
-          status: 'active',
-        };
-        await setDoc(userDocRef, newUserProfile);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Server-side verification failed');
       }
 
-      toast({ title: 'Login successful!', description: `Welcome back!` });
+      toast({ 
+        title: 'Login Successful!', 
+        description: `Welcome back, ${data.user.displayName}!` 
+      });
+
       const redirect = searchParams.get('redirect');
       router.push(redirect || '/my-bookings');
-    } catch (error: any) {
-      console.error("Google login error:", error);
-      setError('Could not sign in with Google. Please try again.');
+
+    } catch (err: any) {
+      console.error("Google Login Flow Error:", err);
+      setError(err.message || 'Google Login failed. Please try again.');
+      toast({
+        variant: 'destructive',
+        title: 'Authentication Error',
+        description: err.message || 'Could not verify your identity.',
+      });
     } finally {
       setIsGoogleLoading(false);
     }
@@ -74,58 +87,43 @@ export function LoginForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth || !firestore) return;
-
+    if (!auth) return;
     setIsLoading(true);
     setError('');
 
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-
-      const userDocRef = doc(firestore, 'users', user.uid);
-      const userDocSnap = await getDoc(userDocRef);
-
-      if (!userDocSnap.exists()) {
-        throw new Error('User profile not found. Please contact support.');
-      }
-      
-      const userProfile = userDocSnap.data() as UserProfile;
-
-      toast({ title: 'Login successful!', description: `Welcome back, ${userProfile.displayName}!` });
+      await signInWithEmailAndPassword(auth, email, password);
+      toast({ title: 'Welcome Back!' });
       const redirect = searchParams.get('redirect');
       router.push(redirect || '/my-bookings');
-
-    } catch (error: any) {
-      if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
-        setError('Invalid email or password.');
-      } else {
-        setError(error.message || 'An error occurred during login.');
-        console.error(error);
-      }
+    } catch (err: any) {
+      setError('Invalid email or password.');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="container flex min-h-[80vh] items-center justify-center">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="font-headline text-3xl">Welcome Back</CardTitle>
-          <CardDescription>Log in to manage your bookings.</CardDescription>
+    <div className="container flex min-h-[80vh] items-center justify-center py-12">
+      <Card className="w-full max-w-md shadow-xl border-border/50">
+        <CardHeader className="text-center space-y-1">
+          <div className="mx-auto bg-primary/10 p-3 rounded-full w-fit mb-2">
+            <Mail className="h-6 w-6 text-primary" />
+          </div>
+          <CardTitle className="font-headline text-3xl font-bold">Welcome Back</CardTitle>
+          <CardDescription>Securely access your Himalayan Getaways account.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-6">
           <Button
             variant="outline"
-            className="w-full"
+            className="w-full h-12 text-base font-semibold hover:bg-muted transition-colors"
             onClick={handleGoogleLogin}
             disabled={isGoogleLoading || isLoading}
           >
             {isGoogleLoading ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
             ) : (
-              <Chrome className="mr-2 h-4 w-4" />
+              <Chrome className="mr-2 h-5 w-5 text-blue-500" />
             )}
             Continue with Google
           </Button>
@@ -135,59 +133,55 @@ export function LoginForm() {
               <Separator />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">Or continue with email</span>
+              <span className="bg-background px-4 text-muted-foreground">Or email login</span>
             </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">Email Address</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="ankit.sharma@example.com"
+                placeholder="ankit@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className="h-11"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                <Link href="/forgot-password" size="sm" className="text-sm font-medium text-primary hover:underline">
+                  Forgot?
+                </Link>
+              </div>
               <Input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                className="h-11"
               />
-              <div className="text-right">
-                 <Link
-                    href="/forgot-password"
-                    className="text-sm font-medium text-primary hover:underline"
-                >
-                    Forgot your password?
-                </Link>
-              </div>
             </div>
-            {error && <p className="text-sm text-destructive">{error}</p>}
+            {error && <p className="text-sm font-medium text-destructive text-center">{error}</p>}
             <Button
               type="submit"
-              className="w-full"
-              disabled={isLoading || isGoogleLoading || !auth || !firestore}
+              className="w-full h-11 text-base font-bold"
+              disabled={isLoading || isGoogleLoading}
             >
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Log In
+              Sign In
             </Button>
           </form>
         </CardContent>
-        <CardFooter className="flex justify-center">
+        <CardFooter className="flex justify-center border-t pt-6 bg-muted/20">
           <p className="text-sm text-muted-foreground">
             Don't have an account?{' '}
-            <Link
-              href="/signup"
-              className="font-semibold text-primary hover:underline"
-            >
-              Sign up
+            <Link href="/signup" className="font-bold text-primary hover:underline">
+              Create Account
             </Link>
           </p>
         </CardFooter>
