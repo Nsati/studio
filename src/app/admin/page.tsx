@@ -94,7 +94,7 @@ export default function AdminDashboard() {
     <div className="space-y-10">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div className="space-y-1">
-            <h1 className="font-headline text-5xl font-black tracking-tight">Dashboard</h1>
+            <h1 className="font-headline text-5xl font-black tracking-tight text-foreground">Dashboard</h1>
             <p className="text-muted-foreground font-medium text-lg">Superuser Analytics Console.</p>
         </div>
         <div className="flex items-center gap-3">
@@ -108,7 +108,7 @@ export default function AdminDashboard() {
       </div>
 
       {bookingsError && (
-        <Card className="border-destructive/50 bg-destructive/5 rounded-[2rem]">
+        <Card className="border-destructive/50 bg-destructive/5 rounded-[2rem] border-dashed">
             <CardHeader className="py-8 px-10">
                 <CardTitle className="text-xl font-black text-destructive flex items-center gap-3">
                     <Loader2 className="h-6 w-6 animate-spin" /> Data Connection Blocked
@@ -158,8 +158,8 @@ export default function AdminDashboard() {
             <CardHeader className="bg-white border-b border-black/5 px-10 py-8">
                 <div className="flex justify-between items-center">
                     <div>
-                        <CardTitle className="text-2xl font-black tracking-tight">Recent Activity</CardTitle>
-                        <CardDescription className="text-base font-medium">Live logs from all accounts.</CardDescription>
+                        <CardTitle className="text-2xl font-black tracking-tight text-foreground">Recent Activity</CardTitle>
+                        <CardDescription className="text-base font-medium text-muted-foreground">Live logs from all accounts.</CardDescription>
                     </div>
                     <Button variant="ghost" asChild size="sm" className="rounded-full font-black uppercase text-[10px] tracking-widest h-12 px-8 hover:bg-muted/50">
                         <Link href="/admin/bookings" className="flex items-center gap-2">Manage All <ArrowUpRight className="h-4 w-4" /></Link>
@@ -242,7 +242,7 @@ export default function AdminDashboard() {
 
             <Card className="rounded-[3rem] shadow-apple border-black/5 bg-white overflow-hidden">
                 <CardHeader className="p-10 pb-6">
-                    <CardTitle className="text-xl font-black tracking-tight">Session Identity</CardTitle>
+                    <CardTitle className="text-xl font-black tracking-tight text-foreground">Session Identity</CardTitle>
                 </CardHeader>
                 <CardContent className="px-10 pb-10 space-y-6">
                     <div className="p-6 bg-muted/30 rounded-[2rem] space-y-3 border border-black/5">

@@ -40,8 +40,8 @@ export default function AdminLayout({
   const { user, isLoading } = useUser();
   const pathname = usePathname();
 
-  // UNRESTRICTED MODE: Always allow shell to render. 
-  // Firestore rules will handle actual data security.
+  // UNRESTRICTED SHELL: Always render the sidebar and container.
+  // Firestore security rules (Synchronous Bypass) will handle actual data protection.
   if (isLoading && !user) {
     return <AdminLayoutSkeleton />;
   }
@@ -55,7 +55,7 @@ export default function AdminLayout({
                 <LayoutDashboard className="h-7 w-7" />
             </div>
             <div className="space-y-0.5">
-                <h2 className="text-xl font-black tracking-tight leading-none">Console</h2>
+                <h2 className="text-xl font-black tracking-tight leading-none text-foreground">Console</h2>
                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground opacity-60">Superuser Mode</p>
             </div>
         </div>
