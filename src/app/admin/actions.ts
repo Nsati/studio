@@ -8,13 +8,19 @@ import { getFirebaseAdmin } from '@/firebase/admin';
  */
 
 // Helper to ensure data is safely serializable for Next.js Client Components
-const serialize = (val: any) => {
+// Added explicit 'any' return type to resolve recursion inference issues
+const serialize = (val: any): any => {
     if (val === null || val === undefined) return null;
-    // Handle Firestore Timestamp
-    if (typeof val.toDate === 'function') return val.toDate().toISOString();
+    
+    // Handle Firestore Timestamp (Admin SDK version)
+    if (val && typeof val === 'object' && 'toDate' in val && typeof val.toDate === 'function') {
+        return val.toDate().toISOString();
+    }
+    
     // Handle JS Date
     if (val instanceof Date) return val.toISOString();
-    // Prevent complex objects/references from leaking to client
+    
+    // Recursively handle objects
     if (typeof val === 'object' && !Array.isArray(val)) {
         const plain: any = {};
         for (const key in val) {
@@ -24,9 +30,12 @@ const serialize = (val: any) => {
         }
         return plain;
     }
+    
+    // Recursively handle arrays
     if (Array.isArray(val)) {
         return val.map(serialize);
     }
+    
     return val;
 };
 
