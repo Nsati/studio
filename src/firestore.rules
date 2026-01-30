@@ -3,7 +3,8 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // --- 1. THE GOD-MODE BYPASS (100% SYNCHRONOUS) ---
-    // Synchronous bypass using token-only data for immediate query authorization.
+    // This evaluates instantly from the Auth Token (No DB lookup).
+    // Authorized via Email and UID for 100% reliability.
     function isMasterAdmin() {
       return request.auth != null && (
         request.auth.token.email in ['mistrikumar42@gmail.com', 'nsati09@gmail.com'] ||
@@ -11,12 +12,14 @@ service cloud.firestore {
       );
     }
 
-    // UNIVERSAL BYPASS
+    // UNIVERSAL BYPASS: Full access for master admins to EVERYTHING.
+    // This recursive wildcard must stay at the top for synchronous bypass.
     match /{allPaths=**} {
       allow read, write: if isMasterAdmin();
     }
 
     // --- 2. EXPLICIT COLLECTION GROUP RULES ---
+    // Required for global queries like collectionGroup('bookings') to function.
     match /{path=**}/bookings/{bookingId} {
       allow list: if isMasterAdmin() || (request.auth != null && request.query.limit <= 100);
       allow get: if isMasterAdmin() || (request.auth != null && (resource == null || resource.data.userId == request.auth.uid));
@@ -25,8 +28,10 @@ service cloud.firestore {
     }
 
     // --- 3. STANDARD COLLECTION RULES ---
+
     match /users/{userId} {
       allow read, write: if request.auth.uid == userId || isMasterAdmin();
+      
       match /{allSubcollections=**} {
         allow read, write: if request.auth.uid == userId || isMasterAdmin();
       }
@@ -34,10 +39,12 @@ service cloud.firestore {
 
     match /hotels/{hotelId} {
       allow read: if true;
+
       match /rooms/{roomId} {
         allow read: if true;
         allow update: if request.auth != null; 
       }
+      
       match /reviews/{reviewId} {
         allow read: if true;
         allow create: if request.auth != null;
