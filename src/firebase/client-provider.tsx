@@ -27,7 +27,6 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
         // --- NUCLEAR DEBUG LOGS ---
         console.log("🔥 [FIREBASE INIT] APP NAME:", app.name);
         console.log("🔥 [FIREBASE INIT] PROJECT ID:", app.options.projectId);
-        console.log("🔥 [FIREBASE INIT] API KEY:", app.options.apiKey?.substring(0, 10) + "...");
         // ---------------------------
 
         const auth = getAuth(app);

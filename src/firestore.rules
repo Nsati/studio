@@ -2,14 +2,11 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // --- 1. GLOBAL HELPERS ---
-
+    // --- 1. GLOBAL HELPERS (SYNCHRONOUS) ---
     function isAuthenticated() {
       return request.auth != null;
     }
 
-    // MASTER ADMIN BYPASS: Purely token-based (Synchronous)
-    // CRITICAL: Must not use get() or exists() for collectionGroup queries to be authorized instantly.
     function isMasterAdmin() {
       return isAuthenticated() && (
         request.auth.token.email == 'mistrikumar42@gmail.com' || 
@@ -18,7 +15,6 @@ service cloud.firestore {
     }
 
     // --- 2. COLLECTION GROUP RULES (MUST BE AT TOP) ---
-    // REQUIRED: Top-level match for global collectionGroup queries
     match /{path=**}/bookings/{bookingId} {
       allow read, write: if isMasterAdmin() || (
         isAuthenticated() && (
@@ -61,7 +57,6 @@ service cloud.firestore {
     match /tourPackages/{packageId} { allow read: if true; allow write: if isMasterAdmin(); }
     match /promotions/{promoId} { allow read: if true; allow write: if isMasterAdmin(); }
     
-    // Global catch-all for Master Admin safety
     match /{allPaths=**} {
       allow read, write: if isMasterAdmin();
     }

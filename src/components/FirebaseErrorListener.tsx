@@ -22,7 +22,6 @@ export function FirebaseErrorListener() {
       setTimeout(() => {
         if (mounted) {
           console.error("🔴 FIREBASE PERMISSION ERROR CAPTURED:", err.request.path);
-          console.log("DEBUG AUTH:", err.request.auth);
           setError(err);
         }
       }, 0);
@@ -36,7 +35,6 @@ export function FirebaseErrorListener() {
     };
   }, []);
 
-  // Triggering the error boundary happens here during the NEXT render.
   if (error) {
     throw error;
   }
