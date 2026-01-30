@@ -1,5 +1,7 @@
+
 'use client';
 
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Hotel, Users2, BookOpen, IndianRupee, TrendingUp, ShieldCheck } from 'lucide-react';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
@@ -86,7 +88,7 @@ export default function AdminDashboard() {
 
       {bookingsError && (
         <div className="p-4 bg-destructive/10 text-destructive rounded-2xl text-xs font-mono">
-          PERMISSION ERROR: {bookingsError.message}. Make sure composite indexes are created in Firebase Console.
+          PERMISSION ERROR: {bookingsError.message}. Ensure composite indexes are created in Firebase.
         </div>
       )}
 

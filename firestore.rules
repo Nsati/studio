@@ -1,3 +1,4 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -8,7 +9,7 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // MASTER ADMIN BYPASS
+    // MASTER ADMIN BYPASS (Immediate authorization for the owner)
     function isMasterAdmin() {
       return isAuthenticated() && (
         request.auth.token.email == 'mistrikumar42@gmail.com' || 
@@ -16,11 +17,13 @@ service cloud.firestore {
       );
     }
 
-    // 1. GLOBAL MASTER ADMIN OVERRIDE
+    // 1. GLOBAL MASTER ADMIN OVERRIDE - MUST BE FIRST
+    // This allows collectionGroup queries and all other paths to bypass any other checks.
     match /{allPaths=**} {
       allow read, write: if isMasterAdmin();
     }
 
+    // General Admin Check
     function isAdmin() {
       return isMasterAdmin() || (isAuthenticated() && 
         exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
@@ -31,11 +34,14 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
+    // --- COLLECTION GROUP RULES ---
     match /{path=**}/bookings/{bookingId} {
       allow read, list: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
       allow update, delete: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
     }
+
+    // --- STANDARD COLLECTION RULES ---
 
     match /users/{userId} {
       allow read, write: if isOwner(userId) || isAdmin();
