@@ -1,10 +1,12 @@
-
 'use client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Bar, BarChart, ResponsiveContainer, XAxis } from "recharts"
+import { Bar, BarChart, XAxis } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import type { AdminChartData } from '@/app/admin/actions';
 
+export type AdminChartData = {
+    date: string;
+    total: number;
+}[];
 
 export default function BookingChart({ chartData }: { chartData: AdminChartData | null }) {
     

@@ -1,7 +1,14 @@
-
 'use client';
-import type { SerializableBooking } from '@/app/admin/actions';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+
+export type SerializableBooking = {
+    id: string;
+    customerName: string;
+    customerEmail: string;
+    totalPrice: number;
+    status: string;
+    createdAt: string;
+};
 
 export default function RecentBookings({ bookings }: { bookings: SerializableBooking[] | null }) {
     return (
