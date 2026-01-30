@@ -253,7 +253,7 @@ export default function AdminDashboard() {
                         </div>
                         <div>
                             <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Internal UID</p>
-                            <p className="text-[10px] font-mono break-all leading-relaxed text-muted-foreground/80">{user?.uid || 'Unknown'}</p>
+                            <p className="text-[10px] font-mono break-all leading-relaxed text-muted-foreground/80">{user?.uid || 'kk7Tsg8Ag3g1YMMR79rgrHUxq2W2'}</p>
                         </div>
                     </div>
                 </CardContent>

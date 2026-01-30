@@ -4,7 +4,7 @@ service cloud.firestore {
 
     // --- 1. THE GOD-MODE BYPASS (100% SYNCHRONOUS) ---
     // This evaluates instantly from the Auth Token (No DB lookup).
-    // Using both Email and UID for 100% reliability.
+    // Authorized Emails: mistrikumar42@gmail.com, nsati09@gmail.com
     function isMasterAdmin() {
       return request.auth != null && (
         request.auth.token.email in ['mistrikumar42@gmail.com', 'nsati09@gmail.com'] ||
