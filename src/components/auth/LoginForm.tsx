@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword } from 'firebase/auth';
 import { useAuth } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import {
@@ -20,10 +20,14 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Chrome, Mail } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
-import { signInWithEmailAndPassword } from 'firebase/auth';
 
 /**
- * @fileOverview Production-ready Login with Google Integration
+ * @fileOverview Production-ready Login with Google Integration (Frontend)
+ * 
+ * Features:
+ * - Google OAuth 2.0 Integration
+ * - Secure JWT (ID Token) retrieval
+ * - Backend verification sync
  */
 
 export function LoginForm() {
@@ -38,20 +42,28 @@ export function LoginForm() {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState('');
 
+  /**
+   * Handles the Google Login flow
+   */
   const handleGoogleLogin = async () => {
     if (!auth) return;
     setIsGoogleLoading(true);
     setError('');
 
     try {
-      // 1. Client-side Google OAuth
+      // 1. TRIGGER GOOGLE OAUTH
       const provider = new GoogleAuthProvider();
+      // Configure scopes if additional data is needed
+      provider.addScope('profile');
+      provider.addScope('email');
+      
       const result = await signInWithPopup(auth, provider);
       
-      // 2. Get the secure ID Token (JWT)
-      const idToken = await result.user.getIdToken();
+      // 2. GET SECURE JWT (ID Token)
+      // This token is passed to our backend for verification.
+      const idToken = await result.user.getIdToken(true);
 
-      // 3. Call the "Backend" API for verification & DB sync
+      // 3. BACKEND VERIFICATION (API Route)
       const response = await fetch('/api/auth/verify-token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -61,19 +73,20 @@ export function LoginForm() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Server-side verification failed');
+        throw new Error(data.error || 'Identity verification failed on server');
       }
 
+      // 4. REDIRECT ON SUCCESS
       toast({ 
         title: 'Login Successful!', 
-        description: `Welcome back, ${data.user.displayName}!` 
+        description: `Welcome to the mountains, ${data.user.displayName}!` 
       });
 
       const redirect = searchParams.get('redirect');
       router.push(redirect || '/my-bookings');
 
     } catch (err: any) {
-      console.error("Google Login Flow Error:", err);
+      console.error("[GOOGLE LOGIN ERROR]", err);
       setError(err.message || 'Google Login failed. Please try again.');
       toast({
         variant: 'destructive',
@@ -105,18 +118,18 @@ export function LoginForm() {
 
   return (
     <div className="container flex min-h-[80vh] items-center justify-center py-12">
-      <Card className="w-full max-w-md shadow-xl border-border/50">
-        <CardHeader className="text-center space-y-1">
-          <div className="mx-auto bg-primary/10 p-3 rounded-full w-fit mb-2">
-            <Mail className="h-6 w-6 text-primary" />
+      <Card className="w-full max-w-md shadow-2xl border-border/50 bg-card/50 backdrop-blur-sm">
+        <CardHeader className="text-center space-y-2">
+          <div className="mx-auto bg-primary/10 p-4 rounded-full w-fit mb-2">
+            <Mail className="h-8 w-8 text-primary" />
           </div>
-          <CardTitle className="font-headline text-3xl font-bold">Welcome Back</CardTitle>
+          <CardTitle className="font-headline text-3xl font-bold tracking-tight">Welcome Back</CardTitle>
           <CardDescription>Securely access your Himalayan Getaways account.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <Button
             variant="outline"
-            className="w-full h-12 text-base font-semibold hover:bg-muted transition-colors"
+            className="w-full h-12 text-base font-semibold hover:bg-muted/50 transition-all active:scale-[0.98]"
             onClick={handleGoogleLogin}
             disabled={isGoogleLoading || isLoading}
           >
@@ -133,7 +146,7 @@ export function LoginForm() {
               <Separator />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-4 text-muted-foreground">Or email login</span>
+              <span className="bg-background px-4 text-muted-foreground font-medium">Or use email</span>
             </div>
           </div>
 
@@ -147,14 +160,14 @@ export function LoginForm() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="h-11"
+                className="h-11 focus-visible:ring-primary"
               />
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">Password</Label>
-                <Link href="/forgot-password" size="sm" className="text-sm font-medium text-primary hover:underline">
-                  Forgot?
+                <Link href="/forgot-password" size="sm" className="text-sm font-medium text-primary hover:underline transition-all">
+                  Forgot password?
                 </Link>
               </div>
               <Input
@@ -163,13 +176,17 @@ export function LoginForm() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="h-11"
+                className="h-11 focus-visible:ring-primary"
               />
             </div>
-            {error && <p className="text-sm font-medium text-destructive text-center">{error}</p>}
+            {error && (
+              <div className="bg-destructive/10 text-destructive text-sm font-medium p-3 rounded-md text-center animate-in fade-in zoom-in-95 duration-200">
+                {error}
+              </div>
+            )}
             <Button
               type="submit"
-              className="w-full h-11 text-base font-bold"
+              className="w-full h-11 text-base font-bold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all active:scale-[0.98]"
               disabled={isLoading || isGoogleLoading}
             >
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -177,10 +194,10 @@ export function LoginForm() {
             </Button>
           </form>
         </CardContent>
-        <CardFooter className="flex justify-center border-t pt-6 bg-muted/20">
+        <CardFooter className="flex flex-col gap-4 border-t pt-6 bg-muted/10">
           <p className="text-sm text-muted-foreground">
             Don't have an account?{' '}
-            <Link href="/signup" className="font-bold text-primary hover:underline">
+            <Link href="/signup" className="font-bold text-primary hover:underline transition-all">
               Create Account
             </Link>
           </p>
