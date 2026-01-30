@@ -123,7 +123,7 @@ export function LoginForm() {
             <div className="space-y-2">
               <div className="flex items-center justify-between ml-1">
                 <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Password</Label>
-                <Link href="/forgot-password" size="sm" className="text-[10px] font-bold text-primary hover:underline uppercase tracking-widest">
+                <Link href="/forgot-password" className="text-[10px] font-bold text-primary hover:underline uppercase tracking-widest">
                   Forgot?
                 </Link>
               </div>
