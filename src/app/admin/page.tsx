@@ -1,4 +1,5 @@
 'use client';
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Hotel, Users2, BookOpen, IndianRupee, TrendingUp, ShieldCheck } from 'lucide-react';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
@@ -9,6 +10,14 @@ import { format } from 'date-fns';
 import { normalizeTimestamp } from '@/lib/firestore-utils';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
 
 function StatCard({ title, value, icon: Icon, description, isLoading, trend }: any) {
     return (
@@ -33,7 +42,7 @@ function StatCard({ title, value, icon: Icon, description, isLoading, trend }: a
                 )}
             </CardContent>
         </Card>
-    )
+    );
 }
 
 export default function AdminDashboard() {
@@ -77,7 +86,7 @@ export default function AdminDashboard() {
 
       {bookingsError && (
         <div className="p-4 bg-destructive/10 text-destructive rounded-2xl text-xs font-mono">
-          PERMISSION ERROR: {bookingsError.message}. Ensure collection group indexes are created in Firebase Console.
+          PERMISSION ERROR: {bookingsError.message}. Make sure composite indexes are created in Firebase Console.
         </div>
       )}
 
@@ -115,7 +124,6 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid gap-8 lg:grid-cols-3">
-        {/* Recent Activity Table */}
         <Card className="lg:col-span-2 rounded-[2rem] shadow-apple border-black/5 overflow-hidden">
             <CardHeader className="bg-white border-b border-black/5 px-8 py-6">
                 <div className="flex justify-between items-center">
@@ -127,30 +135,32 @@ export default function AdminDashboard() {
                 </div>
             </CardHeader>
             <CardContent className="p-0">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                        <thead className="bg-muted/30 border-b border-black/5 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                            <tr>
-                                <th className="px-8 py-4 text-left">Guest</th>
-                                <th className="px-4 py-4 text-left">Hotel</th>
-                                <th className="px-4 py-4 text-left">Amount</th>
-                                <th className="px-8 py-4 text-right">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-black/5">
-                            {isLoading ? (
-                                Array.from({length: 5}).map((_, i) => (
-                                    <tr key={i}><td colSpan={4} className="px-8 py-4"><Skeleton className="h-4 w-full" /></td></tr>
-                                ))
-                            ) : bookings && bookings.slice(0, 6).map(booking => (
-                                <tr key={booking.id} className="hover:bg-muted/10 transition-colors">
-                                    <td className="px-8 py-4">
+                <Table>
+                    <TableHeader className="bg-muted/30">
+                        <TableRow className="border-0">
+                            <TableHead className="px-8 h-12 text-[10px] font-black uppercase tracking-widest">Guest</TableHead>
+                            <TableHead className="h-12 text-[10px] font-black uppercase tracking-widest">Hotel</TableHead>
+                            <TableHead className="h-12 text-[10px] font-black uppercase tracking-widest">Amount</TableHead>
+                            <TableHead className="px-8 h-12 text-right text-[10px] font-black uppercase tracking-widest">Status</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {isLoading ? (
+                            Array.from({length: 5}).map((_, i) => (
+                                <TableRow key={i}>
+                                    <TableCell colSpan={4} className="px-8 py-4"><Skeleton className="h-4 w-full" /></TableCell>
+                                </TableRow>
+                            ))
+                        ) : bookings && bookings.length > 0 ? (
+                            bookings.slice(0, 6).map(booking => (
+                                <TableRow key={booking.id} className="hover:bg-muted/10 transition-colors">
+                                    <TableCell className="px-8 py-4">
                                         <div className="font-bold">{booking.customerName}</div>
                                         <div className="text-[10px] text-muted-foreground font-black tracking-widest uppercase">{format(normalizeTimestamp(booking.createdAt), 'dd MMM, HH:mm')}</div>
-                                    </td>
-                                    <td className="px-4 py-4 font-medium text-muted-foreground">{booking.hotelName}</td>
-                                    <td className="px-4 py-4 font-black text-primary">{booking.totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}</td>
-                                    <td className="px-8 py-4 text-right">
+                                    </TableCell>
+                                    <TableCell className="py-4 font-medium text-muted-foreground">{booking.hotelName}</TableCell>
+                                    <TableCell className="py-4 font-black text-primary">{booking.totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}</TableCell>
+                                    <TableCell className="px-8 py-4 text-right">
                                         <Badge className={cn(
                                             "rounded-full font-black uppercase text-[9px] tracking-widest px-3",
                                             booking.status === 'CONFIRMED' ? "bg-green-100 text-green-700 hover:bg-green-100" : 
@@ -158,19 +168,19 @@ export default function AdminDashboard() {
                                         )}>
                                             {booking.status}
                                         </Badge>
-                                    </td>
-                                </tr>
-                            ))}
-                            {!isLoading && (!bookings || bookings.length === 0) && (
-                                <tr><td colSpan={4} className="px-8 py-12 text-center text-muted-foreground font-medium">No recent bookings found.</td></tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        ) : (
+                            <TableRow>
+                                <TableCell colSpan={4} className="px-8 py-12 text-center text-muted-foreground font-medium">No recent bookings found.</TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
             </CardContent>
         </Card>
 
-        {/* System Info */}
         <div className="space-y-8">
             <Card className="rounded-[2rem] shadow-apple border-black/5 bg-primary text-white overflow-hidden relative">
                 <CardHeader className="p-8">
@@ -178,7 +188,7 @@ export default function AdminDashboard() {
                     <CardDescription className="text-white/70 font-bold uppercase text-[10px] tracking-widest mt-2">Revenue Analytics</CardDescription>
                 </CardHeader>
                 <CardContent className="px-8 pb-8 space-y-4">
-                    <p className="text-sm font-medium text-white/80 leading-relaxed">Confirmed bookings are up by 5% this week.</p>
+                    <p className="text-sm font-medium text-white/80 leading-relaxed">Confirmed bookings are showing a healthy trend this week.</p>
                     <div className="pt-4 border-t border-white/10 flex justify-between items-center">
                         <span className="text-[10px] font-black uppercase tracking-widest">Avg. Order Value</span>
                         <span className="text-lg font-black tracking-tighter">₹14,500</span>
