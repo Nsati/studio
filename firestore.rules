@@ -9,9 +9,12 @@ service cloud.firestore {
     }
 
     // MASTER ADMIN BYPASS (Immediate authorization for the owner)
-    // This uses the auth token email which is available without a document read.
+    // Uses both email and UID for 100% reliability
     function isMasterAdmin() {
-      return isAuthenticated() && request.auth.token.email == 'mistrikumar42@gmail.com';
+      return isAuthenticated() && (
+        request.auth.token.email == 'mistrikumar42@gmail.com' || 
+        request.auth.uid == 'kk7Tsg8Ag3g1YMMR79rgrHUxq2W2'
+      );
     }
 
     // General Admin Check (Registered admins in the database)
@@ -25,13 +28,12 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
-    // --- COLLECTION GROUP RULES (MUST BE AT TOP LEVEL OF MATCHES) ---
+    // --- COLLECTION GROUP RULES (MUST BE AT TOP LEVEL) ---
     
-    // This rule allows collectionGroup('bookings') queries to work.
-    // The {path=**} segment is required for recursive matching.
+    // This rule allows collectionGroup('bookings') queries to work across the whole DB.
     match /{path=**}/bookings/{bookingId} {
       // 1. Master Admin and registered Admins can list and read ALL bookings globally.
-      // 2. Normal users can only list/read their own bookings (requires a where filter in query).
+      // 2. Normal users can only list/read their own bookings.
       allow read, list: if isMasterAdmin() || isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
       
       // Allow creation if the userId in the data matches the authenticated user
@@ -60,8 +62,9 @@ service cloud.firestore {
 
       match /rooms/{roomId} {
         allow read: if true;
-        // Authenticated users must be able to update availability during a booking transaction
-        allow update: if isAuthenticated() || isMasterAdmin() || isAdmin();
+        // MUST allow update for all authenticated users (including anonymous) 
+        // to manage inventory during a booking transaction.
+        allow update: if isAuthenticated(); 
         allow write: if isMasterAdmin() || isAdmin();
       }
       

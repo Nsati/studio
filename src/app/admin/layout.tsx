@@ -41,15 +41,16 @@ function NotAdmin() {
         <div className="flex h-screen w-screen items-center justify-center bg-muted">
             <Card className="w-full max-w-md text-center rounded-[2rem] shadow-apple border-black/5">
                 <CardHeader>
-                    <CardTitle className="text-3xl font-black tracking-tight">Access Denied</CardTitle>
-                    <CardDescription className="font-medium">You do not have permission to view the Admin Panel.</CardDescription>
+                    <CardTitle className="text-3xl font-black tracking-tight text-destructive">Access Denied</CardTitle>
+                    <CardDescription className="font-medium">Admin permissions required.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <p className="text-sm text-muted-foreground leading-relaxed">
-                        This area is restricted to administrators. If you believe this is an error, please ensure you are logged in with the correct account.
+                        This area is restricted to administrators. If you are logged in as <strong>{user?.email}</strong> and still cannot see the panel, please try refreshing or contacting support.
                     </p>
-                    <div className="p-4 bg-muted rounded-xl text-xs font-mono break-all">
-                        Logged in as: {user?.email || 'Unknown'}
+                    <div className="p-4 bg-muted rounded-xl text-xs font-mono break-all text-left">
+                        <div className="flex justify-between border-b pb-1 mb-1"><span>UID:</span> <span>{user?.uid}</span></div>
+                        <div className="flex justify-between"><span>Email:</span> <span>{user?.email || 'N/A'}</span></div>
                     </div>
                      <Button asChild className="w-full rounded-full h-12">
                         <Link href="/">Back to Home</Link>
@@ -69,10 +70,11 @@ export default function AdminLayout({
   const router = useRouter();
   const pathname = usePathname();
 
-  // Bulletproof bypass for the master email
+  // Bulletproof bypass for the master email and UID
   const isAdminEmail = user?.email === 'mistrikumar42@gmail.com';
+  const isAdminUid = user?.uid === 'kk7Tsg8Ag3g1YMMR79rgrHUxq2W2';
   const hasAdminRole = userProfile?.role === 'admin';
-  const isAuthorizedAdmin = isAdminEmail || hasAdminRole;
+  const isAuthorizedAdmin = isAdminEmail || isAdminUid || hasAdminRole;
 
   useEffect(() => {
     if (!isLoading && !user) {
