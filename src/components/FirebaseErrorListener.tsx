@@ -12,9 +12,12 @@ export function FirebaseErrorListener() {
   const [error, setError] = useState<FirestorePermissionError | null>(null);
 
   useEffect(() => {
-    const handleError = (error: FirestorePermissionError) => {
-      // Defer state update to avoid "Cannot update a component while rendering another component" warning
-      setTimeout(() => setError(error), 0);
+    const handleError = (err: FirestorePermissionError) => {
+      // Use setTimeout to push the state update to the next tick.
+      // This prevents the "Cannot update a component while rendering another component" warning.
+      setTimeout(() => {
+        setError(err);
+      }, 0);
     };
 
     errorEmitter.on('permission-error', handleError);
@@ -24,7 +27,8 @@ export function FirebaseErrorListener() {
     };
   }, []);
 
-  // Throwing here is intentional to trigger the error boundary
+  // Throwing here is intentional to trigger the error boundary.
+  // We check if error exists and throw it during the next render cycle.
   if (error) {
     throw error;
   }

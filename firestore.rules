@@ -9,7 +9,7 @@ service cloud.firestore {
     }
 
     // MASTER ADMIN BYPASS: Direct token check for mistrikumar42@gmail.com
-    // This is synchronous and allows collectionGroup queries to authorize immediately.
+    // This MUST be synchronous for collectionGroup queries to authorize immediately.
     function isMasterAdmin() {
       return isAuthenticated() && (
         request.auth.token.email == 'mistrikumar42@gmail.com' || 
@@ -53,7 +53,7 @@ service cloud.firestore {
 
       match /rooms/{roomId} {
         allow read: if true;
-        // Allow anyone to update availableRooms (required for booking transactions)
+        // Allow update for inventory management during booking
         allow update: if true; 
         allow write: if isMasterAdmin() || isAdmin();
       }

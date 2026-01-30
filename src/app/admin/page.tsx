@@ -66,7 +66,7 @@ export default function AdminDashboard() {
   
   const bookingsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-    // collectionGroup query for global summary - depends on /{path=**}/bookings rules
+    // collectionGroup query for global summary
     return query(collectionGroup(firestore, 'bookings'), orderBy('createdAt', 'desc'));
   }, [firestore]);
   
@@ -94,10 +94,10 @@ export default function AdminDashboard() {
         <Card className="border-destructive/50 bg-destructive/5">
             <CardHeader className="py-4">
                 <CardTitle className="text-sm font-bold text-destructive flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin" /> Permission Syncing...
+                    <Loader2 className="h-4 w-4 animate-spin" /> Permission Error
                 </CardTitle>
                 <CardDescription className="text-destructive/80 text-xs">
-                    Accessing global collectionGroup('bookings'). Please ensure your account mistrikumar42@gmail.com is authorized.
+                    Accessing global bookings failed. Ensure you are logged in as mistrikumar42@gmail.com and the Firestore index is created.
                 </CardDescription>
             </CardHeader>
         </Card>
