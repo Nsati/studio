@@ -1,9 +1,8 @@
-
 'use client';
 
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Hotel, Users2, BookOpen, IndianRupee, TrendingUp, ShieldCheck } from 'lucide-react';
+import { Hotel, Users2, BookOpen, IndianRupee, TrendingUp, ShieldCheck, Loader2 } from 'lucide-react';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, collectionGroup, query, orderBy } from 'firebase/firestore';
 import type { Hotel as HotelType, UserProfile, Booking } from '@/lib/types';
@@ -67,13 +66,13 @@ export default function AdminDashboard() {
   
   const bookingsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-    // Explicit collectionGroup query for the dashboard summary
+    // collectionGroup query for global summary
     return query(collectionGroup(firestore, 'bookings'), orderBy('createdAt', 'desc'));
   }, [firestore]);
   
   const { data: bookings, isLoading: isLoadingBookings, error: bookingsError } = useCollection<Booking>(bookingsQuery);
 
-  // Deriving Stats
+  // Stats
   const isLoading = isLoadingHotels || isLoadingUsers || isLoadingBookings;
   const confirmedBookings = bookings?.filter(b => b.status === 'CONFIRMED') || [];
   const totalRevenue = confirmedBookings.reduce((acc, b) => acc + (b.totalPrice || 0), 0) || 0;
@@ -84,17 +83,24 @@ export default function AdminDashboard() {
       <div className="flex justify-between items-end">
         <div className="space-y-1">
             <h1 className="font-headline text-4xl font-black tracking-tight">Dashboard Overview</h1>
-            <p className="text-muted-foreground font-medium">Welcome back to the command center.</p>
+            <p className="text-muted-foreground font-medium">Command center for Uttarakhand Getaways.</p>
         </div>
         <div className="flex items-center gap-2 bg-green-50 text-green-700 px-4 py-2 rounded-full border border-green-100 text-[10px] font-black uppercase tracking-widest">
-            <ShieldCheck className="h-3.5 w-3.5" /> Master Admin Mode Active
+            <ShieldCheck className="h-3.5 w-3.5" /> Master Access
         </div>
       </div>
 
       {bookingsError && (
-        <div className="p-4 bg-destructive/10 text-destructive rounded-2xl text-xs font-mono">
-          PERMISSION ERROR: {bookingsError.message}. Make sure the master bypass email is correct in firestore.rules.
-        </div>
+        <Card className="border-destructive/50 bg-destructive/5">
+            <CardHeader className="py-4">
+                <CardTitle className="text-sm font-bold text-destructive flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" /> Permission Syncing...
+                </CardTitle>
+                <CardDescription className="text-destructive/80">
+                    If this persists, please ensure your account mistrikumar42@gmail.com is correctly logged in.
+                </CardDescription>
+            </CardHeader>
+        </Card>
       )}
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -102,27 +108,27 @@ export default function AdminDashboard() {
             title="Total Revenue" 
             value={totalRevenue.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })} 
             icon={IndianRupee} 
-            description="Confirmed bookings" 
+            description="Lifetime earnings" 
             isLoading={isLoading} 
             trend="+12%"
         />
         <StatCard 
-            title="Bookings" 
+            title="Confirmed Stays" 
             value={confirmedCount} 
             icon={BookOpen} 
-            description="Confirmed stays" 
+            description="Bookings fulfilled" 
             isLoading={isLoading}
             trend="+5%"
         />
         <StatCard 
-            title="Properties" 
+            title="Active Properties" 
             value={hotels?.length ?? 0} 
             icon={Hotel} 
-            description="Active listings" 
+            description="Listed hotels" 
             isLoading={isLoading}
         />
         <StatCard 
-            title="Explorers" 
+            title="Total Explorers" 
             value={users?.length ?? 0} 
             icon={Users2} 
             description="Registered users" 
@@ -131,12 +137,12 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid gap-8 lg:grid-cols-3">
-        <Card className="lg:col-span-2 rounded-[2rem] shadow-apple border-black/5 overflow-hidden">
+        <Card className="lg:col-span-2 rounded-[2.5rem] shadow-apple border-black/5 overflow-hidden">
             <CardHeader className="bg-white border-b border-black/5 px-8 py-6">
                 <div className="flex justify-between items-center">
                     <div>
                         <CardTitle className="text-xl font-black tracking-tight">Recent Reservations</CardTitle>
-                        <CardDescription>Latest activity across the platform.</CardDescription>
+                        <CardDescription>Live activity across the platform.</CardDescription>
                     </div>
                     <Badge variant="outline" className="rounded-full font-black uppercase text-[9px] tracking-widest">Live Feed</Badge>
                 </div>
@@ -159,14 +165,14 @@ export default function AdminDashboard() {
                                 </TableRow>
                             ))
                         ) : bookings && bookings.length > 0 ? (
-                            bookings.slice(0, 6).map(booking => (
+                            bookings.slice(0, 10).map(booking => (
                                 <TableRow key={booking.id} className="hover:bg-muted/10 transition-colors">
                                     <TableCell className="px-8 py-4">
-                                        <div className="font-bold">{booking.customerName}</div>
+                                        <div className="font-bold text-sm">{booking.customerName}</div>
                                         <div className="text-[10px] text-muted-foreground font-black tracking-widest uppercase">{format(normalizeTimestamp(booking.createdAt), 'dd MMM, HH:mm')}</div>
                                     </TableCell>
-                                    <TableCell className="py-4 font-medium text-muted-foreground">{booking.hotelName}</TableCell>
-                                    <TableCell className="py-4 font-black text-primary">{booking.totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}</TableCell>
+                                    <TableCell className="py-4 font-medium text-muted-foreground text-sm">{booking.hotelName}</TableCell>
+                                    <TableCell className="py-4 font-black text-primary text-sm">{booking.totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}</TableCell>
                                     <TableCell className="px-8 py-4 text-right">
                                         <Badge className={cn(
                                             "rounded-full font-black uppercase text-[9px] tracking-widest px-3",
@@ -180,7 +186,7 @@ export default function AdminDashboard() {
                             ))
                         ) : (
                             <TableRow>
-                                <TableCell colSpan={4} className="px-8 py-12 text-center text-muted-foreground font-medium">No recent bookings found.</TableCell>
+                                <TableCell colSpan={4} className="px-8 py-12 text-center text-muted-foreground font-medium">No recent activity detected.</TableCell>
                             </TableRow>
                         )}
                     </TableBody>
@@ -189,32 +195,32 @@ export default function AdminDashboard() {
         </Card>
 
         <div className="space-y-8">
-            <Card className="rounded-[2rem] shadow-apple border-black/5 bg-primary text-white overflow-hidden relative">
+            <Card className="rounded-[2.5rem] shadow-apple border-black/5 bg-primary text-white overflow-hidden relative group">
                 <CardHeader className="p-8">
                     <CardTitle className="text-2xl font-black tracking-tight">Growth Insight</CardTitle>
-                    <CardDescription className="text-white/70 font-bold uppercase text-[10px] tracking-widest mt-2">Revenue Analytics</CardDescription>
+                    <CardDescription className="text-white/70 font-bold uppercase text-[10px] tracking-widest mt-2">Revenue Pulse</CardDescription>
                 </CardHeader>
                 <CardContent className="px-8 pb-8 space-y-4">
-                    <p className="text-sm font-medium text-white/80 leading-relaxed">Confirmed bookings are showing a healthy trend this week.</p>
+                    <p className="text-sm font-medium text-white/80 leading-relaxed">Bookings are showing a steady upward trend this season. Focus on Nainital properties.</p>
                     <div className="pt-4 border-t border-white/10 flex justify-between items-center">
-                        <span className="text-[10px] font-black uppercase tracking-widest">Avg. Order Value</span>
-                        <span className="text-lg font-black tracking-tighter">₹14,500</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest">Expected Growth</span>
+                        <span className="text-lg font-black tracking-tighter">+18%</span>
                     </div>
                 </CardContent>
             </Card>
 
-            <Card className="rounded-[2rem] shadow-apple border-black/5">
+            <Card className="rounded-[2.5rem] shadow-apple border-black/5">
                 <CardHeader className="p-8 pb-4">
                     <CardTitle className="text-lg font-black tracking-tight">System Status</CardTitle>
                 </CardHeader>
                 <CardContent className="px-8 pb-8 space-y-6">
                     <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-muted-foreground">Database Sync</span>
-                        <Badge className="bg-green-500/10 text-green-600 border-0">Optimal</Badge>
+                        <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Firestore Health</span>
+                        <Badge className="bg-green-500/10 text-green-600 border-0 font-black text-[9px] uppercase tracking-widest">Active</Badge>
                     </div>
                     <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-muted-foreground">Payment Gateway</span>
-                        <Badge className="bg-green-500/10 text-green-600 border-0">Razorpay Live</Badge>
+                        <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Payment Node</span>
+                        <Badge className="bg-green-500/10 text-green-600 border-0 font-black text-[9px] uppercase tracking-widest">Live</Badge>
                     </div>
                 </CardContent>
             </Card>
