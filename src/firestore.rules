@@ -8,25 +8,31 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // Robust Admin check: checks for role field OR explicit super-admin email
     function isAdmin() {
-      return isAuthenticated() 
-             && exists(/databases/$(database)/documents/users/$(request.auth.uid)) 
-             && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      return isAuthenticated() && (
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') ||
+        request.auth.token.email == 'mistrikumar42@gmail.com'
+      );
     }
 
-    // User Data & Bookings
+    // --- Collection Group Rules (Must be at top level for collectionGroup queries) ---
+    match /{path=**}/bookings/{bookingId} {
+        // Allow users to see their own bookings
+        // Allow admins to list ALL bookings (Crucial for Admin Dashboard)
+        allow read, list: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
+        allow create: if isAuthenticated();
+        allow update, delete: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
+    }
+
+    // User Data
     match /users/{userId} {
       allow read, write: if isAuthenticated() && request.auth.uid == userId;
       
       match /{allSubcollections=**} {
         allow read, write: if isAuthenticated() && request.auth.uid == userId;
       }
-    }
-
-    // Collection Group for Admin
-    // This allows collectionGroup('bookings') queries for admins
-    match /{path=**}/bookings/{bookingId} {
-        allow list, read: if isAdmin();
     }
 
     // Hotel & Room Rules
@@ -36,7 +42,7 @@ service cloud.firestore {
 
         match /rooms/{roomId} {
           allow read: if true;
-          // Crucial: Allow any authenticated user (including anonymous) to update availability during booking
+          // Crucial: Allow any authenticated user to update availability during booking transaction
           allow update: if isAuthenticated();
           allow write: if isAdmin();
         }
