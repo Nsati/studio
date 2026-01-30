@@ -3,7 +3,7 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Hotel, Users2, BookOpen, IndianRupee, TrendingUp, ShieldCheck, Loader2 } from 'lucide-react';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
 import { collection, collectionGroup, query, orderBy } from 'firebase/firestore';
 import type { Hotel as HotelType, UserProfile, Booking } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -48,6 +48,7 @@ function StatCard({ title, value, icon: Icon, description, isLoading, trend }: a
 
 export default function AdminDashboard() {
   const firestore = useFirestore();
+  const { user } = useUser();
 
   // Queries
   const hotelsQuery = useMemoFirebase(() => {
@@ -65,10 +66,10 @@ export default function AdminDashboard() {
   const { data: users, isLoading: isLoadingUsers } = useCollection<UserProfile>(usersQuery);
   
   const bookingsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    // collectionGroup query for global summary
+    // Only run the global collectionGroup query if we have a user (prevents immediate Rule Denied on mount)
+    if (!firestore || !user) return null;
     return query(collectionGroup(firestore, 'bookings'), orderBy('createdAt', 'desc'));
-  }, [firestore]);
+  }, [firestore, user]);
   
   const { data: bookings, isLoading: isLoadingBookings, error: bookingsError } = useCollection<Booking>(bookingsQuery);
 
@@ -97,7 +98,7 @@ export default function AdminDashboard() {
                     <Loader2 className="h-4 w-4 animate-spin" /> Permission Error
                 </CardTitle>
                 <CardDescription className="text-destructive/80 text-xs">
-                    Accessing global bookings failed. Ensure you are logged in as mistrikumar42@gmail.com and the Firestore index is created.
+                    Accessing global bookings failed. Ensure rules allow collectionGroup queries for {user?.email}.
                 </CardDescription>
             </CardHeader>
         </Card>

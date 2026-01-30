@@ -8,8 +8,8 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // MASTER ADMIN BYPASS: Direct token check for mistrikumar42@gmail.com
-    // This is synchronous and allows collectionGroup queries to be authorized immediately.
+    // MASTER ADMIN BYPASS: Purely token-based (Synchronous)
+    // Required for collectionGroup queries to be authorized instantly.
     function isMasterAdmin() {
       return isAuthenticated() && (
         request.auth.token.email == 'mistrikumar42@gmail.com' || 
@@ -17,7 +17,7 @@ service cloud.firestore {
       );
     }
 
-    // General Admin check for other users defined in the database
+    // General Admin check (Asynchronous - for standard collections)
     function isAdmin() {
       return isMasterAdmin() || (isAuthenticated() && 
         exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
@@ -25,14 +25,14 @@ service cloud.firestore {
     }
 
     // --- COLLECTION GROUP RULES ---
-    // This match pattern is REQUIRED for collectionGroup queries to work.
+    // REQUIRED: Top-level match for global queries
     match /{path=**}/bookings/{bookingId} {
-      // Master Admin can see everything
+      // Master Admin can see everything globally
       allow read, write: if isMasterAdmin();
       
-      // Standard user ownership check
-      // For collectionGroup queries to work for users, the query MUST filter by userId
-      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      // Standard users can only read their own bookings
+      // NOTE: Queries MUST include: where("userId", "==", user.uid)
+      allow read: if isAuthenticated() && (resource == null || resource.data.userId == request.auth.uid);
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
       allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
     }
@@ -54,8 +54,8 @@ service cloud.firestore {
 
       match /rooms/{roomId} {
         allow read: if true;
-        // Allow update for inventory management during booking
-        allow update: if true; 
+        // Allow update for inventory management during booking transactions
+        allow update: if isAuthenticated(); 
         allow write: if isMasterAdmin() || isAdmin();
       }
       
@@ -70,7 +70,7 @@ service cloud.firestore {
     match /tourPackages/{packageId} { allow read: if true; allow write: if isMasterAdmin() || isAdmin(); }
     match /promotions/{promoId} { allow read: if true; allow write: if isMasterAdmin() || isAdmin(); }
     
-    // Global catch-all for Master Admin
+    // Global catch-all for Master Admin safety
     match /{allPaths=**} {
       allow read, write: if isMasterAdmin();
     }
