@@ -6,7 +6,7 @@ import { FirestorePermissionError } from '@/firebase/errors';
 
 /**
  * @fileOverview Listens for globally emitted 'permission-error' events.
- * Fixes "Cannot update a component while rendering" by deferring state updates.
+ * Uses a deferred state update to prevent "Cannot update during render" errors.
  */
 export function FirebaseErrorListener() {
   const [error, setError] = useState<FirestorePermissionError | null>(null);
@@ -17,12 +17,11 @@ export function FirebaseErrorListener() {
     const handleError = (err: FirestorePermissionError) => {
       if (!mounted) return;
       
-      // DEFER: Use setTimeout to push the state update to the next event loop tick.
-      // This ensures the current render phase of the triggering component completes 
-      // before the error state is updated in this component.
+      // DEFER: Push the state update to the next event loop tick.
+      // This is the correct way to handle side-effect state updates triggered by child renders.
       setTimeout(() => {
         if (mounted) {
-          console.error("🔴 FIREBASE PERMISSION ERROR CAPTURED:", err.request.path);
+          console.error("🔴 [FIREBASE ERROR LISTENER] CAPTURED DENIAL:", err.request.path);
           setError(err);
         }
       }, 0);
@@ -37,7 +36,7 @@ export function FirebaseErrorListener() {
   }, []);
 
   if (error) {
-    // Caught by Error Boundary or NextJS error UI
+    // This will be caught by the nearest Next.js error boundary or error.js file.
     throw error;
   }
 

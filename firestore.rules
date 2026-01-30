@@ -3,8 +3,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // --- 1. GLOBAL HELPERS (100% SYNCHRONOUS) ---
-    // collectionGroup queries require synchronous authorization.
-    // Database lookups (get() calls) are NOT supported during the authorization phase of a global query.
+    // Rules for collectionGroup queries MUST be synchronous (no get() calls allowed during authorization phase).
     function isAuthenticated() {
       return request.auth != null;
     }
@@ -17,27 +16,16 @@ service cloud.firestore {
     }
 
     // --- 2. UNIVERSAL COLLECTION GROUP BYPASS (CRITICAL FOR ADMIN) ---
-    // Recursive wildcard {path=**} is mandatory for collectionGroup('bookings') to match correctly.
-    // This MUST stay outside specific resource paths to authorize global queries.
+    // This MUST stay outside specific resource paths to authorize global queries like collectionGroup('bookings').
     match /{path=**}/bookings/{bookingId} {
       
-      // Admin can list all bookings globally.
-      // Normal users can list ONLY if the query includes a filter: .where('userId', '==', uid)
+      // Allow LIST if admin (synchronous) or if the query filters by owner UID.
       allow list: if isMasterAdmin() || (
-        isAuthenticated() && 
-        (resource == null || resource.data.userId == request.auth.uid)
+        isAuthenticated() && (resource == null || resource.data.userId == request.auth.uid)
       );
 
-      // Single document access (get)
-      allow get: if isMasterAdmin() || (
-        isAuthenticated() && (
-          (resource == null) || 
-          (resource.data.userId == request.auth.uid)
-        )
-      );
-
-      // Write operations
-      allow write: if isMasterAdmin() || (
+      // Allow GET/WRITE if admin or owner.
+      allow get, write: if isMasterAdmin() || (
         isAuthenticated() && (
           (resource == null) || 
           (resource.data.userId == request.auth.uid) ||
