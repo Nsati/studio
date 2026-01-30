@@ -15,7 +15,6 @@ service cloud.firestore {
     }
 
     // User Data & Bookings
-    // Highly permissive for the owner to ensure guest/anonymous bookings work flawlessly
     match /users/{userId} {
       allow read, write: if isAuthenticated() && request.auth.uid == userId;
       
@@ -25,8 +24,9 @@ service cloud.firestore {
     }
 
     // Collection Group for Admin
+    // This allows collectionGroup('bookings') queries for admins
     match /{path=**}/bookings/{bookingId} {
-        allow list: if isAdmin();
+        allow list, read: if isAdmin();
     }
 
     // Hotel & Room Rules
