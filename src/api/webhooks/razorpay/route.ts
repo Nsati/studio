@@ -1,9 +1,6 @@
-
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { getFirebaseAdmin } from '@/firebase/admin';
-import type { Booking } from '@/lib/types';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
 
 export async function POST(req: Request) {
   const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
@@ -50,9 +47,8 @@ export async function POST(req: Request) {
 
       const bookingRef = adminDb.doc(`users/${userId}/bookings/${bookingId}`);
 
-      // Here you would typically verify the amount and other details.
-      // For this example, we'll just update the status.
-      await updateDoc(bookingRef, {
+      // Fixed: Using Admin SDK's .update() method instead of client SDK's updateDoc()
+      await bookingRef.update({
         status: 'CONFIRMED',
         razorpayPaymentId: paymentEntity.id,
       });
