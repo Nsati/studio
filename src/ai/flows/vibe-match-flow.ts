@@ -24,15 +24,12 @@ type VibeMatchResult = {
 };
 
 // The AI Prompt that defines the "Devbhoomi Dost" persona.
-// By providing an `output.schema`, we instruct Genkit to handle the JSON formatting and validation.
-// This is far more reliable than manually parsing JSON from a text response.
+// In Genkit 1.x, 'model' must be specified at the top level of definePrompt.
 const suggestionPrompt = ai.definePrompt({
   name: 'vibeMatchPrompt',
+  model: 'googleai/gemini-1.5-flash',
   input: { schema: VibeMatchInputSchema },
   output: { schema: VibeMatchOutputSchema },
-  config: {
-    model: 'gemini-pro',
-  },
   prompt: `You are an API that converts user travel preferences into a structured JSON trip suggestion for Uttarakhand.
 You receive a user's vibe and you MUST respond with ONLY a valid JSON object that adheres to the provided output schema. Do not add any other text, conversation, or markdown formatting like \`\`\`json.
 
@@ -46,7 +43,6 @@ Generate the JSON response based on these preferences and the descriptions in th
 
 
 // The Genkit flow that orchestrates the AI call.
-// This is now much simpler as Genkit handles the structured output automatically.
 const vibeMatchFlow = ai.defineFlow(
   {
     name: 'vibeMatchFlow',
@@ -54,13 +50,13 @@ const vibeMatchFlow = ai.defineFlow(
     outputSchema: VibeMatchOutputSchema,
   },
   async (input) => {
+    // Calling the prompt. The model is already defined in suggestionPrompt.
     const { output } = await suggestionPrompt(input);
 
     if (!output) {
       throw new Error('AI returned an empty or invalid suggestion.');
     }
     
-    // The output is already parsed and validated by Genkit against VibeMatchOutputSchema
     return output;
   }
 );
@@ -79,12 +75,11 @@ export async function getVibeMatchSuggestionAction(
     return { success: true, data: suggestion };
   } catch (error: any) {
     console.error('Vibe Match Action Error:', error);
-    // Provide a user-friendly error message
     return {
       success: false,
       data: null,
       error:
-        "Sorry, I couldn't come up with a suggestion right now. Please try again.",
+        "Sorry, our Devbhoomi Dost is taking a short rest. Please try again in a moment.",
     };
   }
 }
