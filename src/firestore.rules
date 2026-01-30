@@ -3,8 +3,8 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // --- 1. THE GOD-MODE BYPASS (100% SYNCHRONOUS) ---
-    // This evaluates instantly from the Auth Token (No DB lookup required).
-    // MUST be at the top level for global queries (collectionGroup) to function.
+    // Rule logic: Only use request.auth.token data. DO NOT use get() or exists().
+    // This allows collectionGroup queries to be authorized instantly.
     function isMasterAdmin() {
       return request.auth != null && (
         request.auth.token.email.lower() == 'mistrikumar42@gmail.com' ||
@@ -13,14 +13,14 @@ service cloud.firestore {
       );
     }
 
-    // UNIVERSAL BYPASS: Full access for master admins to EVERYTHING.
-    // This allows collectionGroup('bookings') to unblock immediately.
+    // UNIVERSAL RECURSIVE BYPASS
+    // This MUST stay at the top. It unblocks all global queries for admins.
     match /{allPaths=**} {
       allow read, write: if isMasterAdmin();
     }
 
     // --- 2. EXPLICIT COLLECTION GROUP RULES ---
-    // Required for indexed global queries.
+    // Required for the 'bookings' collectionGroup index.
     match /{path=**}/bookings/{bookingId} {
       allow list: if isMasterAdmin() || (request.auth != null && request.query.limit <= 100);
       allow get: if isMasterAdmin() || (request.auth != null && (resource == null || resource.data.userId == request.auth.uid));

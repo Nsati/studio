@@ -34,9 +34,6 @@ import {
   TableRow 
 } from "@/components/ui/table";
 
-/**
- * Superuser Stat Card Component
- */
 function StatCard({ title, value, icon: Icon, description, isLoading, trend }: any) {
     return (
         <Card className="rounded-[2.5rem] shadow-apple border-black/5 overflow-hidden group hover:shadow-apple-deep transition-all duration-500 bg-white">
@@ -65,9 +62,9 @@ function StatCard({ title, value, icon: Icon, description, isLoading, trend }: a
 
 export default function AdminDashboard() {
   const firestore = useFirestore();
-  const { user, isLoading: isUserLoading } = useUser();
+  const { user, userProfile, isLoading: isUserLoading } = useUser();
 
-  // Basic collections
+  // Basic collections (Regular queries)
   const hotelsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return collection(firestore, 'hotels');
@@ -81,11 +78,13 @@ export default function AdminDashboard() {
   const { data: users, isLoading: isLoadingUsers } = useCollection<UserProfile>(usersQuery);
   
   // Critical Global Query: collectionGroup('bookings')
+  // This query triggers the "Data Connection Blocked" error if firestore.rules are not synchronous.
   const bookingsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    // This query triggers the "Data Connection Blocked" error if firestore.rules are not synchronous.
+    // We only initiate this query if we have a user to prevent early permission denials
     return query(collectionGroup(firestore, 'bookings'), orderBy('createdAt', 'desc'), limit(10));
   }, [firestore, user]);
+  
   const { data: bookings, isLoading: isLoadingBookings, error: bookingsError } = useCollection<Booking>(bookingsQuery);
 
   const isLoading = isUserLoading || isLoadingHotels || isLoadingUsers || isLoadingBookings;
@@ -124,6 +123,11 @@ export default function AdminDashboard() {
             <CardContent className="px-10 pb-8">
                 <div className="p-4 bg-white/50 rounded-2xl border border-destructive/10 text-xs font-mono text-destructive/70 break-all">
                     Error Log: {bookingsError.message}
+                </div>
+                <div className="mt-4">
+                    <Button variant="outline" size="sm" onClick={() => window.location.reload()} className="rounded-full">
+                        Retry Connection
+                    </Button>
                 </div>
             </CardContent>
         </Card>
@@ -198,7 +202,7 @@ export default function AdminDashboard() {
                                     <TableCell className="px-10 py-6">
                                         <div className="font-bold text-sm text-foreground">{booking.customerName}</div>
                                         <div className="text-[9px] text-muted-foreground font-black tracking-widest uppercase mt-1">
-                                            {format(normalizeTimestamp(booking.createdAt), 'dd MMM, HH:mm')}
+                                            {booking.createdAt ? format(normalizeTimestamp(booking.createdAt), 'dd MMM, HH:mm') : 'N/A'}
                                         </div>
                                     </TableCell>
                                     <TableCell className="py-6 font-medium text-muted-foreground text-sm">{booking.hotelName}</TableCell>
@@ -227,7 +231,6 @@ export default function AdminDashboard() {
         </Card>
 
         <div className="space-y-10">
-            {/* System Info Section */}
             <Card className="rounded-[3rem] shadow-apple border-black/5 bg-primary text-white overflow-hidden relative group">
                 <CardHeader className="p-10">
                     <CardTitle className="text-3xl font-black tracking-tight">System Identity</CardTitle>
@@ -257,7 +260,7 @@ export default function AdminDashboard() {
                     <div className="p-6 bg-muted/30 rounded-[2rem] space-y-3 border border-black/5">
                         <div>
                             <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Active Admin</p>
-                            <p className="text-sm font-bold truncate text-primary">{user?.email || 'mistrikumar42@gmail.com'}</p>
+                            <p className="text-sm font-bold truncate text-primary">{user?.email || 'Checking session...'}</p>
                         </div>
                         <div className="flex items-center gap-2 text-[9px] font-black text-muted-foreground uppercase tracking-widest pt-2 border-t border-black/5">
                             <Fingerprint className="h-3 w-3" /> UID: {user?.uid?.substring(0, 8)}...
