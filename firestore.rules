@@ -24,8 +24,12 @@ service cloud.firestore {
     // --- COLLECTION GROUP RULES (MUST BE TOP LEVEL) ---
     // Specifically for collectionGroup('bookings') queries used in Admin Dashboard
     match /{path=**}/bookings/{bookingId} {
-        // Master admin can list/read everything. Users can only see their own.
-        allow read, list: if isMasterAdmin() || isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
+        // Master admin can list/read everything.
+        allow read, list: if isMasterAdmin();
+        
+        // Regular admin and Owners can also see.
+        allow read, list: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
+        
         allow create: if isAuthenticated();
         allow update, delete: if isMasterAdmin() || isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
     }
