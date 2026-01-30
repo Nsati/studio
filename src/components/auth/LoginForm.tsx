@@ -28,7 +28,7 @@ import { Separator } from '@/components/ui/separator';
  * - Google OAuth 2.0 Integration
  * - Secure JWT (ID Token) retrieval
  * - Backend verification sync
- * - Graceful error handling (e.g. popup closed/blocked by user)
+ * - Graceful error handling (e.g. popup blocked/closed by user)
  */
 
 export function LoginForm() {

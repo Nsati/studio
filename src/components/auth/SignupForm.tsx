@@ -113,7 +113,7 @@ export function SignupForm() {
       else if (error.code === 'auth/popup-closed-by-user') {
         toast({
           title: 'Signup Cancelled',
-          description: 'The Google sign-up window was closed before completion.',
+          description: 'The Google sign-in window was closed before completion.',
         });
       } else {
         setServerError(error.message || 'Could not sign up with Google. Please try again.');
