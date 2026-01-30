@@ -3,7 +3,8 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // --- 1. GLOBAL MASTER BYPASS (100% SYNCHRONOUS) ---
-    // Zero database lookups for maximum speed and collectionGroup compatibility.
+    // This allows mistrikumar42@gmail.com to bypass all rules immediately.
+    // We use token-based checks which are synchronous and do not require database lookups.
     function isMasterAdmin() {
       return request.auth != null && (
         request.auth.token.email == 'mistrikumar42@gmail.com' || 
@@ -11,12 +12,12 @@ service cloud.firestore {
       );
     }
 
-    // --- 2. UNIVERSAL COLLECTION GROUP BYPASS (GOD MODE) ---
-    // This MUST stay at the top-level to authorize global queries immediately.
+    // --- 2. UNIVERSAL COLLECTION GROUP BYPASS ---
+    // This MUST be at the top level to authorize collectionGroup('bookings') queries.
     match /{path=**}/bookings/{bookingId} {
       allow read, write: if isMasterAdmin();
       
-      // Secondary safety for authenticated users (their own bookings)
+      // Secondary safety for regular users
       allow list: if request.auth != null && request.query.limit <= 100;
       allow get: if request.auth != null && (resource.data.userId == request.auth.uid);
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
