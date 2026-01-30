@@ -5,8 +5,7 @@ service cloud.firestore {
     // --- 1. GLOBAL MASTER HELPERS (100% SYNCHRONOUS) ---
     function isMasterAdmin() {
       return request.auth != null && (
-        request.auth.token.email == 'mistrikumar42@gmail.com' || 
-        request.auth.token.email == 'nsati09@gmail.com' ||
+        request.auth.token.email in ['mistrikumar42@gmail.com', 'nsati09@gmail.com'] ||
         request.auth.uid == 'kk7Tsg8Ag3g1YMMR79rgrHUxq2W2'
       );
     }
