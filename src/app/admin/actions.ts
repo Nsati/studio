@@ -17,7 +17,7 @@ export async function getAdminDashboardStats() {
   try {
     // 1. Fetch Bookings (Simplified to avoid Index errors if no data exists)
     // Note: collectionGroup with orderBy requires a manual index in Firestore console.
-    // Removing orderBy for initial stability.
+    // Removing orderBy for initial stability and sorting in memory.
     const bookingsSnap = await adminDb.collectionGroup('bookings').limit(50).get();
     
     // 2. Fetch Hotels & Users
@@ -31,14 +31,14 @@ export async function getAdminDashboardStats() {
       return {
         id: doc.id,
         ...data,
-        // Ensure dates are serializable for the client
+        // Critical: Normalize timestamps for Server Action serialization
         checkIn: data.checkIn?.toDate?.()?.toISOString() || data.checkIn || null,
         checkOut: data.checkOut?.toDate?.()?.toISOString() || data.checkOut || null,
         createdAt: data.createdAt?.toDate?.()?.toISOString() || data.createdAt || null,
       };
     });
 
-    // Sort manually in memory to avoid "Missing Index" Firestore error
+    // In-memory sort to avoid "Missing Index" Firestore crashes
     bookings.sort((a: any, b: any) => {
       const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
       const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
@@ -59,8 +59,7 @@ export async function getAdminDashboardStats() {
     };
   } catch (e: any) {
     console.error('[ADMIN ACTION] Critical Data Fetch Error:', e.message);
-    // Return a structured error so the UI can handle it without a full crash
-    throw new Error(`Failed to retrieve platform metrics: ${e.message}`);
+    throw new Error(`Platform Metrics Sync Failed: ${e.message}`);
   }
 }
 

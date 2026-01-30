@@ -10,10 +10,9 @@ import {
   TrendingUp, 
   ArrowUpRight,
   Fingerprint,
-  Loader2,
   AlertCircle,
-  Activity,
-  RefreshCw
+  RefreshCw,
+  Activity
 } from 'lucide-react';
 import { useUser } from '@/firebase';
 import { getAdminDashboardStats } from './actions';
@@ -59,7 +58,7 @@ function StatCard({ title, value, icon: Icon, description, isLoading, trend }: a
 }
 
 export default function AdminDashboard() {
-  const { user, userProfile } = useUser();
+  const { userProfile } = useUser();
   const [data, setData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -89,12 +88,12 @@ export default function AdminDashboard() {
           <AlertCircle className="h-12 w-12 text-destructive" />
         </div>
         <div className="text-center space-y-2">
-          <h2 className="text-2xl font-black">Connection Interrupted</h2>
+          <h2 className="text-2xl font-black">Sync Interrupted</h2>
           <p className="text-muted-foreground max-w-md mx-auto leading-relaxed">{error}</p>
         </div>
         <div className="flex gap-4">
             <Button onClick={loadData} variant="default" className="rounded-full px-8 h-12 font-bold shadow-lg">
-                <RefreshCw className="mr-2 h-4 w-4" /> Retry Connection
+                <RefreshCw className="mr-2 h-4 w-4" /> Retry Sync
             </Button>
             <Button asChild variant="outline" className="rounded-full px-8 h-12 font-bold">
                 <Link href="/">Back to Site</Link>
@@ -109,7 +108,7 @@ export default function AdminDashboard() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div className="space-y-1">
             <h1 className="font-headline text-5xl font-black tracking-tight text-foreground">Dashboard</h1>
-            <p className="text-muted-foreground font-medium text-lg">Central Intelligence Console.</p>
+            <p className="text-muted-foreground font-medium text-lg">Platform Intelligence Console.</p>
         </div>
         <div className="flex items-center gap-3">
             <Button variant="outline" size="sm" onClick={loadData} className="rounded-full h-10 px-5 font-bold uppercase tracking-widest text-[9px] border-black/5 bg-white shadow-sm hover:bg-muted/50 transition-all">
@@ -227,16 +226,16 @@ export default function AdminDashboard() {
                 </CardHeader>
                 <CardContent className="px-10 pb-10 space-y-6">
                     <div className="flex justify-between items-center py-3 border-b border-white/10">
-                        <span className="text-[10px] font-black uppercase tracking-widest">Connectivity</span>
-                        <Badge className="bg-green-400 text-green-900 border-0 font-black text-[8px] px-3 py-0.5 uppercase">Online</Badge>
+                        <span className="text-[10px] font-black uppercase tracking-widest">Auth Integrity</span>
+                        <Badge className="bg-green-400 text-green-900 border-0 font-black text-[8px] px-3 py-0.5 uppercase">Verified</Badge>
                     </div>
                     <div className="flex justify-between items-center py-3 border-b border-white/10">
-                        <span className="text-[10px] font-black uppercase tracking-widest">Data Fetch</span>
-                        <Badge className="bg-blue-400 text-blue-900 border-0 font-black text-[8px] px-3 py-0.5 uppercase">Server Action</Badge>
+                        <span className="text-[10px] font-black uppercase tracking-widest">Data Stream</span>
+                        <Badge className="bg-blue-400 text-blue-900 border-0 font-black text-[8px] px-3 py-0.5 uppercase">Secure Action</Badge>
                     </div>
                     <div className="flex justify-between items-center py-3">
-                        <span className="text-[10px] font-black uppercase tracking-widest">DB Security</span>
-                        <Badge className="bg-purple-400 text-purple-900 border-0 font-black text-[8px] px-3 py-0.5 uppercase">Standard</Badge>
+                        <span className="text-[10px] font-black uppercase tracking-widest">Admin Role</span>
+                        <Badge className="bg-purple-400 text-purple-900 border-0 font-black text-[8px] px-3 py-0.5 uppercase">{userProfile?.role || 'User'}</Badge>
                     </div>
                 </CardContent>
             </Card>
@@ -247,12 +246,14 @@ export default function AdminDashboard() {
                 </CardHeader>
                 <CardContent className="px-10 pb-10 space-y-6">
                     <div className="p-6 bg-muted/30 rounded-[2rem] space-y-3 border border-black/5">
-                        <div>
-                            <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Logged In As</p>
-                            <p className="text-sm font-bold truncate text-primary">{userProfile?.displayName || user?.email || 'Explorer'}</p>
-                        </div>
-                        <div className="flex items-center gap-2 text-[9px] font-black text-muted-foreground uppercase tracking-widest pt-2 border-t border-black/5">
-                            <Fingerprint className="h-3 w-3" /> Role: {userProfile?.role || 'user'}
+                        <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center">
+                                <Fingerprint className="h-5 w-5 text-primary" />
+                            </div>
+                            <div className="flex-1 truncate">
+                                <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Authenticated As</p>
+                                <p className="text-xs font-bold truncate text-foreground">{userProfile?.email || 'Himalayan Explorer'}</p>
+                            </div>
                         </div>
                     </div>
                 </CardContent>

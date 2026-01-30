@@ -2,54 +2,50 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // --- 1. THE GOD-MODE BYPASS (100% SYNCHRONOUS) ---
-    // This evaluates instantly from the Auth Token (No DB lookup).
-    // Authorized Emails: mistrikumar42@gmail.com, nsati09@gmail.com
-    function isMasterAdmin() {
-      return request.auth != null && (
-        request.auth.token.email in ['mistrikumar42@gmail.com', 'nsati09@gmail.com'] ||
-        request.auth.uid == 'kk7Tsg8Ag3g1YMMR79rgrHUxq2W2'
-      );
+    // Helper: Check if user is an admin via their profile document
+    function isAdmin() {
+      return request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
-    // UNIVERSAL BYPASS: Full access for master admins to EVERYTHING.
-    // This recursive wildcard must stay at the top for synchronous bypass.
-    match /{allPaths=**} {
-      allow read, write: if isMasterAdmin();
+    // Helper: Check if user owns the document
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
     }
 
-    // --- 2. EXPLICIT COLLECTION GROUP RULES ---
-    // Required for global queries like collectionGroup('bookings') to function.
-    match /{path=**}/bookings/{bookingId} {
-      allow list: if isMasterAdmin() || (request.auth != null && request.query.limit <= 100);
-      allow get: if isMasterAdmin() || (request.auth != null && (resource == null || resource.data.userId == request.auth.uid));
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow update: if isMasterAdmin() || (request.auth != null && resource.data.userId == request.auth.uid);
-    }
-
-    // --- 3. STANDARD COLLECTION RULES ---
-
+    // Standard User Profiles
     match /users/{userId} {
-      allow read, write: if request.auth.uid == userId || isMasterAdmin();
+      allow read, write: if isOwner(userId) || isAdmin();
       
-      match /{allSubcollections=**} {
-        allow read, write: if request.auth.uid == userId || isMasterAdmin();
+      // Nested Bookings
+      match /bookings/{bookingId} {
+        allow read: if isOwner(userId) || isAdmin();
+        allow create: if isOwner(userId);
+        allow update: if isAdmin();
       }
     }
 
+    // Public Collections
     match /hotels/{hotelId} {
       allow read: if true;
+      allow write: if isAdmin();
 
       match /rooms/{roomId} {
         allow read: if true;
-        allow update: if request.auth != null; 
+        allow write: if isAdmin();
       }
       
       match /reviews/{reviewId} {
         allow read: if true;
         allow create: if request.auth != null;
-        allow update, delete: if request.auth != null && (resource.data.userId == request.auth.uid || isMasterAdmin());
+        allow update, delete: if isOwner(resource.data.userId) || isAdmin();
       }
+    }
+
+    // Global queries for Admins (Server Actions handle this securely, 
+    // but we define it here for client-side list checks if needed)
+    match /{path=**}/bookings/{bookingId} {
+      allow list: if isAdmin();
     }
 
     match /cities/{cityId} { allow read: if true; }
