@@ -12,7 +12,8 @@ import {
   TrendingUp, 
   Activity, 
   ArrowUpRight,
-  Fingerprint
+  Fingerprint,
+  AlertCircle
 } from 'lucide-react';
 import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
 import { collection, collectionGroup, query, orderBy, limit } from 'firebase/firestore';
@@ -64,7 +65,7 @@ function StatCard({ title, value, icon: Icon, description, isLoading, trend }: a
 
 export default function AdminDashboard() {
   const firestore = useFirestore();
-  const { user } = useUser();
+  const { user, isLoading: isUserLoading } = useUser();
 
   // Basic collections
   const hotelsQuery = useMemoFirebase(() => {
@@ -80,15 +81,15 @@ export default function AdminDashboard() {
   const { data: users, isLoading: isLoadingUsers } = useCollection<UserProfile>(usersQuery);
   
   // Critical Global Query: collectionGroup('bookings')
-  // This query triggers the "Data Connection Blocked" error if firestore.rules are not synchronous.
   const bookingsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    // Authorized via Synchronous Bypass in firestore.rules
+    // This query triggers the "Data Connection Blocked" error if firestore.rules are not synchronous.
     return query(collectionGroup(firestore, 'bookings'), orderBy('createdAt', 'desc'), limit(10));
   }, [firestore, user]);
   const { data: bookings, isLoading: isLoadingBookings, error: bookingsError } = useCollection<Booking>(bookingsQuery);
 
-  const isLoading = isLoadingHotels || isLoadingUsers || isLoadingBookings;
+  const isLoading = isUserLoading || isLoadingHotels || isLoadingUsers || isLoadingBookings;
+  
   const confirmedBookings = bookings?.filter(b => b.status === 'CONFIRMED') || [];
   const totalRevenue = confirmedBookings.reduce((acc, b) => acc + (b.totalPrice || 0), 0) || 0;
   const confirmedCount = confirmedBookings.length;
@@ -111,15 +112,20 @@ export default function AdminDashboard() {
       </div>
 
       {bookingsError && (
-        <Card className="border-destructive/50 bg-destructive/5 rounded-[2rem] border-dashed">
+        <Card className="border-destructive/50 bg-destructive/5 rounded-[2rem] border-dashed overflow-hidden">
             <CardHeader className="py-8 px-10">
                 <CardTitle className="text-xl font-black text-destructive flex items-center gap-3">
-                    <Loader2 className="h-6 w-6 animate-spin" /> Data Connection Blocked
+                    <AlertCircle className="h-6 w-6" /> Data Connection Blocked
                 </CardTitle>
                 <CardDescription className="text-destructive/80 font-medium text-base leading-relaxed">
                     Firestore rejected the global query. Ensure <strong>{user?.email || 'mistrikumar42@gmail.com'}</strong> is authorized in <code>firestore.rules</code> with synchronous bypass.
                 </CardDescription>
             </CardHeader>
+            <CardContent className="px-10 pb-8">
+                <div className="p-4 bg-white/50 rounded-2xl border border-destructive/10 text-xs font-mono text-destructive/70 break-all">
+                    Error Log: {bookingsError.message}
+                </div>
+            </CardContent>
         </Card>
       )}
 
