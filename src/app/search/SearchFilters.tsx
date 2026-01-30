@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { collection } from 'firebase/firestore';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { format } from 'date-fns';
@@ -15,24 +15,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, MapPin, Calendar as CalendarIcon, Users, ChevronDown } from 'lucide-react';
+import { Search, MapPin, Calendar as CalendarIcon, Users } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
-import { cn } from '@/lib/utils';
 
 export function SearchFilters() {
     const firestore = useFirestore();
     const searchParams = useSearchParams();
     const router = useRouter();
-    const pathname = usePathname();
 
     const hotelsQuery = useMemoFirebase(() => {
         if (!firestore) return null;
         return collection(firestore, 'hotels');
     }, [firestore]);
 
-    const { data: allHotels, isLoading: isLoadingHotels } = useCollection<Hotel>(hotelsQuery);
+    const { data: allHotels } = useCollection<Hotel>(hotelsQuery);
 
     const cities = useMemoFirebase(() => {
         if (!allHotels) return [];
@@ -67,22 +65,22 @@ export function SearchFilters() {
     }
 
     return (
-        <form onSubmit={handleFormSubmit} className="flex flex-col lg:flex-row items-stretch lg:items-center gap-1 bg-white p-2 rounded-[2rem] lg:rounded-full shadow-2xl ring-1 ring-black/5">
+        <form onSubmit={handleFormSubmit} className="flex flex-col lg:flex-row items-stretch lg:items-center gap-1 bg-white p-2 rounded-pill shadow-apple-deep">
             {/* Location Pill */}
-            <div className="flex-1 flex items-center gap-3 px-6 py-3 hover:bg-muted/50 rounded-full transition-colors group cursor-pointer border-b lg:border-b-0 lg:border-r border-black/5">
-                <div className="p-2 bg-primary/5 rounded-full text-primary group-hover:bg-primary group-hover:text-white transition-all">
-                    <MapPin className="h-4 w-4" />
+            <div className="flex-1 flex items-center gap-4 px-8 py-4 hover:bg-muted/50 rounded-full transition-all duration-300 group cursor-pointer border-b lg:border-b-0 lg:border-r border-black/5">
+                <div className="p-2.5 bg-primary/10 rounded-full text-primary group-hover:bg-primary group-hover:text-white transition-all duration-500">
+                    <MapPin className="h-5 w-5" />
                 </div>
                 <div className="flex flex-col items-start flex-1">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Where to?</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-0.5">Where to?</span>
                     <Select value={city} onValueChange={setCity}>
-                        <SelectTrigger className="border-0 bg-transparent p-0 h-auto focus:ring-0 shadow-none font-bold text-sm">
+                        <SelectTrigger className="border-0 bg-transparent p-0 h-auto focus:ring-0 shadow-none font-bold text-base tracking-tight">
                             <SelectValue placeholder="Select Destination" />
                         </SelectTrigger>
-                        <SelectContent className="rounded-2xl border-black/5 shadow-xl">
-                            <SelectItem value="All">All Locations</SelectItem>
+                        <SelectContent className="rounded-3xl border-black/5 shadow-apple-deep p-2">
+                            <SelectItem value="All" className="rounded-xl">All Locations</SelectItem>
                             {cities?.map((c) => (
-                                <SelectItem key={c} value={c}>{c}</SelectItem>
+                                <SelectItem key={c} value={c} className="rounded-xl">{c}</SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
@@ -90,54 +88,54 @@ export function SearchFilters() {
             </div>
 
             {/* Dates Pill */}
-            <div className="flex-1 flex items-center gap-3 px-6 py-3 hover:bg-muted/50 rounded-full transition-colors group cursor-pointer border-b lg:border-b-0 lg:border-r border-black/5">
-                <div className="p-2 bg-primary/5 rounded-full text-primary group-hover:bg-primary group-hover:text-white transition-all">
-                    <CalendarIcon className="h-4 w-4" />
+            <div className="flex-1 flex items-center gap-4 px-8 py-4 hover:bg-muted/50 rounded-full transition-all duration-300 group cursor-pointer border-b lg:border-b-0 lg:border-r border-black/5">
+                <div className="p-2.5 bg-primary/10 rounded-full text-primary group-hover:bg-primary group-hover:text-white transition-all duration-500">
+                    <CalendarIcon className="h-5 w-5" />
                 </div>
                 <Popover>
                     <PopoverTrigger asChild>
                         <button type="button" className="flex flex-col items-start flex-1 text-left">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">When?</span>
-                            <span className="text-sm font-bold truncate">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-0.5">When?</span>
+                            <span className="text-base font-bold truncate tracking-tight">
                                 {dates?.from ? (
                                     dates.to ? `${format(dates.from, 'MMM dd')} - ${format(dates.to, 'MMM dd')}` : format(dates.from, 'MMM dd')
-                                ) : "Add dates"}
+                                ) : "Add Stay dates"}
                             </span>
                         </button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-4 rounded-3xl border-black/5 shadow-2xl" align="center">
+                    <PopoverContent className="w-auto p-6 rounded-[2.5rem] border-black/5 shadow-apple-deep" align="center">
                         <CalendarComponent
                             mode="range"
                             selected={dates}
                             onSelect={setDates}
                             disabled={{ before: new Date() }}
-                            className="rounded-xl"
+                            className="rounded-2xl"
                         />
                     </PopoverContent>
                 </Popover>
             </div>
 
             {/* Guests Pill */}
-            <div className="flex-[0.6] flex items-center gap-3 px-6 py-3 hover:bg-muted/50 rounded-full transition-colors group cursor-pointer border-b lg:border-b-0 lg:border-r border-black/5">
-                <div className="p-2 bg-primary/5 rounded-full text-primary group-hover:bg-primary group-hover:text-white transition-all">
-                    <Users className="h-4 w-4" />
+            <div className="flex-[0.7] flex items-center gap-4 px-8 py-4 hover:bg-muted/50 rounded-full transition-all duration-300 group cursor-pointer border-b lg:border-b-0 lg:border-r border-black/5">
+                <div className="p-2.5 bg-primary/10 rounded-full text-primary group-hover:bg-primary group-hover:text-white transition-all duration-500">
+                    <Users className="h-5 w-5" />
                 </div>
                 <div className="flex flex-col items-start flex-1">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Who?</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-0.5">Who?</span>
                     <Input 
                         type="number" 
                         min="1"
                         value={guests}
                         onChange={(e) => setGuests(e.target.value)}
-                        className="border-0 bg-transparent p-0 h-auto focus-visible:ring-0 shadow-none font-bold text-sm"
+                        className="border-0 bg-transparent p-0 h-auto focus-visible:ring-0 shadow-none font-bold text-base tracking-tight"
                     />
                 </div>
             </div>
             
-            {/* Modern Search Button */}
-            <Button type="submit" size="lg" className="lg:w-14 lg:h-14 w-full h-14 rounded-full bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 transition-all active:scale-95">
-                <Search className="h-5 w-5" />
-                <span className="lg:hidden ml-2 font-bold">Search Now</span>
+            {/* Modern Action Button */}
+            <Button type="submit" size="lg" className="lg:w-16 lg:h-16 w-full h-16 rounded-full bg-primary hover:bg-primary/90 text-white shadow-xl shadow-primary/20 transition-all duration-500 active:scale-95 mx-2">
+                <Search className="h-6 w-6" />
+                <span className="lg:hidden ml-3 font-black tracking-tight text-lg">Search Now</span>
             </Button>
         </form>
     );

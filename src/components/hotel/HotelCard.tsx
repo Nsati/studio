@@ -30,8 +30,8 @@ export function HotelCard({ hotel, className }: HotelCardProps) {
   return (
     <Link href={`/hotels/${hotel.id}`} className={cn("group block w-full", className)}>
       <div className="flex flex-col space-y-4">
-        {/* Modern Tall Card Image */}
-        <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[2rem] bg-muted shadow-sm transition-all duration-500 group-hover:shadow-xl group-hover:shadow-black/5">
+        {/* Modern Tall Card Image - Airbnb Style */}
+        <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[2.5rem] bg-muted shadow-apple transition-all duration-700 group-hover:shadow-apple-deep group-hover:-translate-y-1">
             {imageUrl ? (
               <Image
                 src={imageUrl}
@@ -39,53 +39,51 @@ export function HotelCard({ hotel, className }: HotelCardProps) {
                 data-ai-hint={imageHint}
                 fill
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                className="object-cover transition-transform duration-700 group-hover:scale-105"
+                className="object-cover transition-transform duration-1000 group-hover:scale-110"
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-muted">
-                <span className="text-muted-foreground text-xs uppercase tracking-widest font-bold">No Preview</span>
+                <span className="text-muted-foreground text-xs uppercase tracking-widest font-black">No Preview</span>
               </div>
             )}
             
             {/* Minimal Badge Overlay */}
             {hotel.discount && hotel.discount > 0 ? (
-                <div className="absolute top-4 left-4">
-                    <Badge className="bg-accent text-white border-0 font-bold px-3 py-1 rounded-full shadow-lg">
+                <div className="absolute top-5 left-5">
+                    <Badge className="bg-accent text-white border-0 font-bold px-4 py-1.5 rounded-full shadow-lg text-[10px] tracking-widest uppercase">
                         {hotel.discount}% OFF
                     </Badge>
                 </div>
             ) : null}
 
             {/* Rating Overlay */}
-            <div className="absolute bottom-4 left-4 px-3 py-1.5 glass-morphism rounded-full flex items-center gap-1 shadow-sm border-white/30">
-                <Star className="h-3 w-3 fill-accent text-accent" />
-                <span className="text-[11px] font-bold text-foreground">{hotel.rating}</span>
+            <div className="absolute bottom-5 left-5 px-4 py-2 glass-morphism rounded-full flex items-center gap-1.5 shadow-sm border-white/30 backdrop-blur-md">
+                <Star className="h-3.5 w-3.5 fill-accent text-accent" />
+                <span className="text-xs font-black text-foreground tracking-tight">{hotel.rating}</span>
             </div>
         </div>
 
-        {/* Minimal Details */}
-        <div className="px-1 space-y-1">
-          <div className="flex justify-between items-start gap-2">
-            <h3 className="text-lg font-bold tracking-tight text-foreground leading-tight group-hover:text-primary transition-colors truncate">
-                {hotel.name}
-            </h3>
-          </div>
+        {/* Minimal Details - Apple Style */}
+        <div className="px-2 space-y-1.5">
+          <h3 className="text-xl font-bold tracking-tight text-foreground leading-tight group-hover:text-primary transition-colors truncate">
+              {hotel.name}
+          </h3>
           
-          <div className="flex items-center gap-1 text-muted-foreground">
-            <MapPin className="h-3.5 w-3.5" />
+          <div className="flex items-center gap-1.5 text-muted-foreground">
+            <MapPin className="h-4 w-4" />
             <span className="text-sm font-medium tracking-tight">{hotel.city}</span>
           </div>
 
           <div className="pt-2 flex items-baseline gap-2">
             {hotel.minPrice && hotel.minPrice > 0 ? (
               <>
-                <span className="text-lg font-black text-primary tracking-tight">
+                <span className="text-xl font-black text-primary tracking-tighter">
                   {discountedMinPrice?.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}
                 </span>
-                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">/ Night</span>
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">/ Night</span>
               </>
             ) : (
-              <span className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Seasonal Only</span>
+              <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Seasonal Pricing</span>
             )}
           </div>
         </div>

@@ -1,12 +1,11 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 60 30% 96%; /* Warm Off-White / Light Beige */
-    --foreground: 20 10% 15%;
+    --background: 210 20% 98%; /* Ultra clean light gray/white */
+    --foreground: 20 10% 10%;
 
     --card: 0 0% 100%;
     --card-foreground: 20 10% 15%;
@@ -14,45 +13,46 @@
     --popover: 0 0% 100%;
     --popover-foreground: 20 10% 15%;
 
-    --primary: 123 40% 30%; /* Deep Forest Green */
+    --primary: 151 41% 29%; /* Forest Green */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 92%;
-    --secondary-foreground: 0 0% 20%;
+    --secondary: 210 10% 94%;
+    --secondary-foreground: 20 10% 20%;
 
-    --muted: 60 10% 92%;
-    --muted-foreground: 0 0% 45%;
+    --muted: 210 10% 94%;
+    --muted-foreground: 210 5% 45%;
 
-    --accent: 24 80% 45%; /* Earthy Orange */
+    --accent: 27 82% 53%; /* Earthy Orange */
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
-    --ring: 123 40% 30%;
+    --border: 210 10% 90%;
+    --input: 210 10% 90%;
+    --ring: 151 41% 29%;
 
-    --radius: 1.5rem;
+    --radius: 2rem; /* Massive rounding for Apple feel */
   }
 
   .dark {
-    --background: 20 10% 10%;
+    --background: 20 10% 8%;
     --foreground: 0 0% 95%;
     --card: 20 10% 12%;
     --card-foreground: 0 0% 95%;
-    --primary: 123 40% 40%;
+    --primary: 151 41% 40%;
     --border: 0 0% 15%;
   }
 }
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border outline-none;
   }
   body {
     @apply bg-background text-foreground selection:bg-primary/10 selection:text-primary;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
   }
   h1, h2, h3, h4 {
     @apply font-heading tracking-tight;
@@ -60,13 +60,17 @@
 }
 
 .glass-morphism {
-  @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-sm;
+  @apply bg-white/70 backdrop-blur-xl border border-white/20 shadow-apple;
 }
 
 .apple-pill {
   @apply rounded-full px-6 py-3 transition-all duration-300;
 }
 
-.premium-shadow {
-  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.05);
+.smooth-transition {
+  @apply transition-all duration-500 ease-apple-ease;
+}
+
+.hero-gradient {
+  background: linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 50%, hsl(var(--background)) 100%);
 }

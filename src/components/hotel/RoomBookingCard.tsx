@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { BedDouble, Calendar as CalendarIcon, AlertCircle, ShieldCheck, ChevronRight } from 'lucide-react';
+import { Calendar as CalendarIcon, ShieldCheck, ChevronRight } from 'lucide-react';
 import { differenceInDays, format } from 'date-fns';
 import type { DateRange } from 'react-day-picker';
 import { useRouter } from 'next/navigation';
@@ -44,7 +44,7 @@ export function RoomBookingCard({ hotel, rooms, isLoadingRooms }: { hotel: WithI
 
   const handleBookNow = () => {
     if (!selectedRoom || !isDateRangeValid || !dates?.from || !dates.to) {
-        toast({ variant: 'destructive', title: 'Missing Info', description: 'Select dates and a room.' });
+        toast({ variant: 'destructive', title: 'Action Required', description: 'Please select your dates and preferred room type.' });
         return;
     }
     const params = new URLSearchParams({
@@ -58,65 +58,65 @@ export function RoomBookingCard({ hotel, rooms, isLoadingRooms }: { hotel: WithI
   }
 
   return (
-    <Card className="sticky top-28 rounded-[2.5rem] shadow-2xl border-black/5 overflow-hidden">
-      <CardHeader className="bg-primary p-8 text-white space-y-1">
+    <Card className="sticky top-28 rounded-[3rem] shadow-apple-deep border-black/5 overflow-hidden transition-all duration-700 bg-white">
+      <CardHeader className="bg-primary p-10 text-white space-y-2">
         <div className="flex justify-between items-baseline">
-            <CardTitle className="text-3xl font-black tracking-tight">
+            <CardTitle className="text-4xl font-black tracking-tighter">
                 {hotel.minPrice?.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}
             </CardTitle>
-            <span className="text-sm font-medium opacity-80 uppercase tracking-widest">Starting / night</span>
+            <span className="text-[10px] font-black opacity-80 uppercase tracking-widest">Starting / night</span>
         </div>
-        <CardDescription className="text-white/70 flex items-center gap-1.5 font-medium">
-            <ShieldCheck className="h-4 w-4" /> 100% Best Price Guarantee
+        <CardDescription className="text-white/70 flex items-center gap-2 font-bold text-xs uppercase tracking-widest">
+            <ShieldCheck className="h-4 w-4" /> Best Price Authenticated
         </CardDescription>
       </CardHeader>
       
-      <CardContent className="p-8 space-y-8 bg-white">
-        <div className="grid grid-cols-1 gap-4">
-          <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Stay Period</label>
+      <CardContent className="p-10 space-y-10">
+        <div className="grid grid-cols-1 gap-6">
+          <div className="space-y-3">
+            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-2">Stay Period</label>
             <Popover>
                 <PopoverTrigger asChild>
-                <Button variant="outline" className="w-full h-14 rounded-2xl justify-start font-bold border-black/10 hover:bg-muted/50">
-                    <CalendarIcon className="mr-2 h-4 w-4 text-primary" />
+                <Button variant="outline" className="w-full h-16 rounded-[1.5rem] justify-start font-bold border-black/10 hover:bg-muted/50 transition-all duration-300 text-lg">
+                    <CalendarIcon className="mr-3 h-5 w-5 text-primary" />
                     {dates?.from ? (
                     dates.to ? `${format(dates.from, 'MMM dd')} - ${format(dates.to, 'MMM dd')}` : format(dates.from, 'MMM dd')
-                    ) : "Select your dates"}
+                    ) : "Check-in — Check-out"}
                 </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-4 rounded-3xl" align="end">
-                <Calendar mode="range" selected={dates} onSelect={setDates} disabled={{ before: new Date() }} />
+                <PopoverContent className="w-auto p-6 rounded-[2.5rem] shadow-apple-deep border-black/5" align="end">
+                <Calendar mode="range" selected={dates} onSelect={setDates} disabled={{ before: new Date() }} className="rounded-2xl" />
                 </PopoverContent>
             </Popover>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Guests</label>
-            <div className="flex items-center gap-2 h-14 w-full rounded-2xl border border-black/10 px-4">
+          <div className="space-y-3">
+            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-2">Travelers</label>
+            <div className="flex items-center gap-3 h-16 w-full rounded-[1.5rem] border border-black/10 px-6 bg-background/50">
                 <input 
                     type="number" 
                     min="1" 
                     value={guests} 
                     onChange={e => setGuests(e.target.value)}
-                    className="flex-1 bg-transparent font-bold focus:outline-none"
+                    className="flex-1 bg-transparent font-black text-lg focus:outline-none"
                 />
-                <span className="text-xs font-bold text-muted-foreground">ADULTS</span>
+                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Adults</span>
             </div>
           </div>
         </div>
 
-        <div className="space-y-4">
-          <h4 className="text-xs font-black uppercase tracking-widest text-muted-foreground">Select Preferred Room</h4>
+        <div className="space-y-6">
+          <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-2">The Collection</h4>
           {isLoadingRooms ? (
-            <Skeleton className="h-40 w-full rounded-2xl" />
+            <Skeleton className="h-48 w-full rounded-[2rem]" />
           ) : rooms.length === 0 ? (
-            <Alert className="rounded-2xl bg-amber-50 border-amber-100"><AlertDescription>No rooms configured.</AlertDescription></Alert>
+            <Alert className="rounded-[2rem] bg-amber-50 border-amber-100"><AlertDescription>Pricing currently unavailable.</AlertDescription></Alert>
           ) : !isDateRangeValid ? (
-            <div className="p-6 bg-muted/30 rounded-[2rem] border-2 border-dashed border-black/5 text-center space-y-2">
-                <p className="text-sm font-bold text-muted-foreground">Enter dates to view availability</p>
+            <div className="p-8 bg-muted/30 rounded-[2.5rem] border-2 border-dashed border-black/5 text-center space-y-3">
+                <p className="text-sm font-black text-muted-foreground uppercase tracking-widest">Enter dates to unlock inventory</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {rooms.map((room) => {
                 const isSelected = selectedRoom?.id === room.id;
                 const isSoldOut = room.availableRooms !== undefined && room.availableRooms <= 0;
@@ -127,18 +127,18 @@ export function RoomBookingCard({ hotel, rooms, isLoadingRooms }: { hotel: WithI
                         key={room.id}
                         onClick={() => !isSoldOut && setSelectedRoom(room)}
                         className={cn(
-                            'p-5 rounded-2xl transition-all border-2 cursor-pointer flex items-center justify-between',
-                            isSelected ? 'border-primary bg-primary/5' : 'border-black/5 hover:border-black/10',
-                            isSoldOut && 'opacity-50 grayscale cursor-not-allowed'
+                            'p-6 rounded-[2rem] transition-all duration-500 border-2 cursor-pointer flex items-center justify-between group',
+                            isSelected ? 'border-primary bg-primary/5 shadow-apple' : 'border-black/5 hover:border-black/10 bg-white',
+                            isSoldOut && 'opacity-40 grayscale cursor-not-allowed'
                         )}
                     >
-                        <div className="space-y-1">
-                            <p className="font-bold tracking-tight">{room.type}</p>
-                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Max {room.capacity} Guests</p>
+                        <div className="space-y-1.5">
+                            <p className="font-black text-lg tracking-tight group-hover:text-primary transition-colors">{room.type}</p>
+                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Cap: {room.capacity} Guests</p>
                         </div>
                         <div className="text-right">
-                            <p className="font-black text-primary">{price.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}</p>
-                            {isSelected && <Badge className="text-[9px] h-4 rounded-full mt-1 bg-primary text-white">SELECTED</Badge>}
+                            <p className="font-black text-primary text-xl tracking-tighter">{price.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}</p>
+                            {isSelected && <Badge className="text-[9px] h-5 rounded-full mt-2 bg-primary text-white font-black tracking-widest">SELECTED</Badge>}
                         </div>
                     </div>
                 )
@@ -148,16 +148,16 @@ export function RoomBookingCard({ hotel, rooms, isLoadingRooms }: { hotel: WithI
         </div>
 
         {selectedRoom && isDateRangeValid && (
-          <div className='pt-4 animate-in fade-in slide-in-from-top-4 duration-500'>
+          <div className='pt-6 animate-in fade-in slide-in-from-top-6 duration-700 ease-apple-ease'>
             <Button
               onClick={handleBookNow}
               size="lg"
-              className="w-full h-16 rounded-full text-lg font-black bg-accent hover:bg-accent/90 shadow-xl shadow-accent/20 tracking-tight"
+              className="w-full h-20 rounded-full text-xl font-black bg-accent hover:bg-accent/90 shadow-apple-deep shadow-accent/30 tracking-tight transition-all active:scale-95"
             >
-              Book {selectedRoom.type} <ChevronRight className="ml-2 h-5 w-5" />
+              Confirm Reservation <ChevronRight className="ml-3 h-6 w-6" />
             </Button>
-            <p className="text-center text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-4">
-                No charges will be applied yet
+            <p className="text-center text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mt-6">
+                Instant confirmation available
             </p>
           </div>
         )}
