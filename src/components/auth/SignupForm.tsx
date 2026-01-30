@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -28,12 +27,12 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Chrome } from 'lucide-react';
 import { useAuth, useFirestore } from '@/firebase';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 import type { UserProfile } from '@/lib/types';
-
+import { Separator } from '@/components/ui/separator';
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
@@ -53,17 +52,46 @@ export function SignupForm() {
   const auth = useAuth();
   const firestore = useFirestore();
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [serverError, setServerError] = useState('');
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: '',
-      email: '',
-      mobile: '',
-      password: '',
-    },
-  });
+  const handleGoogleSignup = async () => {
+    if (!auth || !firestore) return;
+    setIsGoogleLoading(true);
+    setServerError('');
+
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+
+      const userDocRef = doc(firestore, 'users', user.uid);
+      const userDocSnap = await getDoc(userDocRef);
+
+      if (!userDocSnap.exists()) {
+        const newUserProfile: UserProfile = {
+          uid: user.uid,
+          displayName: user.displayName || 'Guest User',
+          email: user.email || '',
+          mobile: '',
+          role: 'user',
+          status: 'active',
+        };
+        await setDoc(userDocRef, newUserProfile);
+      }
+
+      toast({
+        title: 'Signup Successful!',
+        description: 'Welcome to Uttarakhand Getaways.',
+      });
+      router.push('/my-bookings');
+    } catch (error: any) {
+      console.error("Google signup error:", error);
+      setServerError('Could not sign up with Google. Please try again.');
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
@@ -79,9 +107,6 @@ export function SignupForm() {
         const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
         const user = userCredential.user;
 
-        // Create user profile in firestore from the client.
-        // All new signups are 'user' by default. Admin role must be granted manually
-        // from the Firebase console for security.
         const newUserProfile: UserProfile = {
             uid: user.uid,
             displayName: values.name,
@@ -124,7 +149,30 @@ export function SignupForm() {
             Join us to start planning your getaway
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={handleGoogleSignup}
+            disabled={isGoogleLoading || isLoading}
+          >
+            {isGoogleLoading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Chrome className="mr-2 h-4 w-4" />
+            )}
+            Continue with Google
+          </Button>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <Separator />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">Or sign up with email</span>
+            </div>
+          </div>
+
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
@@ -197,7 +245,7 @@ export function SignupForm() {
               <Button
                 type="submit"
                 className="w-full"
-                disabled={isLoading || !auth || !firestore}
+                disabled={isLoading || isGoogleLoading || !auth || !firestore}
               >
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Create Account

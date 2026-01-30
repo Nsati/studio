@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { useAuth, useFirestore } from '@/firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import type { UserProfile } from '@/lib/types';
 
 import { Button } from '@/components/ui/button';
@@ -20,7 +20,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Chrome } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
 
 export function LoginForm() {
   const auth = useAuth();
@@ -31,7 +32,45 @@ export function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const handleGoogleLogin = async () => {
+    if (!auth || !firestore) return;
+    setIsGoogleLoading(true);
+    setError('');
+
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+
+      // Check if user profile exists, if not create it (auto-registration on first login)
+      const userDocRef = doc(firestore, 'users', user.uid);
+      const userDocSnap = await getDoc(userDocRef);
+
+      if (!userDocSnap.exists()) {
+        const newUserProfile: UserProfile = {
+          uid: user.uid,
+          displayName: user.displayName || 'Guest User',
+          email: user.email || '',
+          mobile: '', // Google doesn't always provide mobile, user can update later
+          role: 'user',
+          status: 'active',
+        };
+        await setDoc(userDocRef, newUserProfile);
+      }
+
+      toast({ title: 'Login successful!', description: `Welcome back!` });
+      const redirect = searchParams.get('redirect');
+      router.push(redirect || '/my-bookings');
+    } catch (error: any) {
+      console.error("Google login error:", error);
+      setError('Could not sign in with Google. Please try again.');
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +83,6 @@ export function LoginForm() {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Check user profile for active status
       const userDocRef = doc(firestore, 'users', user.uid);
       const userDocSnap = await getDoc(userDocRef);
 
@@ -65,6 +103,7 @@ export function LoginForm() {
         setError(error.message || 'An error occurred during login.');
         console.error(error);
       }
+    } finally {
       setIsLoading(false);
     }
   };
@@ -76,7 +115,30 @@ export function LoginForm() {
           <CardTitle className="font-headline text-3xl">Welcome Back</CardTitle>
           <CardDescription>Log in to manage your bookings.</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={handleGoogleLogin}
+            disabled={isGoogleLoading || isLoading}
+          >
+            {isGoogleLoading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Chrome className="mr-2 h-4 w-4" />
+            )}
+            Continue with Google
+          </Button>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <Separator />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">Or continue with email</span>
+            </div>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -111,7 +173,7 @@ export function LoginForm() {
             <Button
               type="submit"
               className="w-full"
-              disabled={isLoading || !auth || !firestore}
+              disabled={isLoading || isGoogleLoading || !auth || !firestore}
             >
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Log In
