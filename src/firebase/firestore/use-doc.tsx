@@ -41,7 +41,11 @@ export function useDoc<T>(ref: DocumentReference<DocumentData> | null) {
             path: ref?.path || 'unknown',
             operation: 'get',
         });
-        errorEmitter.emit('permission-error', permissionError);
+
+        setTimeout(() => {
+          errorEmitter.emit('permission-error', permissionError);
+        }, 0);
+
         setError(permissionError);
         setIsLoading(false);
       }

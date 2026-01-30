@@ -50,9 +50,15 @@ export function useCollection<T>(query: Query<DocumentData> | null) {
             path: path,
             operation: 'list',
         });
-        errorEmitter.emit('permission-error', permissionError);
+
+        // Use a small timeout to avoid triggering state updates during render
+        // if this happens to be called synchronously (though onSnapshot is usually async).
+        setTimeout(() => {
+          errorEmitter.emit('permission-error', permissionError);
+        }, 0);
 
         setError(permissionError);
+        setData([]); // Provide empty data instead of null to prevent some UI crashes
         setIsLoading(false);
       }
     );

@@ -7,11 +7,12 @@ service cloud.firestore {
     function isAdmin() {
       return request.auth != null &&
              (
+               // Fallback: grant admin access to specific user (useful for first-time setup/testing)
+               request.auth.uid == 'kk7Tsg8Ag3g1YMMR79rgrHUxq2W2' ||
+               request.auth.token.email == 'mistrikumar42@gmail.com' ||
                // Check Firestore document for admin role
                (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-                get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') ||
-               // Fallback: grant admin access to specific email (useful for first-time setup/testing)
-               request.auth.token.email == 'mistrikumar42@gmail.com'
+                get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
              );
     }
     
