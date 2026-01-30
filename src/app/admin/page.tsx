@@ -12,12 +12,13 @@ import {
   Fingerprint,
   Loader2,
   AlertCircle,
-  Activity
+  Activity,
+  RefreshCw
 } from 'lucide-react';
 import { useUser } from '@/firebase';
 import { getAdminDashboardStats } from './actions';
 import { Skeleton } from '@/components/ui/skeleton';
-import { format } from 'date-fns';
+import { format, isValid } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -63,31 +64,42 @@ export default function AdminDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const result = await getAdminDashboardStats();
-        setData(result);
-      } catch (err: any) {
-        setError(err.message);
-      } finally {
-        setIsLoading(false);
-      }
+  const loadData = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const result = await getAdminDashboardStats();
+      setData(result);
+    } catch (err: any) {
+      console.error("[DASHBOARD] Fetch Error:", err);
+      setError(err.message || "An unexpected error occurred while connecting to the server.");
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  useEffect(() => {
     loadData();
   }, []);
 
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6">
-        <div className="p-6 bg-destructive/10 rounded-full">
+        <div className="p-6 bg-destructive/10 rounded-full animate-in zoom-in-90 duration-500">
           <AlertCircle className="h-12 w-12 text-destructive" />
         </div>
         <div className="text-center space-y-2">
-          <h2 className="text-2xl font-black">Connection Error</h2>
-          <p className="text-muted-foreground max-w-md mx-auto">{error}</p>
+          <h2 className="text-2xl font-black">Connection Interrupted</h2>
+          <p className="text-muted-foreground max-w-md mx-auto leading-relaxed">{error}</p>
         </div>
-        <Button onClick={() => window.location.reload()} variant="outline" className="rounded-full">Retry Connection</Button>
+        <div className="flex gap-4">
+            <Button onClick={loadData} variant="default" className="rounded-full px-8 h-12 font-bold shadow-lg">
+                <RefreshCw className="mr-2 h-4 w-4" /> Retry Connection
+            </Button>
+            <Button asChild variant="outline" className="rounded-full px-8 h-12 font-bold">
+                <Link href="/">Back to Site</Link>
+            </Button>
+        </div>
       </div>
     );
   }
@@ -100,9 +112,10 @@ export default function AdminDashboard() {
             <p className="text-muted-foreground font-medium text-lg">Central Intelligence Console.</p>
         </div>
         <div className="flex items-center gap-3">
-            <Badge variant="outline" className="h-10 px-5 rounded-full border-black/5 bg-white shadow-sm font-bold uppercase tracking-widest text-[9px]">
-                <Activity className="h-3 w-3 mr-2 text-primary animate-pulse" /> Live Metrics
-            </Badge>
+            <Button variant="outline" size="sm" onClick={loadData} className="rounded-full h-10 px-5 font-bold uppercase tracking-widest text-[9px] border-black/5 bg-white shadow-sm hover:bg-muted/50 transition-all">
+                <RefreshCw className={cn("h-3 w-3 mr-2 text-primary", isLoading && "animate-spin")} />
+                {isLoading ? 'Syncing...' : 'Live Metrics'}
+            </Button>
         </div>
       </div>
 
@@ -170,29 +183,32 @@ export default function AdminDashboard() {
                                 </TableRow>
                             ))
                         ) : data?.recentBookings?.length > 0 ? (
-                            data.recentBookings.map((booking: any) => (
-                                <TableRow key={booking.id} className="hover:bg-muted/5 transition-colors border-b border-black/5 last:border-0">
-                                    <TableCell className="px-10 py-6">
-                                        <div className="font-bold text-sm text-foreground">{booking.customerName}</div>
-                                        <div className="text-[9px] text-muted-foreground font-black tracking-widest uppercase mt-1">
-                                            {booking.createdAt ? format(new Date(booking.createdAt), 'dd MMM, HH:mm') : 'N/A'}
-                                        </div>
-                                    </TableCell>
-                                    <TableCell className="py-6 font-medium text-muted-foreground text-sm">{booking.hotelName}</TableCell>
-                                    <TableCell className="py-6 font-black text-primary text-sm tracking-tighter">
-                                        {booking.totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}
-                                    </TableCell>
-                                    <TableCell className="px-10 py-6 text-right">
-                                        <Badge className={cn(
-                                            "rounded-full font-black uppercase text-[8px] tracking-[0.15em] px-4 py-1 border-0 shadow-sm",
-                                            booking.status === 'CONFIRMED' ? "bg-green-100 text-green-700" : 
-                                            booking.status === 'CANCELLED' ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"
-                                        )}>
-                                            {booking.status}
-                                        </Badge>
-                                    </TableCell>
-                                </TableRow>
-                            ))
+                            data.recentBookings.map((booking: any) => {
+                                const bookingDate = booking.createdAt ? new Date(booking.createdAt) : null;
+                                return (
+                                    <TableRow key={booking.id} className="hover:bg-muted/5 transition-colors border-b border-black/5 last:border-0">
+                                        <TableCell className="px-10 py-6">
+                                            <div className="font-bold text-sm text-foreground">{booking.customerName || 'Explorer'}</div>
+                                            <div className="text-[9px] text-muted-foreground font-black tracking-widest uppercase mt-1">
+                                                {bookingDate && isValid(bookingDate) ? format(bookingDate, 'dd MMM, HH:mm') : 'N/A'}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="py-6 font-medium text-muted-foreground text-sm truncate max-w-[150px]">{booking.hotelName || 'Property'}</TableCell>
+                                        <TableCell className="py-6 font-black text-primary text-sm tracking-tighter">
+                                            {(Number(booking.totalPrice) || 0).toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}
+                                        </TableCell>
+                                        <TableCell className="px-10 py-6 text-right">
+                                            <Badge className={cn(
+                                                "rounded-full font-black uppercase text-[8px] tracking-[0.15em] px-4 py-1 border-0 shadow-sm",
+                                                booking.status === 'CONFIRMED' ? "bg-green-100 text-green-700" : 
+                                                booking.status === 'CANCELLED' ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"
+                                            )}>
+                                                {booking.status || 'PENDING'}
+                                            </Badge>
+                                        </TableCell>
+                                    </TableRow>
+                                );
+                            })
                         ) : (
                             <TableRow>
                                 <TableCell colSpan={4} className="px-10 py-32 text-center text-muted-foreground font-black uppercase tracking-[0.2em] text-xs">No records found.</TableCell>
@@ -206,21 +222,21 @@ export default function AdminDashboard() {
         <div className="space-y-10">
             <Card className="rounded-[3rem] shadow-apple border-black/5 bg-primary text-white overflow-hidden relative group">
                 <CardHeader className="p-10">
-                    <CardTitle className="text-3xl font-black tracking-tight">System Status</CardTitle>
+                    <CardTitle className="text-3xl font-black tracking-tight">Platform Status</CardTitle>
                     <CardDescription className="text-white/70 font-bold uppercase text-[10px] tracking-widest mt-2">Environment: Production</CardDescription>
                 </CardHeader>
                 <CardContent className="px-10 pb-10 space-y-6">
                     <div className="flex justify-between items-center py-3 border-b border-white/10">
-                        <span className="text-[10px] font-black uppercase tracking-widest">Auth Mode</span>
-                        <Badge className="bg-green-400 text-green-900 border-0 font-black text-[8px] px-3 py-0.5 uppercase">Admin Role</Badge>
+                        <span className="text-[10px] font-black uppercase tracking-widest">Connectivity</span>
+                        <Badge className="bg-green-400 text-green-900 border-0 font-black text-[8px] px-3 py-0.5 uppercase">Online</Badge>
                     </div>
                     <div className="flex justify-between items-center py-3 border-b border-white/10">
                         <span className="text-[10px] font-black uppercase tracking-widest">Data Fetch</span>
-                        <Badge className="bg-green-400 text-green-900 border-0 font-black text-[8px] px-3 py-0.5 uppercase">Server Action</Badge>
+                        <Badge className="bg-blue-400 text-blue-900 border-0 font-black text-[8px] px-3 py-0.5 uppercase">Server Action</Badge>
                     </div>
                     <div className="flex justify-between items-center py-3">
-                        <span className="text-[10px] font-black uppercase tracking-widest">Rules Status</span>
-                        <Badge className="bg-blue-400 text-blue-900 border-0 font-black text-[8px] px-3 py-0.5 uppercase">Standard</Badge>
+                        <span className="text-[10px] font-black uppercase tracking-widest">DB Security</span>
+                        <Badge className="bg-purple-400 text-purple-900 border-0 font-black text-[8px] px-3 py-0.5 uppercase">Standard</Badge>
                     </div>
                 </CardContent>
             </Card>
