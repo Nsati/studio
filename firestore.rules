@@ -9,7 +9,7 @@ service cloud.firestore {
     }
 
     // MASTER ADMIN BYPASS: Direct token check for mistrikumar42@gmail.com
-    // This MUST be synchronous for collectionGroup queries to authorize immediately.
+    // This is synchronous and allows collectionGroup queries to be authorized immediately.
     function isMasterAdmin() {
       return isAuthenticated() && (
         request.auth.token.email == 'mistrikumar42@gmail.com' || 
@@ -27,10 +27,11 @@ service cloud.firestore {
     // --- COLLECTION GROUP RULES ---
     // This match pattern is REQUIRED for collectionGroup queries to work.
     match /{path=**}/bookings/{bookingId} {
-      // Master Admin can do anything
+      // Master Admin can see everything
       allow read, write: if isMasterAdmin();
       
       // Standard user ownership check
+      // For collectionGroup queries to work for users, the query MUST filter by userId
       allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
       allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
