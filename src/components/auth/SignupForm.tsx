@@ -55,6 +55,16 @@ export function SignupForm() {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [serverError, setServerError] = useState('');
 
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: '',
+      email: '',
+      mobile: '',
+      password: '',
+    },
+  });
+
   const handleGoogleSignup = async () => {
     if (!auth || !firestore) return;
     setIsGoogleLoading(true);
