@@ -2,7 +2,9 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // --- 1. GLOBAL MASTER HELPERS (100% SYNCHRONOUS) ---
+    // --- 1. MASTER AUTHORIZATION (SYNCHRONOUS BYPASS) ---
+    // This function evaluates instantly from the Auth Token (No DB lookup).
+    // Essential for collectionGroup queries which are otherwise blocked.
     function isMasterAdmin() {
       return request.auth != null && (
         request.auth.token.email in ['mistrikumar42@gmail.com', 'nsati09@gmail.com'] ||
@@ -10,37 +12,53 @@ service cloud.firestore {
       );
     }
 
-    // --- 2. UNIVERSAL MASTER BYPASS (GOD MODE) ---
+    // UNIVERSAL BYPASS: If you are a master admin, you have full access to everything.
+    // This MUST stay at the top.
     match /{allPaths=**} {
       allow read, write: if isMasterAdmin();
     }
 
-    // --- 3. STANDARD COLLECTION RULES ---
-
+    // --- 2. COLLECTION GROUP RULES (For Regular Users) ---
+    // Required for the 'bookings' collection group query to function for users.
     match /{path=**}/bookings/{bookingId} {
-      allow list: if request.auth != null && request.query.limit <= 100;
-      allow get: if request.auth != null && (resource == null || resource.data.userId == request.auth.uid);
+      allow list: if request.auth != null && (
+        isMasterAdmin() || 
+        request.query.limit <= 100
+      );
+      allow get: if request.auth != null && (
+        isMasterAdmin() || 
+        resource == null || 
+        resource.data.userId == request.auth.uid
+      );
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow update: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow update: if request.auth != null && (
+        isMasterAdmin() || 
+        resource.data.userId == request.auth.uid
+      );
     }
 
+    // --- 3. STANDARD COLLECTION RULES ---
+
     match /users/{userId} {
-      allow read, write: if request.auth.uid == userId;
+      allow read, write: if request.auth.uid == userId || isMasterAdmin();
+      
       match /{allSubcollections=**} {
-        allow read, write: if request.auth.uid == userId;
+        allow read, write: if request.auth.uid == userId || isMasterAdmin();
       }
     }
 
     match /hotels/{hotelId} {
       allow read: if true;
+
       match /rooms/{roomId} {
         allow read: if true;
         allow update: if request.auth != null; 
       }
+      
       match /reviews/{reviewId} {
         allow read: if true;
         allow create: if request.auth != null;
-        allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+        allow update, delete: if request.auth != null && (resource.data.userId == request.auth.uid || isMasterAdmin());
       }
     }
 

@@ -37,22 +37,28 @@ export function FirebaseErrorListener() {
     };
   }, []);
 
-  if (error) {
-    return (
-      <div className="fixed bottom-4 right-4 z-[9999] max-w-md p-6 bg-destructive text-white rounded-[2rem] shadow-2xl animate-in slide-in-from-bottom-10 duration-500">
-        <h3 className="font-black uppercase tracking-widest text-[10px] mb-2 opacity-80">Security Protocol Warning</h3>
-        <p className="font-bold text-sm leading-relaxed">
-          Access Denied: <strong>{user?.email || 'Current User'}</strong> is not authorized. Update <code>firestore.rules</code> with this email for synchronous bypass.
-        </p>
+  if (!error) return null;
+
+  return (
+    <div className="fixed bottom-4 right-4 z-[9999] max-w-md p-6 bg-destructive text-white rounded-[2rem] shadow-2xl animate-in slide-in-from-bottom-10 duration-500">
+      <h3 className="font-black uppercase tracking-widest text-[10px] mb-2 opacity-80">Security Protocol Warning</h3>
+      <p className="font-bold text-sm leading-relaxed">
+        Access Denied: <strong>{user?.email || 'mistrikumar42@gmail.com'}</strong> is not authorized. Update <code>firestore.rules</code> with this email for synchronous bypass.
+      </p>
+      <div className="flex gap-3 mt-4">
         <button 
           onClick={() => window.location.reload()} 
-          className="mt-4 px-6 py-2 bg-white text-destructive rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-opacity-90 transition-all"
+          className="px-6 py-2 bg-white text-destructive rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-opacity-90 transition-all"
         >
           Retry Connection
         </button>
+        <button 
+          onClick={() => setError(null)} 
+          className="px-6 py-2 bg-transparent border border-white/20 text-white rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all"
+        >
+          Dismiss
+        </button>
       </div>
-    );
-  }
-
-  return null;
+    </div>
+  );
 }

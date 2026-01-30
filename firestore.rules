@@ -3,7 +3,6 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // --- 1. GLOBAL MASTER HELPERS (100% SYNCHRONOUS) ---
-    // Token-based checks are instant and cost-free. Essential for collectionGroup queries.
     function isMasterAdmin() {
       return request.auth != null && (
         request.auth.token.email in ['mistrikumar42@gmail.com', 'nsati09@gmail.com'] ||
@@ -12,26 +11,24 @@ service cloud.firestore {
     }
 
     // --- 2. UNIVERSAL MASTER BYPASS (GOD MODE) ---
-    // This MUST be the first rule to ensure synchronous authorization for global queries.
     match /{allPaths=**} {
       allow read, write: if isMasterAdmin();
     }
 
-    // --- 3. STANDARD COLLECTION RULES (For Regular Users) ---
+    // --- 3. STANDARD COLLECTION RULES ---
 
-    // Bookings Protection
     match /{path=**}/bookings/{bookingId} {
-      allow list: if request.auth != null && request.query.limit <= 100;
-      allow get: if request.auth != null && (resource == null || resource.data.userId == request.auth.uid);
+      allow list: if request.auth != null && (isMasterAdmin() || request.query.limit <= 100);
+      allow get: if request.auth != null && (isMasterAdmin() || resource == null || resource.data.userId == request.auth.uid);
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow update: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow update: if request.auth != null && (isMasterAdmin() || resource.data.userId == request.auth.uid);
     }
 
     match /users/{userId} {
-      allow read, write: if request.auth.uid == userId;
+      allow read, write: if request.auth.uid == userId || isMasterAdmin();
       
       match /{allSubcollections=**} {
-        allow read, write: if request.auth.uid == userId;
+        allow read, write: if request.auth.uid == userId || isMasterAdmin();
       }
     }
 
@@ -46,7 +43,7 @@ service cloud.firestore {
       match /reviews/{reviewId} {
         allow read: if true;
         allow create: if request.auth != null;
-        allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+        allow update, delete: if request.auth != null && (resource.data.userId == request.auth.uid || isMasterAdmin());
       }
     }
 
