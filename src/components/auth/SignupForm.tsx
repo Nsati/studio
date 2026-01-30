@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
@@ -28,15 +28,11 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Chrome, UserPlus } from 'lucide-react';
-import { useAuth, useFirestore } from '@/firebase';
+import { useAuth, useUser, useFirestore } from '@/firebase';
 import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import type { UserProfile } from '@/lib/types';
 import { Separator } from '@/components/ui/separator';
-
-/**
- * @fileOverview Production-ready Signup with Google Integration (Frontend)
- */
 
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
@@ -54,10 +50,18 @@ export function SignupForm() {
   const router = useRouter();
   const { toast } = useToast();
   const auth = useAuth();
+  const { user, isLoading: isUserLoading } = useUser();
   const firestore = useFirestore();
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [serverError, setServerError] = useState('');
+
+  // Auto-redirect if already logged in
+  useEffect(() => {
+    if (user && !isUserLoading) {
+      router.push('/my-bookings');
+    }
+  }, [user, isUserLoading, router]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -76,9 +80,12 @@ export function SignupForm() {
 
     try {
       const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
+      
       const result = await signInWithPopup(auth, provider);
       const idToken = await result.user.getIdToken(true);
 
+      // Backend handles atomic creation/verification securely
       const response = await fetch('/api/auth/verify-token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -88,44 +95,39 @@ export function SignupForm() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Backend verification failed');
+        throw new Error(data.error || 'Identity verification failed');
       }
 
       toast({
         title: 'Signup Successful!',
-        description: `Welcome to the Uttarakhand Getaways family, ${data.user.displayName}!`,
+        description: `Welcome to the family, ${data.user.displayName}!`,
       });
       
       router.push('/my-bookings');
     } catch (err: any) {
-      console.error("[AUTH ERROR]", err.code, err.message);
+      console.error("[GOOGLE SIGNUP ERROR]", err.code, err.message);
       
-      // Silent cancellation if user closes the popup
       if (err.code === 'auth/popup-closed-by-user') {
         setIsGoogleLoading(false);
         return;
       }
 
-      let title = "Auth Error";
-      let description = err.message || "Signup failed. Please try again.";
-
       if (err.code === 'auth/popup-blocked') {
-        title = "Popup Blocked";
-        description = "Please allow popups for this site in your browser settings to sign up with Google.";
-      } else if (err.code === 'auth/unauthorized-domain') {
-        title = "Config Error";
-        description = "This domain is not authorized. Please check your Firebase settings.";
-      } else if (err.code === 'auth/operation-not-allowed') {
-        title = "Provider Error";
-        description = "Google provider is not enabled in Firebase Console.";
+        toast({
+          variant: 'destructive',
+          title: "Popup Blocked",
+          description: "Please allow popups for this website to sign in with Google.",
+        });
+        setIsGoogleLoading(false);
+        return;
       }
 
+      const description = err.message || "Signup failed. Please try again.";
       toast({
         variant: 'destructive',
-        title,
+        title: "Signup Error",
         description,
       });
-      
       setServerError(description);
     } finally {
       setIsGoogleLoading(false);
@@ -154,6 +156,7 @@ export function SignupForm() {
             status: 'active',
         };
 
+        // Create profile in Firestore
         await setDoc(doc(firestore, 'users', user.uid), newUserProfile);
       
         toast({
@@ -164,18 +167,30 @@ export function SignupForm() {
         router.push('/my-bookings');
       
     } catch (error: any) {
+        console.error("Signup error:", error);
         let errorMessage = 'An unexpected error occurred during signup.';
+        
         if (error.code === 'auth/email-already-in-use') {
             errorMessage = 'This email is already registered. Please log in.';
+        } else if (error.code === 'auth/unauthorized-domain') {
+            errorMessage = 'This domain is not authorized for authentication.';
         } else if (error.code) {
             errorMessage = error.code.replace('auth/', '').replace(/-/g, ' ');
         }
+        
         setServerError(errorMessage);
-        console.error("Signup error:", error);
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (isUserLoading) {
+    return (
+      <div className="container flex min-h-[80vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="container flex min-h-[80vh] items-center justify-center py-12">
@@ -184,7 +199,7 @@ export function SignupForm() {
           <div className="mx-auto bg-primary/10 p-4 rounded-full w-fit mb-2">
             <UserPlus className="h-8 w-8 text-primary" />
           </div>
-          <CardTitle className="font-headline text-3xl font-bold">
+          <CardTitle className="font-headline text-3xl font-bold tracking-tight">
             Create Account
           </CardTitle>
           <CardDescription>
@@ -194,7 +209,7 @@ export function SignupForm() {
         <CardContent className="space-y-6">
           <Button
             variant="outline"
-            className="w-full h-12 text-base font-semibold transition-all active:scale-[0.98]"
+            className="w-full h-12 text-base font-semibold transition-all active:scale-[0.98] hover:bg-muted/50"
             onClick={handleGoogleSignup}
             disabled={isGoogleLoading || isLoading}
           >

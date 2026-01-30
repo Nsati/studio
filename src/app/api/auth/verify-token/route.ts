@@ -1,17 +1,14 @@
-
 import { NextResponse } from 'next/server';
 import { getFirebaseAdmin } from '@/firebase/admin';
 import type { UserProfile } from '@/lib/types';
 
 /**
- * @fileOverview Auth Verification API (The "Backend" / Express equivalent)
+ * @fileOverview Auth Verification API
  * 
- * This route handles the secure verification of Google ID Tokens.
- * It follows the requirement: "Backend should verify token and create user if not exists"
+ * Securely verifies Google ID Tokens and synchronizes Firestore user profiles.
  */
 
 export async function POST(req: Request) {
-  // Initialize Admin SDK services
   const { adminDb, adminAuth, error: adminError } = getFirebaseAdmin();
 
   if (adminError || !adminAuth || !adminDb) {
@@ -28,24 +25,22 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Token missing' }, { status: 400 });
     }
 
-    // 1. VERIFY JWT (Passport.js functionality)
-    // The Admin SDK verifies the signature, expiration, and audience of the JWT.
+    // 1. Verify the JWT from Google
     const decodedToken = await adminAuth.verifyIdToken(idToken);
-    const { uid, email, name } = decodedToken;
+    const { uid, email, name, picture } = decodedToken;
 
     if (!email) {
-      return NextResponse.json({ error: 'Email not provided by Google' }, { status: 400 });
+      return NextResponse.json({ error: 'Email not provided by identity provider' }, { status: 400 });
     }
 
-    // 2. DATABASE SYNC (MongoDB/Mongoose functionality)
-    // We check if the user exists in Firestore and create them if not.
+    // 2. Database Sync
     const userRef = adminDb.doc(`users/${uid}`);
     const userDoc = await userRef.get();
 
     let userProfile: UserProfile;
 
     if (!userDoc.exists) {
-      // Create user profile (Auto-registration / email-based)
+      // Create user profile if it doesn't exist (Auto-registration)
       userProfile = {
         uid,
         displayName: name || 'Himalayan Explorer',
@@ -55,16 +50,14 @@ export async function POST(req: Request) {
         status: 'active',
       };
       
-      // Atomic write to database
       await userRef.set(userProfile);
-      console.log(`[AUTH] New user registered via Google: ${email}`);
+      console.log(`[AUTH] New user profile created: ${email}`);
     } else {
+      // Return existing profile
       userProfile = userDoc.data() as UserProfile;
-      console.log(`[AUTH] Existing user logged in: ${email}`);
+      console.log(`[AUTH] Profile synced for existing user: ${email}`);
     }
 
-    // 3. RETURN SUCCESS
-    // The client now has a verified session managed by Firebase.
     return NextResponse.json({ 
       success: true, 
       user: userProfile 
@@ -73,7 +66,6 @@ export async function POST(req: Request) {
   } catch (error: any) {
     console.error('[AUTH ERROR] Token verification failed:', error.message);
     
-    // Check for specific JWT errors
     const errorMessage = error.code === 'auth/id-token-expired' 
       ? 'Your session has expired. Please log in again.'
       : 'Unauthorized: Invalid authentication token.';

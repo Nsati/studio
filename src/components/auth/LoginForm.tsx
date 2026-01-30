@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword } from 'firebase/auth';
-import { useAuth } from '@/firebase';
+import { useAuth, useUser } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -20,12 +20,9 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, Chrome, Mail } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
-/**
- * @fileOverview Production-ready Login with Google Integration (Frontend)
- */
-
 export function LoginForm() {
   const auth = useAuth();
+  const { user, isLoading: isUserLoading } = useUser();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -36,9 +33,14 @@ export function LoginForm() {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState('');
 
-  /**
-   * Handles the Google Login flow with refined UX for cancellations
-   */
+  // Auto-redirect if already logged in
+  useEffect(() => {
+    if (user && !isUserLoading) {
+      const redirect = searchParams.get('redirect') || '/my-bookings';
+      router.push(redirect);
+    }
+  }, [user, isUserLoading, router, searchParams]);
+
   const handleGoogleLogin = async () => {
     if (!auth) return;
     setIsGoogleLoading(true);
@@ -46,12 +48,12 @@ export function LoginForm() {
 
     try {
       const provider = new GoogleAuthProvider();
-      provider.addScope('profile');
-      provider.addScope('email');
+      provider.setCustomParameters({ prompt: 'select_account' });
       
       const result = await signInWithPopup(auth, provider);
       const idToken = await result.user.getIdToken(true);
 
+      // Verify and sync profile on backend
       const response = await fetch('/api/auth/verify-token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -61,46 +63,31 @@ export function LoginForm() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Identity verification failed on server');
+        throw new Error(data.error || 'Identity verification failed');
       }
 
       toast({ 
         title: 'Login Successful!', 
-        description: `Welcome back to the Himalayas, ${data.user.displayName}!` 
+        description: `Welcome back, ${data.user.displayName}!` 
       });
 
-      const redirect = searchParams.get('redirect');
-      router.push(redirect || '/my-bookings');
+      const redirect = searchParams.get('redirect') || '/my-bookings';
+      router.push(redirect);
 
     } catch (err: any) {
       console.error("[AUTH ERROR]", err.code, err.message);
       
-      // If the user simply closed the window, we should just stop loading silently
       if (err.code === 'auth/popup-closed-by-user') {
         setIsGoogleLoading(false);
         return;
       }
 
-      let title = "Authentication Error";
-      let description = err.message || "Could not verify your identity.";
-
-      if (err.code === 'auth/popup-blocked') {
-        title = "Popup Blocked";
-        description = "Please allow popups for this site in your browser settings to sign in with Google.";
-      } else if (err.code === 'auth/unauthorized-domain') {
-        title = "Configuration Error";
-        description = "This domain is not authorized for Google Sign-in. Please contact admin.";
-      } else if (err.code === 'auth/operation-not-allowed') {
-        title = "Provider Disabled";
-        description = "Google sign-in is currently disabled in the console.";
-      }
-
+      const description = err.message || "Could not verify your identity.";
       toast({
         variant: 'destructive',
-        title,
+        title: "Authentication Error",
         description,
       });
-      
       setError(description);
     } finally {
       setIsGoogleLoading(false);
@@ -116,14 +103,22 @@ export function LoginForm() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       toast({ title: 'Welcome Back!' });
-      const redirect = searchParams.get('redirect');
-      router.push(redirect || '/my-bookings');
+      const redirect = searchParams.get('redirect') || '/my-bookings';
+      router.push(redirect);
     } catch (err: any) {
       setError('Invalid email or password.');
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (isUserLoading) {
+    return (
+      <div className="container flex min-h-[80vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="container flex min-h-[80vh] items-center justify-center py-12">
