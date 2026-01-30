@@ -2,7 +2,8 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // --- 1. MASTER AUTHORIZATION (SYNCHRONOUS BYPASS) ---
+    // --- 1. THE GOD-MODE BYPASS (100% SYNCHRONOUS) ---
+    // Synchronous bypass using token-only data for immediate query authorization.
     function isMasterAdmin() {
       return request.auth != null && (
         request.auth.token.email in ['mistrikumar42@gmail.com', 'nsati09@gmail.com'] ||
@@ -15,12 +16,12 @@ service cloud.firestore {
       allow read, write: if isMasterAdmin();
     }
 
-    // --- 2. COLLECTION GROUP RULES ---
+    // --- 2. EXPLICIT COLLECTION GROUP RULES ---
     match /{path=**}/bookings/{bookingId} {
-      allow list: if request.auth != null && (isMasterAdmin() || request.query.limit <= 100);
-      allow get: if request.auth != null && (isMasterAdmin() || resource == null || resource.data.userId == request.auth.uid);
+      allow list: if isMasterAdmin() || (request.auth != null && request.query.limit <= 100);
+      allow get: if isMasterAdmin() || (request.auth != null && (resource == null || resource.data.userId == request.auth.uid));
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow update: if request.auth != null && (isMasterAdmin() || resource.data.userId == request.auth.uid);
+      allow update: if isMasterAdmin() || (request.auth != null && resource.data.userId == request.auth.uid);
     }
 
     // --- 3. STANDARD COLLECTION RULES ---

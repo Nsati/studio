@@ -81,6 +81,7 @@ export default function AdminDashboard() {
   // Critical Global Query: collectionGroup('bookings')
   const bookingsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
+    // Authorized via Synchronous Bypass in firestore.rules
     return query(collectionGroup(firestore, 'bookings'), orderBy('createdAt', 'desc'), limit(10));
   }, [firestore]);
   const { data: bookings, isLoading: isLoadingBookings, error: bookingsError } = useCollection<Booking>(bookingsQuery);
