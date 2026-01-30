@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
@@ -70,7 +69,7 @@ export const useFirebaseApp = (): FirebaseApp => {
 };
 
 
-// --- New, Robust, Consolidated User Hook ---
+// --- Consolidating hooks for user and data fetching ---
 
 export interface UserHookResult {
   user: User | null;
@@ -89,29 +88,24 @@ export const useUser = (): UserHookResult => {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    // This will hold the unsubscribe function for the profile listener
     let unsubscribeProfile: (() => void) | undefined;
 
     const unsubscribeAuth = onAuthStateChanged(auth,
       (firebaseUser) => {
-        // First, always clean up any previous profile listener
         if (unsubscribeProfile) {
           unsubscribeProfile();
           unsubscribeProfile = undefined;
         }
 
         if (firebaseUser) {
-          // User is signed in (either real or anonymous)
           setUser(firebaseUser);
 
           if (firebaseUser.isAnonymous) {
-            // This is a guest user. They have no profile. End of the line.
             setUserProfile(null);
             setIsLoading(false);
             setError(null);
           } else {
-            // This is a real, registered user. Fetch their profile.
-            setIsLoading(true); // Start loading profile
+            setIsLoading(true);
             const profileRef = doc(firestore, 'users', firebaseUser.uid);
 
             unsubscribeProfile = onSnapshot(profileRef,
@@ -129,13 +123,12 @@ export const useUser = (): UserHookResult => {
                     }
                     console.error(`Error fetching user profile at ${profileRef.path}:`, err);
                     setError(err);
-                    setUserProfile(null); // Clear profile on error
+                    setUserProfile(null);
                     setIsLoading(false);
                 }
             );
           }
         } else {
-          // User is signed out
           setUser(null);
           setUserProfile(null);
           setIsLoading(false);
@@ -151,20 +144,17 @@ export const useUser = (): UserHookResult => {
       }
     );
 
-    // Cleanup function for the useEffect
     return () => {
       unsubscribeAuth();
-      if (unsubscribeProfile) {
-        unsubscribeProfile();
-      }
+      if (unsubscribeProfile) unsubscribeProfile();
     };
-  }, [auth, firestore]); // Dependencies for the main effect
+  }, [auth, firestore]);
 
   return { user, userProfile, isLoading, error };
 };
 
 
-// Consolidated Document Hook
+// Consolidating data hooks
 export type WithId<T> = T & { id: string };
 
 export interface UseDocResult<T> {
@@ -186,11 +176,6 @@ export function useDoc<T = any>(
       setIsLoading(false);
       setError(null);
       return;
-    }
-
-    // @ts-ignore
-    if (!docRef.__memo && process.env.NODE_ENV === 'development') {
-        console.warn(`Firestore reference passed to useDoc at path "${docRef.path}" is not memoized. This may cause infinite re-renders. Use the useMemoFirebase hook to memoize the reference.`);
     }
 
     setIsLoading(true);
@@ -227,7 +212,6 @@ export function useDoc<T = any>(
   return { data, isLoading, error };
 }
 
-// Consolidated Collection Hook
 export interface UseCollectionResult<T> {
   data: WithId<T>[] | null;
   isLoading: boolean;
@@ -251,29 +235,21 @@ export function useCollection<T = any>(
     
     let path = 'unknown path';
     try {
+        // Robust extraction of path/collectionGroup for debug reporting
         const internalQuery = (refOrQuery as any)._query;
         if (internalQuery) {
-            // This is a Query object
             if (internalQuery.collectionGroup) {
-                // This is a collectionGroup query
                 path = `collectionGroup('${internalQuery.collectionGroup}')`;
             } else if (internalQuery.path) {
-                // This is a regular collection query
                 path = internalQuery.path.segments.join('/');
             }
         } else if ((refOrQuery as any).path) {
-            // This is a CollectionReference
             path = (refOrQuery as any).path;
         }
     } catch (e) {
-        console.error("Could not determine query path for error reporting", e);
+        console.error("Could not determine query path", e);
     }
     
-    // @ts-ignore
-    if (!refOrQuery.__memo && process.env.NODE_ENV === 'development') {
-        console.warn(`Firestore query passed to useCollection for path "${path}" is not memoized. This may cause infinite re-renders. Use the useMemoFirebase hook to memoize the reference.`);
-    }
-
     setIsLoading(true);
     setError(null);
 

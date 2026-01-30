@@ -2,7 +2,9 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // --- 1. GLOBAL HELPERS (SYNCHRONOUS) ---
+    // --- 1. GLOBAL HELPERS (MUST BE SYNCHRONOUS) ---
+    // Pure token-based checks are required for collectionGroup queries.
+    // Avoid get() or exists() inside these if used for global list authorization.
     function isAuthenticated() {
       return request.auth != null;
     }
@@ -14,7 +16,9 @@ service cloud.firestore {
       );
     }
 
-    // --- 2. COLLECTION GROUP RULES ---
+    // --- 2. COLLECTION GROUP RULES (MUST BE AT TOP) ---
+    // This allows collectionGroup('bookings') queries to be authorized globally.
+    // The recursive wildcard {path=**} is critical here.
     match /{path=**}/bookings/{bookingId} {
       allow read, write: if isMasterAdmin() || (
         isAuthenticated() && (
@@ -25,10 +29,12 @@ service cloud.firestore {
       );
     }
 
-    // --- 3. STANDARD RULES ---
+    // --- 3. STANDARD COLLECTION RULES ---
+
     match /users/{userId} {
       allow read, write: if request.auth.uid == userId || isMasterAdmin();
       allow list: if isMasterAdmin();
+      
       match /{allSubcollections=**} {
         allow read, write: if request.auth.uid == userId || isMasterAdmin();
       }
@@ -37,11 +43,13 @@ service cloud.firestore {
     match /hotels/{hotelId} {
       allow read: if true;
       allow write: if isMasterAdmin();
+
       match /rooms/{roomId} {
         allow read: if true;
         allow update: if isAuthenticated(); 
         allow write: if isMasterAdmin();
       }
+      
       match /reviews/{reviewId} {
         allow read: if true;
         allow create: if isAuthenticated();
@@ -53,6 +61,7 @@ service cloud.firestore {
     match /tourPackages/{packageId} { allow read: if true; allow write: if isMasterAdmin(); }
     match /promotions/{promoId} { allow read: if true; allow write: if isMasterAdmin(); }
     
+    // Catch-all safety
     match /{allPaths=**} {
       allow read, write: if isMasterAdmin();
     }
