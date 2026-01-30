@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Hotel, Users2, BookOpen, IndianRupee, ShieldCheck, Loader2, TrendingUp, Activity, ArrowUpRight } from 'lucide-react';
 import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
@@ -20,11 +21,10 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import Link from 'next/link';
 
 function StatCard({ title, value, icon: Icon, description, isLoading, trend }: any) {
     return (
-        <Card className="rounded-[2rem] shadow-apple border-black/5 overflow-hidden group hover:shadow-apple-deep transition-all duration-500">
+        <Card className="rounded-[2rem] shadow-apple border-black/5 overflow-hidden group hover:shadow-apple-deep transition-all duration-500 bg-white">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-6 pt-6">
                 <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">{title}</CardTitle>
                 <div className="p-2 bg-muted/50 rounded-xl group-hover:bg-primary/10 transition-colors">
@@ -214,7 +214,7 @@ export default function AdminDashboard() {
                 <CardContent className="px-8 pb-8 space-y-4">
                     <div className="flex justify-between items-center py-2 border-b border-white/10">
                         <span className="text-[10px] font-black uppercase tracking-widest">Firestore Rules</span>
-                        <Badge className="bg-green-400 text-green-900 border-0 font-black text-[8px] px-2 py-0">SYNCED</Badge>
+                        <Badge className="bg-green-400 text-green-900 border-0 font-black text-[8px] px-2 py-0">GOD-MODE</Badge>
                     </div>
                     <div className="flex justify-between items-center py-2 border-b border-white/10">
                         <span className="text-[10px] font-black uppercase tracking-widest">Auth Gateway</span>

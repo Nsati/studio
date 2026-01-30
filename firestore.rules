@@ -2,7 +2,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // --- 1. GLOBAL HELPERS (MUST BE SYNCHRONOUS) ---
+    // --- 1. GLOBAL HELPERS (100% SYNCHRONOUS) ---
     // collectionGroup queries require synchronous authorization.
     // Database lookups (get() calls) are NOT supported during the authorization phase of a query.
     function isAuthenticated() {
@@ -16,8 +16,9 @@ service cloud.firestore {
       );
     }
 
-    // --- 2. COLLECTION GROUP RULES (TOP LEVEL REQUIRED) ---
+    // --- 2. TOP-LEVEL COLLECTION GROUP RULES ---
     // Recursive wildcard {path=**} is mandatory for collectionGroup('bookings') to match correctly.
+    // Putting this at the top level ensures it overrides any nested restrictions.
     match /{path=**}/bookings/{bookingId} {
       
       // Admin can list all bookings globally.
