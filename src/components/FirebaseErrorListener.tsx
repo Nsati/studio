@@ -22,6 +22,7 @@ export function FirebaseErrorListener() {
       setTimeout(() => {
         if (mounted) {
           console.error("🔴 FIREBASE PERMISSION ERROR CAPTURED:", err.request.path);
+          console.log("DEBUG AUTH:", err.request.auth);
           setError(err);
         }
       }, 0);

@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Hotel, Users2, BookOpen, IndianRupee, TrendingUp, ShieldCheck, Loader2 } from 'lucide-react';
+import { Hotel, Users2, BookOpen, IndianRupee, ShieldCheck, Loader2, TrendingUp } from 'lucide-react';
 import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
-import { collection, collectionGroup, query, orderBy } from 'firebase/firestore';
+import { collection, collectionGroup, query, orderBy, limit } from 'firebase/firestore';
 import type { Hotel as HotelType, UserProfile, Booking } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
@@ -50,35 +50,24 @@ export default function AdminDashboard() {
   const firestore = useFirestore();
   const { user } = useUser();
 
-  useEffect(() => {
-    if (user) {
-      console.log("--- ADMIN DEBUG ---");
-      console.log("AUTH UID:", user.uid);
-      console.log("AUTH EMAIL:", user.email);
-      console.log("QUERY TYPE: collectionGroup('bookings')");
-    }
-  }, [user]);
-
   // Queries
   const hotelsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return collection(firestore, 'hotels');
   }, [firestore]);
-  
   const { data: hotels, isLoading: isLoadingHotels } = useCollection<HotelType>(hotelsQuery);
   
   const usersQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return collection(firestore, 'users');
   }, [firestore]);
-  
   const { data: users, isLoading: isLoadingUsers } = useCollection<UserProfile>(usersQuery);
   
   const bookingsQuery = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return query(collectionGroup(firestore, 'bookings'), orderBy('createdAt', 'desc'));
-  }, [firestore, user]);
-  
+    if (!firestore) return null;
+    // CRITICAL: collectionGroup requires top-level rules match
+    return query(collectionGroup(firestore, 'bookings'), orderBy('createdAt', 'desc'), limit(50));
+  }, [firestore]);
   const { data: bookings, isLoading: isLoadingBookings, error: bookingsError } = useCollection<Booking>(bookingsQuery);
 
   // Stats calculation
@@ -106,7 +95,7 @@ export default function AdminDashboard() {
                     <Loader2 className="h-4 w-4 animate-spin" /> Permission Error
                 </CardTitle>
                 <CardDescription className="text-destructive/80 text-xs">
-                    Accessing global bookings failed. Ensure rules allow collectionGroup queries for {user?.email}. Check console for debug logs.
+                    Accessing global bookings failed. Ensure rules allow collectionGroup queries for {user?.email}.
                 </CardDescription>
             </CardHeader>
         </Card>
@@ -210,30 +199,37 @@ export default function AdminDashboard() {
         <div className="space-y-8">
             <Card className="rounded-[2.5rem] shadow-apple border-black/5 bg-primary text-white overflow-hidden relative group">
                 <CardHeader className="p-8">
-                    <CardTitle className="text-2xl font-black tracking-tight">Growth Insight</CardTitle>
-                    <CardDescription className="text-white/70 font-bold uppercase text-[10px] tracking-widest mt-2">Revenue Pulse</CardDescription>
+                    <CardTitle className="text-2xl font-black tracking-tight">System Health</CardTitle>
+                    <CardDescription className="text-white/70 font-bold uppercase text-[10px] tracking-widest mt-2">Node Status</CardDescription>
                 </CardHeader>
                 <CardContent className="px-8 pb-8 space-y-4">
-                    <p className="text-sm font-medium text-white/80 leading-relaxed">Bookings are showing a steady upward trend this season. Focus on Nainital properties for marketing.</p>
-                    <div className="pt-4 border-t border-white/10 flex justify-between items-center">
-                        <span className="text-[10px] font-black uppercase tracking-widest">Expected Growth</span>
-                        <span className="text-lg font-black tracking-tighter">+18%</span>
+                    <div className="flex justify-between items-center py-2 border-b border-white/10">
+                        <span className="text-[10px] font-black uppercase tracking-widest">Firestore</span>
+                        <Badge className="bg-green-400 text-green-900 border-0 font-black text-[8px] px-2 py-0">LIVE</Badge>
+                    </div>
+                    <div className="flex justify-between items-center py-2 border-b border-white/10">
+                        <span className="text-[10px] font-black uppercase tracking-widest">Auth Service</span>
+                        <Badge className="bg-green-400 text-green-900 border-0 font-black text-[8px] px-2 py-0">ACTIVE</Badge>
+                    </div>
+                    <div className="flex justify-between items-center py-2">
+                        <span className="text-[10px] font-black uppercase tracking-widest">Payment Node</span>
+                        <Badge className="bg-green-400 text-green-900 border-0 font-black text-[8px] px-2 py-0">ONLINE</Badge>
                     </div>
                 </CardContent>
             </Card>
 
             <Card className="rounded-[2.5rem] shadow-apple border-black/5">
                 <CardHeader className="p-8 pb-4">
-                    <CardTitle className="text-lg font-black tracking-tight">System Status</CardTitle>
+                    <CardTitle className="text-lg font-black tracking-tight">Admin Info</CardTitle>
                 </CardHeader>
-                <CardContent className="px-8 pb-8 space-y-6">
-                    <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Firestore Health</span>
-                        <Badge className="bg-green-500/10 text-green-600 border-0 font-black text-[9px] uppercase tracking-widest">Active</Badge>
+                <CardContent className="px-8 pb-8 space-y-4">
+                    <div className="p-4 bg-muted/50 rounded-2xl space-y-2">
+                        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Logged in as</p>
+                        <p className="text-xs font-bold truncate">{user?.email}</p>
                     </div>
-                    <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Payment Node</span>
-                        <Badge className="bg-green-500/10 text-green-600 border-0 font-black text-[9px] uppercase tracking-widest">Live</Badge>
+                    <div className="p-4 bg-muted/50 rounded-2xl space-y-2">
+                        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Auth UID</p>
+                        <p className="text-[10px] font-mono break-all">{user?.uid}</p>
                     </div>
                 </CardContent>
             </Card>

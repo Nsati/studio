@@ -9,7 +9,7 @@ service cloud.firestore {
     }
 
     // MASTER ADMIN BYPASS: Purely token-based (Synchronous)
-    // Essential for collectionGroup queries to be authorized instantly.
+    // CRITICAL: Must not use get() or exists() for collectionGroup queries to be authorized instantly.
     function isMasterAdmin() {
       return isAuthenticated() && (
         request.auth.token.email == 'mistrikumar42@gmail.com' || 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useFirestore, useCollection, useMemoFirebase, type WithId } from '@/firebase';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collectionGroup, orderBy, query } from 'firebase/firestore';
 import type { Booking } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { format } from 'date-fns';
 import { normalizeTimestamp } from '@/lib/firestore-utils';
-import { Loader2, RefreshCw, CheckCircle2, XCircle, Clock } from "lucide-react";
+import { Loader2, RefreshCw } from "lucide-react";
 import { updateBookingStatusByAdmin } from './actions';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
@@ -159,7 +159,7 @@ export default function BookingsAdminPage() {
       
       {error && (
         <div className="p-4 bg-destructive/10 text-destructive rounded-xl text-xs font-mono">
-          Error: {error.message}. Make sure composite indexes are created in Firebase Console.
+          Error: {error.message}. Ensure collectionGroup rules are active.
         </div>
       )}
     </div>
