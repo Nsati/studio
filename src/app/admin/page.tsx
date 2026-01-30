@@ -76,7 +76,6 @@ export default function AdminDashboard() {
   
   const bookingsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-    // Rules enable collectionGroup access for mistrikumar42@gmail.com
     return query(collectionGroup(firestore, 'bookings'), orderBy('createdAt', 'desc'), limit(10));
   }, [firestore]);
   const { data: bookings, isLoading: isLoadingBookings, error: bookingsError } = useCollection<Booking>(bookingsQuery);
@@ -109,8 +108,8 @@ export default function AdminDashboard() {
                 <CardTitle className="text-xl font-black text-destructive flex items-center gap-3">
                     <Loader2 className="h-6 w-6 animate-spin" /> Data Connection Blocked
                 </CardTitle>
-                <CardDescription className="text-destructive/80 font-medium text-base">
-                    Ensure <strong>{user?.email || 'Your Account'}</strong> is the Master Superuser in <code>firestore.rules</code>.
+                <CardDescription className="text-destructive/80 font-medium text-base leading-relaxed">
+                    Firestore rejected the global query. Ensure <strong>{user?.email || 'Your Account'}</strong> is in <code>firestore.rules</code>.
                 </CardDescription>
             </CardHeader>
         </Card>

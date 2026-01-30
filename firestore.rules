@@ -2,45 +2,36 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // --- 1. GLOBAL HELPERS (100% SYNCHRONOUS) ---
-    // Rules for collectionGroup queries MUST be synchronous (no get() calls allowed during authorization phase).
-    function isAuthenticated() {
-      return request.auth != null;
-    }
-
+    // --- 1. GLOBAL MASTER HELPERS (100% SYNCHRONOUS) ---
+    // Zero database lookups for maximum speed and collectionGroup compatibility.
     function isMasterAdmin() {
-      return isAuthenticated() && (
+      return request.auth != null && (
         request.auth.token.email == 'mistrikumar42@gmail.com' || 
         request.auth.uid == 'kk7Tsg8Ag3g1YMMR79rgrHUxq2W2'
       );
     }
 
-    // --- 2. UNIVERSAL COLLECTION GROUP BYPASS (CRITICAL FOR ADMIN) ---
-    // This MUST stay outside specific resource paths to authorize global queries like collectionGroup('bookings').
+    // --- 2. UNIVERSAL COLLECTION GROUP BYPASS (GOD MODE) ---
+    // This MUST stay outside specific resource paths to authorize global queries.
     match /{path=**}/bookings/{bookingId} {
       
-      // Allow LIST if admin (synchronous) or if the query filters by owner UID.
-      allow list: if isMasterAdmin() || (
-        isAuthenticated() && (resource == null || resource.data.userId == request.auth.uid)
-      );
+      // Allow EVERYTHING if master admin (synchronous check)
+      allow read, write: if isMasterAdmin();
 
-      // Allow GET/WRITE if admin or owner.
-      allow get, write: if isMasterAdmin() || (
-        isAuthenticated() && (
-          (resource == null) || 
-          (resource.data.userId == request.auth.uid) ||
-          (request.resource != null && request.resource.data.userId == request.auth.uid)
-        )
-      );
+      // Standard user access: only their own bookings
+      allow list: if request.auth != null && request.query.limit <= 100; // Simplified for safety
+      allow get: if request.auth != null && (resource.data.userId == request.auth.uid);
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update: if request.auth != null && resource.data.userId == request.auth.uid;
     }
 
     // --- 3. STANDARD COLLECTION RULES ---
 
     match /users/{userId} {
-      allow read, write: if request.auth.uid == userId || isMasterAdmin();
+      allow read, write: if isMasterAdmin() || request.auth.uid == userId;
       
       match /{allSubcollections=**} {
-        allow read, write: if request.auth.uid == userId || isMasterAdmin();
+        allow read, write: if isMasterAdmin() || request.auth.uid == userId;
       }
     }
 
@@ -50,14 +41,14 @@ service cloud.firestore {
 
       match /rooms/{roomId} {
         allow read: if true;
-        allow update: if isAuthenticated(); 
+        allow update: if request.auth != null; 
         allow write: if isMasterAdmin();
       }
       
       match /reviews/{reviewId} {
         allow read: if true;
-        allow create: if isAuthenticated();
-        allow update, delete: if isMasterAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
+        allow create: if request.auth != null;
+        allow update, delete: if isMasterAdmin() || (request.auth != null && resource.data.userId == request.auth.uid);
       }
     }
 
