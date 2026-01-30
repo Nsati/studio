@@ -47,7 +47,7 @@ export async function getAdminDashboardStats() {
   }
 
   try {
-    // Fetch data in parallel - No orderBy to avoid Missing Index crashes in production
+    // Fetch data in parallel
     const [bookingsSnap, hotelsSnap, usersSnap] = await Promise.all([
       adminDb.collectionGroup('bookings').limit(100).get(),
       adminDb.collection('hotels').get(),

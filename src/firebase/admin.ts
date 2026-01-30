@@ -4,7 +4,7 @@ import { getAuth, Auth } from 'firebase-admin/auth';
 
 /**
  * @fileOverview Production-grade Firebase Admin SDK Singleton.
- * Optimized for serverless environments with robust environment variable parsing.
+ * Provides clear error messages for missing environment variables.
  */
 
 type AdminServices = {
@@ -32,17 +32,23 @@ export function getFirebaseAdmin(): { adminDb: Firestore | null; adminAuth: Auth
         const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
         let privateKey = process.env.FIREBASE_PRIVATE_KEY;
 
-        if (!projectId || !clientEmail || !privateKey) {
-            return { adminDb: null, adminAuth: null, error: "Firebase Admin credentials missing from environment." };
+        const missing = [];
+        if (!projectId) missing.push('FIREBASE_PROJECT_ID');
+        if (!clientEmail) missing.push('FIREBASE_CLIENT_EMAIL');
+        if (!privateKey) missing.push('FIREBASE_PRIVATE_KEY');
+
+        if (missing.length > 0) {
+            const errorMsg = `Missing Environment Variables: ${missing.join(', ')}. Please add them to your deployment platform settings.`;
+            console.error(`[ADMIN SDK] ${errorMsg}`);
+            return { adminDb: null, adminAuth: null, error: errorMsg };
         }
 
-        // Production-ready private key parsing
-        if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
-            privateKey = privateKey.substring(1, privateKey.length - 1);
+        // Handle private key formatting for different environments
+        if (privateKey!.startsWith('"') && privateKey!.endsWith('"')) {
+            privateKey = privateKey!.substring(1, privateKey!.length - 1);
         }
         
-        // Handle both actual newlines and escaped newline strings
-        const formattedKey = privateKey.replace(/\\n/g, '\n').replace(/\n/g, '\n').trim();
+        const formattedKey = privateKey!.replace(/\\n/g, '\n').replace(/\n/g, '\n').trim();
 
         const app = initializeApp({
             credential: cert({
@@ -58,6 +64,6 @@ export function getFirebaseAdmin(): { adminDb: Firestore | null; adminAuth: Auth
 
     } catch (err: any) {
         console.error("[ADMIN SDK] Initialization Error:", err.message);
-        return { adminDb: null, adminAuth: null, error: err.message };
+        return { adminDb: null, adminAuth: null, error: `Initialization Error: ${err.message}` };
     }
 }
