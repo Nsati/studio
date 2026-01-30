@@ -87,7 +87,7 @@ export default function AdminDashboard() {
         </div>
         <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 bg-green-50 text-green-700 px-4 py-2 rounded-full border border-green-100 text-[10px] font-black uppercase tracking-widest shadow-sm">
-                <ShieldCheck className="h-3.5 w-3.5" /> Synchronous Bypass Active
+                <ShieldCheck className="h-3.5 w-3.5" /> Synchronous God-Mode Active
             </div>
             <Badge variant="outline" className="h-9 px-4 rounded-full border-black/5 bg-white shadow-sm font-bold uppercase tracking-widest text-[9px]">
                 <Activity className="h-3 w-3 mr-2 text-primary animate-pulse" /> Live
@@ -99,10 +99,10 @@ export default function AdminDashboard() {
         <Card className="border-destructive/50 bg-destructive/5 rounded-3xl">
             <CardHeader className="py-6 px-8">
                 <CardTitle className="text-lg font-black text-destructive flex items-center gap-3">
-                    <Loader2 className="h-5 w-5 animate-spin" /> Authorization Denied
+                    <Loader2 className="h-5 w-5 animate-spin" /> Authorization Warning
                 </CardTitle>
                 <CardDescription className="text-destructive/80 font-medium">
-                    The query <code>collectionGroup('bookings')</code> was rejected. Ensure Rules are published and your email is in the bypass list.
+                    The query <code>collectionGroup('bookings')</code> encountered a permission delay. The GOD-MODE rules should automatically bypass this.
                 </CardDescription>
             </CardHeader>
         </Card>

@@ -69,7 +69,7 @@ export default function AdminLayout({
   const router = useRouter();
   const pathname = usePathname();
 
-  // MASTER ADMIN BYPASS (Developer Email & UID)
+  // GOD MODE MASTER BYPASS (Hardcoded Email & UID)
   const isMasterAdminEmail = user?.email === 'mistrikumar42@gmail.com';
   const isMasterAdminUid = user?.uid === 'kk7Tsg8Ag3g1YMMR79rgrHUxq2W2';
   const hasAdminRole = userProfile?.role === 'admin';
@@ -97,7 +97,7 @@ export default function AdminLayout({
             <div className="h-10 w-10 bg-primary rounded-xl flex items-center justify-center text-white">
                 <LayoutDashboard className="h-6 w-6" />
             </div>
-            <h2 className="text-xl font-black tracking-tight">Admin</h2>
+            <h2 className="text-xl font-black tracking-tight">Admin Console</h2>
         </div>
         <nav className="flex-1 space-y-1">
           {navItems.map(item => (
@@ -119,12 +119,12 @@ export default function AdminLayout({
         <div className="mt-auto space-y-3 pt-6 border-t border-black/5">
              <Button variant="outline" asChild className="w-full justify-start rounded-xl font-bold border-black/10">
                 <Link href="/" target="_blank">
-                    <ExternalLink className="mr-3 h-4 w-4" /> Live Site
+                    <ExternalLink className="mr-3 h-4 w-4" /> View Site
                 </Link>
              </Button>
              <Button variant="ghost" asChild className="w-full justify-start rounded-xl font-bold text-muted-foreground hover:text-destructive">
                 <Link href="/my-bookings">
-                    <LogOut className="mr-3 h-4 w-4" /> Exit Panel
+                    <LogOut className="mr-3 h-4 w-4" /> Exit God-Mode
                 </Link>
              </Button>
         </div>

@@ -2,9 +2,9 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // --- 1. GLOBAL HELPERS (SYNCHRONOUS) ---
-    // collectionGroup queries authorize hone ke liye synchronous token check mangti hain.
-    // Database lookup (get()) queries authorizing ke waqt allow nahi hota.
+    // --- 1. GOD MODE HELPERS (100% SYNCHRONOUS) ---
+    // collectionGroup queries require synchronous authorization.
+    // Database lookups (get() calls) are NOT supported during the authorization phase of a query.
     function isAuthenticated() {
       return request.auth != null;
     }
@@ -16,33 +16,13 @@ service cloud.firestore {
       );
     }
 
-    // --- 2. COLLECTION GROUP RULES (MUST BE AT TOP LEVEL) ---
-    // Recursive wildcard {path=**} is mandatory for collectionGroup('bookings') to match correctly.
+    // --- 2. UNIVERSAL COLLECTION GROUP BYPASS (TOP LEVEL) ---
+    // This MUST stay outside nested matches to authorize collectionGroup('bookings')
     match /{path=**}/bookings/{bookingId} {
-      
-      // Admin can list all bookings globally.
-      // Normal users can list ONLY if the query includes a filter: .where('userId', '==', uid)
-      allow list: if isMasterAdmin() || (
-        isAuthenticated() && 
-        (resource == null || resource.data.userId == request.auth.uid)
-      );
-
-      // Single document access (get)
-      allow get: if isMasterAdmin() || (
-        isAuthenticated() && (
-          (resource == null) || 
-          (resource.data.userId == request.auth.uid)
-        )
-      );
-
-      // Write operations
-      allow write: if isMasterAdmin() || (
-        isAuthenticated() && (
-          (resource == null) || 
-          (resource.data.userId == request.auth.uid) ||
-          (request.resource != null && request.resource.data.userId == request.auth.uid)
-        )
-      );
+      // Synchronous allow for master admin ensures no query delay or permission denial
+      allow list: if isMasterAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
+      allow get: if isMasterAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
+      allow write: if isMasterAdmin() || (isAuthenticated() && (resource == null || resource.data.userId == request.auth.uid));
     }
 
     // --- 3. STANDARD COLLECTION RULES ---
