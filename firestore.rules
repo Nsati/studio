@@ -12,7 +12,6 @@ service cloud.firestore {
     }
 
     // --- 2. UNIVERSAL COLLECTION GROUP BYPASS (GOD MODE) ---
-    // This allows collectionGroup queries like 'bookings' to work without filtering.
     // Must be placed before more specific matches.
     match /{path=**}/bookings/{bookingId} {
       allow read, write: if isMasterAdmin();

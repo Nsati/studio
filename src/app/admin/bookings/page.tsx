@@ -40,7 +40,6 @@ export default function BookingsAdminPage() {
   const { toast } = useToast();
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
 
-  // Authorization is handled by synchronous bypass in firestore.rules for isMasterAdmin()
   const bookingsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return query(collectionGroup(firestore, 'bookings'), orderBy('createdAt', 'desc'));
@@ -88,7 +87,7 @@ export default function BookingsAdminPage() {
                     <AlertCircle className="h-6 w-6" /> Permission Error: collectionGroup('bookings')
                 </CardTitle>
                 <CardDescription className="text-destructive/80 font-medium text-base leading-relaxed">
-                    Firestore rejected the global query. Ensure <strong>{user?.email || 'Your Email'}</strong> is added to the <code>isMasterAdmin()</code> function in <code>firestore.rules</code>.
+                    Firestore rejected the global query. Ensure <strong>{user?.email || 'mistrikumar42@gmail.com'}</strong> is added to the <code>isMasterAdmin()</code> function in <code>firestore.rules</code>.
                 </CardDescription>
             </CardHeader>
         </Card>

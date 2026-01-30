@@ -76,7 +76,6 @@ export default function AdminDashboard() {
   
   const bookingsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-    // mistrikumar42@gmail.com is authorized via top-level collectionGroup rule
     return query(collectionGroup(firestore, 'bookings'), orderBy('createdAt', 'desc'), limit(10));
   }, [firestore]);
   const { data: bookings, isLoading: isLoadingBookings, error: bookingsError } = useCollection<Booking>(bookingsQuery);
