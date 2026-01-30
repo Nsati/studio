@@ -18,7 +18,8 @@ export function FirebaseErrorListener() {
       if (!mounted) return;
       
       // DEFER: Use setTimeout to push the state update to the next event loop tick.
-      // This ensures the current render phase completes before the error boundary is triggered.
+      // This ensures the current render phase of the triggering component completes 
+      // before the error state is updated in this component.
       setTimeout(() => {
         if (mounted) {
           console.error("🔴 FIREBASE PERMISSION ERROR CAPTURED:", err.request.path);

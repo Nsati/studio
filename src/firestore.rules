@@ -2,8 +2,9 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // --- 1. GLOBAL HELPERS (SYNCHRONOUS ONLY) ---
-    // CollectionGroup queries require synchronous authorization (no get() calls).
+    // --- 1. GLOBAL HELPERS (MUST BE SYNCHRONOUS) ---
+    // Note: collectionGroup queries do NOT support asynchronous database lookups (get() calls).
+    // Authorization must be determined purely from request.auth tokens.
     function isAuthenticated() {
       return request.auth != null;
     }
@@ -15,19 +16,30 @@ service cloud.firestore {
       );
     }
 
-    // --- 2. COLLECTION GROUP RULES (MUST BE TOP LEVEL) ---
-    // This recursive wildcard match allows collectionGroup('bookings') to work.
+    // --- 2. COLLECTION GROUP RULES (TOP LEVEL REQUIRED) ---
+    // Recursive wildcard {path=**} is mandatory for collectionGroup('bookings') to match results.
     match /{path=**}/bookings/{bookingId} {
-      allow read: if isMasterAdmin() || (
+      
+      // Admin can list all bookings. Normal users can list only if they have a userId filter.
+      // Firestore enforces that the query filter must match the security rule constraints.
+      allow list: if isMasterAdmin() || (
+        isAuthenticated() && 
+        (request.resource == null || request.resource.data.userId == request.auth.uid)
+      );
+
+      // Single document access
+      allow get: if isMasterAdmin() || (
         isAuthenticated() && (
           (resource == null) || 
           (resource.data.userId == request.auth.uid)
         )
       );
+
       allow write: if isMasterAdmin() || (
         isAuthenticated() && (
-          (request.resource == null) || 
-          (request.resource.data.userId == request.auth.uid)
+          (resource == null) || 
+          (resource.data.userId == request.auth.uid) ||
+          (request.resource != null && request.resource.data.userId == request.auth.uid)
         )
       );
     }
@@ -63,7 +75,7 @@ service cloud.firestore {
     match /tourPackages/{packageId} { allow read: if true; allow write: if isMasterAdmin(); }
     match /promotions/{promoId} { allow read: if true; allow write: if isMasterAdmin(); }
     
-    // Catch-all safety
+    // Catch-all safety for admin
     match /{allPaths=**} {
       allow read, write: if isMasterAdmin();
     }

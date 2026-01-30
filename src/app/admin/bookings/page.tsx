@@ -52,7 +52,7 @@ export default function BookingsAdminPage() {
 
   const bookingsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    // collectionGroup needs recursive wildcard {path=**} in rules to work.
+    // collectionGroup needs top-level wildcard {path=**} in rules to work.
     return query(collectionGroup(firestore, 'bookings'), orderBy('createdAt', 'desc'));
   }, [firestore, user]);
 
@@ -78,10 +78,10 @@ export default function BookingsAdminPage() {
     <div className="space-y-8">
       <div className="flex justify-between items-center">
         <div className="space-y-1">
-          <h1 className="font-headline text-4xl font-black tracking-tight">Booking Management</h1>
+          <h1 className="font-headline text-4xl font-black tracking-tight text-foreground">Booking Management</h1>
           <p className="text-muted-foreground font-medium">Centralized control for all customer reservations.</p>
         </div>
-        <Button variant="outline" size="lg" onClick={() => window.location.reload()} className="rounded-full shadow-apple border-black/5 font-bold hover:bg-muted/50 transition-all">
+        <Button variant="outline" size="lg" onClick={() => window.location.reload()} className="rounded-full shadow-apple border-black/5 font-bold hover:bg-muted/50 transition-all bg-white">
           <RefreshCw className="mr-2 h-4 w-4" /> Refresh Global Data
         </Button>
       </div>
