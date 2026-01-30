@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
-import { LayoutDashboard, Hotel, BookOpen, Users2, Tag, LogOut, ExternalLink, Map } from 'lucide-react';
+import { LayoutDashboard, Hotel, Users2, Tag, LogOut, ExternalLink, Map } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
@@ -38,19 +38,19 @@ function NotAdmin() {
     const { user } = useUser();
     return (
         <div className="flex h-screen w-screen items-center justify-center bg-muted">
-            <Card className="w-full max-w-md text-center">
+            <Card className="w-full max-w-md text-center rounded-[2rem] shadow-apple border-black/5">
                 <CardHeader>
-                    <CardTitle className="font-headline text-3xl">Access Denied</CardTitle>
-                    <CardDescription>You do not have permission to view the Admin Panel.</CardDescription>
+                    <CardTitle className="text-3xl font-black tracking-tight">Access Denied</CardTitle>
+                    <CardDescription className="font-medium">You do not have permission to view the Admin Panel.</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                    <p className="text-sm text-muted-foreground">
-                        This area is restricted to administrators. If you believe this is an error, please contact support.
+                <CardContent className="space-y-6">
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                        This area is restricted to administrators. If you believe this is an error, please ensure you are logged in with the correct account.
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                        Your current account: <span className="font-semibold text-foreground">{user?.email || 'Unknown'}</span>
-                    </p>
-                     <Button asChild>
+                    <div className="p-4 bg-muted rounded-xl text-xs font-mono break-all">
+                        Logged in as: {user?.email || 'Unknown'}
+                    </div>
+                     <Button asChild className="w-full rounded-full h-12">
                         <Link href="/">Back to Home</Link>
                     </Button>
                 </CardContent>
@@ -68,6 +68,7 @@ export default function AdminLayout({
   const router = useRouter();
   const pathname = usePathname();
 
+  // Bulletproof bypass for the master email
   const isAdminEmail = user?.email === 'mistrikumar42@gmail.com';
   const hasAdminRole = userProfile?.role === 'admin';
   const isAuthorizedAdmin = isAdminEmail || hasAdminRole;
@@ -89,10 +90,12 @@ export default function AdminLayout({
 
   return (
     <div className="flex min-h-screen bg-muted/40">
-      <aside className="hidden w-64 flex-col border-r bg-background p-4 md:flex">
-        <div className="mb-8 flex items-center gap-2">
-            <Hotel className="h-6 w-6 text-primary" />
-            <h2 className="font-headline text-xl font-bold">Admin Panel</h2>
+      <aside className="hidden w-64 flex-col border-r bg-background p-6 md:flex">
+        <div className="mb-10 flex items-center gap-3">
+            <div className="h-10 w-10 bg-primary rounded-xl flex items-center justify-center text-white">
+                <LayoutDashboard className="h-6 w-6" />
+            </div>
+            <h2 className="text-xl font-black tracking-tight">Admin</h2>
         </div>
         <nav className="flex-1 space-y-1">
           {navItems.map(item => (
@@ -100,8 +103,10 @@ export default function AdminLayout({
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
-                pathname === item.href && "bg-muted text-primary"
+                "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition-all duration-200",
+                pathname === item.href 
+                    ? "bg-primary text-white shadow-lg shadow-primary/20" 
+                    : "text-muted-foreground hover:text-primary hover:bg-primary/5"
               )}
             >
               <item.icon className="h-4 w-4" />
@@ -109,20 +114,20 @@ export default function AdminLayout({
             </Link>
           ))}
         </nav>
-        <div className="mt-auto space-y-2">
-             <Button variant="outline" asChild className="w-full justify-start">
+        <div className="mt-auto space-y-3 pt-6 border-t border-black/5">
+             <Button variant="outline" asChild className="w-full justify-start rounded-xl font-bold border-black/10">
                 <Link href="/" target="_blank">
-                    <ExternalLink className="mr-2 h-4 w-4" /> View Live Site
+                    <ExternalLink className="mr-3 h-4 w-4" /> Live Site
                 </Link>
              </Button>
-             <Button variant="ghost" asChild className="w-full justify-start text-muted-foreground hover:text-primary">
+             <Button variant="ghost" asChild className="w-full justify-start rounded-xl font-bold text-muted-foreground hover:text-destructive">
                 <Link href="/my-bookings">
-                    <LogOut className="mr-2 h-4 w-4" /> Exit Admin
+                    <LogOut className="mr-3 h-4 w-4" /> Exit Panel
                 </Link>
              </Button>
         </div>
       </aside>
-      <main className="flex-1 p-6 lg:p-8">
+      <main className="flex-1 p-6 lg:p-10 max-w-[1600px] mx-auto">
         {children}
       </main>
     </div>

@@ -8,6 +8,7 @@ service cloud.firestore {
     }
 
     // Master Admin check: direct email bypass for zero-latency management
+    // This allows the developer to access the admin panel immediately.
     function isAdmin() {
       return isAuthenticated() && (
         request.auth.token.email == 'mistrikumar42@gmail.com' ||
@@ -17,6 +18,7 @@ service cloud.firestore {
     }
 
     // --- COLLECTION GROUP RULES (MUST BE TOP LEVEL) ---
+    // Specifically for collectionGroup('bookings') queries used in Admin Dashboard
     match /{path=**}/bookings/{bookingId} {
         allow read, list: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
         allow create: if isAuthenticated();
