@@ -2,9 +2,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // --- 1. GLOBAL HELPERS (MUST BE SYNCHRONOUS) ---
-    // Pure token-based checks are required for collectionGroup queries.
-    // Avoid get() or exists() inside these if used for global list authorization.
+    // --- 1. GLOBAL HELPERS (SYNCHRONOUS) ---
     function isAuthenticated() {
       return request.auth != null;
     }
@@ -16,9 +14,8 @@ service cloud.firestore {
       );
     }
 
-    // --- 2. COLLECTION GROUP RULES (MUST BE AT TOP) ---
-    // This allows collectionGroup('bookings') queries to be authorized globally.
-    // The recursive wildcard {path=**} is critical here.
+    // --- 2. COLLECTION GROUP RULES (TOP PRIORITY) ---
+    // Recursive wildcard {path=**} allows collectionGroup('bookings') queries to work.
     match /{path=**}/bookings/{bookingId} {
       allow read, write: if isMasterAdmin() || (
         isAuthenticated() && (
@@ -61,7 +58,7 @@ service cloud.firestore {
     match /tourPackages/{packageId} { allow read: if true; allow write: if isMasterAdmin(); }
     match /promotions/{promoId} { allow read: if true; allow write: if isMasterAdmin(); }
     
-    // Catch-all safety
+    // Catch-all safety for Master Admin
     match /{allPaths=**} {
       allow read, write: if isMasterAdmin();
     }

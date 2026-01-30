@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { format } from 'date-fns';
 import { normalizeTimestamp } from '@/lib/firestore-utils';
-import { Loader2, RefreshCw, AlertCircle } from "lucide-react";
+import { Loader2, RefreshCw, AlertCircle, Activity } from "lucide-react";
 import { updateBookingStatusByAdmin } from './actions';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
@@ -42,7 +42,6 @@ export default function BookingsAdminPage() {
 
   const bookingsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-    // CRITICAL: collectionGroup authorization requires top-level rules
     return query(collectionGroup(firestore, 'bookings'), orderBy('createdAt', 'desc'));
   }, [firestore]);
 

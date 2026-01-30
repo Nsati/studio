@@ -36,6 +36,7 @@ export function FirebaseErrorListener() {
   }, []);
 
   if (error) {
+    // This will be caught by the nearest Error Boundary
     throw error;
   }
 
