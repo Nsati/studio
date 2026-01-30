@@ -1,10 +1,9 @@
-
 'use client';
 
 import { notFound, useParams } from 'next/navigation';
 import Image from 'next/image';
-import { Star, MapPin, BedDouble, Handshake } from 'lucide-react';
-import React from 'react';
+import { Star, MapPin, Handshake, ShieldCheck, Waves, Wind, Mountain, Share2, Heart } from 'lucide-react';
+import React, { useMemo } from 'react';
 
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { AmenityIcon } from '@/components/hotel/AmenityIcon';
@@ -12,21 +11,13 @@ import type { Hotel, Room, Review } from '@/lib/types';
 import { useFirestore, useDoc, useCollection, useMemoFirebase, useUser } from '@/firebase';
 import { doc, collection } from 'firebase/firestore';
 
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from '@/components/ui/carousel';
 import { Separator } from '@/components/ui/separator';
 import { RoomBookingCard } from '@/components/hotel/RoomBookingCard';
 import { Button } from '@/components/ui/button';
 import Loading from './loading';
 import { WriteReviewForm } from '@/components/hotel/WriteReviewForm';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-
 
 export default function HotelPage() {
   const params = useParams();
@@ -55,24 +46,6 @@ export default function HotelPage() {
 
   const { data: reviews, isLoading: isLoadingReviews } = useCollection<Review>(reviewsQuery);
 
-  const minPrice = useMemoFirebase(() => {
-    if (!rooms || rooms.length === 0) return 0;
-    const availableRooms = rooms.filter(r => (r.availableRooms ?? r.totalRooms) > 0);
-    if (availableRooms.length === 0) return 0;
-    return Math.min(...availableRooms.map((r) => r.price));
-  }, [rooms]);
-
-  const bookingSectionRef = React.useRef<HTMLDivElement>(null);
-
-  const handleScrollToBooking = () => {
-    bookingSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const userHasReviewed = useMemoFirebase(() => {
-    if (!user || !reviews) return false;
-    return reviews.some(review => review.userId === user.uid);
-  }, [user, reviews]);
-
   if (isLoading || isLoadingRooms || isLoadingReviews) {
     return <Loading />;
   }
@@ -82,167 +55,119 @@ export default function HotelPage() {
   }
 
   return (
-    <div className="container mx-auto max-w-7xl py-8 px-4 md:px-6">
-      <section className="mb-8">
-        {hotel.isVerifiedPahadiHost && (
-          <Badge className="mb-2 bg-green-100 text-green-800 border-green-200 hover:bg-green-100 text-base font-semibold py-1 px-3">
-              <Handshake className="mr-2 h-5 w-5" /> Verified Pahadi Host
-          </Badge>
-        )}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-            <h1 className="font-headline text-3xl font-bold md:text-4xl">{hotel.name}</h1>
-            <Button onClick={handleScrollToBooking} className="mt-4 md:mt-0">
-                <BedDouble className="mr-2 h-5 w-5" />
-                Book a Room
-            </Button>
-        </div>
-        <div className="mt-2 flex items-center gap-4 text-muted-foreground">
-          <div className="flex items-center gap-1">
-            <MapPin className="h-5 w-5" />
-            <span>{hotel.city}</span>
-          </div>
-          <div className="flex items-center gap-1 font-semibold text-amber-500">
-            <Star className="h-5 w-5 fill-current" />
-            <span>{hotel.rating}</span>
-          </div>
-        </div>
-      </section>
-
-      <section className="mb-12">
-        <Carousel className="w-full">
-          <CarouselContent>
-            {hotel.images.map((imgSrc, index) => {
-              const isUrl = imgSrc.startsWith('http');
-              const imageUrl = isUrl
-                ? imgSrc
-                : PlaceHolderImages.find((i) => i.id === imgSrc)?.imageUrl;
-              const imgData = !isUrl
-                ? PlaceHolderImages.find((i) => i.id === imgSrc)
-                : null;
-
-              return (
-                <CarouselItem key={imgSrc}>
-                  <div className="relative h-[300px] md:h-[400px] lg:h-[500px] w-full overflow-hidden rounded-lg">
-                    {imageUrl && (
-                      <Image
-                        src={imageUrl}
-                        alt={imgData?.description || hotel.name}
-                        data-ai-hint={imgData?.imageHint}
-                        fill
-                        sizes="100vw"
-                        className="object-cover"
-                        priority={index === 0}
-                      />
+    <div className="min-h-screen bg-white">
+      {/* Editorial Header */}
+      <div className="container mx-auto px-6 pt-12 pb-8">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div className="space-y-4 max-w-3xl">
+                <div className="flex items-center gap-3">
+                    {hotel.isVerifiedPahadiHost && (
+                        <Badge className="bg-primary/5 text-primary border-primary/10 hover:bg-primary/5 px-4 py-1 rounded-full font-bold uppercase text-[10px] tracking-widest">
+                            Verified Host
+                        </Badge>
                     )}
-                  </div>
-                </CarouselItem>
-              );
-            })}
-          </CarouselContent>
-          <CarouselPrevious className="absolute left-4 bg-background/50 hover:bg-background/80" />
-          <CarouselNext className="absolute right-4 bg-background/50 hover:bg-background/80" />
-        </Carousel>
-      </section>
-
-      <div className="grid grid-cols-1 gap-12 lg:grid-cols-3">
-        <div className="lg:col-span-2 space-y-8">
-          <section>
-            <h2 className="font-headline text-3xl font-bold mb-4">About this hotel</h2>
-            <p className="text-foreground/80 leading-relaxed">{hotel.description}</p>
-          </section>
-          
-          <Separator />
-
-          {(hotel.safetyInfo && (hotel.safetyInfo.nearestHospital || hotel.safetyInfo.policeStation)) && (
-            <Card className="bg-blue-50 border-blue-200">
-              <CardHeader>
-                <CardTitle className="text-xl flex items-center gap-2 text-blue-900"><AmenityIcon amenity="hospital" className="h-6 w-6"/> Safety & Emergency Info</CardTitle>
-              </CardHeader>
-              <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-blue-800">
-                {hotel.safetyInfo.nearestHospital && <div className="flex items-center gap-2"><AmenityIcon amenity="hospital" /><span>{hotel.safetyInfo.nearestHospital}</span></div>}
-                {hotel.safetyInfo.policeStation && <div className="flex items-center gap-2"><AmenityIcon amenity="police" /><span>{hotel.safetyInfo.policeStation}</span></div>}
-                {hotel.safetyInfo.networkCoverage && <div className="flex items-center gap-2"><AmenityIcon amenity="network" /><span>Network: <span className="font-semibold capitalize">{hotel.safetyInfo.networkCoverage}</span></span></div>}
-              </CardContent>
-            </Card>
-          )}
-
-          <Separator />
-          
-          <section>
-            <h2 className="font-headline text-3xl font-bold mb-6">Amenities</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
-              {hotel.amenities.map((amenity) => (
-                <div key={amenity} className="flex items-center gap-3">
-                  <AmenityIcon amenity={amenity} className="h-6 w-6 text-primary" />
-                  <span className="capitalize">{amenity}</span>
+                    <div className="flex items-center gap-1.5 text-accent font-bold">
+                        <Star className="h-4 w-4 fill-accent" />
+                        <span className="text-sm">{hotel.rating} Rating</span>
+                    </div>
                 </div>
-              ))}
+                <h1 className="text-4xl md:text-6xl font-black tracking-tight leading-[1.1]">{hotel.name}</h1>
+                <div className="flex items-center gap-4 text-muted-foreground font-medium">
+                    <div className="flex items-center gap-1.5">
+                        <MapPin className="h-4 w-4" />
+                        <span>{hotel.city}, Uttarakhand</span>
+                    </div>
+                </div>
             </div>
-          </section>
-
-          {hotel.spiritualAmenities && hotel.spiritualAmenities.length > 0 && (
-             <section>
-                <h3 className="font-headline text-2xl font-bold mb-6">Spiritual & Wellness</h3>
-                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
-                    {hotel.spiritualAmenities.map((amenity) => (
-                        <div key={amenity} className="flex items-center gap-3">
-                        <AmenityIcon amenity={amenity} className="h-6 w-6 text-green-600" />
-                        <span className="capitalize">{amenity.replace('-', ' ')}</span>
-                        </div>
-                    ))}
-                </div>
-             </section>
-          )}
-
-          {hotel.ecoPractices && (hotel.ecoPractices.localSourcing || hotel.ecoPractices.plasticFree || hotel.ecoPractices.waterSaving) && (
-             <section>
-                <h3 className="font-headline text-2xl font-bold mb-6">Eco-Friendly Practices</h3>
-                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
-                    {hotel.ecoPractices.waterSaving && <div className="flex items-center gap-3"><AmenityIcon amenity="water-saving" className="h-6 w-6 text-blue-600" /><span>Water Saving</span></div>}
-                    {hotel.ecoPractices.plasticFree && <div className="flex items-center gap-3"><AmenityIcon amenity="plastic-free" className="h-6 w-6 text-green-600" /><span>Plastic-Free</span></div>}
-                    {hotel.ecoPractices.localSourcing && <div className="flex items-center gap-3"><AmenityIcon amenity="local-sourcing" className="h-6 w-6 text-orange-600" /><span>Local Sourcing</span></div>}
-                </div>
-             </section>
-          )}
-
-          {user && !user.isAnonymous && (
-            <>
-              <Separator />
-              <section>
-                <WriteReviewForm 
-                  hotelId={hotel.id} 
-                  userId={user.uid} 
-                  userHasReviewed={userHasReviewed ?? false} 
-                />
-              </section>
-            </>
-          )}
-
-        </div>
-
-        <div className="lg:col-span-1" ref={bookingSectionRef}>
-           <RoomBookingCard hotel={hotel} rooms={rooms} isLoadingRooms={isLoadingRooms} />
+            <div className="flex items-center gap-3">
+                <Button variant="outline" size="icon" className="rounded-full hover:bg-primary/5 transition-all"><Share2 className="h-4 w-4" /></Button>
+                <Button variant="outline" size="icon" className="rounded-full hover:bg-destructive/5 transition-all"><Heart className="h-4 w-4" /></Button>
+            </div>
         </div>
       </div>
-      
-       {/* Sticky Footer for Mobile */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t p-3 shadow-[0_-2px_10px_rgba(0,0,0,0.1)] flex items-center justify-between gap-4">
-        <div>
-          {minPrice !== null && minPrice > 0 ? (
-             <div>
-                <p className="font-bold text-lg text-foreground">
-                  {minPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}
-                  <span className="text-sm font-normal text-muted-foreground">/night</span>
-                </p>
-                <p className="text-xs text-muted-foreground">Price for 1 adult</p>
-              </div>
-          ) : (
-             <p className="text-sm font-semibold text-muted-foreground">Booking not available</p>
-          )}
+
+      {/* Massive Airbnb Style Gallery */}
+      <div className="container mx-auto px-6 mb-16">
+        <div className="grid grid-cols-4 grid-rows-2 gap-3 h-[400px] md:h-[600px] rounded-[3rem] overflow-hidden">
+            <div className="col-span-2 row-span-2 relative group cursor-pointer">
+                <Image src={hotel.images[0]?.startsWith('http') ? hotel.images[0] : (PlaceHolderImages.find(i => i.id === hotel.images[0])?.imageUrl || '')} alt="Primary" fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
+            </div>
+            <div className="col-span-1 row-span-1 relative group cursor-pointer">
+                <Image src={hotel.images[1]?.startsWith('http') ? hotel.images[1] : (PlaceHolderImages.find(i => i.id === hotel.images[1])?.imageUrl || '')} alt="Gallery 1" fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
+            </div>
+            <div className="col-span-1 row-span-1 relative group cursor-pointer">
+                <Image src={hotel.images[2]?.startsWith('http') ? hotel.images[2] : (PlaceHolderImages.find(i => i.id === hotel.images[2])?.imageUrl || '')} alt="Gallery 2" fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
+            </div>
+            <div className="col-span-1 row-span-1 relative group cursor-pointer">
+                <Image src={hotel.images[3]?.startsWith('http') ? hotel.images[3] : (PlaceHolderImages.find(i => i.id === hotel.images[3])?.imageUrl || '')} alt="Gallery 3" fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
+            </div>
+            <div className="col-span-1 row-span-1 relative group cursor-pointer bg-primary">
+                {hotel.images.length > 4 ? (
+                    <Image src={hotel.images[4]?.startsWith('http') ? hotel.images[4] : (PlaceHolderImages.find(i => i.id === hotel.images[4])?.imageUrl || '')} alt="Gallery 4" fill className="object-cover opacity-50 transition-transform duration-700 group-hover:scale-105" />
+                ) : null}
+                <div className="absolute inset-0 flex items-center justify-center text-white font-bold tracking-widest text-xs uppercase bg-black/20">
+                    View All Photos
+                </div>
+            </div>
         </div>
-        <Button onClick={handleScrollToBooking} disabled={minPrice === null || minPrice === 0} size="lg">
-            Book Now
-        </Button>
+      </div>
+
+      <div className="container mx-auto px-6 pb-24">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-16">
+            {/* Left Content */}
+            <div className="lg:col-span-2 space-y-16">
+                <section className="space-y-6">
+                    <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-primary">
+                        <Compass className="h-4 w-4" /> The Experience
+                    </div>
+                    <h2 className="text-4xl font-bold tracking-tight">Immerse Yourself</h2>
+                    <p className="text-xl text-muted-foreground leading-relaxed font-medium">
+                        {hotel.description}
+                    </p>
+                </section>
+
+                <Separator className="opacity-50" />
+
+                {/* Modern Amenities Grid */}
+                <section className="space-y-10">
+                    <h2 className="text-3xl font-bold tracking-tight">Luxury Amenities</h2>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
+                        {hotel.amenities.map((amenity) => (
+                            <div key={amenity} className="flex items-center gap-4 group">
+                                <div className="p-4 bg-muted/50 rounded-2xl group-hover:bg-primary group-hover:text-white transition-all duration-300">
+                                    <AmenityIcon amenity={amenity} className="h-6 w-6" />
+                                </div>
+                                <span className="font-bold tracking-tight capitalize">{amenity.replace('-', ' ')}</span>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+
+                {hotel.safetyInfo && (
+                    <section className="p-10 rounded-[2.5rem] bg-blue-50 border border-blue-100 space-y-6">
+                        <div className="flex items-center gap-2 text-blue-600 font-black uppercase tracking-[0.2em] text-[10px]">
+                            <ShieldCheck className="h-4 w-4" /> Safety First
+                        </div>
+                        <h3 className="text-2xl font-bold text-blue-900 tracking-tight">Premium Care & Support</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-blue-800 font-medium">
+                            <div className="flex items-center gap-3"><Badge className="bg-blue-200 text-blue-800">Hospital</Badge> <span>{hotel.safetyInfo.nearestHospital}</span></div>
+                            <div className="flex items-center gap-3"><Badge className="bg-blue-200 text-blue-800">Network</Badge> <span className="capitalize">{hotel.safetyInfo.networkCoverage} Coverage</span></div>
+                        </div>
+                    </section>
+                )}
+
+                {user && !user.isAnonymous && (
+                    <section className="pt-12">
+                        <WriteReviewForm hotelId={slug} userId={user.uid} userHasReviewed={false} />
+                    </section>
+                )}
+            </div>
+
+            {/* Sticky Right Card */}
+            <div className="lg:col-span-1">
+                <RoomBookingCard hotel={hotel as any} rooms={rooms} isLoadingRooms={isLoadingRooms} />
+            </div>
+        </div>
       </div>
     </div>
   );

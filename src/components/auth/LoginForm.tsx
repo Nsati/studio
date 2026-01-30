@@ -17,7 +17,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Chrome, Mail } from 'lucide-react';
+import { Loader2, Chrome, Mail, Lock } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
 export function LoginForm() {
@@ -33,7 +33,6 @@ export function LoginForm() {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Auto-redirect if already logged in
   useEffect(() => {
     if (user && !isUserLoading) {
       const redirect = searchParams.get('redirect') || '/my-bookings';
@@ -45,50 +44,22 @@ export function LoginForm() {
     if (!auth) return;
     setIsGoogleLoading(true);
     setError('');
-
     try {
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: 'select_account' });
-      
       const result = await signInWithPopup(auth, provider);
       const idToken = await result.user.getIdToken(true);
-
-      // Verify and sync profile on backend
       const response = await fetch('/api/auth/verify-token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ idToken }),
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Identity verification failed');
-      }
-
-      toast({ 
-        title: 'Login Successful!', 
-        description: `Welcome back, ${data.user.displayName}!` 
-      });
-
-      const redirect = searchParams.get('redirect') || '/my-bookings';
-      router.push(redirect);
-
+      if (!response.ok) throw new Error('Identity verification failed');
+      router.push(searchParams.get('redirect') || '/my-bookings');
     } catch (err: any) {
-      console.error("[AUTH ERROR]", err.code, err.message);
-      
-      if (err.code === 'auth/popup-closed-by-user') {
-        setIsGoogleLoading(false);
-        return;
+      if (err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/popup-blocked') {
+        toast({ variant: 'destructive', title: "Auth Error", description: err.message });
       }
-
-      const description = err.message || "Could not verify your identity.";
-      toast({
-        variant: 'destructive',
-        title: "Authentication Error",
-        description,
-      });
-      setError(description);
     } finally {
       setIsGoogleLoading(false);
     }
@@ -99,12 +70,9 @@ export function LoginForm() {
     if (!auth) return;
     setIsLoading(true);
     setError('');
-
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      toast({ title: 'Welcome Back!' });
-      const redirect = searchParams.get('redirect') || '/my-bookings';
-      router.push(redirect);
+      router.push(searchParams.get('redirect') || '/my-bookings');
     } catch (err: any) {
       setError('Invalid email or password.');
     } finally {
@@ -112,85 +80,68 @@ export function LoginForm() {
     }
   };
 
-  if (isUserLoading) {
-    return (
-      <div className="container flex min-h-[80vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
   return (
-    <div className="container flex min-h-[80vh] items-center justify-center py-12">
-      <Card className="w-full max-w-md shadow-2xl border-border/50 bg-card/50 backdrop-blur-sm">
-        <CardHeader className="text-center space-y-2">
-          <div className="mx-auto bg-primary/10 p-4 rounded-full w-fit mb-2">
+    <div className="container min-h-screen flex items-center justify-center py-24 bg-muted/30">
+      <Card className="w-full max-w-md rounded-[3rem] shadow-2xl border-black/5 overflow-hidden">
+        <CardHeader className="text-center p-10 pb-6 space-y-4">
+          <div className="mx-auto bg-primary/10 p-5 rounded-full w-fit">
             <Mail className="h-8 w-8 text-primary" />
           </div>
-          <CardTitle className="font-headline text-3xl font-bold tracking-tight">Welcome Back</CardTitle>
-          <CardDescription>Securely access your Himalayan Getaways account.</CardDescription>
+          <CardTitle className="text-4xl font-black tracking-tight">Welcome Back</CardTitle>
+          <CardDescription className="text-base font-medium">Continue your Himalayan journey</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="px-10 pb-10 space-y-8">
           <Button
             variant="outline"
-            className="w-full h-12 text-base font-semibold hover:bg-muted/50 transition-all active:scale-[0.98]"
+            className="w-full h-14 rounded-full text-base font-bold transition-all hover:bg-muted active:scale-95 border-black/10"
             onClick={handleGoogleLogin}
             disabled={isGoogleLoading || isLoading}
           >
-            {isGoogleLoading ? (
-              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-            ) : (
-              <Chrome className="mr-2 h-5 w-5 text-blue-500" />
-            )}
+            {isGoogleLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Chrome className="mr-2 h-5 w-5 text-blue-500" />}
             Continue with Google
           </Button>
 
           <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <Separator />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-4 text-muted-foreground font-medium">Or use email</span>
+            <div className="absolute inset-0 flex items-center"><Separator /></div>
+            <div className="relative flex justify-center text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
+              <span className="bg-white px-4">Or secure login</span>
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Email Address</Label>
               <Input
-                id="email"
                 type="email"
                 placeholder="ankit@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="h-11 focus-visible:ring-primary"
+                className="h-14 rounded-2xl bg-muted/50 border-0 focus-visible:ring-primary font-bold"
               />
             </div>
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
-                <Link href="/forgot-password" size="sm" className="text-sm font-medium text-primary hover:underline transition-all">
-                  Forgot password?
+              <div className="flex items-center justify-between ml-1">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Password</Label>
+                <Link href="/forgot-password" size="sm" className="text-[10px] font-bold text-primary hover:underline uppercase tracking-widest">
+                  Forgot?
                 </Link>
               </div>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="h-11 focus-visible:ring-primary"
-              />
-            </div>
-            {error && (
-              <div className="bg-destructive/10 text-destructive text-sm font-medium p-3 rounded-md text-center animate-in fade-in zoom-in-95 duration-200">
-                {error}
+              <div className="relative">
+                <Input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    className="h-14 rounded-2xl bg-muted/50 border-0 focus-visible:ring-primary font-bold pl-12"
+                />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               </div>
-            )}
+            </div>
+            {error && <div className="p-4 bg-destructive/10 text-destructive text-xs font-bold rounded-2xl text-center">{error}</div>}
             <Button
               type="submit"
-              className="w-full h-11 text-base font-bold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all active:scale-[0.98]"
+              className="w-full h-14 rounded-full text-lg font-black bg-primary text-white shadow-xl shadow-primary/20 transition-all active:scale-95"
               disabled={isLoading || isGoogleLoading}
             >
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -198,12 +149,9 @@ export function LoginForm() {
             </Button>
           </form>
         </CardContent>
-        <CardFooter className="flex flex-col gap-4 border-t pt-6 bg-muted/10">
-          <p className="text-sm text-muted-foreground">
-            Don't have an account?{' '}
-            <Link href="/signup" className="font-bold text-primary hover:underline transition-all">
-              Create Account
-            </Link>
+        <CardFooter className="justify-center border-t border-black/5 bg-muted/20 p-8">
+          <p className="text-sm font-medium text-muted-foreground">
+            New here? <Link href="/signup" className="font-black text-primary hover:underline">Create an Account</Link>
           </p>
         </CardFooter>
       </Card>

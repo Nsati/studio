@@ -26,10 +26,9 @@ import { Logo } from './Logo';
 
 const navLinks = [
   { href: '/', label: 'Home' },
-  { href: '/vibe-match', label: 'Vibe Match™' },
   { href: '/search', label: 'Hotels' },
   { href: '/tour-packages', label: 'Tour Packages' },
-  { href: '/about', label: 'About Us' },
+  { href: '/vibe-match', label: 'Vibe Match™', premium: true },
 ];
 
 function UserNav() {
@@ -44,44 +43,42 @@ function UserNav() {
   };
 
   if (isLoading) {
-    return <Skeleton className="h-10 w-10 rounded-full" />;
+    return <Skeleton className="h-9 w-9 rounded-full" />;
   }
 
   if (user) {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-            <Avatar className="h-10 w-10">
+          <Button variant="ghost" className="relative h-9 w-9 rounded-full ring-offset-background transition-all hover:ring-2 hover:ring-primary/20">
+            <Avatar className="h-9 w-9">
                <AvatarImage src={user.photoURL || ''} alt={userProfile?.displayName || 'User'} />
-              <AvatarFallback>
-                {userProfile?.displayName?.charAt(0).toUpperCase() || <User className="h-5 w-5" />}
+              <AvatarFallback className="bg-muted text-xs">
+                {userProfile?.displayName?.charAt(0).toUpperCase() || <User className="h-4 w-4" />}
               </AvatarFallback>
             </Avatar>
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-56" align="end" forceMount>
-          <DropdownMenuLabel className="font-normal">
+        <DropdownMenuContent className="w-56 mt-2 rounded-2xl p-2" align="end">
+          <DropdownMenuLabel className="font-normal px-3 py-2">
             <div className="flex flex-col space-y-1">
-              <p className="text-sm font-medium leading-none">{userProfile?.displayName}</p>
-              <p className="text-xs leading-none text-muted-foreground">
-                {user.email}
-              </p>
+              <p className="text-sm font-semibold leading-none">{userProfile?.displayName}</p>
+              <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           {userProfile?.role === 'admin' && (
-            <DropdownMenuItem onClick={() => router.push('/admin')}>
+            <DropdownMenuItem className="rounded-lg cursor-pointer" onClick={() => router.push('/admin')}>
               <LayoutDashboard className="mr-2 h-4 w-4" />
               <span>Admin Panel</span>
             </DropdownMenuItem>
           )}
-          <DropdownMenuItem onClick={() => router.push('/my-bookings')}>
+          <DropdownMenuItem className="rounded-lg cursor-pointer" onClick={() => router.push('/my-bookings')}>
             <Book className="mr-2 h-4 w-4" />
             <span>My Bookings</span>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={handleSignOut}>
+          <DropdownMenuItem className="rounded-lg cursor-pointer text-destructive focus:text-destructive" onClick={handleSignOut}>
             <LogOut className="mr-2 h-4 w-4" />
             <span>Log out</span>
           </DropdownMenuItem>
@@ -92,89 +89,76 @@ function UserNav() {
 
   return (
     <div className="flex items-center gap-2">
-      <Button variant="ghost" asChild>
+      <Button variant="ghost" asChild className="rounded-full px-6">
         <Link href="/login">Log in</Link>
       </Button>
-      <Button asChild>
+      <Button asChild className="rounded-full px-6 bg-primary hover:bg-primary/90 shadow-sm">
         <Link href="/signup">Sign Up</Link>
       </Button>
     </div>
   );
 }
 
-
 export default function Header() {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b bg-background/80 backdrop-blur-sm">
-      <div className="container flex h-16 items-center justify-between">
-        {/* Left Side: Logo */}
-        <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-3">
+    <header className="sticky top-0 z-50 w-full border-b border-black/5 bg-white/80 backdrop-blur-xl">
+      <div className="container flex h-20 items-center justify-between">
+        <div className="flex items-center gap-8">
+            <Link href="/" className="flex items-center gap-2 group">
                 <Logo />
-                <span className="hidden font-bold text-lg sm:inline-block">
+                <span className="font-heading text-xl font-bold tracking-tight">
                     Uttarakhand Getaways
                 </span>
             </Link>
-        </div>
-        
-        {/* Center: Desktop Navigation */}
-        <div className="hidden md:flex">
-            <nav className="flex items-center gap-6">
+            
+            <nav className="hidden lg:flex items-center gap-1">
                 {navLinks.map((link) => (
                     <Link
                     key={link.href}
                     href={link.href}
                     className={cn(
-                        "text-sm font-medium transition-colors flex items-center gap-1.5",
+                        "text-sm font-medium px-4 py-2 rounded-full transition-all duration-200",
                         pathname === link.href
-                        ? "text-primary"
-                        : "text-muted-foreground hover:text-foreground",
-                         link.href === '/vibe-match' && "font-bold text-accent-foreground bg-accent hover:bg-accent/90 rounded-full px-4 py-2"
+                        ? "text-primary bg-primary/5"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted",
+                        link.premium && "text-accent bg-accent/5 hover:bg-accent/10 ml-2"
                     )}
                     >
-                    {link.href === '/vibe-match' && <Sparkles className="h-4 w-4" />}
-                    {link.label}
+                    <span className="flex items-center gap-1.5">
+                        {link.premium && <Sparkles className="h-3.5 w-3.5" />}
+                        {link.label}
+                    </span>
                     </Link>
                 ))}
             </nav>
         </div>
 
-        {/* Right Side: User Menu & Mobile Menu */}
         <div className="flex items-center gap-2">
           <UserNav />
-           <div className="md:hidden">
+           <div className="lg:hidden">
             <Sheet>
                 <SheetTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                        <Menu className="h-6 w-6" />
+                    <Button variant="ghost" size="icon" className="rounded-full">
+                        <Menu className="h-5 w-5" />
                     </Button>
                 </SheetTrigger>
-                <SheetContent side="right">
-                    <nav className="grid gap-6 text-lg font-medium mt-10">
-                        <SheetClose asChild>
-                          <Link href="/" className="flex items-center gap-3 mb-6">
-                            <Logo />
-                            <span className="font-bold text-lg">
-                              Uttarakhand Getaways
-                            </span>
-                          </Link>
-                        </SheetClose>
+                <SheetContent side="right" className="rounded-l-[2rem]">
+                    <nav className="grid gap-4 text-lg font-medium mt-12">
                         {navLinks.map((link) => (
                           <SheetClose asChild key={link.href}>
                             <Link
                               href={link.href}
                               className={cn(
-                                "transition-colors hover:text-primary flex items-center gap-2",
-                                pathname === link.href
-                                  ? "text-primary"
-                                  : "text-muted-foreground",
-                                link.href === '/vibe-match' && "font-bold text-accent"
+                                "p-4 rounded-2xl transition-all",
+                                pathname === link.href ? "bg-primary/5 text-primary" : "hover:bg-muted"
                               )}
                             >
-                              {link.href === '/vibe-match' && <Sparkles className="h-5 w-5" />}
-                              {link.label}
+                              <span className="flex items-center gap-2">
+                                {link.premium && <Sparkles className="h-5 w-5 text-accent" />}
+                                {link.label}
+                              </span>
                             </Link>
                           </SheetClose>
                         ))}
