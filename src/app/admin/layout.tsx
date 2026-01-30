@@ -1,4 +1,3 @@
-
 'use client';
 import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
@@ -49,7 +48,7 @@ function NotAdmin() {
                         This area is restricted to administrators. If you believe this is an error, please contact support.
                     </p>
                     <p className="text-xs text-muted-foreground">
-                        Your current role: <span className="font-semibold text-foreground capitalize">{user?.isAnonymous ? 'Guest' : 'User'}</span>
+                        Your current account: <span className="font-semibold text-foreground">{user?.email || 'Unknown'}</span>
                     </p>
                      <Button asChild>
                         <Link href="/">Back to Home</Link>
@@ -69,6 +68,10 @@ export default function AdminLayout({
   const router = useRouter();
   const pathname = usePathname();
 
+  const isAdminEmail = user?.email === 'mistrikumar42@gmail.com';
+  const hasAdminRole = userProfile?.role === 'admin';
+  const isAuthorizedAdmin = isAdminEmail || hasAdminRole;
+
   useEffect(() => {
     if (!isLoading && !user) {
       router.push('/login?redirect=/admin');
@@ -80,7 +83,7 @@ export default function AdminLayout({
     return <AdminLayoutSkeleton />;
   }
   
-  if (!user || userProfile?.role !== 'admin') {
+  if (!user || !isAuthorizedAdmin) {
       return <NotAdmin />;
   }
 
