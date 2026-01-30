@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -8,7 +7,7 @@ import { differenceInDays, format, parse } from 'date-fns';
 import { signInAnonymously } from 'firebase/auth';
 import type { Hotel, Room, Booking, Promotion } from '@/lib/types';
 import { useFirestore, useAuth, useUser, useDoc, useCollection, useMemoFirebase, type WithId } from '@/firebase';
-import { doc, collection, getDoc, runTransaction, FieldValue, Timestamp } from 'firebase/firestore';
+import { doc, collection, getDoc, runTransaction, increment, Timestamp } from 'firebase/firestore';
 
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -213,7 +212,7 @@ export function BookingForm() {
                         }
                         
                         transaction.update(roomRef, {
-                            availableRooms: FieldValue.increment(-1),
+                            availableRooms: increment(-1),
                         });
                         
                         const bookingPayload: Booking = {
