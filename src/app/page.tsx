@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
 import { dummyCities, dummyTourPackages } from '@/lib/dummy-data';
-import { ArrowRight, Sparkles, MapPin, Compass } from 'lucide-react';
+import { ArrowRight, Sparkles, MapPin, Compass, Mountain, Cloud } from 'lucide-react';
 import { HotelCard } from '@/components/hotel/HotelCard';
 
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
@@ -64,7 +64,6 @@ export default function HomePage() {
             </h1>
           </div>
           
-          {/* Pill Search Bar - MakeMyTrip functionality, Apple Style */}
           <div className="w-full max-w-5xl mx-auto p-3 bg-white/10 backdrop-blur-2xl rounded-pill border border-white/20 shadow-apple-deep animate-in zoom-in-95 duration-1000">
             <SearchFilters />
           </div>
@@ -180,21 +179,66 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Final CTA Section - High End Luxury */}
-      <section className="py-32 container mx-auto px-6">
-        <div className="relative rounded-[4rem] bg-primary overflow-hidden p-16 md:p-32 text-center text-white space-y-10 shadow-apple-deep">
-            <div className="absolute top-0 left-0 w-full h-full bg-[url('https://picsum.photos/seed/bg/1200/800')] opacity-10 mix-blend-overlay" />
-            <Sparkles className="h-16 w-16 mx-auto text-accent mb-6 animate-pulse" />
-            <h2 className="text-5xl md:text-8xl font-black tracking-tighter leading-none">Ready for the <br/>heights?</h2>
-            <p className="text-white/80 text-2xl max-w-xl mx-auto font-medium">Your journey to the heart of the Himalayas begins here. Book your serenity today.</p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-6">
-                <Button size="lg" className="rounded-full px-12 h-16 bg-white text-primary hover:bg-white/90 font-black text-xl shadow-xl transition-all active:scale-95">
-                    Start Planning
-                </Button>
-                <Button variant="outline" size="lg" className="rounded-full px-12 h-16 border-2 border-white/40 bg-transparent text-white hover:bg-white hover:text-primary font-black text-xl transition-all shadow-none">
-                    Contact an Expert
-                </Button>
+      {/* Final CTA Section - High End Luxury & Creative Animations */}
+      <section className="py-32 container mx-auto px-6 overflow-hidden">
+        <div className="relative rounded-[4rem] bg-primary overflow-hidden p-16 md:p-32 text-center text-white space-y-10 shadow-apple-deep group">
+            {/* Animated Background Image */}
+            <div className="absolute inset-0 z-0">
+                <Image 
+                    src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=2070&auto=format&fit=crop"
+                    alt="Mountain range"
+                    fill
+                    className="object-cover opacity-30 mix-blend-overlay animate-slow-zoom"
+                />
+                <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/95 to-black/40" />
             </div>
+
+            {/* Floating Icons for Creativity */}
+            <div className="absolute top-20 left-20 hidden lg:block animate-float" style={{ animationDelay: '0s' }}>
+                <Cloud className="h-16 w-16 text-white/20" />
+            </div>
+            <div className="absolute bottom-20 right-24 hidden lg:block animate-float" style={{ animationDelay: '2s' }}>
+                <Mountain className="h-20 w-20 text-white/10" />
+            </div>
+            <div className="absolute top-40 right-40 hidden lg:block animate-float" style={{ animationDelay: '1s' }}>
+                <Sparkles className="h-12 w-12 text-accent/40" />
+            </div>
+
+            {/* Content with Reveal Animations */}
+            <div className="relative z-10 space-y-10">
+                <div className="space-y-4">
+                    <div className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-white/10 backdrop-blur-md text-accent text-[10px] font-black uppercase tracking-[0.3em] border border-white/10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+                        <Sparkles className="h-4 w-4" /> Final Step to Serenity
+                    </div>
+                    <h2 className="text-6xl md:text-9xl font-black tracking-tighter leading-none animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
+                        Ready for the <br/><span className="text-accent italic font-heading font-medium">Heights?</span>
+                    </h2>
+                </div>
+                
+                <p className="text-white/80 text-xl md:text-3xl max-w-2xl mx-auto font-medium leading-relaxed animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-500">
+                    Your journey to the soul of the Himalayas begins with a single click. Let our experts craft your dream escape.
+                </p>
+
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-8 pt-8 animate-in fade-in zoom-in-95 duration-1000 delay-700">
+                    <Button 
+                        size="lg" 
+                        className="rounded-full px-16 h-20 bg-white text-primary hover:bg-accent hover:text-white font-black text-2xl shadow-2xl shadow-white/10 transition-all active:scale-95 group/btn overflow-hidden relative"
+                    >
+                        <span className="relative z-10">Start Planning</span>
+                        <div className="absolute inset-0 bg-accent translate-y-full group-hover/btn:translate-y-0 transition-transform duration-500" />
+                    </Button>
+                    <Button 
+                        variant="outline" 
+                        size="lg" 
+                        className="rounded-full px-16 h-20 border-2 border-white/40 bg-transparent text-white hover:bg-white/10 hover:border-white font-black text-2xl transition-all shadow-none group/outline"
+                    >
+                        Contact an Expert <ArrowRight className="ml-3 h-6 w-6 group-hover/outline:translate-x-2 transition-transform" />
+                    </Button>
+                </div>
+            </div>
+
+            {/* Glowing Bottom Line */}
+            <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-accent/50 to-transparent opacity-50" />
         </div>
       </section>
     </div>
