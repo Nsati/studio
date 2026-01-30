@@ -12,9 +12,16 @@ service cloud.firestore {
     }
 
     // --- 2. UNIVERSAL COLLECTION GROUP BYPASS (GOD MODE) ---
-    // This allows the Admin Dashboard to query all bookings across all users instantly.
+    // This MUST stay outside specific resource paths to authorize global queries like collectionGroup('bookings').
     match /{path=**}/bookings/{bookingId} {
-      allow read, write: if isSuperuser() || (
+      
+      // Allow LIST if superuser (synchronous) or if the query filters by owner UID.
+      allow list: if isSuperuser() || (
+        request.auth != null && (resource == null || resource.data.userId == request.auth.uid)
+      );
+
+      // Allow GET/WRITE if superuser or owner.
+      allow get, write: if isSuperuser() || (
         request.auth != null && (
           (resource == null) || 
           (resource.data.userId == request.auth.uid) ||
@@ -24,8 +31,7 @@ service cloud.firestore {
     }
 
     // --- 3. STANDARD COLLECTION RULES ---
-    
-    // Users Collection
+
     match /users/{userId} {
       allow read, write: if isSuperuser() || request.auth.uid == userId;
       
@@ -34,15 +40,14 @@ service cloud.firestore {
       }
     }
 
-    // Hotels & Rooms (Public Read, Admin Write)
     match /hotels/{hotelId} {
       allow read: if true;
       allow write: if isSuperuser();
 
       match /rooms/{roomId} {
         allow read: if true;
-        allow write: if isSuperuser();
         allow update: if request.auth != null; 
+        allow write: if isSuperuser();
       }
       
       match /reviews/{reviewId} {
@@ -52,12 +57,11 @@ service cloud.firestore {
       }
     }
 
-    // CMS Collections
     match /cities/{cityId} { allow read: if true; allow write: if isSuperuser(); }
     match /tourPackages/{packageId} { allow read: if true; allow write: if isSuperuser(); }
     match /promotions/{promoId} { allow read: if true; allow write: if isSuperuser(); }
     
-    // Catch-all safety
+    // Catch-all safety for admin
     match /{allPaths=**} {
       allow read, write: if isSuperuser();
     }
