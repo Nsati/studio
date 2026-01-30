@@ -28,6 +28,7 @@ import { Separator } from '@/components/ui/separator';
  * - Google OAuth 2.0 Integration
  * - Secure JWT (ID Token) retrieval
  * - Backend verification sync
+ * - Graceful error handling (e.g. popup closed by user)
  */
 
 export function LoginForm() {
@@ -53,14 +54,12 @@ export function LoginForm() {
     try {
       // 1. TRIGGER GOOGLE OAUTH
       const provider = new GoogleAuthProvider();
-      // Configure scopes if additional data is needed
       provider.addScope('profile');
       provider.addScope('email');
       
       const result = await signInWithPopup(auth, provider);
       
       // 2. GET SECURE JWT (ID Token)
-      // This token is passed to our backend for verification.
       const idToken = await result.user.getIdToken(true);
 
       // 3. BACKEND VERIFICATION (API Route)
@@ -87,12 +86,21 @@ export function LoginForm() {
 
     } catch (err: any) {
       console.error("[GOOGLE LOGIN ERROR]", err);
-      setError(err.message || 'Google Login failed. Please try again.');
-      toast({
-        variant: 'destructive',
-        title: 'Authentication Error',
-        description: err.message || 'Could not verify your identity.',
-      });
+      
+      // Handle the specific case where the user closes the popup manually
+      if (err.code === 'auth/popup-closed-by-user') {
+        toast({
+          title: 'Login Cancelled',
+          description: 'The Google sign-in window was closed before completion.',
+        });
+      } else {
+        setError(err.message || 'Google Login failed. Please try again.');
+        toast({
+          variant: 'destructive',
+          title: 'Authentication Error',
+          description: err.message || 'Could not verify your identity.',
+        });
+      }
     } finally {
       setIsGoogleLoading(false);
     }

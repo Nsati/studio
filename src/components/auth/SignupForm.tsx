@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -79,7 +80,6 @@ export function SignupForm() {
       const idToken = await result.user.getIdToken(true);
 
       // 3. Verify and sync with backend
-      // This handles user creation in Firestore atomically on the server
       const response = await fetch('/api/auth/verify-token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -100,12 +100,21 @@ export function SignupForm() {
       router.push('/my-bookings');
     } catch (error: any) {
       console.error("Google signup error:", error);
-      setServerError(error.message || 'Could not sign up with Google. Please try again.');
-      toast({
-        variant: 'destructive',
-        title: 'Auth Error',
-        description: error.message || 'Verification failed.',
-      });
+      
+      // Handle the specific case where the user closes the popup manually
+      if (error.code === 'auth/popup-closed-by-user') {
+        toast({
+          title: 'Signup Cancelled',
+          description: 'The Google sign-up window was closed before completion.',
+        });
+      } else {
+        setServerError(error.message || 'Could not sign up with Google. Please try again.');
+        toast({
+          variant: 'destructive',
+          title: 'Auth Error',
+          description: error.message || 'Verification failed.',
+        });
+      }
     } finally {
       setIsGoogleLoading(false);
     }
