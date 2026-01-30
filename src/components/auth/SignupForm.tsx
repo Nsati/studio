@@ -27,10 +27,10 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Chrome } from 'lucide-react';
+import { Loader2, Chrome, UserPlus } from 'lucide-react';
 import { useAuth, useFirestore } from '@/firebase';
 import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 import type { UserProfile } from '@/lib/types';
 import { Separator } from '@/components/ui/separator';
 
@@ -66,52 +66,59 @@ export function SignupForm() {
   });
 
   const handleGoogleSignup = async () => {
-    if (!auth || !firestore) return;
+    if (!auth) return;
     setIsGoogleLoading(true);
     setServerError('');
 
     try {
+      // 1. Trigger Google OAuth
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
-      const user = result.user;
+      
+      // 2. Get secure JWT (ID Token)
+      const idToken = await result.user.getIdToken(true);
 
-      const userDocRef = doc(firestore, 'users', user.uid);
-      const userDocSnap = await getDoc(userDocRef);
+      // 3. Verify and sync with backend
+      // This handles user creation in Firestore atomically on the server
+      const response = await fetch('/api/auth/verify-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken }),
+      });
 
-      if (!userDocSnap.exists()) {
-        const newUserProfile: UserProfile = {
-          uid: user.uid,
-          displayName: user.displayName || 'Guest User',
-          email: user.email || '',
-          mobile: '',
-          role: 'user',
-          status: 'active',
-        };
-        await setDoc(userDocRef, newUserProfile);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Backend verification failed');
       }
 
       toast({
         title: 'Signup Successful!',
-        description: 'Welcome to Uttarakhand Getaways.',
+        description: `Welcome to the family, ${data.user.displayName}!`,
       });
+      
       router.push('/my-bookings');
     } catch (error: any) {
       console.error("Google signup error:", error);
-      setServerError('Could not sign up with Google. Please try again.');
+      setServerError(error.message || 'Could not sign up with Google. Please try again.');
+      toast({
+        variant: 'destructive',
+        title: 'Auth Error',
+        description: error.message || 'Verification failed.',
+      });
     } finally {
       setIsGoogleLoading(false);
     }
   };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    setIsLoading(true);
-    setServerError('');
-
     if (!auth || !firestore) {
-        setServerError("Authentication service is not available. Please try again later.");
-        setIsLoading(false);
+        setServerError("Authentication service is not available.");
         return;
     }
+    
+    setIsLoading(true);
+    setServerError('');
 
     try {
         const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
@@ -126,13 +133,15 @@ export function SignupForm() {
             status: 'active',
         };
 
+        // Create user profile in Firestore
         await setDoc(doc(firestore, 'users', user.uid), newUserProfile);
       
         toast({
             title: 'Account Created!',
-            description: 'You can now log in with your credentials.',
+            description: 'Welcome aboard! Redirecting to your dashboard...',
         });
-        router.push('/login');
+        
+        router.push('/my-bookings');
       
     } catch (error: any) {
         let errorMessage = 'An unexpected error occurred during signup.';
@@ -142,34 +151,37 @@ export function SignupForm() {
             errorMessage = error.code.replace('auth/', '').replace(/-/g, ' ');
         }
         setServerError(errorMessage);
-        console.error("Client-side signup error:", error);
+        console.error("Signup error:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="container flex min-h-[80vh] items-center justify-center">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="font-headline text-3xl">
-            Create an Account
+    <div className="container flex min-h-[80vh] items-center justify-center py-12">
+      <Card className="w-full max-w-md shadow-2xl border-border/50">
+        <CardHeader className="text-center space-y-2">
+          <div className="mx-auto bg-primary/10 p-4 rounded-full w-fit mb-2">
+            <UserPlus className="h-8 w-8 text-primary" />
+          </div>
+          <CardTitle className="font-headline text-3xl font-bold">
+            Create Account
           </CardTitle>
           <CardDescription>
-            Join us to start planning your getaway
+            Join Uttarakhand Getaways and explore the Himalayas.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-6">
           <Button
             variant="outline"
-            className="w-full"
+            className="w-full h-12 text-base font-semibold"
             onClick={handleGoogleSignup}
             disabled={isGoogleLoading || isLoading}
           >
             {isGoogleLoading ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
             ) : (
-              <Chrome className="mr-2 h-4 w-4" />
+              <Chrome className="mr-2 h-5 w-5 text-blue-500" />
             )}
             Continue with Google
           </Button>
@@ -179,7 +191,7 @@ export function SignupForm() {
               <Separator />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">Or sign up with email</span>
+              <span className="bg-background px-4 text-muted-foreground font-medium">Or sign up with email</span>
             </div>
           </div>
 
@@ -192,7 +204,7 @@ export function SignupForm() {
                   <FormItem>
                     <FormLabel>Full Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Ankit Sharma" {...field} />
+                      <Input placeholder="e.g. Ankit Sharma" {...field} className="h-11" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -203,12 +215,13 @@ export function SignupForm() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>Email Address</FormLabel>
                     <FormControl>
                       <Input
                         type="email"
-                        placeholder="ankit.sharma@example.com"
+                        placeholder="ankit@example.com"
                         {...field}
+                        className="h-11"
                       />
                     </FormControl>
                     <FormMessage />
@@ -222,11 +235,8 @@ export function SignupForm() {
                   <FormItem>
                     <FormLabel>Mobile Number</FormLabel>
                     <FormControl>
-                      <Input type="tel" placeholder="9876543210" {...field} />
+                      <Input type="tel" placeholder="9876543210" {...field} className="h-11" />
                     </FormControl>
-                     <FormDescription className="text-xs">
-                      Your mobile number for our records.
-                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -238,10 +248,10 @@ export function SignupForm() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input type="password" {...field} />
+                      <Input type="password" {...field} className="h-11" />
                     </FormControl>
                     <FormDescription className="text-xs">
-                      Must be at least 8 characters long.
+                      Minimum 8 characters.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -249,13 +259,15 @@ export function SignupForm() {
               />
 
               {serverError && (
-                <p className="text-sm text-destructive">{serverError}</p>
+                <div className="bg-destructive/10 text-destructive text-sm font-medium p-3 rounded-md text-center">
+                  {serverError}
+                </div>
               )}
 
               <Button
                 type="submit"
-                className="w-full"
-                disabled={isLoading || isGoogleLoading || !auth || !firestore}
+                className="w-full h-11 text-base font-bold shadow-lg"
+                disabled={isLoading || isGoogleLoading}
               >
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Create Account
@@ -263,12 +275,12 @@ export function SignupForm() {
             </form>
           </Form>
         </CardContent>
-        <CardFooter className="flex justify-center">
+        <CardFooter className="flex justify-center border-t pt-6 bg-muted/10">
           <p className="text-sm text-muted-foreground">
             Already have an account?{' '}
             <Link
               href="/login"
-              className="font-semibold text-primary hover:underline"
+              className="font-bold text-primary hover:underline"
             >
               Log in
             </Link>
