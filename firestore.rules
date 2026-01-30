@@ -2,7 +2,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // --- GLOBAL HELPERS ---
+    // --- 1. GLOBAL HELPERS ---
 
     function isAuthenticated() {
       return request.auth != null;
@@ -17,7 +17,7 @@ service cloud.firestore {
       );
     }
 
-    // --- COLLECTION GROUP RULES (MUST BE AT TOP) ---
+    // --- 2. COLLECTION GROUP RULES (MUST BE AT TOP) ---
     // REQUIRED: Top-level match for global collectionGroup queries
     match /{path=**}/bookings/{bookingId} {
       allow read, write: if isMasterAdmin() || (
@@ -29,7 +29,7 @@ service cloud.firestore {
       );
     }
 
-    // --- STANDARD COLLECTION RULES ---
+    // --- 3. STANDARD COLLECTION RULES ---
 
     match /users/{userId} {
       allow read, write: if request.auth.uid == userId || isMasterAdmin();

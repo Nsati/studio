@@ -21,6 +21,7 @@ export function FirebaseErrorListener() {
       // This ensures the current render phase completes before the error boundary is triggered.
       setTimeout(() => {
         if (mounted) {
+          console.error("🔴 FIREBASE PERMISSION ERROR CAPTURED:", err.request.path);
           setError(err);
         }
       }, 0);

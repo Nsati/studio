@@ -21,23 +21,30 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
   const [services, setServices] = useState<FirebaseServices | null>(null);
 
   useEffect(() => {
-    // This effect runs only once on the client after mounting
     try {
         const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+        
+        // --- NUCLEAR DEBUG LOGS ---
+        console.log("🔥 [FIREBASE INIT] APP NAME:", app.name);
+        console.log("🔥 [FIREBASE INIT] PROJECT ID:", app.options.projectId);
+        console.log("🔥 [FIREBASE INIT] API KEY:", app.options.apiKey?.substring(0, 10) + "...");
+        // ---------------------------
+
         const auth = getAuth(app);
         const firestore = getFirestore(app);
         setServices({ firebaseApp: app, auth, firestore });
     } catch (error) {
         console.error("Firebase initialization failed:", error);
     }
-  }, []); // Empty dependency array ensures this runs once on the client
+  }, []);
 
   if (!services) {
-    // Return a full-page loader if Firebase is not yet initialized.
-    // This state is managed by the dynamic import in the layout, but this is a fallback.
     return (
         <div className="h-screen w-full flex items-center justify-center bg-background">
-            <p>Initializing App...</p>
+            <div className="text-center space-y-4">
+                <p className="font-bold animate-pulse">Initializing Himalayan Gateway...</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Verifying Connection</p>
+            </div>
         </div>
     );
   }
