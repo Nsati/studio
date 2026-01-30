@@ -5,13 +5,14 @@ import { useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
-import { LayoutDashboard, Hotel, Users2, Tag, LogOut, ExternalLink, Map } from 'lucide-react';
+import { LayoutDashboard, Hotel, Users2, Tag, LogOut, ExternalLink, Map, BookOpen } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
 
 const navItems = [
     { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
+    { href: '/admin/bookings', label: 'Bookings', icon: BookOpen },
     { href: '/admin/hotels', label: 'Hotels', icon: Hotel },
     { href: '/admin/tour-packages', label: 'Tour Packages', icon: Map },
     { href: '/admin/users', label: 'Users', icon: Users2 },
