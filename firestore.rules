@@ -2,50 +2,51 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions
+    // 1. MASTER ADMIN BYPASS: Direct token check (Zero-latency, no get() calls)
+    function isMasterAdmin() {
+      return request.auth != null && request.auth.token.email == 'mistrikumar42@gmail.com';
+    }
+
+    // 2. REGULAR ADMIN CHECK: Document-based role check
+    function isAdmin() {
+      return isMasterAdmin() || (
+        request.auth != null && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+      );
+    }
+
     function isAuthenticated() {
       return request.auth != null;
     }
 
-    // Master Admin check: direct email bypass for zero-latency management
-    // This allows the developer to access the admin panel immediately.
-    function isAdmin() {
-      return isAuthenticated() && (
-        request.auth.token.email == 'mistrikumar42@gmail.com' ||
-        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
-      );
-    }
-
     // --- COLLECTION GROUP RULES (MUST BE TOP LEVEL) ---
-    // Specifically for collectionGroup('bookings') queries used in Admin Dashboard
+    // Critical for Admin Dashboard summary and global booking management
     match /{path=**}/bookings/{bookingId} {
-        allow read, list: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
+        // Master admin can list/read everything. Users can only see their own.
+        allow read, list: if isMasterAdmin() || isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
         allow create: if isAuthenticated();
-        allow update, delete: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
+        allow update, delete: if isMasterAdmin() || isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
     }
 
-    // User Data & Profiles
+    // --- USER DATA & PROFILES ---
     match /users/{userId} {
-      allow read, write: if isAuthenticated() && request.auth.uid == userId;
-      
-      // Allow admins to list all users
+      allow read, write: if isMasterAdmin() || (isAuthenticated() && request.auth.uid == userId);
       allow list: if isAdmin();
       
       match /{allSubcollections=**} {
-        allow read, write: if isAuthenticated() && request.auth.uid == userId;
-        allow read, write: if isAdmin();
+        allow read, write: if isMasterAdmin() || (isAuthenticated() && request.auth.uid == userId);
       }
     }
 
-    // Hotel & Room Rules
+    // --- HOTELS & ROOMS ---
     match /hotels/{hotelId} {
       allow read: if true;
       allow write: if isAdmin();
 
         match /rooms/{roomId} {
           allow read: if true;
-          allow update: if isAuthenticated();
+          allow update: if isAuthenticated(); // Allowed for booking transaction (inventory update)
           allow write: if isAdmin();
         }
         
@@ -56,7 +57,7 @@ service cloud.firestore {
         }
     }
 
-    // Content Collections
+    // --- CONTENT COLLECTIONS ---
     match /cities/{cityId} {
         allow read: if true;
         allow write: if isAdmin();
