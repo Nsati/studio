@@ -1,13 +1,14 @@
 'use client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Hotel, Users2, BookOpen, IndianRupee, ArrowUpRight, TrendingUp, ShieldCheck } from 'lucide-react';
+import { Hotel, Users2, BookOpen, IndianRupee, TrendingUp, ShieldCheck } from 'lucide-react';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, collectionGroup, query, orderBy, limit } from 'firebase/firestore';
+import { collection, collectionGroup, query, orderBy } from 'firebase/firestore';
 import type { Hotel as HotelType, UserProfile, Booking } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { normalizeTimestamp } from '@/lib/firestore-utils';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 function StatCard({ title, value, icon: Icon, description, isLoading, trend }: any) {
     return (
@@ -169,7 +170,7 @@ export default function AdminDashboard() {
                 <div className="absolute top-0 right-0 p-8 opacity-10"><TrendingUp className="h-32 w-32" /></div>
                 <CardHeader className="p-8">
                     <CardTitle className="text-2xl font-black tracking-tight leading-tight">Growth Insight</CardTitle>
-                    <CardDescription className="text-white/70 font-bold uppercase text-[10px] tracking-widest mt-2">Revenue Analytics</CardTitle>
+                    <CardDescription className="text-white/70 font-bold uppercase text-[10px] tracking-widest mt-2">Revenue Analytics</CardDescription>
                 </CardHeader>
                 <CardContent className="px-8 pb-8 space-y-4 relative z-10">
                     <p className="text-sm font-medium text-white/80 leading-relaxed">Your business has seen a 12% increase in confirmed bookings compared to last month.</p>
