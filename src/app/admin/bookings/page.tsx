@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
-import { collectionGroup, orderBy, query } from 'firebase/firestore';
-import type { Booking } from '@/lib/types';
+import React, { useEffect, useState } from 'react';
+import { useUser } from '@/firebase';
+import { getAllBookingsForAdmin } from '../actions';
+import { updateBookingStatusByAdmin } from './actions';
+import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { 
   Table, 
@@ -16,10 +17,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { format } from 'date-fns';
-import { normalizeTimestamp } from '@/lib/firestore-utils';
 import { Loader2, RefreshCw, AlertCircle, Activity, Filter, Download } from "lucide-react";
-import { updateBookingStatusByAdmin } from './actions';
-import { useToast } from '@/hooks/use-toast';
 
 function BookingStatusBadge({ status }: { status: string }) {
   switch (status) {
@@ -35,17 +33,29 @@ function BookingStatusBadge({ status }: { status: string }) {
 }
 
 export default function BookingsAdminPage() {
-  const firestore = useFirestore();
   const { user } = useUser();
   const { toast } = useToast();
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
 
-  const bookingsQuery = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return query(collectionGroup(firestore, 'bookings'), orderBy('createdAt', 'desc'));
-  }, [firestore, user]);
+  const loadBookings = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await getAllBookingsForAdmin();
+      setBookings(data);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  const { data: bookings, isLoading, error } = useCollection<Booking>(bookingsQuery);
+  useEffect(() => {
+    loadBookings();
+  }, []);
 
   const handleStatusUpdate = async (userId: string, bookingId: string, status: 'CONFIRMED' | 'CANCELLED') => {
     setIsUpdating(bookingId);
@@ -53,6 +63,7 @@ export default function BookingsAdminPage() {
         const result = await updateBookingStatusByAdmin(userId, bookingId, status);
         if (result.success) {
           toast({ title: 'Success', description: result.message });
+          loadBookings(); // Refresh list
         } else {
           toast({ variant: 'destructive', title: 'Action Failed', description: result.message });
         }
@@ -74,7 +85,7 @@ export default function BookingsAdminPage() {
             <Button variant="outline" size="lg" className="rounded-full h-14 px-8 border-black/10 font-bold hover:bg-muted/50 bg-white">
                 <Filter className="mr-2 h-4 w-4" /> Filter
             </Button>
-            <Button variant="outline" size="lg" onClick={() => window.location.reload()} className="rounded-full h-14 px-8 shadow-apple border-black/5 font-bold hover:bg-muted/50 transition-all bg-white">
+            <Button variant="outline" size="lg" onClick={loadBookings} className="rounded-full h-14 px-8 shadow-apple border-black/5 font-bold hover:bg-muted/50 transition-all bg-white">
                 <RefreshCw className="mr-2 h-4 w-4" /> Refresh
             </Button>
         </div>
@@ -84,10 +95,10 @@ export default function BookingsAdminPage() {
         <Card className="rounded-[2.5rem] border-destructive/20 bg-destructive/5 overflow-hidden">
             <CardHeader className="py-8 px-10">
                 <CardTitle className="text-xl font-black text-destructive flex items-center gap-3">
-                    <AlertCircle className="h-6 w-6" /> Permission Error: collectionGroup('bookings')
+                    <AlertCircle className="h-6 w-6" /> Data Retrieval Error
                 </CardTitle>
                 <CardDescription className="text-destructive/80 font-medium text-base leading-relaxed">
-                    Firestore rejected the global query. Ensure <strong>{user?.email || 'mistrikumar42@gmail.com'}</strong> is authorized in <code>firestore.rules</code> with synchronous bypass.
+                    {error}
                 </CardDescription>
             </CardHeader>
         </Card>
@@ -102,7 +113,7 @@ export default function BookingsAdminPage() {
             </div>
             <div className="text-right">
                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Volume</p>
-                <p className="text-3xl font-black tracking-tighter text-primary">{bookings?.length || 0} Records</p>
+                <p className="text-3xl font-black tracking-tighter text-primary">{bookings.length} Records</p>
             </div>
           </div>
         </CardHeader>
@@ -127,7 +138,7 @@ export default function BookingsAdminPage() {
                     </TableCell>
                   </TableRow>
                 ))
-              ) : bookings && bookings.length > 0 ? (
+              ) : bookings.length > 0 ? (
                 bookings.map((booking) => (
                   <TableRow key={booking.id} className="hover:bg-muted/5 transition-colors border-b border-black/5 last:border-0">
                     <TableCell className="px-10 py-8">
@@ -140,7 +151,7 @@ export default function BookingsAdminPage() {
                     </TableCell>
                     <TableCell className="py-8">
                       <div className="text-xs font-black tracking-tight text-foreground">
-                        {format(normalizeTimestamp(booking.checkIn), 'dd MMM')} — {format(normalizeTimestamp(booking.checkOut), 'dd MMM yyyy')}
+                        {format(new Date(booking.checkIn), 'dd MMM')} — {format(new Date(booking.checkOut), 'dd MMM yyyy')}
                       </div>
                       <div className="text-[10px] text-muted-foreground font-black mt-1 uppercase tracking-widest">{booking.guests} Guests</div>
                     </TableCell>

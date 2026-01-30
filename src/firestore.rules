@@ -2,54 +2,43 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // --- 1. THE GOD-MODE BYPASS (100% SYNCHRONOUS) ---
-    // Rule logic: Only use request.auth.token data. DO NOT use get() or exists().
-    // This allows collectionGroup queries to be authorized instantly.
-    function isMasterAdmin() {
-      return request.auth != null && (
-        request.auth.token.email.lower() == 'mistrikumar42@gmail.com' ||
-        request.auth.token.email.lower() == 'nsati09@gmail.com' ||
-        request.auth.uid == 'kk7Tsg8Ag3g1YMMR79rgrHUxq2W2'
-      );
+    // Helper: Check if user is an admin via their profile document
+    function isAdmin() {
+      return request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
-    // UNIVERSAL RECURSIVE BYPASS
-    // This MUST stay at the top. It unblocks all global queries for admins.
-    match /{allPaths=**} {
-      allow read, write: if isMasterAdmin();
+    // Helper: Check if user owns the document
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
     }
 
-    // --- 2. EXPLICIT COLLECTION GROUP RULES ---
-    // Required for the 'bookings' collectionGroup index.
-    match /{path=**}/bookings/{bookingId} {
-      allow list: if isMasterAdmin() || (request.auth != null && request.query.limit <= 100);
-      allow get: if isMasterAdmin() || (request.auth != null && (resource == null || resource.data.userId == request.auth.uid));
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow update: if isMasterAdmin() || (request.auth != null && resource.data.userId == request.auth.uid);
-    }
-
-    // --- 3. STANDARD COLLECTION RULES ---
-
+    // Standard User Profiles
     match /users/{userId} {
-      allow read, write: if request.auth.uid == userId || isMasterAdmin();
+      allow read, write: if isOwner(userId) || isAdmin();
       
-      match /{allSubcollections=**} {
-        allow read, write: if request.auth.uid == userId || isMasterAdmin();
+      // Nested Bookings
+      match /bookings/{bookingId} {
+        allow read: if isOwner(userId) || isAdmin();
+        allow create: if isOwner(userId);
+        allow update: if isAdmin();
       }
     }
 
+    // Public Collections
     match /hotels/{hotelId} {
       allow read: if true;
+      allow write: if isAdmin();
 
       match /rooms/{roomId} {
         allow read: if true;
-        allow update: if request.auth != null; 
+        allow write: if isAdmin();
       }
       
       match /reviews/{reviewId} {
         allow read: if true;
         allow create: if request.auth != null;
-        allow update, delete: if request.auth != null && (resource.data.userId == request.auth.uid || isMasterAdmin());
+        allow update, delete: if isOwner(resource.data.userId) || isAdmin();
       }
     }
 
