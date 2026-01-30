@@ -191,7 +191,7 @@ export default function HomePage() {
                 <Button size="lg" className="rounded-full px-12 h-16 bg-white text-primary hover:bg-white/90 font-black text-xl shadow-xl transition-all active:scale-95">
                     Start Planning
                 </Button>
-                <Button variant="outline" size="lg" className="rounded-full px-12 h-16 border-white/30 hover:bg-white/10 text-white font-black text-xl transition-all">
+                <Button variant="outline" size="lg" className="rounded-full px-12 h-16 border-2 border-white/40 bg-transparent text-white hover:bg-white hover:text-primary font-black text-xl transition-all shadow-none">
                     Contact an Expert
                 </Button>
             </div>
