@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -56,7 +57,6 @@ export function SignupForm() {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [serverError, setServerError] = useState('');
 
-  // Auto-redirect if already logged in
   useEffect(() => {
     if (user && !isUserLoading) {
       router.push('/my-bookings');
@@ -85,7 +85,6 @@ export function SignupForm() {
       const result = await signInWithPopup(auth, provider);
       const idToken = await result.user.getIdToken(true);
 
-      // Backend handles atomic creation/verification securely
       const response = await fetch('/api/auth/verify-token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -105,13 +104,10 @@ export function SignupForm() {
       
       router.push('/my-bookings');
     } catch (err: any) {
-      console.error("[GOOGLE SIGNUP ERROR]", err.code, err.message);
-      
       if (err.code === 'auth/popup-closed-by-user') {
         setIsGoogleLoading(false);
         return;
       }
-
       if (err.code === 'auth/popup-blocked') {
         toast({
           variant: 'destructive',
@@ -121,13 +117,7 @@ export function SignupForm() {
         setIsGoogleLoading(false);
         return;
       }
-
       const description = err.message || "Signup failed. Please try again.";
-      toast({
-        variant: 'destructive',
-        title: "Signup Error",
-        description,
-      });
       setServerError(description);
     } finally {
       setIsGoogleLoading(false);
@@ -145,10 +135,10 @@ export function SignupForm() {
 
     try {
         const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
-        const user = userCredential.user;
+        const fbUser = userCredential.user;
 
         const newUserProfile: UserProfile = {
-            uid: user.uid,
+            uid: fbUser.uid,
             displayName: values.name,
             email: values.email,
             mobile: values.mobile,
@@ -156,8 +146,7 @@ export function SignupForm() {
             status: 'active',
         };
 
-        // Create profile in Firestore
-        await setDoc(doc(firestore, 'users', user.uid), newUserProfile);
+        await setDoc(doc(firestore, 'users', fbUser.uid), newUserProfile);
       
         toast({
             title: 'Account Created!',
@@ -167,17 +156,12 @@ export function SignupForm() {
         router.push('/my-bookings');
       
     } catch (error: any) {
-        console.error("Signup error:", error);
         let errorMessage = 'An unexpected error occurred during signup.';
-        
         if (error.code === 'auth/email-already-in-use') {
             errorMessage = 'This email is already registered. Please log in.';
-        } else if (error.code === 'auth/unauthorized-domain') {
-            errorMessage = 'This domain is not authorized for authentication.';
         } else if (error.code) {
             errorMessage = error.code.replace('auth/', '').replace(/-/g, ' ');
         }
-        
         setServerError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -194,7 +178,7 @@ export function SignupForm() {
 
   return (
     <div className="container flex min-h-[80vh] items-center justify-center py-12">
-      <Card className="w-full max-w-md shadow-2xl border-border/50 bg-card/50 backdrop-blur-sm">
+      <Card className="w-full max-w-md shadow-2xl border-border/50 bg-card/50 backdrop-blur-sm rounded-[2rem] overflow-hidden">
         <CardHeader className="text-center space-y-2">
           <div className="mx-auto bg-primary/10 p-4 rounded-full w-fit mb-2">
             <UserPlus className="h-8 w-8 text-primary" />
@@ -206,10 +190,10 @@ export function SignupForm() {
             Join Uttarakhand Getaways and explore the Himalayas.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-6 px-8 pb-8">
           <Button
             variant="outline"
-            className="w-full h-12 text-base font-semibold transition-all active:scale-[0.98] hover:bg-muted/50"
+            className="w-full h-12 text-sm font-bold transition-all active:scale-[0.98] hover:bg-muted/50 rounded-full border-black/10"
             onClick={handleGoogleSignup}
             disabled={isGoogleLoading || isLoading}
           >
@@ -225,8 +209,8 @@ export function SignupForm() {
             <div className="absolute inset-0 flex items-center">
               <Separator />
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-4 text-muted-foreground font-medium">Or sign up with email</span>
+            <div className="relative flex justify-center text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
+              <span className="bg-white px-4">Or sign up with email</span>
             </div>
           </div>
 
@@ -237,9 +221,9 @@ export function SignupForm() {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Full Name</FormLabel>
+                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Full Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g. Ankit Sharma" {...field} className="h-11 focus-visible:ring-primary" />
+                      <Input placeholder="Ankit Sharma" {...field} className="h-12 rounded-xl bg-muted/50 border-0 focus-visible:ring-primary font-bold" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -250,13 +234,13 @@ export function SignupForm() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email Address</FormLabel>
+                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Email Address</FormLabel>
                     <FormControl>
                       <Input
                         type="email"
                         placeholder="ankit@example.com"
                         {...field}
-                        className="h-11 focus-visible:ring-primary"
+                        className="h-12 rounded-xl bg-muted/50 border-0 focus-visible:ring-primary font-bold"
                       />
                     </FormControl>
                     <FormMessage />
@@ -268,9 +252,9 @@ export function SignupForm() {
                 name="mobile"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Mobile Number</FormLabel>
+                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Mobile Number</FormLabel>
                     <FormControl>
-                      <Input type="tel" placeholder="9876543210" {...field} className="h-11 focus-visible:ring-primary" />
+                      <Input type="tel" placeholder="9876543210" {...field} className="h-12 rounded-xl bg-muted/50 border-0 focus-visible:ring-primary font-bold" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -281,11 +265,11 @@ export function SignupForm() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Password</FormLabel>
                     <FormControl>
-                      <Input type="password" {...field} className="h-11 focus-visible:ring-primary" />
+                      <Input type="password" {...field} className="h-12 rounded-xl bg-muted/50 border-0 focus-visible:ring-primary font-bold" />
                     </FormControl>
-                    <FormDescription className="text-xs">
+                    <FormDescription className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest ml-1">
                       Minimum 8 characters.
                     </FormDescription>
                     <FormMessage />
@@ -294,14 +278,14 @@ export function SignupForm() {
               />
 
               {serverError && (
-                <div className="bg-destructive/10 text-destructive text-sm font-medium p-3 rounded-md text-center animate-in fade-in zoom-in-95 duration-200">
+                <div className="bg-destructive/10 text-destructive text-[11px] font-black uppercase tracking-widest p-3 rounded-xl text-center">
                   {serverError}
                 </div>
               )}
 
               <Button
                 type="submit"
-                className="w-full h-11 text-base font-bold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all active:scale-[0.98]"
+                className="w-full h-12 text-base font-black shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all active:scale-[0.98] rounded-full"
                 disabled={isLoading || isGoogleLoading}
               >
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -310,12 +294,12 @@ export function SignupForm() {
             </form>
           </Form>
         </CardContent>
-        <CardFooter className="flex justify-center border-t pt-6 bg-muted/10">
-          <p className="text-sm text-muted-foreground">
+        <CardFooter className="flex justify-center border-t pt-6 bg-muted/10 p-8">
+          <p className="text-sm font-medium text-muted-foreground">
             Already have an account?{' '}
             <Link
               href="/login"
-              className="font-bold text-primary hover:underline transition-all"
+              className="font-black text-primary hover:underline transition-all"
             >
               Log in
             </Link>

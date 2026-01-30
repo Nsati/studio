@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -55,10 +56,14 @@ export function LoginForm() {
         body: JSON.stringify({ idToken }),
       });
       if (!response.ok) throw new Error('Identity verification failed');
-      router.push(searchParams.get('redirect') || '/my-bookings');
+      const redirect = searchParams.get('redirect') || '/my-bookings';
+      router.push(redirect);
     } catch (err: any) {
       if (err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/popup-blocked') {
         toast({ variant: 'destructive', title: "Auth Error", description: err.message });
+      }
+      if (err.code === 'auth/popup-blocked') {
+        toast({ variant: 'destructive', title: "Popup Blocked", description: "Please allow popups for this website to sign in with Google." });
       }
     } finally {
       setIsGoogleLoading(false);
@@ -72,7 +77,8 @@ export function LoginForm() {
     setError('');
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      router.push(searchParams.get('redirect') || '/my-bookings');
+      const redirect = searchParams.get('redirect') || '/my-bookings';
+      router.push(redirect);
     } catch (err: any) {
       setError('Invalid email or password.');
     } finally {
@@ -138,7 +144,7 @@ export function LoginForm() {
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               </div>
             </div>
-            {error && <div className="p-4 bg-destructive/10 text-destructive text-xs font-bold rounded-2xl text-center">{error}</div>}
+            {error && <div className="p-4 bg-destructive/10 text-destructive text-[10px] font-black uppercase tracking-widest rounded-2xl text-center">{error}</div>}
             <Button
               type="submit"
               className="w-full h-14 rounded-full text-lg font-black bg-primary text-white shadow-xl shadow-primary/20 transition-all active:scale-95"

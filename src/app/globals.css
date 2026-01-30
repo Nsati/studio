@@ -1,28 +1,29 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 0 0% 98%; /* Ultra light gray/white */
-    --foreground: 0 0% 10%;
+    --background: 60 30% 96%; /* Warm Off-White / Light Beige */
+    --foreground: 20 10% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 10%;
+    --card-foreground: 20 10% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 10%;
+    --popover-foreground: 20 10% 15%;
 
-    --primary: 151 41% 25%; /* Deep Forest Green */
+    --primary: 123 40% 30%; /* Deep Forest Green */
     --primary-foreground: 0 0% 100%;
 
     --secondary: 0 0% 92%;
     --secondary-foreground: 0 0% 20%;
 
-    --muted: 0 0% 96%;
+    --muted: 60 10% 92%;
     --muted-foreground: 0 0% 45%;
 
-    --accent: 27 82% 53%; /* Earthy Orange */
+    --accent: 24 80% 45%; /* Earthy Orange */
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
@@ -30,17 +31,17 @@
 
     --border: 0 0% 90%;
     --input: 0 0% 90%;
-    --ring: 151 41% 25%;
+    --ring: 123 40% 30%;
 
-    --radius: 1.25rem;
+    --radius: 1.5rem;
   }
 
   .dark {
-    --background: 0 0% 5%;
+    --background: 20 10% 10%;
     --foreground: 0 0% 95%;
-    --card: 0 0% 8%;
+    --card: 20 10% 12%;
     --card-foreground: 0 0% 95%;
-    --primary: 151 41% 35%;
+    --primary: 123 40% 40%;
     --border: 0 0% 15%;
   }
 }
