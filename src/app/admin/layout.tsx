@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
-import { LayoutDashboard, Hotel, Users2, Tag, LogOut, ExternalLink, Map, BookOpen, Loader2 } from 'lucide-react';
+import { LayoutDashboard, Hotel, Users2, Tag, LogOut, ExternalLink, Map, BookOpen } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 
@@ -45,7 +45,7 @@ function NotAdmin() {
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <p className="text-sm text-muted-foreground leading-relaxed">
-                        This area is restricted to administrators. If you are logged in as <strong>{user?.email}</strong> and still cannot see the panel, please try refreshing or contacting support.
+                        This area is restricted to administrators. If you are logged in as <strong>{user?.email}</strong> and still cannot see the panel, please refresh or ensure your account has the correct role.
                     </p>
                     <div className="p-4 bg-muted rounded-xl text-xs font-mono break-all text-left">
                         <div className="flex justify-between border-b pb-1 mb-1"><span>UID:</span> <span>{user?.uid}</span></div>
@@ -69,11 +69,12 @@ export default function AdminLayout({
   const router = useRouter();
   const pathname = usePathname();
 
-  // Master Admin Override
-  const isAdminEmail = user?.email === 'mistrikumar42@gmail.com';
-  const isAdminUid = user?.uid === 'kk7Tsg8Ag3g1YMMR79rgrHUxq2W2';
+  // MASTER ADMIN BYPASS (Developer Email & UID)
+  const isMasterAdminEmail = user?.email === 'mistrikumar42@gmail.com';
+  const isMasterAdminUid = user?.uid === 'kk7Tsg8Ag3g1YMMR79rgrHUxq2W2';
   const hasAdminRole = userProfile?.role === 'admin';
-  const isAuthorizedAdmin = isAdminEmail || isAdminUid || hasAdminRole;
+  
+  const isAuthorized = isMasterAdminEmail || isMasterAdminUid || hasAdminRole;
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -85,7 +86,7 @@ export default function AdminLayout({
     return <AdminLayoutSkeleton />;
   }
   
-  if (!user || !isAuthorizedAdmin) {
+  if (!user || !isAuthorized) {
       return <NotAdmin />;
   }
 

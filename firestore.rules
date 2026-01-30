@@ -8,8 +8,7 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // MASTER ADMIN BYPASS (Immediate authorization for the owner)
-    // Uses both email and UID for 100% reliability.
+    // MASTER ADMIN BYPASS
     function isMasterAdmin() {
       return isAuthenticated() && (
         request.auth.token.email == 'mistrikumar42@gmail.com' || 
@@ -18,13 +17,11 @@ service cloud.firestore {
     }
 
     // 1. GLOBAL MASTER ADMIN OVERRIDE
-    // This allows the developer to bypass ALL restrictions globally.
-    // Necessary for complex collectionGroup queries in the dashboard.
     match /{allPaths=**} {
       allow read, write: if isMasterAdmin();
     }
 
-    // General Admin Check (For registered admins in the database)
+    // General Admin Check
     function isAdmin() {
       return isMasterAdmin() || (isAuthenticated() && 
         exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
@@ -38,7 +35,6 @@ service cloud.firestore {
     // --- COLLECTION GROUP RULES ---
     
     match /{path=**}/bookings/{bookingId} {
-      // Admins see all, users see their own.
       allow read, list: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
       allow update, delete: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
@@ -46,7 +42,6 @@ service cloud.firestore {
 
     // --- STANDARD COLLECTION RULES ---
 
-    // User Profiles
     match /users/{userId} {
       allow read, write: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
@@ -56,14 +51,12 @@ service cloud.firestore {
       }
     }
 
-    // Hotels & Rooms (Public Read, Admin Write)
     match /hotels/{hotelId} {
       allow read: if true;
       allow write: if isAdmin();
 
       match /rooms/{roomId} {
         allow read: if true;
-        // Authenticated users can update inventory during booking
         allow update: if isAuthenticated() || isAdmin(); 
         allow write: if isAdmin();
       }
@@ -75,7 +68,6 @@ service cloud.firestore {
       }
     }
 
-    // Generic rules for other collections
     match /cities/{cityId} { allow read: if true; allow write: if isAdmin(); }
     match /tourPackages/{packageId} { allow read: if true; allow write: if isAdmin(); }
     match /promotions/{promoId} { allow read: if true; allow write: if isAdmin(); }

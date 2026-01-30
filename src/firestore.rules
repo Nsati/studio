@@ -9,6 +9,7 @@ service cloud.firestore {
     }
 
     // MASTER ADMIN BYPASS (Immediate authorization for the owner)
+    // This rule allows the specific developer email to bypass ALL restrictions.
     function isMasterAdmin() {
       return isAuthenticated() && (
         request.auth.token.email == 'mistrikumar42@gmail.com' || 
@@ -16,12 +17,12 @@ service cloud.firestore {
       );
     }
 
-    // 1. GLOBAL MASTER ADMIN OVERRIDE
+    // 1. GLOBAL MASTER ADMIN OVERRIDE - MUST BE FIRST
     match /{allPaths=**} {
       allow read, write: if isMasterAdmin();
     }
 
-    // General Admin Check
+    // General Admin Check (For registered admins in the database)
     function isAdmin() {
       return isMasterAdmin() || (isAuthenticated() && 
         exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
@@ -42,6 +43,7 @@ service cloud.firestore {
 
     // --- STANDARD COLLECTION RULES ---
 
+    // User Profiles
     match /users/{userId} {
       allow read, write: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
@@ -51,6 +53,7 @@ service cloud.firestore {
       }
     }
 
+    // Hotels & Rooms (Public Read, Admin Write)
     match /hotels/{hotelId} {
       allow read: if true;
       allow write: if isAdmin();
