@@ -15,6 +15,11 @@ type AdminServices = {
 let adminInstance: AdminServices | null = null;
 
 export function getFirebaseAdmin(): { adminDb: Firestore | null; adminAuth: Auth | null; error: string | null; } {
+    // Safety check for client-side environments to prevent Webpack static extraction errors
+    if (typeof window !== 'undefined') {
+        return { adminDb: null, adminAuth: null, error: "Admin SDK cannot be initialized on the client." };
+    }
+
     if (adminInstance) return { ...adminInstance, error: null };
 
     try {
