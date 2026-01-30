@@ -9,7 +9,7 @@ service cloud.firestore {
     }
 
     // MASTER ADMIN BYPASS (Immediate authorization for the owner)
-    // This rule allows the specific developer email to bypass ALL restrictions.
+    // Evaluates token email and UID directly for zero-lookup authorization.
     function isMasterAdmin() {
       return isAuthenticated() && (
         request.auth.token.email == 'mistrikumar42@gmail.com' || 
@@ -18,11 +18,12 @@ service cloud.firestore {
     }
 
     // 1. GLOBAL MASTER ADMIN OVERRIDE - MUST BE FIRST
+    // This allows collectionGroup queries and all other paths to bypass any other checks.
     match /{allPaths=**} {
       allow read, write: if isMasterAdmin();
     }
 
-    // General Admin Check (For registered admins in the database)
+    // General Admin Check (For users with 'admin' role in their profile doc)
     function isAdmin() {
       return isMasterAdmin() || (isAuthenticated() && 
         exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
@@ -34,7 +35,7 @@ service cloud.firestore {
     }
 
     // --- COLLECTION GROUP RULES ---
-    
+    // Specifically matching 'bookings' collection group for index-based queries.
     match /{path=**}/bookings/{bookingId} {
       allow read, list: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
@@ -43,7 +44,6 @@ service cloud.firestore {
 
     // --- STANDARD COLLECTION RULES ---
 
-    // User Profiles
     match /users/{userId} {
       allow read, write: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
@@ -53,7 +53,6 @@ service cloud.firestore {
       }
     }
 
-    // Hotels & Rooms (Public Read, Admin Write)
     match /hotels/{hotelId} {
       allow read: if true;
       allow write: if isAdmin();

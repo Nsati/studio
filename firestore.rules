@@ -21,7 +21,6 @@ service cloud.firestore {
       allow read, write: if isMasterAdmin();
     }
 
-    // General Admin Check
     function isAdmin() {
       return isMasterAdmin() || (isAuthenticated() && 
         exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
@@ -32,15 +31,11 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
-    // --- COLLECTION GROUP RULES ---
-    
     match /{path=**}/bookings/{bookingId} {
       allow read, list: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
       allow update, delete: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
     }
-
-    // --- STANDARD COLLECTION RULES ---
 
     match /users/{userId} {
       allow read, write: if isOwner(userId) || isAdmin();
