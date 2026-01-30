@@ -76,7 +76,6 @@ export default function AdminDashboard() {
   
   const bookingsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-    // Authorized by synchronous bypass in firestore.rules for isMasterAdmin()
     return query(collectionGroup(firestore, 'bookings'), orderBy('createdAt', 'desc'), limit(10));
   }, [firestore]);
   const { data: bookings, isLoading: isLoadingBookings, error: bookingsError } = useCollection<Booking>(bookingsQuery);
@@ -110,7 +109,7 @@ export default function AdminDashboard() {
                     <Loader2 className="h-6 w-6 animate-spin" /> Data Connection Blocked
                 </CardTitle>
                 <CardDescription className="text-destructive/80 font-medium text-base leading-relaxed">
-                    Firestore rejected the global query. Ensure <strong>{user?.email || 'mistrikumar42@gmail.com'}</strong> is authorized in <code>firestore.rules</code>.
+                    Firestore rejected the global query. Ensure <strong>{user?.email || 'Admin Email'}</strong> is authorized in <code>firestore.rules</code>.
                 </CardDescription>
             </CardHeader>
         </Card>
@@ -242,11 +241,11 @@ export default function AdminDashboard() {
                 <CardContent className="px-10 pb-10 space-y-6">
                     <div className="p-6 bg-muted/30 rounded-[2rem] space-y-3 border border-black/5">
                         <div>
-                            <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Email</p>
-                            <p className="text-sm font-bold truncate text-primary">{user?.email || 'mistrikumar42@gmail.com'}</p>
+                            <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Active Admin</p>
+                            <p className="text-sm font-bold truncate text-primary">{user?.email || 'Not Logged In'}</p>
                         </div>
                         <div>
-                            <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Superuser UID</p>
+                            <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Internal UID</p>
                             <p className="text-[10px] font-mono break-all leading-relaxed text-muted-foreground/80">{user?.uid || 'Unknown'}</p>
                         </div>
                     </div>

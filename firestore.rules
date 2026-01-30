@@ -3,22 +3,21 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // --- 1. GLOBAL MASTER HELPERS (100% SYNCHRONOUS) ---
-    // Rule evaluation for queries (list) must be synchronous.
-    // We use token-based checks which do not require database lookups.
+    // ADD YOUR ADMIN EMAIL HERE for instant synchronous bypass.
     function isMasterAdmin() {
       return request.auth != null && (
         request.auth.token.email == 'mistrikumar42@gmail.com' || 
+        request.auth.token.email == 'nsati09@gmail.com' ||
         request.auth.uid == 'kk7Tsg8Ag3g1YMMR79rgrHUxq2W2'
       );
     }
 
     // --- 2. UNIVERSAL COLLECTION GROUP BYPASS (GOD MODE) ---
-    // This MUST be at the top level to authorize collectionGroup queries.
-    // For queries, we allow 'list' based purely on the user's token.
+    // This allows collectionGroup queries like 'bookings' to work without filtering.
     match /{path=**}/bookings/{bookingId} {
       allow read, write: if isMasterAdmin();
       
-      // Regular user rules (must be filter-aligned)
+      // Regular user rules
       allow list: if request.auth != null && request.query.limit <= 100;
       allow get: if request.auth != null && (resource == null || resource.data.userId == request.auth.uid);
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
