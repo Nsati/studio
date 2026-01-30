@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { format } from 'date-fns';
+import { format, isValid, parseISO } from 'date-fns';
 import { Loader2, RefreshCw, AlertCircle, Activity, Filter, Download } from "lucide-react";
 
 function BookingStatusBadge({ status }: { status: string }) {
@@ -44,10 +44,15 @@ export default function BookingsAdminPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const data = await getAllBookingsForAdmin();
-      setBookings(data);
+      const result = await getAllBookingsForAdmin();
+      if (result.success) {
+        setBookings(result.data || []);
+      } else {
+        setError(result.error || "Failed to fetch bookings inventory.");
+      }
     } catch (err: any) {
-      setError(err.message);
+      console.error("[INVENTORY] Sync Error:", err);
+      setError("Network failure: Could not reach the administration server.");
     } finally {
       setIsLoading(false);
     }
@@ -74,6 +79,19 @@ export default function BookingsAdminPage() {
     }
   };
 
+  const formatDateRange = (checkIn: string, checkOut: string) => {
+    try {
+        const start = checkIn ? parseISO(checkIn) : null;
+        const end = checkOut ? parseISO(checkOut) : null;
+        if (start && end && isValid(start) && isValid(end)) {
+            return `${format(start, 'dd MMM')} — ${format(end, 'dd MMM yyyy')}`;
+        }
+        return 'Dates pending';
+    } catch (e) {
+        return 'Invalid window';
+    }
+  };
+
   return (
     <div className="space-y-10">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
@@ -95,7 +113,7 @@ export default function BookingsAdminPage() {
         <Card className="rounded-[2.5rem] border-destructive/20 bg-destructive/5 overflow-hidden">
             <CardHeader className="py-8 px-10">
                 <CardTitle className="text-xl font-black text-destructive flex items-center gap-3">
-                    <AlertCircle className="h-6 w-6" /> Data Retrieval Error
+                    <AlertCircle className="h-6 w-6" /> System Sync Error
                 </CardTitle>
                 <CardDescription className="text-destructive/80 font-medium text-base leading-relaxed">
                     {error}
@@ -151,7 +169,7 @@ export default function BookingsAdminPage() {
                     </TableCell>
                     <TableCell className="py-8">
                       <div className="text-xs font-black tracking-tight text-foreground">
-                        {format(new Date(booking.checkIn), 'dd MMM')} — {format(new Date(booking.checkOut), 'dd MMM yyyy')}
+                        {formatDateRange(booking.checkIn, booking.checkOut)}
                       </div>
                       <div className="text-[10px] text-muted-foreground font-black mt-1 uppercase tracking-widest">{booking.guests} Guests</div>
                     </TableCell>

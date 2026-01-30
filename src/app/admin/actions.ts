@@ -4,17 +4,28 @@ import { getFirebaseAdmin } from '@/firebase/admin';
 
 /**
  * @fileOverview High-performance Admin Analytics with Strict Serialization.
- * Returns a structured object to prevent Next.js render errors in production.
+ * Optimized for production to prevent Next.js POJO (Plain Old JavaScript Object) errors.
  */
 
-// Strict serializer to ensure ONLY JSON-compatible data leaves the server
-const safeSerialize = (val: any) => {
+// Helper to ensure data is safely serializable for Next.js Client Components
+const serialize = (val: any) => {
     if (val === null || val === undefined) return null;
+    // Handle Firestore Timestamp
     if (typeof val.toDate === 'function') return val.toDate().toISOString();
+    // Handle JS Date
     if (val instanceof Date) return val.toISOString();
-    if (typeof val === 'object') {
-        // If it's a Firestore reference or complex object, don't pass it to client
-        return null;
+    // Prevent complex objects/references from leaking to client
+    if (typeof val === 'object' && !Array.isArray(val)) {
+        const plain: any = {};
+        for (const key in val) {
+            if (Object.prototype.hasOwnProperty.call(val, key)) {
+                plain[key] = serialize(val[key]);
+            }
+        }
+        return plain;
+    }
+    if (Array.isArray(val)) {
+        return val.map(serialize);
     }
     return val;
 };
@@ -27,7 +38,7 @@ export async function getAdminDashboardStats() {
   }
 
   try {
-    // Fetch data in parallel
+    // Fetch data in parallel - No orderBy to avoid Missing Index crashes in production
     const [bookingsSnap, hotelsSnap, usersSnap] = await Promise.all([
       adminDb.collectionGroup('bookings').limit(100).get(),
       adminDb.collection('hotels').get(),
@@ -45,13 +56,13 @@ export async function getAdminDashboardStats() {
         roomType: data.roomType || '',
         totalPrice: Number(data.totalPrice) || 0,
         status: data.status || 'PENDING',
-        checkIn: safeSerialize(data.checkIn),
-        checkOut: safeSerialize(data.checkOut),
-        createdAt: safeSerialize(data.createdAt),
+        checkIn: serialize(data.checkIn),
+        checkOut: serialize(data.checkOut),
+        createdAt: serialize(data.createdAt),
       };
     });
 
-    // Memory-side sorting
+    // Memory-side sorting to prevent indexing errors
     bookings.sort((a: any, b: any) => {
       const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
       const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
@@ -74,7 +85,7 @@ export async function getAdminDashboardStats() {
       }
     };
   } catch (e: any) {
-    console.error('[ADMIN ANALYTICS] Fetch Failure:', e.message);
+    console.error('[ADMIN ANALYTICS] Production Fetch Failure:', e.message);
     return { success: false, error: e.message };
   }
 }
@@ -96,9 +107,9 @@ export async function getAllBookingsForAdmin() {
         roomType: data.roomType || '',
         totalPrice: Number(data.totalPrice) || 0,
         status: data.status || 'PENDING',
-        checkIn: safeSerialize(data.checkIn),
-        checkOut: safeSerialize(data.checkOut),
-        createdAt: safeSerialize(data.createdAt),
+        checkIn: serialize(data.checkIn),
+        checkOut: serialize(data.checkOut),
+        createdAt: serialize(data.createdAt),
         guests: data.guests || 1
       };
     });
@@ -111,7 +122,7 @@ export async function getAllBookingsForAdmin() {
 
     return { success: true, data: bookings };
   } catch (e: any) {
-    console.error('[ADMIN INVENTORY] Retrieval Failure:', e.message);
+    console.error('[ADMIN INVENTORY] Production Retrieval Failure:', e.message);
     return { success: false, error: e.message };
   }
 }
