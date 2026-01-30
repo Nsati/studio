@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { normalizeTimestamp } from '@/lib/firestore-utils';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { 
   Table, 
@@ -66,7 +67,7 @@ export default function AdminDashboard() {
   
   const bookingsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-    // collectionGroup needs top-level match in firestore.rules
+    // Synchronous bypass in rules allows this collectionGroup query for master admin
     return query(collectionGroup(firestore, 'bookings'), orderBy('createdAt', 'desc'), limit(10));
   }, [firestore]);
   const { data: bookings, isLoading: isLoadingBookings, error: bookingsError } = useCollection<Booking>(bookingsQuery);
@@ -86,7 +87,7 @@ export default function AdminDashboard() {
         </div>
         <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 bg-green-50 text-green-700 px-4 py-2 rounded-full border border-green-100 text-[10px] font-black uppercase tracking-widest shadow-sm">
-                <ShieldCheck className="h-3.5 w-3.5" /> Universal Bypass Active
+                <ShieldCheck className="h-3.5 w-3.5" /> Synchronous Bypass Active
             </div>
             <Badge variant="outline" className="h-9 px-4 rounded-full border-black/5 bg-white shadow-sm font-bold uppercase tracking-widest text-[9px]">
                 <Activity className="h-3 w-3 mr-2 text-primary animate-pulse" /> Live
@@ -98,10 +99,10 @@ export default function AdminDashboard() {
         <Card className="border-destructive/50 bg-destructive/5 rounded-3xl">
             <CardHeader className="py-6 px-8">
                 <CardTitle className="text-lg font-black text-destructive flex items-center gap-3">
-                    <Loader2 className="h-5 w-5 animate-spin" /> Authorization Locked
+                    <Loader2 className="h-5 w-5 animate-spin" /> Authorization Denied
                 </CardTitle>
                 <CardDescription className="text-destructive/80 font-medium">
-                    Firestore denied <code>collectionGroup('bookings')</code>. Ensure rules are published.
+                    The query <code>collectionGroup('bookings')</code> was rejected. Ensure Rules are published and your email is in the bypass list.
                 </CardDescription>
             </CardHeader>
         </Card>
@@ -220,15 +221,15 @@ export default function AdminDashboard() {
                         <Badge className="bg-green-400 text-green-900 border-0 font-black text-[8px] px-2 py-0">ACTIVE</Badge>
                     </div>
                     <div className="flex justify-between items-center py-2">
-                        <span className="text-[10px] font-black uppercase tracking-widest">NextJS Edge</span>
-                        <Badge className="bg-green-400 text-green-900 border-0 font-black text-[8px] px-2 py-0">STABLE</Badge>
+                        <span className="text-[10px] font-black uppercase tracking-widest">NextJS Core</span>
+                        <Badge className="bg-green-400 text-green-900 border-0 font-black text-[8px] px-2 py-0">LATEST</Badge>
                     </div>
                 </CardContent>
             </Card>
 
             <Card className="rounded-[2.5rem] shadow-apple border-black/5 bg-white">
                 <CardHeader className="p-8 pb-4">
-                    <CardTitle className="text-lg font-black tracking-tight">Session</CardTitle>
+                    <CardTitle className="text-lg font-black tracking-tight">Active Session</CardTitle>
                 </CardHeader>
                 <CardContent className="px-8 pb-8 space-y-4">
                     <div className="p-4 bg-muted/50 rounded-2xl space-y-2 border border-black/5">
