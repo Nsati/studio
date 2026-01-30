@@ -2,7 +2,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // --- 1. GLOBAL MASTER HELPERS (100% SYNCHRONOUS) ---
+    // --- 1. GLOBAL MASTER BYPASS (100% SYNCHRONOUS) ---
     // Zero database lookups for maximum speed and collectionGroup compatibility.
     function isMasterAdmin() {
       return request.auth != null && (
@@ -12,14 +12,12 @@ service cloud.firestore {
     }
 
     // --- 2. UNIVERSAL COLLECTION GROUP BYPASS (GOD MODE) ---
-    // This MUST stay outside specific resource paths to authorize global queries.
+    // This MUST stay at the top-level to authorize global queries immediately.
     match /{path=**}/bookings/{bookingId} {
-      
-      // Allow EVERYTHING if master admin (synchronous check)
       allow read, write: if isMasterAdmin();
-
-      // Standard user access: only their own bookings
-      allow list: if request.auth != null && request.query.limit <= 100; // Simplified for safety
+      
+      // Secondary safety for authenticated users (their own bookings)
+      allow list: if request.auth != null && request.query.limit <= 100;
       allow get: if request.auth != null && (resource.data.userId == request.auth.uid);
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
       allow update: if request.auth != null && resource.data.userId == request.auth.uid;
@@ -56,7 +54,7 @@ service cloud.firestore {
     match /tourPackages/{packageId} { allow read: if true; allow write: if isMasterAdmin(); }
     match /promotions/{promoId} { allow read: if true; allow write: if isMasterAdmin(); }
     
-    // Catch-all safety for admin
+    // Final catch-all safety for superuser
     match /{allPaths=**} {
       allow read, write: if isMasterAdmin();
     }

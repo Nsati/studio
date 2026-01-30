@@ -1,10 +1,10 @@
 'use client';
 import { useUser } from '@/firebase';
-import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { LayoutDashboard, Hotel, Users2, Tag, LogOut, ExternalLink, Map, BookOpen } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
 const navItems = [
@@ -37,12 +37,11 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, userProfile, isLoading } = useUser();
+  const { user, isLoading } = useUser();
   const pathname = usePathname();
 
-  // Master bypass check
-  const isMasterAdmin = user?.email === 'mistrikumar42@gmail.com' || user?.uid === 'kk7Tsg8Ag3g1YMMR79rgrHUxq2W2' || userProfile?.role === 'admin';
-
+  // UNRESTRICTED MODE: Always allow shell to render. 
+  // Firestore rules will handle actual data security.
   if (isLoading && !user) {
     return <AdminLayoutSkeleton />;
   }
@@ -80,13 +79,6 @@ export default function AdminLayout({
         </nav>
 
         <div className="mt-auto space-y-4 pt-10 border-t border-black/5">
-             {!isMasterAdmin && user && (
-                <div className="p-4 bg-destructive/10 rounded-2xl mb-4">
-                    <p className="text-[10px] font-black text-destructive uppercase tracking-widest leading-relaxed">
-                        Security Warning: Restricted Data Access.
-                    </p>
-                </div>
-             )}
              <Button variant="outline" asChild className="w-full justify-start rounded-2xl h-14 font-black border-black/10 hover:bg-muted transition-all">
                 <Link href="/" target="_blank">
                     <ExternalLink className="mr-4 h-5 w-5" /> Live Site
