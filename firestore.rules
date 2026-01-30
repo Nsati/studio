@@ -3,6 +3,8 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // --- 1. GLOBAL HELPERS (MUST BE SYNCHRONOUS) ---
+    // collectionGroup queries do NOT support asynchronous database lookups (get() calls) for authorization.
+    // Authorization must be determined purely from request.auth tokens for 'list' operations.
     function isAuthenticated() {
       return request.auth != null;
     }
@@ -14,12 +16,31 @@ service cloud.firestore {
       );
     }
 
-    // --- 2. COLLECTION GROUP RULES ---
+    // --- 2. COLLECTION GROUP RULES (TOP LEVEL REQUIRED) ---
+    // Recursive wildcard {path=**} is mandatory for collectionGroup('bookings') to match correctly.
     match /{path=**}/bookings/{bookingId} {
-      allow read, write: if isMasterAdmin() || (
+      
+      // Admin can list all bookings globally.
+      // Normal users can list only if the query includes a filter: .where('userId', '==', uid)
+      allow list: if isMasterAdmin() || (
+        isAuthenticated() && 
+        (request.query.limit <= 100) && // Safety limit
+        (resource == null || resource.data.userId == request.auth.uid)
+      );
+
+      // Single document access (get)
+      allow get: if isMasterAdmin() || (
         isAuthenticated() && (
           (resource == null) || 
-          (resource.data.userId == request.auth.uid) || 
+          (resource.data.userId == request.auth.uid)
+        )
+      );
+
+      // Write operations
+      allow write: if isMasterAdmin() || (
+        isAuthenticated() && (
+          (resource == null) || 
+          (resource.data.userId == request.auth.uid) ||
           (request.resource != null && request.resource.data.userId == request.auth.uid)
         )
       );
@@ -29,7 +50,6 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow read, write: if request.auth.uid == userId || isMasterAdmin();
-      allow list: if isMasterAdmin();
       
       match /{allSubcollections=**} {
         allow read, write: if request.auth.uid == userId || isMasterAdmin();
@@ -57,7 +77,7 @@ service cloud.firestore {
     match /tourPackages/{packageId} { allow read: if true; allow write: if isMasterAdmin(); }
     match /promotions/{promoId} { allow read: if true; allow write: if isMasterAdmin(); }
     
-    // Catch-all safety
+    // Catch-all safety for admin
     match /{allPaths=**} {
       allow read, write: if isMasterAdmin();
     }
