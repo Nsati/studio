@@ -9,15 +9,15 @@ import {
   IndianRupee, 
   TrendingUp, 
   ArrowUpRight,
-  AlertCircle,
   RefreshCw,
   Activity,
-  ShieldAlert
+  ShieldAlert,
+  AlertTriangle
 } from 'lucide-react';
 import { useUser } from '@/firebase';
 import { getAdminDashboardStats } from './actions';
 import { Skeleton } from '@/components/ui/skeleton';
-import { format, isValid } from 'date-fns';
+import { format, isValid, parseISO } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -70,8 +70,8 @@ export default function AdminDashboard() {
       const result = await getAdminDashboardStats();
       setData(result);
     } catch (err: any) {
-      console.error("[DASHBOARD] Fetch Error:", err);
-      setError(err.message || "An unexpected error occurred while connecting to the server.");
+      console.error("[DASHBOARD] Sync Error:", err);
+      setError(err.message || "Cloud metrics could not be synchronized.");
     } finally {
       setIsLoading(false);
     }
@@ -113,12 +113,25 @@ export default function AdminDashboard() {
         </div>
       </div>
 
+      {error && (
+        <Card className="rounded-[2rem] border-amber-200 bg-amber-50 overflow-hidden">
+            <CardContent className="p-6 flex items-center gap-4">
+                <AlertTriangle className="h-6 w-6 text-amber-600" />
+                <div className="flex-1">
+                    <p className="font-bold text-amber-900">Sync Failure</p>
+                    <p className="text-sm text-amber-700">{error}</p>
+                </div>
+                <Button onClick={loadData} variant="outline" size="sm" className="rounded-full">Retry</Button>
+            </CardContent>
+        </Card>
+      )}
+
       <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
         <StatCard 
             title="Revenue" 
             value={(data?.stats?.totalRevenue || 0).toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })} 
             icon={IndianRupee} 
-            description="Total confirmed" 
+            description="Confirmed earnings" 
             isLoading={isLoading} 
             trend="+12%"
         />
@@ -152,10 +165,10 @@ export default function AdminDashboard() {
                 <div className="flex justify-between items-center">
                     <div>
                         <CardTitle className="text-2xl font-black tracking-tight text-foreground">Recent Activity</CardTitle>
-                        <CardDescription className="text-base font-medium text-muted-foreground">Latest events across the cloud.</CardDescription>
+                        <CardDescription className="text-base font-medium text-muted-foreground">Latest events from the server.</CardDescription>
                     </div>
                     <Button variant="ghost" asChild size="sm" className="rounded-full font-black uppercase text-[10px] tracking-widest h-12 px-8 hover:bg-muted/50">
-                        <Link href="/admin/bookings" className="flex items-center gap-2">Inventory <ArrowUpRight className="h-4 w-4" /></Link>
+                        <Link href="/admin/bookings" className="flex items-center gap-2">Full Inventory <ArrowUpRight className="h-4 w-4" /></Link>
                     </Button>
                 </div>
             </CardHeader>
@@ -178,13 +191,13 @@ export default function AdminDashboard() {
                             ))
                         ) : data?.recentBookings?.length > 0 ? (
                             data.recentBookings.map((booking: any) => {
-                                const bookingDate = booking.createdAt ? new Date(booking.createdAt) : null;
+                                const bookingDate = booking.createdAt ? parseISO(booking.createdAt) : null;
                                 return (
                                     <TableRow key={booking.id} className="hover:bg-muted/5 transition-colors border-b border-black/5 last:border-0">
                                         <TableCell className="px-10 py-6">
                                             <div className="font-bold text-sm text-foreground">{booking.customerName || 'Explorer'}</div>
                                             <div className="text-[9px] text-muted-foreground font-black tracking-widest uppercase mt-1">
-                                                {bookingDate && isValid(bookingDate) ? format(bookingDate, 'dd MMM, HH:mm') : 'N/A'}
+                                                {bookingDate && isValid(bookingDate) ? format(bookingDate, 'dd MMM, HH:mm') : 'Recently'}
                                             </div>
                                         </TableCell>
                                         <TableCell className="py-6 font-medium text-muted-foreground text-sm truncate max-w-[150px]">{booking.hotelName || 'Property'}</TableCell>
@@ -217,20 +230,20 @@ export default function AdminDashboard() {
             <Card className="rounded-[3rem] shadow-apple border-black/5 bg-primary text-white overflow-hidden relative group">
                 <CardHeader className="p-10">
                     <CardTitle className="text-3xl font-black tracking-tight">Cloud Node</CardTitle>
-                    <CardDescription className="text-white/70 font-bold uppercase text-[10px] tracking-widest mt-2">Status: Optimized</CardDescription>
+                    <CardDescription className="text-white/70 font-bold uppercase text-[10px] tracking-widest mt-2">Status: Active</CardDescription>
                 </CardHeader>
                 <CardContent className="px-10 pb-10 space-y-6">
                     <div className="flex justify-between items-center py-3 border-b border-white/10">
                         <span className="text-[10px] font-black uppercase tracking-widest">Protocol</span>
-                        <Badge className="bg-green-400 text-green-900 border-0 font-black text-[8px] px-3 py-0.5 uppercase">Stable</Badge>
+                        <Badge className="bg-green-400 text-green-900 border-0 font-black text-[8px] px-3 py-0.5 uppercase">Standard</Badge>
                     </div>
                     <div className="flex justify-between items-center py-3 border-b border-white/10">
-                        <span className="text-[10px] font-black uppercase tracking-widest">Latency</span>
-                        <Badge className="bg-blue-400 text-blue-900 border-0 font-black text-[8px] px-3 py-0.5 uppercase">Minimal</Badge>
+                        <span className="text-[10px] font-black uppercase tracking-widest">Runtime</span>
+                        <Badge className="bg-blue-400 text-blue-900 border-0 font-black text-[8px] px-3 py-0.5 uppercase">NodeJS</Badge>
                     </div>
                     <div className="flex justify-between items-center py-3">
-                        <span className="text-[10px] font-black uppercase tracking-widest">Auth Flow</span>
-                        <Badge className="bg-purple-400 text-purple-900 border-0 font-black text-[8px] px-3 py-0.5 uppercase">Secure</Badge>
+                        <span className="text-[10px] font-black uppercase tracking-widest">Sync Mode</span>
+                        <Badge className="bg-purple-400 text-purple-900 border-0 font-black text-[8px] px-3 py-0.5 uppercase">Safe</Badge>
                     </div>
                 </CardContent>
             </Card>
@@ -238,10 +251,10 @@ export default function AdminDashboard() {
             <div className="p-8 bg-muted/30 rounded-[3rem] border border-black/5 space-y-4">
                 <div className="flex items-center gap-3">
                     <Activity className="h-5 w-5 text-primary animate-pulse" />
-                    <span className="font-black uppercase tracking-widest text-[10px] text-muted-foreground">Real-time Stream</span>
+                    <span className="font-black uppercase tracking-widest text-[10px] text-muted-foreground">System Health</span>
                 </div>
                 <p className="text-sm font-medium text-muted-foreground leading-relaxed">
-                    All operations are monitored and executed via authorized Server Actions.
+                    Production data is fetched via authorized Admin SDK sessions to ensure security and reliability.
                 </p>
             </div>
         </div>

@@ -7,9 +7,20 @@ import { getFirebaseAdmin } from '@/firebase/admin';
  * Executes on the server using Admin SDK to bypass security rules safely.
  */
 
+// Helper to convert any Firestore value into a safe serializable string/number
+const serialize = (val: any) => {
+    if (!val) return null;
+    if (typeof val.toDate === 'function') return val.toDate().toISOString();
+    if (val instanceof Date) return val.toISOString();
+    return val;
+};
+
 export async function getAdminDashboardStats() {
   const { adminDb, error } = getFirebaseAdmin();
-  if (error || !adminDb) throw new Error(error || 'Platform link failure.');
+  if (error || !adminDb) {
+      console.error("[ADMIN ACTION] SDK Error:", error);
+      throw new Error(error || 'Failed to connect to Firebase Admin.');
+  }
 
   try {
     // Parallel fetching for high performance
@@ -23,10 +34,16 @@ export async function getAdminDashboardStats() {
       const data = doc.data();
       return {
         id: doc.id,
-        ...data,
-        checkIn: data.checkIn?.toDate?.()?.toISOString() || data.checkIn || null,
-        checkOut: data.checkOut?.toDate?.()?.toISOString() || data.checkOut || null,
-        createdAt: data.createdAt?.toDate?.()?.toISOString() || data.createdAt || null,
+        userId: data.userId || '',
+        customerName: data.customerName || 'Explorer',
+        customerEmail: data.customerEmail || '',
+        hotelName: data.hotelName || 'Property',
+        roomType: data.roomType || '',
+        totalPrice: Number(data.totalPrice) || 0,
+        status: data.status || 'PENDING',
+        checkIn: serialize(data.checkIn),
+        checkOut: serialize(data.checkOut),
+        createdAt: serialize(data.createdAt),
       };
     });
 
@@ -51,7 +68,7 @@ export async function getAdminDashboardStats() {
     };
   } catch (e: any) {
     console.error('[ADMIN ANALYTICS] Fetch Failure:', e.message);
-    throw new Error('Platform metrics sync failed. Please try again.');
+    throw new Error('Data retrieval failed. Check if collectionGroup indices are required in Firebase Console.');
   }
 }
 
@@ -65,10 +82,17 @@ export async function getAllBookingsForAdmin() {
       const data = doc.data();
       return {
         id: doc.id,
-        ...data,
-        checkIn: data.checkIn?.toDate?.()?.toISOString() || data.checkIn || null,
-        checkOut: data.checkOut?.toDate?.()?.toISOString() || data.checkOut || null,
-        createdAt: data.createdAt?.toDate?.()?.toISOString() || data.createdAt || null,
+        userId: data.userId || '',
+        customerName: data.customerName || 'Explorer',
+        customerEmail: data.customerEmail || '',
+        hotelName: data.hotelName || 'Property',
+        roomType: data.roomType || '',
+        totalPrice: Number(data.totalPrice) || 0,
+        status: data.status || 'PENDING',
+        checkIn: serialize(data.checkIn),
+        checkOut: serialize(data.checkOut),
+        createdAt: serialize(data.createdAt),
+        guests: data.guests || 1
       };
     });
 
