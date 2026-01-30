@@ -2,9 +2,9 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // --- 1. GLOBAL HELPERS (MUST BE SYNCHRONOUS) ---
-    // collectionGroup queries do NOT support asynchronous database lookups (get() calls) for authorization.
-    // Authorization must be determined purely from request.auth tokens for 'list' operations.
+    // --- 1. GLOBAL HELPERS (SYNCHRONOUS) ---
+    // collectionGroup queries authorize hone ke liye synchronous token check mangti hain.
+    // Database lookup (get()) queries authorizing ke waqt allow nahi hota.
     function isAuthenticated() {
       return request.auth != null;
     }
@@ -16,12 +16,12 @@ service cloud.firestore {
       );
     }
 
-    // --- 2. COLLECTION GROUP RULES (TOP LEVEL REQUIRED) ---
+    // --- 2. COLLECTION GROUP RULES (MUST BE AT TOP LEVEL) ---
     // Recursive wildcard {path=**} is mandatory for collectionGroup('bookings') to match correctly.
     match /{path=**}/bookings/{bookingId} {
       
       // Admin can list all bookings globally.
-      // Normal users can list only if the query includes a filter: .where('userId', '==', uid)
+      // Normal users can list ONLY if the query includes a filter: .where('userId', '==', uid)
       allow list: if isMasterAdmin() || (
         isAuthenticated() && 
         (resource == null || resource.data.userId == request.auth.uid)

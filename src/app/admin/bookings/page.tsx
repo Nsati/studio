@@ -40,19 +40,8 @@ export default function BookingsAdminPage() {
   const { toast } = useToast();
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
 
-  // DEBUG: Track Auth State
-  useEffect(() => {
-    if (user) {
-      console.log("--- ADMIN DEBUG ---");
-      console.log("UID:", user.uid);
-      console.log("Email:", user.email);
-      console.log("Is Admin Email:", user.email === 'mistrikumar42@gmail.com');
-    }
-  }, [user]);
-
   const bookingsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    // collectionGroup needs top-level wildcard {path=**} in rules to work.
     return query(collectionGroup(firestore, 'bookings'), orderBy('createdAt', 'desc'));
   }, [firestore, user]);
 
@@ -78,11 +67,11 @@ export default function BookingsAdminPage() {
     <div className="space-y-8">
       <div className="flex justify-between items-center">
         <div className="space-y-1">
-          <h1 className="font-headline text-4xl font-black tracking-tight text-foreground">Booking Management</h1>
-          <p className="text-muted-foreground font-medium">Centralized control for all customer reservations.</p>
+          <h1 className="font-headline text-4xl font-black tracking-tight text-foreground">Reservations</h1>
+          <p className="text-muted-foreground font-medium">Manage all customer bookings in one place.</p>
         </div>
         <Button variant="outline" size="lg" onClick={() => window.location.reload()} className="rounded-full shadow-apple border-black/5 font-bold hover:bg-muted/50 transition-all bg-white">
-          <RefreshCw className="mr-2 h-4 w-4" /> Refresh Global Data
+          <RefreshCw className="mr-2 h-4 w-4" /> Refresh Data
         </Button>
       </div>
 
@@ -90,11 +79,10 @@ export default function BookingsAdminPage() {
         <Card className="rounded-3xl border-destructive/20 bg-destructive/5 overflow-hidden">
             <CardHeader className="py-6 px-8">
                 <CardTitle className="text-lg font-black text-destructive flex items-center gap-3">
-                    <AlertCircle className="h-5 w-5" /> Access Denied
+                    <AlertCircle className="h-5 w-5" /> Permission Mismatch
                 </CardTitle>
                 <CardDescription className="text-destructive/80 font-medium">
-                    The query <code>collectionGroup('bookings')</code> was rejected. 
-                    User: <strong>{user?.email || 'Not Authenticated'}</strong>
+                    The query <code>collectionGroup('bookings')</code> was rejected. Ensure Rules use synchronous bypass.
                 </CardDescription>
             </CardHeader>
         </Card>
@@ -104,12 +92,12 @@ export default function BookingsAdminPage() {
         <CardHeader className="bg-white border-b border-black/5 px-8 py-8">
           <div className="flex justify-between items-end">
             <div>
-                <CardTitle className="text-2xl font-black tracking-tight">Global Reservations</CardTitle>
+                <CardTitle className="text-2xl font-black tracking-tight">All Stays</CardTitle>
                 <CardDescription className="font-medium">Total bookings across all explorer accounts.</CardDescription>
             </div>
             <div className="text-right">
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Inventory Status</p>
-                <p className="text-xl font-black tracking-tighter text-primary">{bookings?.length || 0} Total Stays</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Volume</p>
+                <p className="text-xl font-black tracking-tighter text-primary">{bookings?.length || 0} Records</p>
             </div>
           </div>
         </CardHeader>
@@ -117,10 +105,10 @@ export default function BookingsAdminPage() {
           <Table>
             <TableHeader className="bg-muted/20">
               <TableRow className="border-0">
-                <TableHead className="px-8 h-14 text-[10px] font-black uppercase tracking-widest">Customer Profile</TableHead>
-                <TableHead className="h-14 text-[10px] font-black uppercase tracking-widest">Hotel & Accommodation</TableHead>
-                <TableHead className="h-14 text-[10px] font-black uppercase tracking-widest">Itinerary</TableHead>
-                <TableHead className="h-14 text-[10px] font-black uppercase tracking-widest">Transaction</TableHead>
+                <TableHead className="px-8 h-14 text-[10px] font-black uppercase tracking-widest">Customer</TableHead>
+                <TableHead className="h-14 text-[10px] font-black uppercase tracking-widest">Accommodation</TableHead>
+                <TableHead className="h-14 text-[10px] font-black uppercase tracking-widest">Dates</TableHead>
+                <TableHead className="h-14 text-[10px] font-black uppercase tracking-widest">Payment</TableHead>
                 <TableHead className="h-14 text-[10px] font-black uppercase tracking-widest">Status</TableHead>
                 <TableHead className="text-right px-8 h-14 text-[10px] font-black uppercase tracking-widest">Actions</TableHead>
               </TableRow>
@@ -143,7 +131,7 @@ export default function BookingsAdminPage() {
                     </TableCell>
                     <TableCell className="py-6">
                       <div className="font-bold text-sm text-foreground">{booking.hotelName}</div>
-                      <div className="text-xs text-muted-foreground font-medium mt-0.5">{booking.roomType}</div>
+                      <div className="text-[10px] text-muted-foreground font-medium mt-0.5">{booking.roomType}</div>
                     </TableCell>
                     <TableCell className="py-6">
                       <div className="text-xs font-black tracking-tight">
@@ -193,8 +181,8 @@ export default function BookingsAdminPage() {
                             <Activity className="h-12 w-12 text-muted-foreground/30" />
                         </div>
                         <div className="space-y-1">
-                            <p className="text-muted-foreground font-black uppercase tracking-widest text-xs">Quiet Horizon</p>
-                            <p className="text-muted-foreground/60 text-sm font-medium">No bookings found in the database yet.</p>
+                            <p className="text-muted-foreground font-black uppercase tracking-widest text-xs">Nothing Found</p>
+                            <p className="text-muted-foreground/60 text-sm font-medium">No bookings recorded yet.</p>
                         </div>
                     </div>
                   </TableCell>

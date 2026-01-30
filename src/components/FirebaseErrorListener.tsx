@@ -37,7 +37,7 @@ export function FirebaseErrorListener() {
   }, []);
 
   if (error) {
-    // This will be caught by the nearest Error Boundary or displayed by NextJS error UI
+    // Caught by Error Boundary or NextJS error UI
     throw error;
   }
 
