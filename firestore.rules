@@ -6,8 +6,13 @@ service cloud.firestore {
     // Helper function to check for admin role
     function isAdmin() {
       return request.auth != null &&
-             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+             (
+               // Check Firestore document for admin role
+               (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+                get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') ||
+               // Fallback: grant admin access to specific email (useful for first-time setup/testing)
+               request.auth.token.email == 'mistrikumar42@gmail.com'
+             );
     }
     
     function isOwner(userId) {

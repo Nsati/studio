@@ -37,8 +37,17 @@ export function useCollection<T>(query: Query<DocumentData> | null) {
         setIsLoading(false);
       },
       async serverError => {
+        let path = 'unknown';
+        try {
+          // Safely attempt to extract path or collection group ID
+          const q = query as any;
+          path = q._query?.path?.segments?.join('/') || q.path || (q._query?.collectionGroup ? `collectionGroup('${q._query.collectionGroup}')` : 'query');
+        } catch (e) {
+          // Fallback if internal structure changes
+        }
+
         const permissionError = new FirestorePermissionError({
-            path: (query as any)._query.path.segments.join('/'),
+            path: path,
             operation: 'list',
         });
         errorEmitter.emit('permission-error', permissionError);
