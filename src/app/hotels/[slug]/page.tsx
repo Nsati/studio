@@ -2,7 +2,7 @@
 
 import { notFound, useParams } from 'next/navigation';
 import Image from 'next/image';
-import { Star, MapPin, Handshake, ShieldCheck, Waves, Wind, Mountain, Share2, Heart } from 'lucide-react';
+import { Star, MapPin, Compass, Share2, Heart, ShieldCheck } from 'lucide-react';
 import React, { useMemo } from 'react';
 
 import { PlaceHolderImages } from '@/lib/placeholder-images';
