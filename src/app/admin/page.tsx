@@ -2,8 +2,17 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Hotel, Users2, BookOpen, IndianRupee, ShieldCheck, Loader2, TrendingUp, Activity, ArrowUpRight } from 'lucide-react';
+import { 
+  Hotel, 
+  Users2, 
+  BookOpen, 
+  IndianRupee, 
+  ShieldCheck, 
+  Loader2, 
+  TrendingUp, 
+  Activity, 
+  ArrowUpRight 
+} from 'lucide-react';
 import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
 import { collection, collectionGroup, query, orderBy, limit } from 'firebase/firestore';
 import type { Hotel as HotelType, UserProfile, Booking } from '@/lib/types';
@@ -12,6 +21,7 @@ import { format } from 'date-fns';
 import { normalizeTimestamp } from '@/lib/firestore-utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { 
   Table, 
