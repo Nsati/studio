@@ -22,12 +22,6 @@ import { Separator } from '@/components/ui/separator';
 
 /**
  * @fileOverview Production-ready Login with Google Integration (Frontend)
- * 
- * Features:
- * - Google OAuth 2.0 Integration
- * - Robust Error Handling (Unauthorized domains, Disabled providers, Popup issues)
- * - Backend verification sync
- * - Themed UI following PRD guidelines
  */
 
 export function LoginForm() {
@@ -43,7 +37,7 @@ export function LoginForm() {
   const [error, setError] = useState('');
 
   /**
-   * Handles the Google Login flow with comprehensive error checking
+   * Handles the Google Login flow with refined UX for cancellations
    */
   const handleGoogleLogin = async () => {
     if (!auth) return;
@@ -56,7 +50,6 @@ export function LoginForm() {
       provider.addScope('email');
       
       const result = await signInWithPopup(auth, provider);
-      
       const idToken = await result.user.getIdToken(true);
 
       const response = await fetch('/api/auth/verify-token', {
@@ -82,16 +75,18 @@ export function LoginForm() {
     } catch (err: any) {
       console.error("[AUTH ERROR]", err.code, err.message);
       
+      // If the user simply closed the window, we should just stop loading silently
+      if (err.code === 'auth/popup-closed-by-user') {
+        setIsGoogleLoading(false);
+        return;
+      }
+
       let title = "Authentication Error";
       let description = err.message || "Could not verify your identity.";
 
-      // Handle specific Firebase Auth errors based on Step 6 of our guide
       if (err.code === 'auth/popup-blocked') {
         title = "Popup Blocked";
         description = "Please allow popups for this site in your browser settings to sign in with Google.";
-      } else if (err.code === 'auth/popup-closed-by-user') {
-        title = "Login Cancelled";
-        description = "The Google sign-in window was closed before completion.";
       } else if (err.code === 'auth/unauthorized-domain') {
         title = "Configuration Error";
         description = "This domain is not authorized for Google Sign-in. Please contact admin.";
@@ -101,14 +96,12 @@ export function LoginForm() {
       }
 
       toast({
-        variant: err.code === 'auth/popup-closed-by-user' ? 'default' : 'destructive',
+        variant: 'destructive',
         title,
         description,
       });
       
-      if (err.code !== 'auth/popup-closed-by-user') {
-        setError(description);
-      }
+      setError(description);
     } finally {
       setIsGoogleLoading(false);
     }

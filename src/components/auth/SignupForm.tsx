@@ -36,12 +36,6 @@ import { Separator } from '@/components/ui/separator';
 
 /**
  * @fileOverview Production-ready Signup with Google Integration (Frontend)
- * 
- * Features:
- * - Robust Google OAuth 2.0 Integration
- * - Server-side profile verification & creation
- * - Advanced error handling for popup blocks and config issues
- * - Themed UI following PRD guidelines
  */
 
 const formSchema = z.object({
@@ -83,7 +77,6 @@ export function SignupForm() {
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
-      
       const idToken = await result.user.getIdToken(true);
 
       const response = await fetch('/api/auth/verify-token', {
@@ -107,15 +100,18 @@ export function SignupForm() {
     } catch (err: any) {
       console.error("[AUTH ERROR]", err.code, err.message);
       
+      // Silent cancellation if user closes the popup
+      if (err.code === 'auth/popup-closed-by-user') {
+        setIsGoogleLoading(false);
+        return;
+      }
+
       let title = "Auth Error";
       let description = err.message || "Signup failed. Please try again.";
 
       if (err.code === 'auth/popup-blocked') {
         title = "Popup Blocked";
         description = "Please allow popups for this site in your browser settings to sign up with Google.";
-      } else if (err.code === 'auth/popup-closed-by-user') {
-        title = "Signup Cancelled";
-        description = "The Google sign-in window was closed.";
       } else if (err.code === 'auth/unauthorized-domain') {
         title = "Config Error";
         description = "This domain is not authorized. Please check your Firebase settings.";
@@ -125,14 +121,12 @@ export function SignupForm() {
       }
 
       toast({
-        variant: err.code === 'auth/popup-closed-by-user' ? 'default' : 'destructive',
+        variant: 'destructive',
         title,
         description,
       });
       
-      if (err.code !== 'auth/popup-closed-by-user') {
-        setServerError(description);
-      }
+      setServerError(description);
     } finally {
       setIsGoogleLoading(false);
     }
