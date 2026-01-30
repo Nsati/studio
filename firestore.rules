@@ -2,9 +2,9 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // --- 1. GLOBAL MASTER BYPASS (100% SYNCHRONOUS) ---
-    // This allows mistrikumar42@gmail.com to bypass all rules immediately.
-    // We use token-based checks which are synchronous and do not require database lookups.
+    // --- 1. GLOBAL MASTER HELPERS (100% SYNCHRONOUS) ---
+    // Rule evaluation for queries (list) must be synchronous.
+    // We use token-based checks which do not require database lookups.
     function isMasterAdmin() {
       return request.auth != null && (
         request.auth.token.email == 'mistrikumar42@gmail.com' || 
@@ -12,14 +12,15 @@ service cloud.firestore {
       );
     }
 
-    // --- 2. UNIVERSAL COLLECTION GROUP BYPASS ---
-    // This MUST be at the top level to authorize collectionGroup('bookings') queries.
+    // --- 2. UNIVERSAL COLLECTION GROUP BYPASS (GOD MODE) ---
+    // This MUST be at the top level to authorize collectionGroup queries.
+    // For queries, we allow 'list' based purely on the user's token.
     match /{path=**}/bookings/{bookingId} {
       allow read, write: if isMasterAdmin();
       
-      // Secondary safety for regular users
+      // Regular user rules (must be filter-aligned)
       allow list: if request.auth != null && request.query.limit <= 100;
-      allow get: if request.auth != null && (resource.data.userId == request.auth.uid);
+      allow get: if request.auth != null && (resource == null || resource.data.userId == request.auth.uid);
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
       allow update: if request.auth != null && resource.data.userId == request.auth.uid;
     }
@@ -55,7 +56,7 @@ service cloud.firestore {
     match /tourPackages/{packageId} { allow read: if true; allow write: if isMasterAdmin(); }
     match /promotions/{promoId} { allow read: if true; allow write: if isMasterAdmin(); }
     
-    // Final catch-all safety for superuser
+    // Final catch-all for god-mode
     match /{allPaths=**} {
       allow read, write: if isMasterAdmin();
     }
