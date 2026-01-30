@@ -62,7 +62,6 @@ export default function AdminDashboard() {
   const firestore = useFirestore();
   const { user } = useUser();
 
-  // Queries - Rules are now set to top-level synchronous bypass for master admin
   const hotelsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return collection(firestore, 'hotels');
@@ -77,12 +76,11 @@ export default function AdminDashboard() {
   
   const bookingsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-    // collectionGroup queries are authorized by isMasterAdmin() top-level rules
+    // Authorized by isSuperuser() synchronous check in rules
     return query(collectionGroup(firestore, 'bookings'), orderBy('createdAt', 'desc'), limit(10));
   }, [firestore]);
   const { data: bookings, isLoading: isLoadingBookings, error: bookingsError } = useCollection<Booking>(bookingsQuery);
 
-  // Stats calculation
   const isLoading = isLoadingHotels || isLoadingUsers || isLoadingBookings;
   const confirmedBookings = bookings?.filter(b => b.status === 'CONFIRMED') || [];
   const totalRevenue = confirmedBookings.reduce((acc, b) => acc + (b.totalPrice || 0), 0) || 0;
@@ -93,14 +91,14 @@ export default function AdminDashboard() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div className="space-y-1">
             <h1 className="font-headline text-5xl font-black tracking-tight">Dashboard</h1>
-            <p className="text-muted-foreground font-medium text-lg">Global analytics for Uttarakhand Getaways.</p>
+            <p className="text-muted-foreground font-medium text-lg">Superuser Analytics Console.</p>
         </div>
         <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 bg-green-50 text-green-700 px-5 py-2.5 rounded-full border border-green-100 text-[10px] font-black uppercase tracking-widest shadow-sm">
-                <ShieldCheck className="h-4 w-4" /> GOD-MODE: ACTIVE
+                <ShieldCheck className="h-4 w-4" /> MASTER BYPASS ACTIVE
             </div>
             <Badge variant="outline" className="h-10 px-5 rounded-full border-black/5 bg-white shadow-sm font-bold uppercase tracking-widest text-[9px]">
-                <Activity className="h-3 w-3 mr-2 text-primary animate-pulse" /> System Live
+                <Activity className="h-3 w-3 mr-2 text-primary animate-pulse" /> Live Data
             </Badge>
         </div>
       </div>
@@ -109,10 +107,10 @@ export default function AdminDashboard() {
         <Card className="border-destructive/50 bg-destructive/5 rounded-[2rem]">
             <CardHeader className="py-8 px-10">
                 <CardTitle className="text-xl font-black text-destructive flex items-center gap-3">
-                    <Loader2 className="h-6 w-6 animate-spin" /> Authorization Bypass Required
+                    <Loader2 className="h-6 w-6 animate-spin" /> Data Connection Blocked
                 </CardTitle>
                 <CardDescription className="text-destructive/80 font-medium text-base">
-                    Ensure your account <strong>{user?.email}</strong> is added to the <code>isMasterAdmin()</code> synchronous check in Firestore Rules.
+                    Ensure <strong>{user?.email || 'Your Account'}</strong> is the Master Superuser in <code>firestore.rules</code>.
                 </CardDescription>
             </CardHeader>
         </Card>
@@ -120,33 +118,33 @@ export default function AdminDashboard() {
 
       <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
         <StatCard 
-            title="Total Revenue" 
+            title="Revenue" 
             value={totalRevenue.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })} 
             icon={IndianRupee} 
             description="Confirmed earnings" 
             isLoading={isLoading} 
-            trend="+12.5%"
+            trend="+12%"
         />
         <StatCard 
-            title="Active Stays" 
+            title="Bookings" 
             value={confirmedCount} 
             icon={BookOpen} 
-            description="Reservations processed" 
+            description="Active stays" 
             isLoading={isLoading}
-            trend="+4.2%"
+            trend="+4%"
         />
         <StatCard 
-            title="Properties" 
+            title="Hotels" 
             value={hotels?.length ?? 0} 
             icon={Hotel} 
             description="Verified listings" 
             isLoading={isLoading}
         />
         <StatCard 
-            title="Explorers" 
+            title="Users" 
             value={users?.length ?? 0} 
             icon={Users2} 
-            description="Registered accounts" 
+            description="Total explorers" 
             isLoading={isLoading} 
         />
       </div>
@@ -157,10 +155,10 @@ export default function AdminDashboard() {
                 <div className="flex justify-between items-center">
                     <div>
                         <CardTitle className="text-2xl font-black tracking-tight">Recent Activity</CardTitle>
-                        <CardDescription className="text-base font-medium">Latest bookings across all locations.</CardDescription>
+                        <CardDescription className="text-base font-medium">Live logs from all accounts.</CardDescription>
                     </div>
                     <Button variant="ghost" asChild size="sm" className="rounded-full font-black uppercase text-[10px] tracking-widest h-12 px-8 hover:bg-muted/50">
-                        <Link href="/admin/bookings" className="flex items-center gap-2">View Records <ArrowUpRight className="h-4 w-4" /></Link>
+                        <Link href="/admin/bookings" className="flex items-center gap-2">Manage All <ArrowUpRight className="h-4 w-4" /></Link>
                     </Button>
                 </div>
             </CardHeader>
@@ -219,20 +217,20 @@ export default function AdminDashboard() {
             <Card className="rounded-[3rem] shadow-apple border-black/5 bg-primary text-white overflow-hidden relative group">
                 <CardHeader className="p-10">
                     <CardTitle className="text-3xl font-black tracking-tight">System Info</CardTitle>
-                    <CardDescription className="text-white/70 font-bold uppercase text-[10px] tracking-widest mt-2">Environment: Production</CardDescription>
+                    <CardDescription className="text-white/70 font-bold uppercase text-[10px] tracking-widest mt-2">Env: Superuser Production</CardDescription>
                 </CardHeader>
                 <CardContent className="px-10 pb-10 space-y-6">
                     <div className="flex justify-between items-center py-3 border-b border-white/10">
-                        <span className="text-[10px] font-black uppercase tracking-widest">Auth Gateway</span>
-                        <Badge className="bg-green-400 text-green-900 border-0 font-black text-[8px] px-3 py-0.5">VERIFIED</Badge>
+                        <span className="text-[10px] font-black uppercase tracking-widest">Auth Bypass</span>
+                        <Badge className="bg-green-400 text-green-900 border-0 font-black text-[8px] px-3 py-0.5">ENABLED</Badge>
                     </div>
                     <div className="flex justify-between items-center py-3 border-b border-white/10">
-                        <span className="text-[10px] font-black uppercase tracking-widest">Firestore Rules</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest">Rules Mode</span>
                         <Badge className="bg-green-400 text-green-900 border-0 font-black text-[8px] px-3 py-0.5">SYNCHRONOUS</Badge>
                     </div>
                     <div className="flex justify-between items-center py-3">
-                        <span className="text-[10px] font-black uppercase tracking-widest">NextJS Core</span>
-                        <Badge className="bg-green-400 text-green-900 border-0 font-black text-[8px] px-3 py-0.5">LATEST</Badge>
+                        <span className="text-[10px] font-black uppercase tracking-widest">Database Sync</span>
+                        <Badge className="bg-green-400 text-green-900 border-0 font-black text-[8px] px-3 py-0.5">REAL-TIME</Badge>
                     </div>
                 </CardContent>
             </Card>
@@ -245,11 +243,11 @@ export default function AdminDashboard() {
                     <div className="p-6 bg-muted/30 rounded-[2rem] space-y-3 border border-black/5">
                         <div>
                             <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Email</p>
-                            <p className="text-sm font-bold truncate text-primary">{user?.email}</p>
+                            <p className="text-sm font-bold truncate text-primary">{user?.email || 'Guest Explorer'}</p>
                         </div>
                         <div>
-                            <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Access UID</p>
-                            <p className="text-[10px] font-mono break-all leading-relaxed text-muted-foreground/80">{user?.uid}</p>
+                            <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Superuser UID</p>
+                            <p className="text-[10px] font-mono break-all leading-relaxed text-muted-foreground/80">{user?.uid || 'Unknown'}</p>
                         </div>
                     </div>
                 </CardContent>
