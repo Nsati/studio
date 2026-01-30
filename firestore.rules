@@ -9,7 +9,7 @@ service cloud.firestore {
     }
 
     // MASTER ADMIN BYPASS (Immediate authorization for the owner)
-    // Uses both email and UID for 100% reliability
+    // Uses both email and UID for 100% reliability without document reads.
     function isMasterAdmin() {
       return isAuthenticated() && (
         request.auth.token.email == 'mistrikumar42@gmail.com' || 
@@ -64,7 +64,7 @@ service cloud.firestore {
         allow read: if true;
         // MUST allow update for all authenticated users (including anonymous) 
         // to manage inventory during a booking transaction.
-        allow update: if isAuthenticated(); 
+        allow update: if isAuthenticated() || isMasterAdmin() || isAdmin(); 
         allow write: if isMasterAdmin() || isAdmin();
       }
       
