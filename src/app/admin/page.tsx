@@ -50,26 +50,30 @@ function StatCard({ title, value, icon: Icon, description, isLoading, trend }: a
 export default function AdminDashboard() {
   const firestore = useFirestore();
 
+  // Queries
   const hotelsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return collection(firestore, 'hotels');
   }, [firestore]);
+  
   const { data: hotels, isLoading: isLoadingHotels } = useCollection<HotelType>(hotelsQuery);
   
   const usersQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return collection(firestore, 'users');
   }, [firestore]);
+  
   const { data: users, isLoading: isLoadingUsers } = useCollection<UserProfile>(usersQuery);
   
   const bookingsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return query(collectionGroup(firestore, 'bookings'), orderBy('createdAt', 'desc'));
   }, [firestore]);
+  
   const { data: bookings, isLoading: isLoadingBookings, error: bookingsError } = useCollection<Booking>(bookingsQuery);
 
+  // Deriving Stats
   const isLoading = isLoadingHotels || isLoadingUsers || isLoadingBookings;
-
   const confirmedBookings = bookings?.filter(b => b.status === 'CONFIRMED') || [];
   const totalRevenue = confirmedBookings.reduce((acc, b) => acc + b.totalPrice, 0) || 0;
   const confirmedCount = confirmedBookings.length;
@@ -88,7 +92,7 @@ export default function AdminDashboard() {
 
       {bookingsError && (
         <div className="p-4 bg-destructive/10 text-destructive rounded-2xl text-xs font-mono">
-          PERMISSION ERROR: {bookingsError.message}. Ensure composite indexes are created in Firebase.
+          PERMISSION ERROR: {bookingsError.message}. Ensure composite indexes are created in Firebase Console.
         </div>
       )}
 

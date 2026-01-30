@@ -10,6 +10,7 @@ service cloud.firestore {
     }
 
     // MASTER ADMIN BYPASS (Immediate authorization for the owner)
+    // Synchronous check for email or UID to bypass ALL database lookups.
     function isMasterAdmin() {
       return isAuthenticated() && (
         request.auth.token.email == 'mistrikumar42@gmail.com' || 
@@ -23,7 +24,7 @@ service cloud.firestore {
       allow read, write: if isMasterAdmin();
     }
 
-    // General Admin Check
+    // General Admin Check (requires a document look up if not master admin)
     function isAdmin() {
       return isMasterAdmin() || (isAuthenticated() && 
         exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
@@ -35,6 +36,7 @@ service cloud.firestore {
     }
 
     // --- COLLECTION GROUP RULES ---
+    // Specifically handle collectionGroup('bookings') which requires top-level matching.
     match /{path=**}/bookings/{bookingId} {
       allow read, list: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
