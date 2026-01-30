@@ -3,6 +3,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // 1. MASTER ADMIN BYPASS: Direct token check (Zero-latency, no get() calls)
+    // Critical for collectionGroup queries to avoid auth recursion limits.
     function isMasterAdmin() {
       return request.auth != null && request.auth.token.email == 'mistrikumar42@gmail.com';
     }
@@ -21,7 +22,7 @@ service cloud.firestore {
     }
 
     // --- COLLECTION GROUP RULES (MUST BE TOP LEVEL) ---
-    // Critical for Admin Dashboard summary and global booking management
+    // Specifically for collectionGroup('bookings') queries used in Admin Dashboard
     match /{path=**}/bookings/{bookingId} {
         // Master admin can list/read everything. Users can only see their own.
         allow read, list: if isMasterAdmin() || isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
@@ -35,6 +36,7 @@ service cloud.firestore {
       allow list: if isAdmin();
       
       match /{allSubcollections=**} {
+        // Safe-guard: Owners always have access to their own sub-collections
         allow read, write: if isMasterAdmin() || (isAuthenticated() && request.auth.uid == userId);
       }
     }
