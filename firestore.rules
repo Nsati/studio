@@ -12,7 +12,7 @@ service cloud.firestore {
     }
 
     // --- 2. UNIVERSAL COLLECTION GROUP BYPASS (GOD MODE) ---
-    // Must be placed before more specific matches.
+    // Authorized emails get immediate access to all bookings across all users.
     match /{path=**}/bookings/{bookingId} {
       allow read, write: if isMasterAdmin();
       
