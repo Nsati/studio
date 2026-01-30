@@ -32,6 +32,9 @@ import {
   TableRow 
 } from "@/components/ui/table";
 
+/**
+ * Superuser Stat Card Component
+ */
 function StatCard({ title, value, icon: Icon, description, isLoading, trend }: any) {
     return (
         <Card className="rounded-[2.5rem] shadow-apple border-black/5 overflow-hidden group hover:shadow-apple-deep transition-all duration-500 bg-white">
@@ -62,6 +65,7 @@ export default function AdminDashboard() {
   const firestore = useFirestore();
   const { user } = useUser();
 
+  // Basic collections
   const hotelsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return collection(firestore, 'hotels');
@@ -74,9 +78,9 @@ export default function AdminDashboard() {
   }, [firestore]);
   const { data: users, isLoading: isLoadingUsers } = useCollection<UserProfile>(usersQuery);
   
+  // Critical Global Query: collectionGroup('bookings')
   const bookingsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-    // collectionGroup('bookings') is authorized by masterAdmin synchronous rules
     return query(collectionGroup(firestore, 'bookings'), orderBy('createdAt', 'desc'), limit(10));
   }, [firestore]);
   const { data: bookings, isLoading: isLoadingBookings, error: bookingsError } = useCollection<Booking>(bookingsQuery);
@@ -214,6 +218,7 @@ export default function AdminDashboard() {
         </Card>
 
         <div className="space-y-10">
+            {/* System Identity Section */}
             <Card className="rounded-[3rem] shadow-apple border-black/5 bg-primary text-white overflow-hidden relative group">
                 <CardHeader className="p-10">
                     <CardTitle className="text-3xl font-black tracking-tight">System Info</CardTitle>
