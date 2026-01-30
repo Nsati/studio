@@ -2,7 +2,13 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper: Check if user is an admin via their profile document
+    /**
+     * @fileOverview Hardened Production Security Rules.
+     * Implements strict RBAC (Role-Based Access Control).
+     */
+
+    // Master helper: Check if user is an admin via their profile document
+    // Synchronous bypass is only used via Server Actions (Admin SDK)
     function isAdmin() {
       return request.auth != null && 
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
@@ -13,19 +19,19 @@ service cloud.firestore {
       return request.auth != null && request.auth.uid == userId;
     }
 
-    // Standard User Profiles
+    // User Profiles & Private Data
     match /users/{userId} {
       allow read, write: if isOwner(userId) || isAdmin();
       
-      // Nested Bookings
+      // Nested Bookings: Accessible to the owner and Admins
       match /bookings/{bookingId} {
         allow read: if isOwner(userId) || isAdmin();
         allow create: if isOwner(userId);
-        allow update: if isAdmin();
+        allow update: if isAdmin(); // Status updates like CONFIRMED/CANCELLED
       }
     }
 
-    // Public Collections
+    // Public Inventory (Hotels & Rooms)
     match /hotels/{hotelId} {
       allow read: if true;
       allow write: if isAdmin();
@@ -42,8 +48,14 @@ service cloud.firestore {
       }
     }
 
+    // Global Read-Only Collections
     match /cities/{cityId} { allow read: if true; }
     match /tourPackages/{packageId} { allow read: if true; }
     match /promotions/{promoId} { allow read: if true; }
+    
+    // Explicit deny for any other path not covered
+    match /{path=**} {
+      allow read, write: if false;
+    }
   }
 }

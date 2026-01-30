@@ -9,10 +9,10 @@ import {
   IndianRupee, 
   TrendingUp, 
   ArrowUpRight,
-  Fingerprint,
   AlertCircle,
   RefreshCw,
-  Activity
+  Activity,
+  ShieldAlert
 } from 'lucide-react';
 import { useUser } from '@/firebase';
 import { getAdminDashboardStats } from './actions';
@@ -81,25 +81,20 @@ export default function AdminDashboard() {
     loadData();
   }, []);
 
-  if (error) {
+  if (userProfile && userProfile.role !== 'admin') {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6">
-        <div className="p-6 bg-destructive/10 rounded-full animate-in zoom-in-90 duration-500">
-          <AlertCircle className="h-12 w-12 text-destructive" />
-        </div>
-        <div className="text-center space-y-2">
-          <h2 className="text-2xl font-black">Sync Interrupted</h2>
-          <p className="text-muted-foreground max-w-md mx-auto leading-relaxed">{error}</p>
-        </div>
-        <div className="flex gap-4">
-            <Button onClick={loadData} variant="default" className="rounded-full px-8 h-12 font-bold shadow-lg">
-                <RefreshCw className="mr-2 h-4 w-4" /> Retry Sync
-            </Button>
-            <Button asChild variant="outline" className="rounded-full px-8 h-12 font-bold">
-                <Link href="/">Back to Site</Link>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6">
+            <div className="p-6 bg-amber-50 rounded-full">
+                <ShieldAlert className="h-12 w-12 text-amber-600" />
+            </div>
+            <div className="text-center space-y-2">
+                <h2 className="text-2xl font-black">Restricted Access</h2>
+                <p className="text-muted-foreground">Your account does not have authorization for this panel.</p>
+            </div>
+            <Button asChild className="rounded-full px-8 h-12">
+                <Link href="/">Return to Site</Link>
             </Button>
         </div>
-      </div>
     );
   }
 
@@ -107,8 +102,8 @@ export default function AdminDashboard() {
     <div className="space-y-10">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div className="space-y-1">
-            <h1 className="font-headline text-5xl font-black tracking-tight text-foreground">Dashboard</h1>
-            <p className="text-muted-foreground font-medium text-lg">Platform Intelligence Console.</p>
+            <h1 className="font-headline text-5xl font-black tracking-tight text-foreground">Intelligence</h1>
+            <p className="text-muted-foreground font-medium text-lg">Central Operations Control.</p>
         </div>
         <div className="flex items-center gap-3">
             <Button variant="outline" size="sm" onClick={loadData} className="rounded-full h-10 px-5 font-bold uppercase tracking-widest text-[9px] border-black/5 bg-white shadow-sm hover:bg-muted/50 transition-all">
@@ -123,30 +118,30 @@ export default function AdminDashboard() {
             title="Revenue" 
             value={(data?.stats?.totalRevenue || 0).toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })} 
             icon={IndianRupee} 
-            description="Confirmed earnings" 
+            description="Total confirmed" 
             isLoading={isLoading} 
             trend="+12%"
         />
         <StatCard 
-            title="Bookings" 
+            title="Active Stays" 
             value={data?.stats?.confirmedCount || 0} 
             icon={BookOpen} 
-            description="Active stays" 
+            description="Live reservations" 
             isLoading={isLoading}
             trend="+4%"
         />
         <StatCard 
-            title="Hotels" 
+            title="Properties" 
             value={data?.stats?.hotelCount || 0} 
             icon={Hotel} 
             description="Verified listings" 
             isLoading={isLoading}
         />
         <StatCard 
-            title="Users" 
+            title="Explorers" 
             value={data?.stats?.userCount || 0} 
             icon={Users2} 
-            description="Total explorers" 
+            description="Total accounts" 
             isLoading={isLoading} 
         />
       </div>
@@ -157,10 +152,10 @@ export default function AdminDashboard() {
                 <div className="flex justify-between items-center">
                     <div>
                         <CardTitle className="text-2xl font-black tracking-tight text-foreground">Recent Activity</CardTitle>
-                        <CardDescription className="text-base font-medium text-muted-foreground">Latest reservations across the platform.</CardDescription>
+                        <CardDescription className="text-base font-medium text-muted-foreground">Latest events across the cloud.</CardDescription>
                     </div>
                     <Button variant="ghost" asChild size="sm" className="rounded-full font-black uppercase text-[10px] tracking-widest h-12 px-8 hover:bg-muted/50">
-                        <Link href="/admin/bookings" className="flex items-center gap-2">Manage All <ArrowUpRight className="h-4 w-4" /></Link>
+                        <Link href="/admin/bookings" className="flex items-center gap-2">Inventory <ArrowUpRight className="h-4 w-4" /></Link>
                     </Button>
                 </div>
             </CardHeader>
@@ -170,7 +165,7 @@ export default function AdminDashboard() {
                         <TableRow className="border-0">
                             <TableHead className="px-10 h-14 text-[10px] font-black uppercase tracking-widest">Guest</TableHead>
                             <TableHead className="h-14 text-[10px] font-black uppercase tracking-widest">Property</TableHead>
-                            <TableHead className="h-14 text-[10px] font-black uppercase tracking-widest">Amount</TableHead>
+                            <TableHead className="h-14 text-[10px] font-black uppercase tracking-widest">Investment</TableHead>
                             <TableHead className="px-10 h-14 text-right text-[10px] font-black uppercase tracking-widest">Status</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -221,43 +216,34 @@ export default function AdminDashboard() {
         <div className="space-y-10">
             <Card className="rounded-[3rem] shadow-apple border-black/5 bg-primary text-white overflow-hidden relative group">
                 <CardHeader className="p-10">
-                    <CardTitle className="text-3xl font-black tracking-tight">Platform Status</CardTitle>
-                    <CardDescription className="text-white/70 font-bold uppercase text-[10px] tracking-widest mt-2">Environment: Production</CardDescription>
+                    <CardTitle className="text-3xl font-black tracking-tight">Cloud Node</CardTitle>
+                    <CardDescription className="text-white/70 font-bold uppercase text-[10px] tracking-widest mt-2">Status: Optimized</CardDescription>
                 </CardHeader>
                 <CardContent className="px-10 pb-10 space-y-6">
                     <div className="flex justify-between items-center py-3 border-b border-white/10">
-                        <span className="text-[10px] font-black uppercase tracking-widest">Auth Integrity</span>
-                        <Badge className="bg-green-400 text-green-900 border-0 font-black text-[8px] px-3 py-0.5 uppercase">Verified</Badge>
+                        <span className="text-[10px] font-black uppercase tracking-widest">Protocol</span>
+                        <Badge className="bg-green-400 text-green-900 border-0 font-black text-[8px] px-3 py-0.5 uppercase">Stable</Badge>
                     </div>
                     <div className="flex justify-between items-center py-3 border-b border-white/10">
-                        <span className="text-[10px] font-black uppercase tracking-widest">Data Stream</span>
-                        <Badge className="bg-blue-400 text-blue-900 border-0 font-black text-[8px] px-3 py-0.5 uppercase">Secure Action</Badge>
+                        <span className="text-[10px] font-black uppercase tracking-widest">Latency</span>
+                        <Badge className="bg-blue-400 text-blue-900 border-0 font-black text-[8px] px-3 py-0.5 uppercase">Minimal</Badge>
                     </div>
                     <div className="flex justify-between items-center py-3">
-                        <span className="text-[10px] font-black uppercase tracking-widest">Admin Role</span>
-                        <Badge className="bg-purple-400 text-purple-900 border-0 font-black text-[8px] px-3 py-0.5 uppercase">{userProfile?.role || 'User'}</Badge>
+                        <span className="text-[10px] font-black uppercase tracking-widest">Auth Flow</span>
+                        <Badge className="bg-purple-400 text-purple-900 border-0 font-black text-[8px] px-3 py-0.5 uppercase">Secure</Badge>
                     </div>
                 </CardContent>
             </Card>
 
-            <Card className="rounded-[3rem] shadow-apple border-black/5 bg-white overflow-hidden">
-                <CardHeader className="p-10 pb-6">
-                    <CardTitle className="text-xl font-black tracking-tight text-foreground">Active Identity</CardTitle>
-                </CardHeader>
-                <CardContent className="px-10 pb-10 space-y-6">
-                    <div className="p-6 bg-muted/30 rounded-[2rem] space-y-3 border border-black/5">
-                        <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center">
-                                <Fingerprint className="h-5 w-5 text-primary" />
-                            </div>
-                            <div className="flex-1 truncate">
-                                <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Authenticated As</p>
-                                <p className="text-xs font-bold truncate text-foreground">{userProfile?.email || 'Himalayan Explorer'}</p>
-                            </div>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
+            <div className="p-8 bg-muted/30 rounded-[3rem] border border-black/5 space-y-4">
+                <div className="flex items-center gap-3">
+                    <Activity className="h-5 w-5 text-primary animate-pulse" />
+                    <span className="font-black uppercase tracking-widest text-[10px] text-muted-foreground">Real-time Stream</span>
+                </div>
+                <p className="text-sm font-medium text-muted-foreground leading-relaxed">
+                    All operations are monitored and executed via authorized Server Actions.
+                </p>
+            </div>
         </div>
       </div>
     </div>

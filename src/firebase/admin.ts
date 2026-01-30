@@ -1,29 +1,23 @@
-import { initializeApp, getApps, cert, App } from 'firebase-admin/app';
+import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore, Firestore } from 'firebase-admin/firestore';
 import { getAuth, Auth } from 'firebase-admin/auth';
+
+/**
+ * @fileOverview Production-grade Firebase Admin SDK Singleton.
+ * Ensures consistent initialization across serverless execution environments.
+ */
 
 type AdminServices = {
     adminDb: Firestore;
     adminAuth: Auth;
 };
 
-// Singleton instance holder
 let adminInstance: AdminServices | null = null;
-let initError: string | null = null;
 
-/**
- * Initializes and returns the Firebase Admin SDK services.
- * Optimized for robustness in Next.js Server Actions.
- */
 export function getFirebaseAdmin(): { adminDb: Firestore | null; adminAuth: Auth | null; error: string | null; } {
-    // Return cached services
     if (adminInstance) return { ...adminInstance, error: null };
-    
-    // Return cached error
-    if (initError) return { adminDb: null, adminAuth: null, error: initError };
 
     try {
-        // Handle existing app in hot-reload
         if (getApps().length > 0) {
             const app = getApps()[0];
             adminInstance = { adminDb: getFirestore(app), adminAuth: getAuth(app) };
@@ -31,22 +25,15 @@ export function getFirebaseAdmin(): { adminDb: Firestore | null; adminAuth: Auth
         }
 
         const projectId = process.env.FIREBASE_PROJECT_ID;
-        const privateKey = process.env.FIREBASE_PRIVATE_KEY;
         const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+        const privateKey = process.env.FIREBASE_PRIVATE_KEY;
 
         if (!projectId || !clientEmail || !privateKey) {
-            const missing = [
-                !projectId && 'FIREBASE_PROJECT_ID',
-                !clientEmail && 'FIREBASE_CLIENT_EMAIL',
-                !privateKey && 'FIREBASE_PRIVATE_KEY'
-            ].filter(Boolean).join(', ');
-            
-            initError = `Missing required Admin credentials: ${missing}`;
-            console.error(`[ADMIN SDK] ${initError}`);
-            return { adminDb: null, adminAuth: null, error: initError };
+            console.error("[ADMIN SDK] Missing environment variables for initialization.");
+            return { adminDb: null, adminAuth: null, error: "Cloud configuration incomplete." };
         }
 
-        // Clean private key formatting (essential for production deployments)
+        // Essential for handling newlines in environment variables properly
         const formattedKey = privateKey.replace(/\\n/g, '\n').trim();
 
         const app = initializeApp({
@@ -57,13 +44,12 @@ export function getFirebaseAdmin(): { adminDb: Firestore | null; adminAuth: Auth
             }),
         });
 
-        console.log("✅ [ADMIN SDK] Initialized successfully for project:", projectId);
         adminInstance = { adminDb: getFirestore(app), adminAuth: getAuth(app) };
+        console.log("✅ [ADMIN SDK] Initialized for project:", projectId);
         return { ...adminInstance, error: null };
 
     } catch (err: any) {
-        initError = `Initialization failed: ${err.message}`;
-        console.error("[ADMIN SDK] FATAL ERROR:", err.message);
-        return { adminDb: null, adminAuth: null, error: initError };
+        console.error("[ADMIN SDK] Critical Initialization Error:", err.message);
+        return { adminDb: null, adminAuth: null, error: err.message };
     }
 }
