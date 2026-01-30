@@ -16,10 +16,20 @@ service cloud.firestore {
     }
 
     // --- 2. COLLECTION GROUP RULES (MUST BE TOP LEVEL) ---
-    // This allows collectionGroup('bookings') to work for Admins and specific Users.
+    // This recursive wildcard match allows collectionGroup('bookings') to work.
     match /{path=**}/bookings/{bookingId} {
-      allow read: if isMasterAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
-      allow write: if isMasterAdmin() || (isAuthenticated() && request.resource.data.userId == request.auth.uid);
+      allow read: if isMasterAdmin() || (
+        isAuthenticated() && (
+          (resource == null) || 
+          (resource.data.userId == request.auth.uid)
+        )
+      );
+      allow write: if isMasterAdmin() || (
+        isAuthenticated() && (
+          (request.resource == null) || 
+          (request.resource.data.userId == request.auth.uid)
+        )
+      );
     }
 
     // --- 3. STANDARD COLLECTION RULES ---

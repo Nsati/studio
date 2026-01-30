@@ -19,7 +19,7 @@ import { normalizeTimestamp } from '@/lib/firestore-utils';
 import { Loader2, RefreshCw, AlertCircle, Activity } from "lucide-react";
 import { updateBookingStatusByAdmin } from './actions';
 import { useToast } from '@/hooks/use-toast';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 function BookingStatusBadge({ status }: { status: string }) {
   switch (status) {
@@ -40,10 +40,21 @@ export default function BookingsAdminPage() {
   const { toast } = useToast();
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
 
+  // DEBUG: Track Auth State
+  useEffect(() => {
+    if (user) {
+      console.log("--- ADMIN DEBUG ---");
+      console.log("UID:", user.uid);
+      console.log("Email:", user.email);
+      console.log("Is Admin Email:", user.email === 'mistrikumar42@gmail.com');
+    }
+  }, [user]);
+
   const bookingsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
+    if (!firestore || !user) return null;
+    // collectionGroup needs recursive wildcard {path=**} in rules to work.
     return query(collectionGroup(firestore, 'bookings'), orderBy('createdAt', 'desc'));
-  }, [firestore]);
+  }, [firestore, user]);
 
   const { data: bookings, isLoading, error } = useCollection<Booking>(bookingsQuery);
 
@@ -83,7 +94,7 @@ export default function BookingsAdminPage() {
                 </CardTitle>
                 <CardDescription className="text-destructive/80 font-medium">
                     The query <code>collectionGroup('bookings')</code> was rejected. 
-                    Authenticated as: <strong>{user?.email}</strong>
+                    User: <strong>{user?.email || 'Not Authenticated'}</strong>
                 </CardDescription>
             </CardHeader>
         </Card>
