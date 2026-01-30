@@ -8,8 +8,7 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // MASTER ADMIN BYPASS: Purely token-based (Synchronous)
-    // Essential for collectionGroup queries to be authorized instantly.
+    // MASTER ADMIN BYPASS: Synchronous token check
     function isMasterAdmin() {
       return isAuthenticated() && (
         request.auth.token.email == 'mistrikumar42@gmail.com' || 
@@ -18,15 +17,12 @@ service cloud.firestore {
     }
 
     // --- COLLECTION GROUP RULES ---
-    // REQUIRED: Top-level match for global collectionGroup queries
     match /{path=**}/bookings/{bookingId} {
-      // Allow if Master Admin (Sync check)
-      // Allow if standard user is reading/writing their own booking (userId match)
       allow read, write: if isMasterAdmin() || (
         isAuthenticated() && (
-          (resource == null) || // For creation
-          (resource.data.userId == request.auth.uid) || // For existing
-          (request.resource != null && request.resource.data.userId == request.auth.uid) // For updates
+          (resource == null) || 
+          (resource.data.userId == request.auth.uid) || 
+          (request.resource != null && request.resource.data.userId == request.auth.uid)
         )
       );
     }
@@ -48,7 +44,6 @@ service cloud.firestore {
 
       match /rooms/{roomId} {
         allow read: if true;
-        // Allow update for inventory management during booking transactions
         allow update: if isAuthenticated(); 
         allow write: if isMasterAdmin();
       }
@@ -64,7 +59,6 @@ service cloud.firestore {
     match /tourPackages/{packageId} { allow read: if true; allow write: if isMasterAdmin(); }
     match /promotions/{promoId} { allow read: if true; allow write: if isMasterAdmin(); }
     
-    // Global catch-all for Master Admin safety
     match /{allPaths=**} {
       allow read, write: if isMasterAdmin();
     }

@@ -66,7 +66,6 @@ export default function AdminDashboard() {
   const { data: users, isLoading: isLoadingUsers } = useCollection<UserProfile>(usersQuery);
   
   const bookingsQuery = useMemoFirebase(() => {
-    // Only run the global collectionGroup query if we have a user (prevents immediate Rule Denied on mount)
     if (!firestore || !user) return null;
     return query(collectionGroup(firestore, 'bookings'), orderBy('createdAt', 'desc'));
   }, [firestore, user]);
