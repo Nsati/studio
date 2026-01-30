@@ -87,7 +87,7 @@ export default function BookingsAdminPage() {
                     <AlertCircle className="h-6 w-6" /> Permission Error: collectionGroup('bookings')
                 </CardTitle>
                 <CardDescription className="text-destructive/80 font-medium text-base leading-relaxed">
-                    Firestore rejected the global query. Ensure <strong>{user?.email || 'mistrikumar42@gmail.com'}</strong> is added to the <code>isMasterAdmin()</code> function in <code>firestore.rules</code>.
+                    Firestore rejected the global query. Ensure <strong>{user?.email || 'mistrikumar42@gmail.com'}</strong> is authorized in <code>firestore.rules</code> with synchronous bypass.
                 </CardDescription>
             </CardHeader>
         </Card>
