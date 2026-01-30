@@ -12,22 +12,29 @@ export function FirebaseErrorListener() {
   const [error, setError] = useState<FirestorePermissionError | null>(null);
 
   useEffect(() => {
+    let mounted = true;
+
     const handleError = (err: FirestorePermissionError) => {
+      if (!mounted) return;
+      
       // DEFER: Use setTimeout to push the state update to the next event loop tick.
-      // This prevents the React "setState during render" warning.
+      // This ensures the current render phase completes before the error boundary is triggered.
       setTimeout(() => {
-        setError(err);
+        if (mounted) {
+          setError(err);
+        }
       }, 0);
     };
 
     errorEmitter.on('permission-error', handleError);
 
     return () => {
+      mounted = false;
       errorEmitter.off('permission-error', handleError);
     };
   }, []);
 
-  // Triggering the error boundary happens here.
+  // Triggering the error boundary happens here during the NEXT render.
   if (error) {
     throw error;
   }

@@ -16,51 +16,48 @@ service cloud.firestore {
       );
     }
 
-    function isAdmin() {
-      return isMasterAdmin() || (isAuthenticated() && 
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
-    }
-
     // --- COLLECTION GROUP RULES ---
     match /{path=**}/bookings/{bookingId} {
-      allow read, write: if isMasterAdmin();
-      allow read: if isAuthenticated() && (resource == null || resource.data.userId == request.auth.uid);
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow read, write: if isMasterAdmin() || (
+        isAuthenticated() && (
+          (resource == null) || 
+          (resource.data.userId == request.auth.uid) || 
+          (request.resource != null && request.resource.data.userId == request.auth.uid)
+        )
+      );
     }
 
     // --- STANDARD COLLECTION RULES ---
 
     match /users/{userId} {
-      allow read, write: if request.auth.uid == userId || isMasterAdmin() || isAdmin();
-      allow list: if isMasterAdmin() || isAdmin();
+      allow read, write: if request.auth.uid == userId || isMasterAdmin();
+      allow list: if isMasterAdmin();
       
       match /{allSubcollections=**} {
-        allow read, write: if request.auth.uid == userId || isMasterAdmin() || isAdmin();
+        allow read, write: if request.auth.uid == userId || isMasterAdmin();
       }
     }
 
     match /hotels/{hotelId} {
       allow read: if true;
-      allow write: if isMasterAdmin() || isAdmin();
+      allow write: if isMasterAdmin();
 
       match /rooms/{roomId} {
         allow read: if true;
         allow update: if isAuthenticated(); 
-        allow write: if isMasterAdmin() || isAdmin();
+        allow write: if isMasterAdmin();
       }
       
       match /reviews/{reviewId} {
         allow read: if true;
         allow create: if isAuthenticated();
-        allow update, delete: if isMasterAdmin() || isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
+        allow update, delete: if isMasterAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
       }
     }
 
-    match /cities/{cityId} { allow read: if true; allow write: if isMasterAdmin() || isAdmin(); }
-    match /tourPackages/{packageId} { allow read: if true; allow write: if isMasterAdmin() || isAdmin(); }
-    match /promotions/{promoId} { allow read: if true; allow write: if isMasterAdmin() || isAdmin(); }
+    match /cities/{cityId} { allow read: if true; allow write: if isMasterAdmin(); }
+    match /tourPackages/{packageId} { allow read: if true; allow write: if isMasterAdmin(); }
+    match /promotions/{promoId} { allow read: if true; allow write: if isMasterAdmin(); }
     
     match /{allPaths=**} {
       allow read, write: if isMasterAdmin();

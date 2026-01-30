@@ -9,7 +9,7 @@ service cloud.firestore {
     }
 
     // MASTER ADMIN BYPASS: Purely token-based (Synchronous)
-    // Required for collectionGroup queries to be authorized instantly.
+    // Essential for collectionGroup queries to be authorized instantly.
     function isMasterAdmin() {
       return isAuthenticated() && (
         request.auth.token.email == 'mistrikumar42@gmail.com' || 
@@ -17,58 +17,52 @@ service cloud.firestore {
       );
     }
 
-    // General Admin check (Asynchronous - for standard collections)
-    function isAdmin() {
-      return isMasterAdmin() || (isAuthenticated() && 
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
-    }
-
     // --- COLLECTION GROUP RULES ---
-    // REQUIRED: Top-level match for global queries
+    // REQUIRED: Top-level match for global collectionGroup queries
     match /{path=**}/bookings/{bookingId} {
-      // Master Admin can see everything globally
-      allow read, write: if isMasterAdmin();
-      
-      // Standard users can only read their own bookings
-      // NOTE: Queries MUST include: where("userId", "==", user.uid)
-      allow read: if isAuthenticated() && (resource == null || resource.data.userId == request.auth.uid);
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      // Allow if Master Admin (Sync check)
+      // Allow if standard user is reading/writing their own booking (userId match)
+      allow read, write: if isMasterAdmin() || (
+        isAuthenticated() && (
+          (resource == null) || // For creation
+          (resource.data.userId == request.auth.uid) || // For existing
+          (request.resource != null && request.resource.data.userId == request.auth.uid) // For updates
+        )
+      );
     }
 
     // --- STANDARD COLLECTION RULES ---
 
     match /users/{userId} {
-      allow read, write: if request.auth.uid == userId || isMasterAdmin() || isAdmin();
-      allow list: if isMasterAdmin() || isAdmin();
+      allow read, write: if request.auth.uid == userId || isMasterAdmin();
+      allow list: if isMasterAdmin();
       
       match /{allSubcollections=**} {
-        allow read, write: if request.auth.uid == userId || isMasterAdmin() || isAdmin();
+        allow read, write: if request.auth.uid == userId || isMasterAdmin();
       }
     }
 
     match /hotels/{hotelId} {
       allow read: if true;
-      allow write: if isMasterAdmin() || isAdmin();
+      allow write: if isMasterAdmin();
 
       match /rooms/{roomId} {
         allow read: if true;
         // Allow update for inventory management during booking transactions
         allow update: if isAuthenticated(); 
-        allow write: if isMasterAdmin() || isAdmin();
+        allow write: if isMasterAdmin();
       }
       
       match /reviews/{reviewId} {
         allow read: if true;
         allow create: if isAuthenticated();
-        allow update, delete: if isMasterAdmin() || isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
+        allow update, delete: if isMasterAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
       }
     }
 
-    match /cities/{cityId} { allow read: if true; allow write: if isMasterAdmin() || isAdmin(); }
-    match /tourPackages/{packageId} { allow read: if true; allow write: if isMasterAdmin() || isAdmin(); }
-    match /promotions/{promoId} { allow read: if true; allow write: if isMasterAdmin() || isAdmin(); }
+    match /cities/{cityId} { allow read: if true; allow write: if isMasterAdmin(); }
+    match /tourPackages/{packageId} { allow read: if true; allow write: if isMasterAdmin(); }
+    match /promotions/{promoId} { allow read: if true; allow write: if isMasterAdmin(); }
     
     // Global catch-all for Master Admin safety
     match /{allPaths=**} {

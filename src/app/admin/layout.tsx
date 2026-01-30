@@ -1,4 +1,3 @@
-
 'use client';
 import { useUser } from '@/firebase';
 import { useRouter, usePathname } from 'next/navigation';
@@ -46,7 +45,7 @@ function NotAdmin() {
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <p className="text-sm text-muted-foreground leading-relaxed">
-                        This area is restricted to administrators. If you are logged in as <strong>{user?.email}</strong> and still cannot see the panel, please refresh or ensure your account has the correct role.
+                        This area is restricted to administrators. If you are logged in as <strong>{user?.email}</strong> and still cannot see the panel, please ensure your account has the correct role.
                     </p>
                     <div className="p-4 bg-muted rounded-xl text-xs font-mono break-all text-left">
                         <div className="flex justify-between border-b pb-1 mb-1"><span>UID:</span> <span>{user?.uid}</span></div>
