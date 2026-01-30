@@ -3,31 +3,32 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Helper functions for clarity and reuse
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
     function isAdmin() {
-      return request.auth != null 
+      return isAuthenticated() 
              && exists(/databases/$(database)/documents/users/$(request.auth.uid)) 
              && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
-    // User Profile Rules
+    // User Profile & Bookings Rules
+    // This allows both regular users and anonymous guests to manage their own data
     match /users/{userId} {
-      // Allow user to read and write their own profile
-      allow get, create, update: if request.auth != null && request.auth.uid == userId;
+      allow read, write: if isOwner(userId) || isAdmin();
       
-      // Admin has full access
-      allow read, write: if isAdmin();
-
-      // Booking Rules (Nested under user)
       match /bookings/{bookingId} {
-        // Anyone can create and read their own bookings
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-        
-        // Admin has full access
-        allow read, write: if isAdmin();
+        allow read, write: if isOwner(userId) || isAdmin();
       }
     }
 
-    // Global Bookings Read for Admin (Collection Group)
+    // Global Bookings Read for Admin (Collection Group Query support)
     match /{path=**}/bookings/{bookingId} {
         allow list: if isAdmin();
     }
@@ -39,19 +40,19 @@ service cloud.firestore {
 
         match /rooms/{roomId} {
           allow read: if true;
-          // Allow any authenticated user to update inventory (essential for booking transaction)
-          allow update: if request.auth != null;
+          // Crucial for booking: Allow any authenticated user to decrement room count
+          allow update: if isAuthenticated();
           allow write: if isAdmin();
         }
         
         match /reviews/{reviewId} {
           allow read: if true;
-          allow create: if request.auth != null;
-          allow update, delete: if isAdmin() || (request.auth != null && resource.data.userId == request.auth.uid);
+          allow create: if isAuthenticated();
+          allow update, delete: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
         }
     }
 
-    // Other Collections
+    // Other Content Collections
     match /cities/{cityId} {
         allow read: if true;
         allow write: if isAdmin();
