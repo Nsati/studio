@@ -65,16 +65,16 @@ export function SearchFilters() {
     }
 
     return (
-        <form onSubmit={handleFormSubmit} className="flex flex-col lg:flex-row items-stretch lg:items-center gap-1 bg-white p-2 rounded-pill shadow-apple-deep">
+        <form onSubmit={handleFormSubmit} className="flex flex-col lg:flex-row items-stretch lg:items-center gap-1 bg-white p-2 rounded-[2rem] lg:rounded-pill shadow-apple-deep">
             {/* Location Pill */}
-            <div className="flex-1 flex items-center gap-4 px-8 py-4 hover:bg-muted/50 rounded-full transition-all duration-300 group cursor-pointer border-b lg:border-b-0 lg:border-r border-black/5">
+            <div className="flex-1 flex items-center gap-4 px-6 lg:px-8 py-4 hover:bg-muted/50 rounded-full transition-all duration-300 group cursor-pointer border-b lg:border-b-0 lg:border-r border-black/5">
                 <div className="p-2.5 bg-primary/10 rounded-full text-primary group-hover:bg-primary group-hover:text-white transition-all duration-500">
                     <MapPin className="h-5 w-5" />
                 </div>
-                <div className="flex flex-col items-start flex-1">
+                <div className="flex flex-col items-start flex-1 min-w-0">
                     <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-0.5">Where to?</span>
                     <Select value={city} onValueChange={setCity}>
-                        <SelectTrigger className="border-0 bg-transparent p-0 h-auto focus:ring-0 shadow-none font-bold text-base tracking-tight">
+                        <SelectTrigger className="border-0 bg-transparent p-0 h-auto focus:ring-0 shadow-none font-bold text-sm lg:text-base tracking-tight truncate w-full">
                             <SelectValue placeholder="Select Destination" />
                         </SelectTrigger>
                         <SelectContent className="rounded-3xl border-black/5 shadow-apple-deep p-2">
@@ -88,22 +88,22 @@ export function SearchFilters() {
             </div>
 
             {/* Dates Pill */}
-            <div className="flex-1 flex items-center gap-4 px-8 py-4 hover:bg-muted/50 rounded-full transition-all duration-300 group cursor-pointer border-b lg:border-b-0 lg:border-r border-black/5">
+            <div className="flex-1 flex items-center gap-4 px-6 lg:px-8 py-4 hover:bg-muted/50 rounded-full transition-all duration-300 group cursor-pointer border-b lg:border-b-0 lg:border-r border-black/5">
                 <div className="p-2.5 bg-primary/10 rounded-full text-primary group-hover:bg-primary group-hover:text-white transition-all duration-500">
                     <CalendarIcon className="h-5 w-5" />
                 </div>
                 <Popover>
                     <PopoverTrigger asChild>
-                        <button type="button" className="flex flex-col items-start flex-1 text-left">
+                        <button type="button" className="flex flex-col items-start flex-1 text-left min-w-0">
                             <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-0.5">When?</span>
-                            <span className="text-base font-bold truncate tracking-tight">
+                            <span className="text-sm lg:text-base font-bold truncate tracking-tight w-full">
                                 {dates?.from ? (
                                     dates.to ? `${format(dates.from, 'MMM dd')} - ${format(dates.to, 'MMM dd')}` : format(dates.from, 'MMM dd')
                                 ) : "Add Stay dates"}
                             </span>
                         </button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-6 rounded-[2.5rem] border-black/5 shadow-apple-deep" align="center">
+                    <PopoverContent className="w-[300px] sm:w-auto p-4 md:p-6 rounded-[2rem] md:rounded-[2.5rem] border-black/5 shadow-apple-deep" align="center">
                         <CalendarComponent
                             mode="range"
                             selected={dates}
@@ -116,26 +116,26 @@ export function SearchFilters() {
             </div>
 
             {/* Guests Pill */}
-            <div className="flex-[0.7] flex items-center gap-4 px-8 py-4 hover:bg-muted/50 rounded-full transition-all duration-300 group cursor-pointer border-b lg:border-b-0 lg:border-r border-black/5">
+            <div className="flex-[0.7] flex items-center gap-4 px-6 lg:px-8 py-4 hover:bg-muted/50 rounded-full transition-all duration-300 group cursor-pointer border-b lg:border-b-0 lg:border-r border-black/5">
                 <div className="p-2.5 bg-primary/10 rounded-full text-primary group-hover:bg-primary group-hover:text-white transition-all duration-500">
                     <Users className="h-5 w-5" />
                 </div>
-                <div className="flex flex-col items-start flex-1">
+                <div className="flex flex-col items-start flex-1 min-w-0">
                     <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-0.5">Who?</span>
                     <Input 
                         type="number" 
                         min="1"
                         value={guests}
                         onChange={(e) => setGuests(e.target.value)}
-                        className="border-0 bg-transparent p-0 h-auto focus-visible:ring-0 shadow-none font-bold text-base tracking-tight"
+                        className="border-0 bg-transparent p-0 h-auto focus-visible:ring-0 shadow-none font-bold text-sm lg:text-base tracking-tight"
                     />
                 </div>
             </div>
             
             {/* Modern Action Button */}
-            <Button type="submit" size="lg" className="lg:w-16 lg:h-16 w-full h-16 rounded-full bg-primary hover:bg-primary/90 text-white shadow-xl shadow-primary/20 transition-all duration-500 active:scale-95 mx-2">
-                <Search className="h-6 w-6" />
-                <span className="lg:hidden ml-3 font-black tracking-tight text-lg">Search Now</span>
+            <Button type="submit" size="lg" className="lg:w-16 lg:h-16 w-full h-14 md:h-16 rounded-full bg-primary hover:bg-primary/90 text-white shadow-xl shadow-primary/20 transition-all duration-500 active:scale-95 mx-0 lg:mx-2 mt-2 lg:mt-0">
+                <Search className="h-5 w-5 md:h-6 md:w-6" />
+                <span className="lg:hidden ml-2 font-black tracking-tight text-base">Search Now</span>
             </Button>
         </form>
     );

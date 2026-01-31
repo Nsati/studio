@@ -93,17 +93,17 @@ export default function BookingsAdminPage() {
   };
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-8 md:space-y-10">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div className="space-y-1">
-          <h1 className="font-headline text-5xl font-black tracking-tight text-foreground">Reservations</h1>
-          <p className="text-muted-foreground font-medium text-lg">Central control for all Himalayan stays.</p>
+          <h1 className="font-headline text-4xl md:text-5xl font-black tracking-tight text-foreground">Reservations</h1>
+          <p className="text-muted-foreground font-medium text-base md:text-lg">Central control for all Himalayan stays.</p>
         </div>
-        <div className="flex items-center gap-3">
-            <Button variant="outline" size="lg" className="rounded-full h-14 px-8 border-black/10 font-bold hover:bg-muted/50 bg-white">
+        <div className="flex items-center gap-2 w-full md:w-auto">
+            <Button variant="outline" size="lg" className="flex-1 md:flex-none rounded-full h-14 px-6 md:px-8 border-black/10 font-bold hover:bg-muted/50 bg-white">
                 <Filter className="mr-2 h-4 w-4" /> Filter
             </Button>
-            <Button variant="outline" size="lg" onClick={loadBookings} className="rounded-full h-14 px-8 shadow-apple border-black/5 font-bold hover:bg-muted/50 transition-all bg-white">
+            <Button variant="outline" size="lg" onClick={loadBookings} className="flex-1 md:flex-none rounded-full h-14 px-6 md:px-8 shadow-apple border-black/5 font-bold hover:bg-muted/50 transition-all bg-white">
                 <RefreshCw className="mr-2 h-4 w-4" /> Refresh
             </Button>
         </div>
@@ -111,8 +111,8 @@ export default function BookingsAdminPage() {
 
       {error && (
         <Card className="rounded-[2.5rem] border-destructive/20 bg-destructive/5 overflow-hidden">
-            <CardHeader className="py-8 px-10">
-                <CardTitle className="text-xl font-black text-destructive flex items-center gap-3">
+            <CardHeader className="py-6 md:py-8 px-6 md:px-10 text-center md:text-left">
+                <CardTitle className="text-xl font-black text-destructive flex items-center justify-center md:justify-start gap-3">
                     <AlertCircle className="h-6 w-6" /> System Sync Error
                 </CardTitle>
                 <CardDescription className="text-destructive/80 font-medium text-base leading-relaxed">
@@ -122,111 +122,113 @@ export default function BookingsAdminPage() {
         </Card>
       )}
 
-      <Card className="rounded-[3rem] shadow-apple border-black/5 overflow-hidden bg-white">
-        <CardHeader className="bg-white border-b border-black/5 px-10 py-10">
-          <div className="flex justify-between items-end">
+      <Card className="rounded-[2rem] md:rounded-[3rem] shadow-apple border-black/5 overflow-hidden bg-white">
+        <CardHeader className="bg-white border-b border-black/5 p-6 md:p-10">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
             <div className="space-y-1">
-                <CardTitle className="text-3xl font-black tracking-tight">Stay Inventory</CardTitle>
-                <CardDescription className="text-base font-medium">Aggregated logs from all explorer accounts.</CardDescription>
+                <CardTitle className="text-2xl md:text-3xl font-black tracking-tight">Stay Inventory</CardTitle>
+                <CardDescription className="text-sm md:text-base font-medium">Aggregated logs from all explorer accounts.</CardDescription>
             </div>
-            <div className="text-right">
+            <div className="text-left md:text-right w-full md:w-auto">
                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Volume</p>
-                <p className="text-3xl font-black tracking-tighter text-primary">{bookings.length} Records</p>
+                <p className="text-2xl md:text-3xl font-black tracking-tighter text-primary">{bookings.length} Records</p>
             </div>
           </div>
         </CardHeader>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader className="bg-muted/20">
-              <TableRow className="border-0">
-                <TableHead className="px-10 h-16 text-[10px] font-black uppercase tracking-widest">Customer</TableHead>
-                <TableHead className="h-16 text-[10px] font-black uppercase tracking-widest">Accommodation</TableHead>
-                <TableHead className="h-16 text-[10px] font-black uppercase tracking-widest">Stay Window</TableHead>
-                <TableHead className="h-16 text-[10px] font-black uppercase tracking-widest">Investment</TableHead>
-                <TableHead className="h-16 text-[10px] font-black uppercase tracking-widest">Status</TableHead>
-                <TableHead className="text-right px-10 h-16 text-[10px] font-black uppercase tracking-widest">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                Array.from({ length: 8 }).map((_, i) => (
-                  <TableRow key={i} className="border-b border-black/5">
-                    <TableCell colSpan={6} className="h-24 text-center">
-                      <Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground/30" />
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : bookings.length > 0 ? (
-                bookings.map((booking) => (
-                  <TableRow key={booking.id} className="hover:bg-muted/5 transition-colors border-b border-black/5 last:border-0">
-                    <TableCell className="px-10 py-8">
-                      <div className="font-bold text-sm leading-tight text-foreground">{booking.customerName}</div>
-                      <div className="text-[10px] text-muted-foreground uppercase font-black tracking-[0.1em] mt-1.5 truncate max-w-[180px]">{booking.customerEmail}</div>
-                    </TableCell>
-                    <TableCell className="py-8">
-                      <div className="font-bold text-sm text-foreground">{booking.hotelName}</div>
-                      <div className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1 opacity-60">{booking.roomType}</div>
-                    </TableCell>
-                    <TableCell className="py-8">
-                      <div className="text-xs font-black tracking-tight text-foreground">
-                        {formatDateRange(booking.checkIn, booking.checkOut)}
-                      </div>
-                      <div className="text-[10px] text-muted-foreground font-black mt-1 uppercase tracking-widest">{booking.guests} Guests</div>
-                    </TableCell>
-                    <TableCell className="py-8 font-black text-primary text-base tracking-tighter">
-                      {booking.totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}
-                    </TableCell>
-                    <TableCell className="py-8">
-                      <BookingStatusBadge status={booking.status} />
-                    </TableCell>
-                    <TableCell className="text-right px-10 py-8">
-                      <div className="flex justify-end gap-3">
-                        {booking.status === 'PENDING' && (
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="h-10 px-6 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm hover:bg-green-50 hover:text-green-700 hover:border-green-200 border-black/5"
-                            disabled={isUpdating === booking.id}
-                            onClick={() => handleStatusUpdate(booking.userId, booking.id, 'CONFIRMED')}
-                          >
-                            {isUpdating === booking.id ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Confirm'}
-                          </Button>
-                        )}
-                        {booking.status !== 'CANCELLED' && (
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-10 px-6 rounded-full text-[9px] font-black uppercase tracking-widest text-destructive hover:bg-destructive/5"
-                            disabled={isUpdating === booking.id}
-                            onClick={() => handleStatusUpdate(booking.userId, booking.id, 'CANCELLED')}
-                          >
-                            Cancel
-                          </Button>
-                        )}
-                        <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-muted">
-                            <Download className="h-4 w-4 text-muted-foreground" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={6} className="h-96 text-center">
-                    <div className="flex flex-col items-center justify-center space-y-6">
-                        <div className="p-8 bg-muted/30 rounded-full">
-                            <Activity className="h-16 w-16 text-muted-foreground/20" />
-                        </div>
-                        <div className="space-y-2">
-                            <p className="text-muted-foreground font-black uppercase tracking-[0.3em] text-xs">Inventory Empty</p>
-                            <p className="text-muted-foreground/60 text-base font-medium">No Himalayan bookings recorded yet.</p>
-                        </div>
-                    </div>
-                  </TableCell>
+        <CardContent className="p-0 overflow-x-auto">
+          <div className="min-w-[900px]">
+            <Table>
+                <TableHeader className="bg-muted/20">
+                <TableRow className="border-0">
+                    <TableHead className="px-10 h-16 text-[10px] font-black uppercase tracking-widest">Customer</TableHead>
+                    <TableHead className="h-16 text-[10px] font-black uppercase tracking-widest">Accommodation</TableHead>
+                    <TableHead className="h-16 text-[10px] font-black uppercase tracking-widest">Stay Window</TableHead>
+                    <TableHead className="h-16 text-[10px] font-black uppercase tracking-widest">Investment</TableHead>
+                    <TableHead className="h-16 text-[10px] font-black uppercase tracking-widest">Status</TableHead>
+                    <TableHead className="text-right px-10 h-16 text-[10px] font-black uppercase tracking-widest">Actions</TableHead>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
+                </TableHeader>
+                <TableBody>
+                {isLoading ? (
+                    Array.from({ length: 8 }).map((_, i) => (
+                    <TableRow key={i} className="border-b border-black/5">
+                        <TableCell colSpan={6} className="h-24 text-center">
+                        <Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground/30" />
+                        </TableCell>
+                    </TableRow>
+                    ))
+                ) : bookings.length > 0 ? (
+                    bookings.map((booking) => (
+                    <TableRow key={booking.id} className="hover:bg-muted/5 transition-colors border-b border-black/5 last:border-0">
+                        <TableCell className="px-10 py-8">
+                        <div className="font-bold text-sm leading-tight text-foreground">{booking.customerName}</div>
+                        <div className="text-[10px] text-muted-foreground uppercase font-black tracking-[0.1em] mt-1.5 truncate max-w-[180px]">{booking.customerEmail}</div>
+                        </TableCell>
+                        <TableCell className="py-8">
+                        <div className="font-bold text-sm text-foreground">{booking.hotelName}</div>
+                        <div className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1 opacity-60">{booking.roomType}</div>
+                        </TableCell>
+                        <TableCell className="py-8">
+                        <div className="text-xs font-black tracking-tight text-foreground">
+                            {formatDateRange(booking.checkIn, booking.checkOut)}
+                        </div>
+                        <div className="text-[10px] text-muted-foreground font-black mt-1 uppercase tracking-widest">{booking.guests} Guests</div>
+                        </TableCell>
+                        <TableCell className="py-8 font-black text-primary text-base tracking-tighter">
+                        {booking.totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}
+                        </TableCell>
+                        <TableCell className="py-8">
+                        <BookingStatusBadge status={booking.status} />
+                        </TableCell>
+                        <TableCell className="text-right px-10 py-8">
+                        <div className="flex justify-end gap-3">
+                            {booking.status === 'PENDING' && (
+                            <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="h-10 px-6 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm hover:bg-green-50 hover:text-green-700 hover:border-green-200 border-black/5"
+                                disabled={isUpdating === booking.id}
+                                onClick={() => handleStatusUpdate(booking.userId, booking.id, 'CONFIRMED')}
+                            >
+                                {isUpdating === booking.id ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Confirm'}
+                            </Button>
+                            )}
+                            {booking.status !== 'CANCELLED' && (
+                            <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="h-10 px-6 rounded-full text-[9px] font-black uppercase tracking-widest text-destructive hover:bg-destructive/5"
+                                disabled={isUpdating === booking.id}
+                                onClick={() => handleStatusUpdate(booking.userId, booking.id, 'CANCELLED')}
+                            >
+                                Cancel
+                            </Button>
+                            )}
+                            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-muted">
+                                <Download className="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                        </div>
+                        </TableCell>
+                    </TableRow>
+                    ))
+                ) : (
+                    <TableRow>
+                    <TableCell colSpan={6} className="h-96 text-center">
+                        <div className="flex flex-col items-center justify-center space-y-6">
+                            <div className="p-8 bg-muted/30 rounded-full">
+                                <Activity className="h-16 w-16 text-muted-foreground/20" />
+                            </div>
+                            <div className="space-y-2">
+                                <p className="text-muted-foreground font-black uppercase tracking-[0.3em] text-xs">Inventory Empty</p>
+                                <p className="text-muted-foreground/60 text-base font-medium">No Himalayan bookings recorded yet.</p>
+                            </div>
+                        </div>
+                    </TableCell>
+                    </TableRow>
+                )}
+                </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>
