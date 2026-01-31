@@ -11,6 +11,7 @@ service cloud.firestore {
     // Synchronous bypass is only used via Server Actions (Admin SDK)
     function isAdmin() {
       return request.auth != null && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 

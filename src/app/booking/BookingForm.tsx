@@ -7,7 +7,7 @@ import { differenceInDays, format, parse } from 'date-fns';
 import { signInAnonymously } from 'firebase/auth';
 import type { Hotel, Room, Booking, Promotion } from '@/lib/types';
 import { useFirestore, useAuth, useUser, useDoc, useCollection, useMemoFirebase } from '@/firebase';
-import { doc, collection, getDoc, runTransaction, increment, Timestamp } from 'firebase/firestore';
+import { doc, collection, getDoc } from 'firebase/firestore';
 
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -19,6 +19,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2, Calendar, Users, BedDouble, ArrowLeft, Tag, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 import { BookingFormSkeleton } from './BookingFormSkeleton';
+import { confirmBookingAction } from './actions';
 
 
 declare global {
@@ -189,61 +190,43 @@ export function BookingForm() {
             currency: "INR",
             name: "Uttarakhand Getaways",
             description: `Booking for ${hotel.name}`,
+            notes: {
+                booking_id: `booking_${Date.now()}`,
+                user_id: userIdForBooking
+            },
             handler: async (response: any) => {
-                try {
-                    const bookingId = `booking_${Date.now()}_${userIdForBooking.substring(0, 5)}`;
-                    const bookingRef = doc(firestore, 'users', userIdForBooking, 'bookings', bookingId);
-                    const roomRef = doc(firestore, 'hotels', hotelId, 'rooms', roomId);
+                const bookingId = options.notes.booking_id;
+                
+                const result = await confirmBookingAction({
+                    userId: userIdForBooking,
+                    hotelId: hotelId!,
+                    roomId: roomId!,
+                    bookingId,
+                    paymentId: response.razorpay_payment_id,
+                    bookingData: {
+                        hotelName: hotel.name,
+                        hotelCity: hotel.city,
+                        hotelAddress: hotel.address || '',
+                        roomType: room.type,
+                        checkIn: checkInStr,
+                        checkOut: checkOutStr,
+                        guests: parseInt(guests),
+                        totalPrice: totalPrice,
+                        customerName: customerDetails.name,
+                        customerEmail: customerDetails.email,
+                        couponCode: couponDiscount > 0 ? couponCode : undefined,
+                    }
+                });
 
-                    await runTransaction(firestore, async (transaction) => {
-                        const roomDoc = await transaction.get(roomRef);
-                        if (!roomDoc.exists()) {
-                            throw new Error("Room details not found in database.");
-                        }
-                        
-                        const currentAvailable = roomDoc.data().availableRooms ?? 0;
-                        if (currentAvailable <= 0) {
-                            throw new Error("Sorry, this room just got sold out while you were paying!");
-                        }
-                        
-                        transaction.update(roomRef, {
-                            availableRooms: increment(-1),
-                        });
-                        
-                        const bookingPayload: Booking = {
-                            userId: userIdForBooking,
-                            hotelId,
-                            hotelName: hotel.name,
-                            hotelCity: hotel.city,
-                            hotelAddress: hotel.address || '',
-                            roomId,
-                            roomType: room.type,
-                            checkIn,
-                            checkOut,
-                            guests: parseInt(guests),
-                            totalPrice: totalPrice,
-                            customerName: customerDetails.name,
-                            customerEmail: customerDetails.email,
-                            status: 'CONFIRMED',
-                            createdAt: Timestamp.now() as any,
-                            razorpayPaymentId: response.razorpay_payment_id,
-                            ...(couponDiscount > 0 && { couponCode: couponCode }),
-                        };
-
-                        transaction.set(bookingRef, bookingPayload);
-                    });
-
+                if (result.success) {
                     toast({ title: "Booking Confirmed!", description: "Your Himalayan adventure is officially scheduled." });
                     router.push(`/booking/success/${bookingId}`);
-
-                } catch (err: any) {
-                     console.error("Booking Transaction Error:", err);
-                     toast({
+                } else {
+                    toast({
                         variant: "destructive",
-                        title: "Booking Persistence Failed",
-                        description: err.message || "Could not save your booking. Please contact support with your Payment ID.",
+                        title: "Booking Error",
+                        description: result.error,
                     });
-                } finally {
                     setIsBooking(false);
                 }
             },
