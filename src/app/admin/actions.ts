@@ -1,4 +1,3 @@
-
 'use server';
 
 import { getFirebaseAdmin } from '@/firebase/admin';
@@ -24,7 +23,7 @@ const serialize = (val: any): any => {
                 plain[key] = serialize(val[key]);
             }
         }
-        return plain;Plain
+        return plain;
     }
     
     if (Array.isArray(val)) {
