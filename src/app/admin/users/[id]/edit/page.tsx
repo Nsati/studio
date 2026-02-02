@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { getUserDetailsForAdmin, updateUserByAdmin, UpdateUserSchema, type UpdateUserInput } from '@/app/admin/users/actions';
-import type { UserProfile } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -15,11 +14,6 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BookOpen, IndianRupee, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-
-interface UserDetails extends UserProfile {
-    totalRevenue: number;
-    totalBookings: number;
-}
 
 function StatCard({ title, value, icon: Icon, isLoading }: any) {
     return (
@@ -39,42 +33,13 @@ function StatCard({ title, value, icon: Icon, isLoading }: any) {
     )
 }
 
-function EditUserPageSkeleton() {
-    return (
-      <div className="space-y-6">
-          <Skeleton className="h-9 w-1/3 mb-2" />
-          <Skeleton className="h-5 w-1/2 mb-8" />
-          <div className="grid gap-4 md:grid-cols-2">
-            <StatCard title="Total Revenue" isLoading={true} icon={IndianRupee} />
-            <StatCard title="Total Bookings" isLoading={true} icon={BookOpen} />
-          </div>
-          <Card>
-              <CardHeader><CardTitle>Edit User Details</CardTitle></CardHeader>
-              <CardContent className="pt-6">
-                  <div className="space-y-8">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                          <Skeleton className="h-10 w-full" />
-                          <Skeleton className="h-10 w-full" />
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                          <Skeleton className="h-10 w-full" />
-                          <Skeleton className="h-10 w-full" />
-                      </div>
-                      <Skeleton className="h-10 w-32" />
-                  </div>
-              </CardContent>
-          </Card>
-      </div>
-    );
-}
-
 export default function EditUserPage() {
     const params = useParams();
     const router = useRouter();
     const userId = params.id as string;
     const { toast } = useToast();
 
-    const [user, setUser] = useState<UserDetails | null>(null);
+    const [userData, setUserData] = useState<any | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -93,13 +58,12 @@ export default function EditUserPage() {
         if (userId) {
             getUserDetailsForAdmin(userId)
                 .then(data => {
-                    setUser(data);
-                    // Fixed: Type cast status literals to ensure build validity
+                    setUserData(data);
                     form.reset({
                         displayName: data.displayName,
                         mobile: data.mobile,
                         role: data.role,
-                        status: data.status as any, 
+                        status: data.status as any,
                     });
                     setIsLoading(false);
                 })
@@ -130,10 +94,19 @@ export default function EditUserPage() {
     }
 
     if (isLoading) {
-        return <EditUserPageSkeleton />;
+        return (
+            <div className="space-y-6">
+                <Skeleton className="h-10 w-1/3" />
+                <div className="grid gap-4 md:grid-cols-2">
+                    <Skeleton className="h-24 w-full" />
+                    <Skeleton className="h-24 w-full" />
+                </div>
+                <Skeleton className="h-96 w-full" />
+            </div>
+        );
     }
 
-    if (error || !user) {
+    if (error || !userData) {
         return notFound();
     }
 
@@ -142,20 +115,20 @@ export default function EditUserPage() {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
                 <div className="space-y-1">
                     <h1 className="text-3xl font-bold tracking-tight text-[#1a1a1a]">Manage Explorer</h1>
-                    <p className="text-muted-foreground text-sm font-medium">Modifying profile for {user.displayName} ({user.email})</p>
+                    <p className="text-muted-foreground text-sm font-medium">Modifying profile for {userData.displayName} ({userData.email})</p>
                 </div>
             </div>
             
             <div className="grid gap-4 md:grid-cols-2">
                 <StatCard 
                     title="Lifetime Revenue" 
-                    value={(user.totalRevenue).toLocaleString('en-IN', { style: 'currency', currency: 'INR' })} 
+                    value={(userData.totalRevenue).toLocaleString('en-IN', { style: 'currency', currency: 'INR' })} 
                     icon={IndianRupee} 
                     isLoading={isLoading} 
                 />
                 <StatCard 
                     title="Verified Stays" 
-                    value={user.totalBookings}
+                    value={userData.totalBookings}
                     icon={BookOpen} 
                     isLoading={isLoading} 
                 />

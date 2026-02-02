@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useUser } from '@/firebase';
 import { getAllBookingsForAdmin } from '../actions';
 import { updateBookingStatusByAdmin, deleteBookingByAdmin } from './actions';
 import { useToast } from '@/hooks/use-toast';
@@ -33,7 +32,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger, // Added missing import
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { cn } from '@/lib/utils';
 
@@ -51,7 +50,6 @@ function BookingStatusBadge({ status }: { status: string }) {
 }
 
 export default function BookingsAdminPage() {
-  const { user } = useUser();
   const { toast } = useToast();
   const [bookings, setBookings] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);

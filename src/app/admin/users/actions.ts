@@ -2,7 +2,7 @@
 
 import { getFirebaseAdmin } from '@/firebase/admin';
 import { revalidatePath } from 'next/cache';
-import type { UserProfile, Booking } from '@/lib/types';
+import type { UserProfile } from '@/lib/types';
 import { z } from 'zod';
 
 type ActionResponse = {
@@ -37,12 +37,11 @@ export async function getUserDetailsForAdmin(uid: string): Promise<UserDetailsFo
     }
 
     const userRef = adminDb.doc(`users/${uid}`);
-    // Fixed: Define ref separately to avoid circular dependency in initializers
     const bookingsRef = adminDb.collectionGroup('bookings').where('userId', '==', uid);
 
     const [userDoc, bookingsSnap] = await Promise.all([
         userRef.get(),
-        bookingsRef.get(), // Fixed: Use bookingsRef instead of bookingsSnap
+        bookingsRef.get(),
     ]);
 
     if (!userDoc.exists) {
