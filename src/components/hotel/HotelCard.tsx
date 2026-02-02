@@ -24,7 +24,8 @@ interface HotelCardProps {
 
 export function HotelCard({ hotel, className }: HotelCardProps) {
   const getImageUrl = (img: string) => {
-    if (img?.startsWith('http')) return img;
+    if (!img) return '';
+    if (img.startsWith('http')) return img;
     return PlaceHolderImages.find((p) => p.id === img)?.imageUrl || '';
   };
 
@@ -42,14 +43,20 @@ export function HotelCard({ hotel, className }: HotelCardProps) {
                 <CarouselContent className="h-full ml-0">
                   {hotel.images.map((img, index) => (
                     <CarouselItem key={index} className="pl-0 h-full relative">
-                      <Link href={`/hotels/${hotel.id}`}>
-                        <Image
-                          src={getImageUrl(img)}
-                          alt={`${hotel.name} - ${index + 1}`}
-                          fill
-                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                          className="object-cover transition-transform duration-1000 group-hover:scale-105"
-                        />
+                      <Link href={`/hotels/${hotel.id}`} className="block w-full h-full relative">
+                        {getImageUrl(img) ? (
+                          <Image
+                            src={getImageUrl(img)}
+                            alt={`${hotel.name} - ${index + 1}`}
+                            fill
+                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                            className="object-cover transition-transform duration-1000 group-hover:scale-105"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center bg-muted">
+                            <span className="text-muted-foreground text-[10px] font-black uppercase">No Image</span>
+                          </div>
+                        )}
                       </Link>
                     </CarouselItem>
                   ))}
@@ -59,9 +66,9 @@ export function HotelCard({ hotel, className }: HotelCardProps) {
                 <CarouselNext className="absolute right-4 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 hover:bg-white border-0 h-8 w-8" />
               </Carousel>
             ) : (
-              <div className="flex h-full w-full items-center justify-center bg-muted">
+              <Link href={`/hotels/${hotel.id}`} className="flex h-full w-full items-center justify-center bg-muted">
                 <span className="text-muted-foreground text-xs uppercase tracking-widest font-black">No Preview</span>
-              </div>
+              </Link>
             )}
             
             {/* Minimal Badge Overlay */}
