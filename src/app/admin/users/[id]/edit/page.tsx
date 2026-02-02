@@ -98,7 +98,7 @@ export default function EditUserPage() {
                         displayName: data.displayName,
                         mobile: data.mobile,
                         role: data.role,
-                        status: data.status,
+                        status: data.status as any, // Fix: Explicitly cast to match form union types
                     });
                     setIsLoading(false);
                 })
