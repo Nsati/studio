@@ -295,7 +295,7 @@ export default function BookingsAdminPage() {
                                 <Activity className="h-20 w-20 text-muted-foreground/10" />
                             </div>
                             <div className="space-y-3">
-                                <p className="text-muted-foreground font-black uppercase tracking-[0.4em] text-sm">No Active Events Logged.</p>
+                                <p className="text-muted-foreground font-black uppercase tracking-[0.4em] text-sm">Inventory Void</p>
                                 <p className="text-muted-foreground/60 text-lg font-medium tracking-tight">No Himalayan bookings recorded in this node.</p>
                             </div>
                         </div>
