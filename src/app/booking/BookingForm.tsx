@@ -132,7 +132,7 @@ export function BookingForm() {
             }
 
             const options = {
-                key: 'rzp_live_SBAuFmGWqZjkQM', // Verified Live Key ID
+                key: 'rzp_live_SBCbtId0o91JAf', // Updated to latest provided Live Key ID
                 amount: orderData.amount,
                 currency: "INR",
                 name: "Uttarakhand Getaways",
