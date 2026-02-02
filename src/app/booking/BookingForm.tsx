@@ -176,7 +176,9 @@ export function BookingForm() {
         }
         
         const userIdForBooking = currentAuthUser.uid;
-        const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+        // Use the specific live key provided by the user as fallback
+        const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_live_SBAuFmGWqZjkQM';
+        
         if (!keyId) {
             toast({ variant: "destructive", title: "Payment Gateway Error", description: "Razorpay Key ID is not configured." });
             setIsBooking(false);
