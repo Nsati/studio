@@ -1,4 +1,3 @@
-
 'use server';
 
 import { getFirebaseAdmin } from '@/firebase/admin';
@@ -15,7 +14,7 @@ export const UpdateUserSchema = z.object({
   displayName: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
   mobile: z.string().length(10, { message: 'Mobile number must be 10 digits.' }),
   role: z.enum(['user', 'admin']),
-  status: z.enum(['pending', 'active']),
+  status: z.enum(['pending', 'active', 'suspended']),
 });
 
 export type UpdateUserInput = z.infer<typeof UpdateUserSchema>;
