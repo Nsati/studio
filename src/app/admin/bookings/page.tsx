@@ -24,7 +24,7 @@ import {
   Activity, 
   Filter, 
   Trash2,
-  ShieldAlert
+  ChevronRight
 } from "lucide-react";
 import {
   AlertDialog,
@@ -42,13 +42,13 @@ import { cn } from '@/lib/utils';
 function BookingStatusBadge({ status }: { status: string }) {
   switch (status) {
     case 'CONFIRMED':
-      return <Badge className="bg-green-100 text-green-700 border-0 hover:bg-green-100 font-bold uppercase text-[10px] px-3 py-1 rounded-sm">Confirmed</Badge>;
+      return <Badge className="bg-green-100 text-green-700 border-0 rounded-none font-bold uppercase text-[10px] px-2 py-0.5">Confirmed</Badge>;
     case 'CANCELLED':
-      return <Badge variant="destructive" className="font-bold uppercase text-[10px] px-3 py-1 rounded-sm">Cancelled</Badge>;
+      return <Badge className="bg-red-100 text-red-700 border-0 rounded-none font-bold uppercase text-[10px] px-2 py-0.5">Cancelled</Badge>;
     case 'PENDING':
-      return <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 font-bold uppercase text-[10px] px-3 py-1 rounded-sm">Pending</Badge>;
+      return <Badge className="bg-amber-50 text-amber-700 border-amber-200 rounded-none font-bold uppercase text-[10px] px-2 py-0.5">Pending</Badge>;
     default:
-      return <Badge variant="secondary" className="font-bold uppercase text-[10px] px-3 py-1 rounded-sm">{status}</Badge>;
+      return <Badge variant="outline" className="rounded-none font-bold uppercase text-[10px] px-2 py-0.5">{status}</Badge>;
   }
 }
 
@@ -88,7 +88,7 @@ export default function BookingsAdminPage() {
         const result = await updateBookingStatusByAdmin(userId, bookingId, status);
         if (result.success) {
           toast({ title: 'Success', description: result.message });
-          loadBookings(); // Refresh list
+          loadBookings();
         } else {
           toast({ variant: 'destructive', title: 'Action Failed', description: result.message });
         }
@@ -104,7 +104,7 @@ export default function BookingsAdminPage() {
     try {
         const result = await deleteBookingByAdmin(userId, bookingId);
         if (result.success) {
-            toast({ title: 'System Purge Complete', description: result.message });
+            toast({ title: 'Record Purged', description: result.message });
             loadBookings();
         } else {
             toast({ variant: 'destructive', title: 'Purge Failed', description: result.message });
@@ -123,47 +123,42 @@ export default function BookingsAdminPage() {
         if (start && end && isValid(start) && isValid(end)) {
             return `${format(start, 'dd MMM')} — ${format(end, 'dd MMM yyyy')}`;
         }
-        return 'Dates pending';
+        return 'N/A';
     } catch (e) {
-        return 'Invalid window';
+        return 'Invalid';
     }
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Reservations</h1>
-          <p className="text-muted-foreground">Central control for all Himalayan stays.</p>
+          <h1 className="text-3xl font-bold tracking-tight text-[#1a1a1a]">Reservations</h1>
+          <p className="text-muted-foreground text-sm font-medium">Manage and monitor all hotel stay requests.</p>
         </div>
-        <div className="flex items-center gap-3">
-            <Button variant="outline" size="sm" className="rounded-none font-bold">
-                <Filter className="mr-2 h-4 w-4" /> Filter
-            </Button>
-            <Button variant="outline" size="sm" onClick={loadBookings} className="rounded-none font-bold">
-                <RefreshCw className={cn("mr-2 h-4 w-4 text-primary", isLoading && "animate-spin")} /> {isLoading ? 'Syncing...' : 'Refresh'}
+        <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={loadBookings} className="rounded-none h-10 font-bold border-border bg-white px-6">
+                <RefreshCw className={cn("mr-2 h-4 w-4 text-[#003580]", isLoading && "animate-spin")} /> {isLoading ? 'Syncing...' : 'Refresh'}
             </Button>
         </div>
       </div>
 
       {error && (
-        <Card className="border-destructive/20 bg-destructive/5 overflow-hidden">
-            <CardHeader className="py-6 px-6 flex flex-row items-center gap-4">
-                <AlertCircle className="h-6 w-6 text-destructive" />
-                <div className="space-y-1">
-                    <CardTitle className="text-lg font-bold text-destructive">System Sync Error</CardTitle>
-                    <CardDescription className="text-destructive/80 font-medium">
-                        {error}
-                    </CardDescription>
+        <Card className="border-red-200 bg-red-50 rounded-none shadow-none">
+            <CardHeader className="py-4 px-6 flex flex-row items-center gap-4">
+                <AlertCircle className="h-5 w-5 text-red-600" />
+                <div className="space-y-0.5">
+                    <CardTitle className="text-sm font-bold text-red-900">System Error</CardTitle>
+                    <CardDescription className="text-red-700 text-xs font-medium">{error}</CardDescription>
                 </div>
             </CardHeader>
         </Card>
       )}
 
-      <Card className="rounded-none border-border shadow-sm overflow-hidden bg-white">
-        <CardHeader className="bg-[#f5f5f5] border-b p-6">
+      <Card className="rounded-none border-border bg-white shadow-sm overflow-hidden">
+        <CardHeader className="bg-muted/20 border-b p-6">
           <div className="flex justify-between items-center">
-            <CardTitle className="text-lg font-bold">Stay Inventory ({bookings.length})</CardTitle>
+            <CardTitle className="text-lg font-bold text-[#1a1a1a]">Booking Inventory ({bookings.length})</CardTitle>
           </div>
         </CardHeader>
         <CardContent className="p-0 overflow-x-auto">
@@ -171,32 +166,32 @@ export default function BookingsAdminPage() {
             <Table>
                 <TableHeader className="bg-muted/10">
                 <TableRow>
-                    <TableHead>Customer</TableHead>
-                    <TableHead>Accommodation</TableHead>
-                    <TableHead>Stay Window</TableHead>
-                    <TableHead>Investment</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="font-bold text-[#1a1a1a] text-[11px] uppercase tracking-wider">Customer</TableHead>
+                    <TableHead className="font-bold text-[#1a1a1a] text-[11px] uppercase tracking-wider">Property Details</TableHead>
+                    <TableHead className="font-bold text-[#1a1a1a] text-[11px] uppercase tracking-wider">Stay Window</TableHead>
+                    <TableHead className="font-bold text-[#1a1a1a] text-[11px] uppercase tracking-wider">Amount</TableHead>
+                    <TableHead className="font-bold text-[#1a1a1a] text-[11px] uppercase tracking-wider">Status</TableHead>
+                    <TableHead className="text-right font-bold text-[#1a1a1a] text-[11px] uppercase tracking-wider">Actions</TableHead>
                 </TableRow>
                 </TableHeader>
                 <TableBody>
                 {isLoading ? (
                     Array.from({ length: 5 }).map((_, i) => (
                     <TableRow key={i}>
-                        <TableCell colSpan={6} className="h-20 text-center">
-                        <Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground/40" />
+                        <TableCell colSpan={6} className="h-16 text-center">
+                        <Loader2 className="h-5 w-5 animate-spin mx-auto text-muted-foreground/40" />
                         </TableCell>
                     </TableRow>
                     ))
                 ) : bookings.length > 0 ? (
                     bookings.map((booking) => (
-                    <TableRow key={booking.id} className="hover:bg-muted/5">
+                    <TableRow key={booking.id} className="hover:bg-muted/5 transition-colors">
                         <TableCell>
-                        <div className="font-bold text-sm">{booking.customerName}</div>
-                        <div className="text-[11px] text-muted-foreground truncate max-w-[180px]">{booking.customerEmail}</div>
+                        <div className="font-bold text-sm text-[#1a1a1a]">{booking.customerName}</div>
+                        <div className="text-[11px] text-[#006ce4] truncate max-w-[180px] hover:underline cursor-pointer">{booking.customerEmail}</div>
                         </TableCell>
                         <TableCell>
-                        <div className="font-bold text-sm">{booking.hotelName}</div>
+                        <div className="font-bold text-sm text-[#1a1a1a]">{booking.hotelName}</div>
                         <div className="text-[11px] text-muted-foreground">{booking.roomType}</div>
                         </TableCell>
                         <TableCell>
@@ -205,7 +200,7 @@ export default function BookingsAdminPage() {
                         </div>
                         <div className="text-[11px] text-muted-foreground">{booking.guests} Guests</div>
                         </TableCell>
-                        <TableCell className="font-bold text-[#1a1a1a]">
+                        <TableCell className="font-bold text-[#1a1a1a] text-sm">
                         {booking.totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}
                         </TableCell>
                         <TableCell>
@@ -228,7 +223,7 @@ export default function BookingsAdminPage() {
                             <Button 
                                 variant="ghost" 
                                 size="sm" 
-                                className="h-8 rounded-none text-[11px] font-bold text-destructive hover:bg-destructive/5"
+                                className="h-8 rounded-none text-[11px] font-bold text-red-600 hover:bg-red-50"
                                 disabled={isUpdating === booking.id}
                                 onClick={() => handleStatusUpdate(booking.userId, booking.id, 'CANCELLED')}
                             >
@@ -240,22 +235,22 @@ export default function BookingsAdminPage() {
                                     <Button 
                                         variant="ghost" 
                                         size="icon" 
-                                        className="h-8 w-8 text-muted-foreground/40 hover:text-destructive"
+                                        className="h-8 w-8 text-muted-foreground/40 hover:text-red-600 transition-colors"
                                         disabled={isUpdating === booking.id}
                                     >
                                         <Trash2 className="h-4 w-4" />
                                     </Button>
                                 </AlertDialogTrigger>
-                                <AlertDialogContent>
+                                <AlertDialogContent className="rounded-none">
                                     <AlertDialogHeader>
-                                        <AlertDialogTitle>Purge Record?</AlertDialogTitle>
+                                        <AlertDialogTitle>Delete Reservation?</AlertDialogTitle>
                                         <AlertDialogDescription>
-                                            Permanently erase reservation for {booking.customerName}?
+                                            This will permanently remove the record for {booking.customerName}.
                                         </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
-                                        <AlertDialogCancel>Abort</AlertDialogCancel>
-                                        <AlertDialogAction onClick={() => handlePurge(booking.userId, booking.id)} className="bg-destructive text-white hover:bg-destructive/90">Confirm Purge</AlertDialogAction>
+                                        <AlertDialogCancel className="rounded-none">Cancel</AlertDialogCancel>
+                                        <AlertDialogAction onClick={() => handlePurge(booking.userId, booking.id)} className="bg-red-600 text-white hover:bg-red-700 rounded-none">Confirm Delete</AlertDialogAction>
                                     </AlertDialogFooter>
                                 </AlertDialogContent>
                             </AlertDialog>
@@ -265,10 +260,10 @@ export default function BookingsAdminPage() {
                     ))
                 ) : (
                     <TableRow>
-                    <TableCell colSpan={6} className="h-[300px] text-center">
-                        <div className="flex flex-col items-center justify-center space-y-4">
-                            <Activity className="h-12 w-12 text-muted-foreground/20" />
-                            <p className="text-muted-foreground font-medium">No bookings recorded.</p>
+                    <TableCell colSpan={6} className="h-64 text-center">
+                        <div className="flex flex-col items-center justify-center space-y-3">
+                            <Activity className="h-10 w-10 text-muted-foreground/20" />
+                            <p className="text-muted-foreground text-sm font-medium">No reservations found in the system.</p>
                         </div>
                     </TableCell>
                     </TableRow>
