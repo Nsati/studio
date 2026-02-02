@@ -33,7 +33,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
+  AlertDialogTrigger, // Added missing import
 } from "@/components/ui/alert-dialog";
 import { cn } from '@/lib/utils';
 

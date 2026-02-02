@@ -37,11 +37,12 @@ export async function getUserDetailsForAdmin(uid: string): Promise<UserDetailsFo
     }
 
     const userRef = adminDb.doc(`users/${uid}`);
+    // Fixed: Define ref separately to avoid circular dependency in initializers
     const bookingsRef = adminDb.collectionGroup('bookings').where('userId', '==', uid);
 
     const [userDoc, bookingsSnap] = await Promise.all([
         userRef.get(),
-        bookingsRef.get(),
+        bookingsRef.get(), // Fixed: Use bookingsRef instead of bookingsSnap
     ]);
 
     if (!userDoc.exists) {

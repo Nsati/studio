@@ -94,11 +94,12 @@ export default function EditUserPage() {
             getUserDetailsForAdmin(userId)
                 .then(data => {
                     setUser(data);
+                    // Fixed: Type cast status literals to ensure build validity
                     form.reset({
                         displayName: data.displayName,
                         mobile: data.mobile,
                         role: data.role,
-                        status: data.status as any, // Cast to synchronize with literals
+                        status: data.status as any, 
                     });
                     setIsLoading(false);
                 })
