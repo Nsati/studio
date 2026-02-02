@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useUser } from '@/firebase';
 import { getAllBookingsForAdmin } from '../actions';
-import { updateBookingStatusByAdmin } from './actions';
+import { updateBookingStatusByAdmin, deleteBookingByAdmin } from './actions';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { 
@@ -17,7 +17,27 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { format, isValid, parseISO } from 'date-fns';
-import { Loader2, RefreshCw, AlertCircle, Activity, Filter, Download } from "lucide-react";
+import { 
+  Loader2, 
+  RefreshCw, 
+  AlertCircle, 
+  Activity, 
+  Filter, 
+  Download, 
+  Trash2,
+  ShieldAlert
+} from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 function BookingStatusBadge({ status }: { status: string }) {
   switch (status) {
@@ -78,6 +98,23 @@ export default function BookingsAdminPage() {
         setIsUpdating(null);
     }
   };
+
+  const handlePurge = async (userId: string, bookingId: string) => {
+    setIsUpdating(bookingId);
+    try {
+        const result = await deleteBookingByAdmin(userId, bookingId);
+        if (result.success) {
+            toast({ title: 'System Purge Complete', description: result.message });
+            loadBookings();
+        } else {
+            toast({ variant: 'destructive', title: 'Purge Failed', description: result.message });
+        }
+    } catch (e: any) {
+        toast({ variant: 'destructive', title: 'Critical Failure', description: e.message });
+    } finally {
+        setIsUpdating(null);
+    }
+  }
 
   const formatDateRange = (checkIn: string, checkOut: string) => {
     try {
@@ -181,7 +218,7 @@ export default function BookingsAdminPage() {
                         <BookingStatusBadge status={booking.status} />
                         </TableCell>
                         <TableCell className="text-right px-10 py-8">
-                        <div className="flex justify-end gap-3">
+                        <div className="flex justify-end gap-2 items-center">
                             {booking.status === 'PENDING' && (
                             <Button 
                                 variant="outline" 
@@ -204,6 +241,41 @@ export default function BookingsAdminPage() {
                                 Cancel
                             </Button>
                             )}
+                            <div className="h-8 w-px bg-black/5 mx-1" />
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        className="h-10 w-10 rounded-full hover:bg-destructive/10 text-destructive/40 hover:text-destructive transition-colors"
+                                        disabled={isUpdating === booking.id}
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent className="rounded-[2.5rem] border-0 shadow-2xl">
+                                    <AlertDialogHeader className="items-center text-center space-y-4">
+                                        <div className="h-16 w-16 bg-destructive/10 rounded-full flex items-center justify-center text-destructive">
+                                            <ShieldAlert className="h-8 w-8" />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <AlertDialogTitle className="text-2xl font-black tracking-tight">God-Mode Purge</AlertDialogTitle>
+                                            <AlertDialogDescription className="text-base font-medium">
+                                                This action is irreversible. It will permanently erase this reservation for <span className="text-foreground font-bold">{booking.customerName}</span> from the database.
+                                            </AlertDialogDescription>
+                                        </div>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter className="sm:justify-center gap-3 pt-6">
+                                        <AlertDialogCancel className="rounded-full h-12 px-8 font-black uppercase text-[10px] tracking-widest">Abort</AlertDialogCancel>
+                                        <AlertDialogAction 
+                                            onClick={() => handlePurge(booking.userId, booking.id)}
+                                            className="bg-destructive hover:bg-destructive/90 rounded-full h-12 px-8 font-black uppercase text-[10px] tracking-widest shadow-xl shadow-destructive/20"
+                                        >
+                                            Confirm Purge
+                                        </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
                             <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-muted">
                                 <Download className="h-4 w-4 text-muted-foreground" />
                             </Button>
