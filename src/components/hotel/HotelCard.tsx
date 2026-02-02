@@ -43,27 +43,30 @@ export function HotelCard({ hotel, className }: HotelCardProps) {
         <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[2.5rem] bg-muted shadow-apple transition-all duration-700 group-hover:shadow-apple-deep">
             <Carousel className="w-full h-full">
               <CarouselContent className="h-full ml-0">
-                {images.map((img, index) => (
-                  <CarouselItem key={index} className="pl-0 h-full relative">
-                    <Link href={`/hotels/${hotel.id}`} className="block w-full h-full relative">
-                      {getImageUrl(img) ? (
-                        <Image
-                          src={getImageUrl(img)}
-                          alt={`${hotel.name} - ${index + 1}`}
-                          data-ai-hint="hotel property"
-                          fill
-                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                          className="object-cover transition-transform duration-1000 group-hover:scale-105"
-                          priority={index === 0}
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-muted/50">
-                          <span className="text-muted-foreground text-[10px] font-black uppercase tracking-widest opacity-40">Visual Pending</span>
-                        </div>
-                      )}
-                    </Link>
-                  </CarouselItem>
-                ))}
+                {images.map((img, index) => {
+                  const url = getImageUrl(img);
+                  return (
+                    <CarouselItem key={index} className="pl-0 h-full relative basis-full">
+                      <Link href={`/hotels/${hotel.id}`} className="block relative w-full h-full">
+                        {url ? (
+                          <Image
+                            src={url}
+                            alt={`${hotel.name} - ${index + 1}`}
+                            data-ai-hint="hotel property"
+                            fill
+                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                            className="object-cover transition-transform duration-1000 group-hover:scale-105"
+                            priority={index === 0}
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center bg-muted/50">
+                            <span className="text-muted-foreground text-[10px] font-black uppercase tracking-widest opacity-40">Visual Pending</span>
+                          </div>
+                        )}
+                      </Link>
+                    </CarouselItem>
+                  );
+                })}
               </CarouselContent>
               {/* Minimal arrows visible on hover */}
               {images.length > 1 && (
