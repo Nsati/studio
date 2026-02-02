@@ -10,8 +10,12 @@ export interface Hotel {
   minPrice?: number;
   discount?: number;
 
-  // New Features for a Unique Experience
+  // God-Mode Features
   isVerifiedPahadiHost?: boolean;
+  isForceClosed?: boolean; // Emergency manual shutdown
+  isPremiumListing?: boolean;
+  adminNotes?: string;
+  
   ecoPractices?: {
     waterSaving: boolean;
     plasticFree: boolean;
@@ -22,7 +26,7 @@ export interface Hotel {
     policeStation: string;
     networkCoverage: 'good' | 'average' | 'poor' | '';
   };
-  spiritualAmenities?: string[]; // e.g., 'meditation-friendly', 'silent-zone', 'sunrise-view', 'temple-nearby', 'yoga-sessions'
+  spiritualAmenities?: string[];
 }
 
 export interface Room {
@@ -32,6 +36,7 @@ export interface Room {
   capacity: number;
   totalRooms: number;
   availableRooms?: number;
+  isInventoryOverridden?: boolean;
 }
 
 export interface City {
@@ -41,12 +46,14 @@ export interface City {
 }
 
 export interface UserProfile {
-  uid: string; // Matches Auth UID
+  uid: string;
   displayName: string;
   email: string;
   mobile: string;
   role: 'user' | 'admin';
-  status: 'pending' | 'active';
+  status: 'pending' | 'active' | 'suspended';
+  isVip?: boolean;
+  lastLogin?: Date;
 }
 
 export interface Booking {
@@ -63,10 +70,20 @@ export interface Booking {
   totalPrice: number;
   customerName: string;
   customerEmail: string;
-  status: 'CONFIRMED' | 'CANCELLED' | 'PENDING';
+  status: 'CONFIRMED' | 'CANCELLED' | 'PENDING' | 'REJECTED';
   createdAt: Date;
   razorpayPaymentId?: string;
   couponCode?: string;
+  adminNote?: string;
+  isOverridden?: boolean;
+}
+
+export interface SystemSettings {
+  isBookingEnabled: boolean;
+  isPaymentEnabled: boolean;
+  isCouponSystemActive: boolean;
+  emergencyAlertMessage?: string;
+  globalMaintenanceMode: boolean;
 }
 
 export interface TourPackage {
@@ -90,7 +107,7 @@ export interface Review {
   hotelId: string;
   userId: string;
   authorName: string;
-  rating: number; // 1 to 5
+  rating: number;
   text: string;
   title: string;
   createdAt: Date;

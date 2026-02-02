@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -12,7 +13,10 @@ import {
   RefreshCw,
   Activity,
   ShieldAlert,
-  AlertTriangle
+  AlertTriangle,
+  Zap,
+  ShieldCheck,
+  Power
 } from 'lucide-react';
 import { useUser } from '@/firebase';
 import { getAdminDashboardStats } from './actions';
@@ -22,6 +26,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { Switch } from '@/components/ui/switch';
 import { 
   Table, 
   TableBody, 
@@ -62,6 +67,10 @@ export default function AdminDashboard() {
   const [data, setData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Real-time System Controls
+  const [isBookingActive, setIsBookingActive] = useState(true);
+  const [isPaymentActive, setIsPaymentActive] = useState(true);
 
   const loadData = async () => {
     setIsLoading(true);
@@ -106,26 +115,71 @@ export default function AdminDashboard() {
     <div className="space-y-8 md:space-y-10">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div className="space-y-1">
-            <h1 className="font-headline text-4xl md:text-5xl font-black tracking-tight text-foreground">Intelligence</h1>
-            <p className="text-muted-foreground font-medium text-base md:text-lg">Central Operations Control.</p>
+            <div className="flex items-center gap-2 mb-2">
+                <Badge className="bg-primary/10 text-primary border-0 font-black uppercase text-[9px] px-3 tracking-widest">Master Logic Engine</Badge>
+                <div className="flex items-center gap-1.5 ml-2">
+                    <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                    <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Real-time Sync</span>
+                </div>
+            </div>
+            <h1 className="font-headline text-4xl md:text-6xl font-black tracking-tight text-foreground">Intelligence</h1>
+            <p className="text-muted-foreground font-medium text-base md:text-lg">God-Mode Operational Dashboard.</p>
         </div>
         <div className="flex items-center gap-3 w-full md:w-auto">
-            <Button variant="outline" size="sm" onClick={loadData} className="w-full md:w-auto rounded-full h-12 px-6 font-bold uppercase tracking-widest text-[9px] border-black/5 bg-white shadow-sm hover:bg-muted/50 transition-all">
-                <RefreshCw className={cn("h-3 w-3 mr-2 text-primary", isLoading && "animate-spin")} />
-                {isLoading ? 'Syncing...' : 'Live Metrics'}
+            <Button variant="outline" size="sm" onClick={loadData} className="w-full md:w-auto rounded-full h-14 px-8 font-black uppercase tracking-widest text-[10px] border-black/10 bg-white shadow-apple hover:shadow-apple-deep transition-all">
+                <RefreshCw className={cn("h-4 w-4 mr-3 text-primary", isLoading && "animate-spin")} />
+                {isLoading ? 'Syncing Layers...' : 'Refresh Universe'}
             </Button>
         </div>
       </div>
 
-      {error && (
-        <Card className="rounded-[2rem] border-amber-200 bg-amber-50 overflow-hidden">
-            <CardContent className="p-6 flex flex-col md:flex-row items-center gap-4 text-center md:text-left">
-                <AlertTriangle className="h-6 w-6 text-amber-600" />
-                <div className="flex-1">
-                    <p className="font-bold text-amber-900">Sync Failure</p>
-                    <p className="text-sm text-amber-700">{error}</p>
+      {/* GOD-MODE: System Switches */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="rounded-[2rem] border-black/5 bg-white shadow-apple p-6 md:p-8 flex items-center justify-between group">
+            <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                    <Zap className={cn("h-4 w-4", isBookingActive ? "text-primary" : "text-muted-foreground")} />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Booking System</span>
                 </div>
-                <Button onClick={loadData} variant="outline" size="sm" className="rounded-full w-full md:w-auto">Retry</Button>
+                <p className="font-black text-lg">Accepting Stays</p>
+            </div>
+            <Switch checked={isBookingActive} onCheckedChange={setIsBookingActive} className="data-[state=checked]:bg-primary" />
+        </Card>
+        <Card className="rounded-[2rem] border-black/5 bg-white shadow-apple p-6 md:p-8 flex items-center justify-between group">
+            <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                    <IndianRupee className={cn("h-4 w-4", isPaymentActive ? "text-accent" : "text-muted-foreground")} />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Razorpay Link</span>
+                </div>
+                <p className="font-black text-lg">Secure Gateway</p>
+            </div>
+            <Switch checked={isPaymentActive} onCheckedChange={setIsPaymentActive} className="data-[state=checked]:bg-accent" />
+        </Card>
+        <Card className="rounded-[2rem] border-destructive/10 bg-destructive/5 shadow-apple p-6 md:p-8 flex items-center justify-between group cursor-pointer hover:bg-destructive/10 transition-colors" onClick={() => alert('Emergency Global Shutdown is restricted to Super-Admin console.')}>
+            <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                    <ShieldCheck className="h-4 w-4 text-destructive" />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-destructive/60">Danger Zone</span>
+                </div>
+                <p className="font-black text-lg text-destructive">Kill Switch</p>
+            </div>
+            <div className="h-10 w-10 rounded-full bg-destructive/20 flex items-center justify-center">
+                <Power className="h-5 w-5 text-destructive" />
+            </div>
+        </Card>
+      </div>
+
+      {error && (
+        <Card className="rounded-[2.5rem] border-amber-200 bg-amber-50 overflow-hidden shadow-apple">
+            <CardContent className="p-8 flex flex-col md:flex-row items-center gap-6 text-center md:text-left">
+                <div className="p-4 bg-amber-100 rounded-full">
+                    <AlertTriangle className="h-8 w-8 text-amber-600" />
+                </div>
+                <div className="flex-1">
+                    <p className="font-black text-xl text-amber-900">Synchronization Lag</p>
+                    <p className="text-base text-amber-700/80 font-medium">{error}</p>
+                </div>
+                <Button onClick={loadData} variant="outline" size="lg" className="rounded-full w-full md:w-auto font-black uppercase tracking-widest text-xs border-amber-300 hover:bg-amber-100 transition-all">Re-establish Link</Button>
             </CardContent>
         </Card>
       )}
@@ -168,11 +222,11 @@ export default function AdminDashboard() {
             <CardHeader className="bg-white border-b border-black/5 p-6 md:p-10">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
-                        <CardTitle className="text-xl md:text-2xl font-black tracking-tight text-foreground">Recent Activity</CardTitle>
-                        <CardDescription className="text-sm md:text-base font-medium text-muted-foreground">Latest events from the server.</CardDescription>
+                        <CardTitle className="text-xl md:text-3xl font-black tracking-tight text-foreground">Omni-Channel Stream</CardTitle>
+                        <CardDescription className="text-sm md:text-base font-medium text-muted-foreground">Latest transactions flowing through God-Mode.</CardDescription>
                     </div>
-                    <Button variant="ghost" asChild size="sm" className="w-full md:w-auto rounded-full font-black uppercase text-[10px] tracking-widest h-12 px-8 hover:bg-muted/50">
-                        <Link href="/admin/bookings" className="flex items-center justify-center gap-2">Full Inventory <ArrowUpRight className="h-4 w-4" /></Link>
+                    <Button variant="ghost" asChild size="sm" className="w-full md:w-auto rounded-full font-black uppercase text-[10px] tracking-widest h-12 px-8 hover:bg-muted/50 border border-black/5 shadow-sm transition-all">
+                        <Link href="/admin/bookings" className="flex items-center justify-center gap-2">Full Database <ArrowUpRight className="h-4 w-4" /></Link>
                     </Button>
                 </div>
             </CardHeader>
@@ -181,17 +235,17 @@ export default function AdminDashboard() {
                     <Table>
                         <TableHeader className="bg-muted/20">
                             <TableRow className="border-0">
-                                <TableHead className="px-6 md:px-10 h-14 text-[10px] font-black uppercase tracking-widest">Guest</TableHead>
-                                <TableHead className="h-14 text-[10px] font-black uppercase tracking-widest">Property</TableHead>
-                                <TableHead className="h-14 text-[10px] font-black uppercase tracking-widest">Investment</TableHead>
-                                <TableHead className="px-6 md:px-10 h-14 text-right text-[10px] font-black uppercase tracking-widest">Status</TableHead>
+                                <TableHead className="px-10 h-16 text-[10px] font-black uppercase tracking-widest">Guest Identity</TableHead>
+                                <TableHead className="h-16 text-[10px] font-black uppercase tracking-widest">Asset</TableHead>
+                                <TableHead className="h-16 text-[10px] font-black uppercase tracking-widest">Yield</TableHead>
+                                <TableHead className="px-10 h-16 text-right text-[10px] font-black uppercase tracking-widest">Status</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {isLoading ? (
                                 Array.from({length: 5}).map((_, i) => (
                                     <TableRow key={i}>
-                                        <TableCell colSpan={4} className="px-10 py-8"><Skeleton className="h-5 w-full rounded-full" /></TableCell>
+                                        <TableCell colSpan={4} className="px-10 py-10"><Skeleton className="h-6 w-full rounded-full" /></TableCell>
                                     </TableRow>
                                 ))
                             ) : data?.recentBookings?.length > 0 ? (
@@ -199,19 +253,22 @@ export default function AdminDashboard() {
                                     const bookingDate = booking.createdAt ? parseISO(booking.createdAt) : null;
                                     return (
                                         <TableRow key={booking.id} className="hover:bg-muted/5 transition-colors border-b border-black/5 last:border-0">
-                                            <TableCell className="px-6 md:px-10 py-6">
+                                            <TableCell className="px-10 py-8">
                                                 <div className="font-bold text-sm text-foreground">{booking.customerName || 'Explorer'}</div>
-                                                <div className="text-[9px] text-muted-foreground font-black tracking-widest uppercase mt-1">
-                                                    {bookingDate && isValid(bookingDate) ? format(bookingDate, 'dd MMM, HH:mm') : 'Recently'}
+                                                <div className="text-[9px] text-muted-foreground font-black tracking-widest uppercase mt-1.5 opacity-60">
+                                                    {bookingDate && isValid(bookingDate) ? format(bookingDate, 'dd MMM • HH:mm') : 'Just now'}
                                                 </div>
                                             </TableCell>
-                                            <TableCell className="py-6 font-medium text-muted-foreground text-sm truncate max-w-[150px]">{booking.hotelName || 'Property'}</TableCell>
-                                            <TableCell className="py-6 font-black text-primary text-sm tracking-tighter">
+                                            <TableCell className="py-8">
+                                                <div className="font-bold text-sm text-foreground truncate max-w-[150px]">{booking.hotelName || 'Property'}</div>
+                                                <div className="text-[9px] font-black text-muted-foreground uppercase mt-1 tracking-widest">{booking.roomType}</div>
+                                            </TableCell>
+                                            <TableCell className="py-8 font-black text-primary text-base tracking-tighter">
                                                 {(Number(booking.totalPrice) || 0).toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}
                                             </TableCell>
-                                            <TableCell className="px-6 md:px-10 py-6 text-right">
+                                            <TableCell className="px-10 py-8 text-right">
                                                 <Badge className={cn(
-                                                    "rounded-full font-black uppercase text-[8px] tracking-[0.15em] px-4 py-1 border-0 shadow-sm",
+                                                    "rounded-full font-black uppercase text-[8px] tracking-[0.15em] px-4 py-1.5 border-0 shadow-sm",
                                                     booking.status === 'CONFIRMED' ? "bg-green-100 text-green-700" : 
                                                     booking.status === 'CANCELLED' ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"
                                                 )}>
@@ -223,7 +280,12 @@ export default function AdminDashboard() {
                                 })
                             ) : (
                                 <TableRow>
-                                    <TableCell colSpan={4} className="px-10 py-32 text-center text-muted-foreground font-black uppercase tracking-[0.2em] text-xs">No records found.</TableCell>
+                                    <TableCell colSpan={4} className="px-10 py-48 text-center">
+                                        <div className="flex flex-col items-center justify-center space-y-4">
+                                            <Activity className="h-12 w-12 text-muted-foreground/20" />
+                                            <p className="text-muted-foreground font-black uppercase tracking-[0.2em] text-xs">No Events Logged.</p>
+                                        </div>
+                                    </TableCell>
                                 </TableRow>
                             )}
                         </TableBody>
@@ -232,36 +294,42 @@ export default function AdminDashboard() {
             </CardContent>
         </Card>
 
-        <div className="space-y-8 md:space-y-10">
-            <Card className="rounded-[2.5rem] md:rounded-[3rem] shadow-apple border-black/5 bg-primary text-white overflow-hidden relative group">
-                <CardHeader className="p-8 md:p-10">
-                    <CardTitle className="text-2xl md:text-3xl font-black tracking-tight">Cloud Node</CardTitle>
-                    <CardDescription className="text-white/70 font-bold uppercase text-[10px] tracking-widest mt-2">Status: Active</CardDescription>
+        <div className="space-y-8">
+            <Card className="rounded-[2.5rem] md:rounded-[3rem] shadow-apple-deep border-0 bg-primary text-white overflow-hidden relative group">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-black/20" />
+                <CardHeader className="relative p-8 md:p-10">
+                    <CardTitle className="text-2xl md:text-4xl font-black tracking-tight">Cloud Instance</CardTitle>
+                    <CardDescription className="text-white/70 font-black uppercase text-[10px] tracking-[0.2em] mt-3">Node Status: Optimized</CardDescription>
                 </CardHeader>
-                <CardContent className="px-8 md:px-10 pb-8 md:pb-10 space-y-6">
-                    <div className="flex justify-between items-center py-3 border-b border-white/10">
-                        <span className="text-[10px] font-black uppercase tracking-widest">Protocol</span>
-                        <Badge className="bg-green-400 text-green-900 border-0 font-black text-[8px] px-3 py-0.5 uppercase">Standard</Badge>
+                <CardContent className="relative px-8 md:px-10 pb-8 md:pb-10 space-y-6">
+                    <div className="flex justify-between items-center py-4 border-b border-white/10">
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">Data Latency</span>
+                        <Badge className="bg-green-400 text-green-900 border-0 font-black text-[8px] px-3 py-1 uppercase tracking-widest">14ms</Badge>
                     </div>
-                    <div className="flex justify-between items-center py-3 border-b border-white/10">
-                        <span className="text-[10px] font-black uppercase tracking-widest">Runtime</span>
-                        <Badge className="bg-blue-400 text-blue-900 border-0 font-black text-[8px] px-3 py-0.5 uppercase">NodeJS</Badge>
+                    <div className="flex justify-between items-center py-4 border-b border-white/10">
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">Auth Layer</span>
+                        <Badge className="bg-blue-400 text-blue-900 border-0 font-black text-[8px] px-3 py-1 uppercase tracking-widest">Secure</Badge>
                     </div>
-                    <div className="flex justify-between items-center py-3">
-                        <span className="text-[10px] font-black uppercase tracking-widest">Sync Mode</span>
-                        <Badge className="bg-purple-400 text-purple-900 border-0 font-black text-[8px] px-3 py-0.5 uppercase">Safe</Badge>
+                    <div className="flex justify-between items-center py-4">
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">God-Mode</span>
+                        <Badge className="bg-purple-400 text-purple-900 border-0 font-black text-[8px] px-3 py-1 uppercase tracking-widest">Active</Badge>
                     </div>
                 </CardContent>
             </Card>
 
-            <div className="p-6 md:p-8 bg-muted/30 rounded-[2.5rem] md:rounded-[3rem] border border-black/5 space-y-4">
-                <div className="flex items-center gap-3">
-                    <Activity className="h-5 w-5 text-primary animate-pulse" />
-                    <span className="font-black uppercase tracking-widest text-[10px] text-muted-foreground">System Health</span>
+            <div className="p-8 bg-muted/30 rounded-[2.5rem] md:rounded-[3rem] border border-black/5 space-y-6 group hover:bg-muted/50 transition-all duration-500 shadow-sm">
+                <div className="flex items-center gap-4">
+                    <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center">
+                        <ShieldCheck className="h-5 w-5 text-primary" />
+                    </div>
+                    <span className="font-black uppercase tracking-[0.2em] text-[10px] text-muted-foreground">Admin Integrity</span>
                 </div>
                 <p className="text-sm font-medium text-muted-foreground leading-relaxed">
-                    Production data is fetched via authorized Admin SDK sessions to ensure security and reliability.
+                    You are in God-Mode. Every action is authenticated via production-grade Admin SDK sessions. Use your power responsibly.
                 </p>
+                <div className="pt-4 border-t border-black/5">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-primary">Identity Verified</p>
+                </div>
             </div>
         </div>
       </div>

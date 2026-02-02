@@ -1,21 +1,23 @@
+
 'use client';
 import { useUser } from '@/firebase';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { LayoutDashboard, Hotel, Users2, Tag, LogOut, ExternalLink, Map, BookOpen, Menu } from 'lucide-react';
+import { LayoutDashboard, Hotel, Users2, Tag, LogOut, ExternalLink, Map, BookOpen, Menu, ShieldCheck, Zap } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { AdminCommandPalette } from '@/components/admin/AdminCommandPalette';
 
 const navItems = [
-    { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/admin/bookings', label: 'Bookings', icon: BookOpen },
-    { href: '/admin/hotels', label: 'Hotels', icon: Hotel },
-    { href: '/admin/tour-packages', label: 'Tour Packages', icon: Map },
-    { href: '/admin/users', label: 'Users', icon: Users2 },
-    { href: '/admin/promotions', label: 'Promotions', icon: Tag },
+    { href: '/admin', label: 'Intelligence', icon: Zap },
+    { href: '/admin/bookings', label: 'Reservations', icon: BookOpen },
+    { href: '/admin/hotels', label: 'Inventory', icon: Hotel },
+    { href: '/admin/tour-packages', label: 'Journeys', icon: Map },
+    { href: '/admin/users', label: 'Explorers', icon: Users2 },
+    { href: '/admin/promotions', label: 'Campaigns', icon: Tag },
 ];
 
 function AdminLayoutSkeleton() {
@@ -45,16 +47,16 @@ export default function AdminLayout({
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    if (!isLoading && !user) {
+    if (!isLoading && (!user || userProfile?.role !== 'admin')) {
       router.push('/login?redirect=' + pathname);
     }
-  }, [user, isLoading, router, pathname]);
+  }, [user, userProfile, isLoading, router, pathname]);
 
   if (isLoading) {
     return <AdminLayoutSkeleton />;
   }
 
-  if (!user) return null;
+  if (!user || userProfile?.role !== 'admin') return null;
 
   const NavLinks = ({ onClick }: { onClick?: () => void }) => (
     <nav className="space-y-2">
@@ -83,9 +85,9 @@ export default function AdminLayout({
       <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b z-50 px-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
             <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center text-white">
-                <LayoutDashboard className="h-5 w-5" />
+                <Zap className="h-5 w-5" />
             </div>
-            <span className="font-black text-sm uppercase tracking-widest">Console</span>
+            <span className="font-black text-sm uppercase tracking-widest">GOD MODE</span>
         </div>
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
@@ -97,11 +99,11 @@ export default function AdminLayout({
                 <SheetHeader className="p-8 border-b text-left">
                     <SheetTitle className="font-black flex items-center gap-3">
                         <div className="h-10 w-10 bg-primary rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary/20">
-                            <LayoutDashboard className="h-6 w-6" />
+                            <Zap className="h-6 w-6" />
                         </div>
                         <div className="flex flex-col">
-                            <span>Admin Panel</span>
-                            <span className="text-[9px] uppercase tracking-widest text-muted-foreground">Mobile Access</span>
+                            <span>God Control</span>
+                            <span className="text-[9px] uppercase tracking-widest text-muted-foreground">Master Access</span>
                         </div>
                     </SheetTitle>
                 </SheetHeader>
@@ -109,7 +111,7 @@ export default function AdminLayout({
                     <NavLinks onClick={() => setIsOpen(false)} />
                     <div className="mt-8 pt-8 border-t space-y-4">
                         <Button variant="outline" asChild className="w-full justify-start rounded-xl font-black h-12">
-                            <Link href="/"><ExternalLink className="mr-3 h-4 w-4" /> Site</Link>
+                            <Link href="/"><ExternalLink className="mr-3 h-4 w-4" /> Live Site</Link>
                         </Button>
                         <Button variant="ghost" asChild className="w-full justify-start rounded-xl font-black text-destructive h-12">
                             <Link href="/my-bookings"><LogOut className="mr-3 h-4 w-4" /> Exit</Link>
@@ -122,14 +124,18 @@ export default function AdminLayout({
 
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex w-80 flex-col border-r bg-white p-8 sticky top-0 h-screen overflow-y-auto">
-        <div className="mb-16 flex items-center gap-4 group">
+        <div className="mb-10 flex items-center gap-4 group">
             <div className="h-12 w-12 bg-primary rounded-2xl flex items-center justify-center text-white shadow-lg shadow-primary/20">
-                <LayoutDashboard className="h-7 w-7" />
+                <Zap className="h-7 w-7" />
             </div>
             <div className="space-y-0.5">
-                <h2 className="text-xl font-black tracking-tight leading-none text-foreground">Console</h2>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground opacity-60">Superuser Mode</p>
+                <h2 className="text-xl font-black tracking-tight leading-none text-foreground">God-Mode</h2>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground opacity-60">Control Center</p>
             </div>
+        </div>
+
+        <div className="mb-8">
+            <AdminCommandPalette />
         </div>
 
         <div className="flex-1">
@@ -137,6 +143,13 @@ export default function AdminLayout({
         </div>
 
         <div className="mt-auto space-y-4 pt-10 border-t border-black/5">
+             <div className="p-4 bg-muted/30 rounded-2xl border border-black/5 mb-4">
+                <div className="flex items-center gap-2 mb-2">
+                    <ShieldCheck className="h-3 w-3 text-green-600" />
+                    <span className="text-[9px] font-black uppercase tracking-widest">Active Identity</span>
+                </div>
+                <p className="text-[10px] font-bold text-muted-foreground truncate">{userProfile?.displayName}</p>
+             </div>
              <Button variant="outline" asChild className="w-full justify-start rounded-2xl h-14 font-black border-black/10 hover:bg-muted transition-all">
                 <Link href="/" target="_blank">
                     <ExternalLink className="mr-4 h-5 w-5" /> Live Site
