@@ -2,7 +2,7 @@
 
 import { notFound, useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Star, MapPin, Compass, Share2, Heart, ShieldCheck, ArrowLeft, Clock, Info } from 'lucide-react';
+import { Star, MapPin, Compass, Share2, Heart, ShieldCheck, ArrowLeft, Clock, Info, ImageOff } from 'lucide-react';
 import React from 'react';
 
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -57,14 +57,17 @@ export default function HotelPage() {
     return <Loading />;
   }
 
-  if (!hotel || !rooms || !reviews) {
+  if (!hotel) {
     notFound();
   }
 
   const getImageUrl = (img: string) => {
-    if (img?.startsWith('http')) return img;
+    if (!img) return '';
+    if (img.startsWith('http')) return img;
     return PlaceHolderImages.find((p) => p.id === img)?.imageUrl || '';
   };
+
+  const images = hotel.images && hotel.images.length > 0 ? hotel.images : ['hero'];
 
   return (
     <div className="min-h-screen bg-background pb-32">
@@ -107,30 +110,35 @@ export default function HotelPage() {
       <div className="container mx-auto px-4 md:px-6 mb-20">
         <Carousel className="w-full relative group">
           <CarouselContent className="-ml-4">
-            {hotel.images.map((img, index) => (
+            {images.map((img, index) => (
               <CarouselItem key={index} className="pl-4 basis-full md:basis-3/4 lg:basis-2/3">
-                <div className="relative aspect-[16/9] overflow-hidden rounded-[3rem] shadow-apple-deep">
-                  <Image
-                    src={getImageUrl(img)}
-                    alt={`${hotel.name} gallery ${index + 1}`}
-                    fill
-                    className="object-cover transition-transform duration-2000 hover:scale-105"
-                    priority={index === 0}
-                  />
+                <div className="relative aspect-[16/9] overflow-hidden rounded-[3rem] shadow-apple-deep bg-muted">
+                  {getImageUrl(img) ? (
+                    <Image
+                      src={getImageUrl(img)}
+                      alt={`${hotel.name} gallery ${index + 1}`}
+                      fill
+                      className="object-cover transition-transform duration-2000 hover:scale-105"
+                      priority={index === 0}
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-full w-full text-muted-foreground">
+                        <ImageOff className="h-12 w-12 opacity-20 mb-2" />
+                        <span className="text-xs font-black uppercase tracking-widest opacity-40">Visual Syncing...</span>
+                    </div>
+                  )}
                 </div>
               </CarouselItem>
             ))}
           </CarouselContent>
-          {/* Custom positioned arrows */}
           <div className="absolute top-1/2 -translate-y-1/2 left-8 right-8 flex justify-between pointer-events-none">
             <CarouselPrevious className="static pointer-events-auto h-14 w-14 rounded-full glass-morphism border-0 text-foreground translate-x-0" />
             <CarouselNext className="static pointer-events-auto h-14 w-14 rounded-full glass-morphism border-0 text-foreground translate-x-0" />
           </div>
           
-          {/* Gallery Counter */}
           <div className="absolute bottom-10 right-12 z-10">
             <div className="glass-morphism px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg">
-              Collection • {hotel.images.length} Photos
+              Collection • {images.length} Photos
             </div>
           </div>
         </Carousel>
