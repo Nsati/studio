@@ -59,7 +59,7 @@ export function RoomBookingCard({ hotel, rooms, isLoadingRooms }: { hotel: WithI
 
   return (
     <Card className="sticky top-28 rounded-[3rem] shadow-apple-deep border-black/5 overflow-hidden transition-all duration-700 bg-white">
-      <CardHeader className="bg-primary p-10 text-white space-y-2">
+      <CardHeader className="bg-[#003580] p-10 text-white space-y-2">
         <div className="flex justify-between items-baseline">
             <CardTitle className="text-4xl font-black tracking-tighter">
                 {hotel.minPrice?.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}
@@ -78,7 +78,7 @@ export function RoomBookingCard({ hotel, rooms, isLoadingRooms }: { hotel: WithI
             <Popover>
                 <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full h-16 rounded-[1.5rem] justify-start font-bold border-black/10 hover:bg-muted/50 transition-all duration-300 text-lg">
-                    <CalendarIcon className="mr-3 h-5 w-5 text-primary" />
+                    <CalendarIcon className="mr-3 h-5 w-5 text-[#003580]" />
                     {dates?.from ? (
                     dates.to ? `${format(dates.from, 'MMM dd')} - ${format(dates.to, 'MMM dd')}` : format(dates.from, 'MMM dd')
                     ) : "Check-in — Check-out"}
@@ -128,17 +128,17 @@ export function RoomBookingCard({ hotel, rooms, isLoadingRooms }: { hotel: WithI
                         onClick={() => !isSoldOut && setSelectedRoom(room)}
                         className={cn(
                             'p-6 rounded-[2rem] transition-all duration-500 border-2 cursor-pointer flex items-center justify-between group',
-                            isSelected ? 'border-primary bg-primary/5 shadow-apple' : 'border-black/5 hover:border-black/10 bg-white',
+                            isSelected ? 'border-[#003580] bg-[#003580]/5 shadow-apple' : 'border-black/5 hover:border-black/10 bg-white',
                             isSoldOut && 'opacity-40 grayscale cursor-not-allowed'
                         )}
                     >
                         <div className="space-y-1.5">
-                            <p className="font-black text-lg tracking-tight group-hover:text-primary transition-colors">{room.type}</p>
+                            <p className="font-black text-lg tracking-tight group-hover:text-[#003580] transition-colors">{room.type}</p>
                             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Cap: {room.capacity} Guests</p>
                         </div>
                         <div className="text-right">
-                            <p className="font-black text-primary text-xl tracking-tighter">{price.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}</p>
-                            {isSelected && <Badge className="text-[9px] h-5 rounded-full mt-2 bg-primary text-white font-black tracking-widest">SELECTED</Badge>}
+                            <p className="font-black text-[#003580] text-xl tracking-tighter">{price.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}</p>
+                            {isSelected && <Badge className="text-[9px] h-5 rounded-full mt-2 bg-[#003580] text-white font-black tracking-widest">SELECTED</Badge>}
                         </div>
                     </div>
                 )
@@ -152,7 +152,7 @@ export function RoomBookingCard({ hotel, rooms, isLoadingRooms }: { hotel: WithI
             <Button
               onClick={handleBookNow}
               size="lg"
-              className="w-full h-20 rounded-full text-xl font-black bg-accent hover:bg-accent/90 shadow-apple-deep shadow-accent/30 tracking-tight transition-all active:scale-95"
+              className="w-full h-20 rounded-full text-xl font-black bg-[#febb02] text-[#003580] hover:bg-[#febb02]/90 shadow-apple-deep shadow-[#febb02]/30 tracking-tight transition-all active:scale-95"
             >
               Confirm Reservation <ChevronRight className="ml-3 h-6 w-6" />
             </Button>
