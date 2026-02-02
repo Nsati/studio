@@ -1,9 +1,8 @@
-
 'use client';
 import { useUser } from '@/firebase';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { LayoutDashboard, Hotel, Users2, Tag, LogOut, ExternalLink, Map, BookOpen, Menu, ShieldCheck, Zap } from 'lucide-react';
+import { Hotel, Users2, Tag, LogOut, ExternalLink, BookOpen, Menu, ShieldCheck, Zap } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -15,7 +14,6 @@ const navItems = [
     { href: '/admin', label: 'Intelligence', icon: Zap },
     { href: '/admin/bookings', label: 'Reservations', icon: BookOpen },
     { href: '/admin/hotels', label: 'Inventory', icon: Hotel },
-    { href: '/admin/tour-packages', label: 'Journeys', icon: Map },
     { href: '/admin/users', label: 'Explorers', icon: Users2 },
     { href: '/admin/promotions', label: 'Campaigns', icon: Tag },
 ];
@@ -23,14 +21,14 @@ const navItems = [
 function AdminLayoutSkeleton() {
     return (
         <div className="flex min-h-screen bg-muted/20">
-            <aside className="hidden md:block w-72 border-r p-8 space-y-8 bg-white">
-                <Skeleton className="h-12 w-48 rounded-2xl" />
-                <div className="space-y-4 pt-10">
-                    {Array.from({length: 6}).map((_, i) => <Skeleton key={i} className="h-14 w-full rounded-2xl" />)}
+            <aside className="hidden md:block w-80 border-r p-10 space-y-10 bg-white">
+                <Skeleton className="h-14 w-56 rounded-2xl" />
+                <div className="space-y-6 pt-12">
+                    {Array.from({length: 5}).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-2xl" />)}
                 </div>
             </aside>
-            <main className="flex-1 p-6 md:p-12">
-                <Skeleton className="h-96 w-full rounded-[3rem]" />
+            <main className="flex-1 p-10 md:p-20">
+                <Skeleton className="h-full w-full rounded-[4rem]" />
             </main>
         </div>
     )
@@ -59,16 +57,16 @@ export default function AdminLayout({
   if (!user || userProfile?.role !== 'admin') return null;
 
   const NavLinks = ({ onClick }: { onClick?: () => void }) => (
-    <nav className="space-y-2">
+    <nav className="space-y-3">
       {navItems.map(item => (
         <Link
           key={item.href}
           href={item.href}
           onClick={onClick}
           className={cn(
-            "flex items-center gap-4 rounded-2xl px-6 py-4 text-sm font-black transition-all duration-300",
+            "flex items-center gap-5 rounded-[1.5rem] px-8 py-5 text-sm font-black transition-all duration-500",
             pathname === item.href 
-                ? "bg-primary text-white shadow-xl shadow-primary/20 translate-x-2" 
+                ? "bg-primary text-white shadow-2xl shadow-primary/30 -translate-y-0.5 scale-105" 
                 : "text-muted-foreground hover:text-primary hover:bg-primary/5"
           )}
         >
@@ -80,41 +78,41 @@ export default function AdminLayout({
   );
 
   return (
-    <div className="flex min-h-screen bg-muted/20">
+    <div className="flex min-h-screen bg-muted/10">
       {/* Mobile Top Bar */}
-      <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b z-50 px-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-            <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center text-white">
-                <Zap className="h-5 w-5" />
+      <div className="md:hidden fixed top-0 left-0 right-0 h-20 bg-white/80 backdrop-blur-2xl border-b z-50 px-6 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+            <div className="h-10 w-10 bg-primary rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary/20">
+                <Zap className="h-6 w-6" />
             </div>
-            <span className="font-black text-sm uppercase tracking-widest">GOD MODE</span>
+            <span className="font-black text-xs uppercase tracking-[0.2em]">GOD MODE</span>
         </div>
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full">
-                    <Menu className="h-6 w-6" />
+                <Button variant="ghost" size="icon" className="rounded-full h-12 w-12 hover:bg-muted">
+                    <Menu className="h-7 w-7" />
                 </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-[300px] p-0">
-                <SheetHeader className="p-8 border-b text-left">
-                    <SheetTitle className="font-black flex items-center gap-3">
-                        <div className="h-10 w-10 bg-primary rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary/20">
-                            <Zap className="h-6 w-6" />
+            <SheetContent side="left" className="w-[320px] p-0 border-0 rounded-r-[3rem] overflow-hidden">
+                <SheetHeader className="p-10 border-b bg-muted/10">
+                    <SheetTitle className="font-black flex items-center gap-4">
+                        <div className="h-12 w-12 bg-primary rounded-2xl flex items-center justify-center text-white shadow-xl shadow-primary/30">
+                            <Zap className="h-7 w-7" />
                         </div>
                         <div className="flex flex-col">
-                            <span>God Control</span>
-                            <span className="text-[9px] uppercase tracking-widest text-muted-foreground">Master Access</span>
+                            <span className="text-xl">Console</span>
+                            <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Admin Access</span>
                         </div>
                     </SheetTitle>
                 </SheetHeader>
-                <div className="p-6">
+                <div className="p-8">
                     <NavLinks onClick={() => setIsOpen(false)} />
-                    <div className="mt-8 pt-8 border-t space-y-4">
-                        <Button variant="outline" asChild className="w-full justify-start rounded-xl font-black h-12">
-                            <Link href="/"><ExternalLink className="mr-3 h-4 w-4" /> Live Site</Link>
+                    <div className="mt-12 pt-10 border-t space-y-4">
+                        <Button variant="outline" asChild className="w-full justify-start rounded-2xl font-black h-14 border-black/5 hover:bg-muted">
+                            <Link href="/"><ExternalLink className="mr-4 h-5 w-5" /> Live Site</Link>
                         </Button>
-                        <Button variant="ghost" asChild className="w-full justify-start rounded-xl font-black text-destructive h-12">
-                            <Link href="/my-bookings"><LogOut className="mr-3 h-4 w-4" /> Exit</Link>
+                        <Button variant="ghost" asChild className="w-full justify-start rounded-2xl font-black text-destructive h-14 hover:bg-destructive/5">
+                            <Link href="/my-bookings"><LogOut className="mr-4 h-5 w-5" /> Exit Console</Link>
                         </Button>
                     </div>
                 </div>
@@ -123,18 +121,18 @@ export default function AdminLayout({
       </div>
 
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex w-80 flex-col border-r bg-white p-8 sticky top-0 h-screen overflow-y-auto">
-        <div className="mb-10 flex items-center gap-4 group">
-            <div className="h-12 w-12 bg-primary rounded-2xl flex items-center justify-center text-white shadow-lg shadow-primary/20">
-                <Zap className="h-7 w-7" />
+      <aside className="hidden md:flex w-85 flex-col border-r bg-white p-10 sticky top-0 h-screen overflow-y-auto">
+        <div className="mb-16 flex items-center gap-5 group">
+            <div className="h-14 w-14 bg-primary rounded-[1.5rem] flex items-center justify-center text-white shadow-2xl shadow-primary/30 transition-transform duration-500 group-hover:scale-110">
+                <Zap className="h-8 w-8" />
             </div>
-            <div className="space-y-0.5">
-                <h2 className="text-xl font-black tracking-tight leading-none text-foreground">God-Mode</h2>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground opacity-60">Control Center</p>
+            <div className="space-y-1">
+                <h2 className="text-2xl font-black tracking-tighter leading-none text-foreground">God-Mode</h2>
+                <p className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground opacity-50">Operational Core</p>
             </div>
         </div>
 
-        <div className="mb-8">
+        <div className="mb-12">
             <AdminCommandPalette />
         </div>
 
@@ -142,30 +140,34 @@ export default function AdminLayout({
             <NavLinks />
         </div>
 
-        <div className="mt-auto space-y-4 pt-10 border-t border-black/5">
-             <div className="p-4 bg-muted/30 rounded-2xl border border-black/5 mb-4">
-                <div className="flex items-center gap-2 mb-2">
-                    <ShieldCheck className="h-3 w-3 text-green-600" />
-                    <span className="text-[9px] font-black uppercase tracking-widest">Active Identity</span>
+        <div className="mt-auto space-y-6 pt-12 border-t border-black/5">
+             <div className="p-6 bg-muted/30 rounded-[2rem] border border-black/5 mb-6">
+                <div className="flex items-center gap-3 mb-3">
+                    <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Active Admin</span>
                 </div>
-                <p className="text-[10px] font-bold text-muted-foreground truncate">{userProfile?.displayName}</p>
+                <p className="text-xs font-black text-foreground truncate">{userProfile?.displayName}</p>
              </div>
-             <Button variant="outline" asChild className="w-full justify-start rounded-2xl h-14 font-black border-black/10 hover:bg-muted transition-all">
-                <Link href="/" target="_blank">
-                    <ExternalLink className="mr-4 h-5 w-5" /> Live Site
-                </Link>
-             </Button>
-             <Button variant="ghost" asChild className="w-full justify-start rounded-2xl h-14 font-black text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all">
-                <Link href="/my-bookings">
-                    <LogOut className="mr-4 h-5 w-5" /> Exit Console
-                </Link>
-             </Button>
+             <div className="flex flex-col gap-3">
+                <Button variant="outline" asChild className="w-full justify-start rounded-2xl h-16 font-black border-black/10 hover:bg-muted transition-all text-xs">
+                    <Link href="/" target="_blank">
+                        <ExternalLink className="mr-4 h-5 w-5 opacity-50" /> Live Environment
+                    </Link>
+                </Button>
+                <Button variant="ghost" asChild className="w-full justify-start rounded-2xl h-16 font-black text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all text-xs">
+                    <Link href="/my-bookings">
+                        <LogOut className="mr-4 h-5 w-5 opacity-50" /> Close Console
+                    </Link>
+                </Button>
+             </div>
         </div>
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 p-4 md:p-8 lg:p-16 max-w-[1800px] mt-16 md:mt-0">
-        {children}
+      <main className="flex-1 p-6 md:p-12 lg:p-20 max-w-[1920px] mt-20 md:mt-0 overflow-x-hidden">
+        <div className="max-w-7xl mx-auto w-full">
+            {children}
+        </div>
       </main>
     </div>
   );

@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -38,21 +37,21 @@ import {
 
 function StatCard({ title, value, icon: Icon, description, isLoading, trend }: any) {
     return (
-        <Card className="rounded-[2.5rem] shadow-apple border-black/5 overflow-hidden group hover:shadow-apple-deep transition-all duration-500 bg-white">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-6 md:px-8 pt-8">
-                <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">{title}</CardTitle>
-                <div className="p-2 bg-muted/50 rounded-xl group-hover:bg-primary/10 transition-colors">
-                    <Icon className="h-4 w-4 text-primary" />
+        <Card className="rounded-[3rem] shadow-apple border-black/5 overflow-hidden group hover:shadow-apple-deep transition-all duration-700 bg-white">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 px-10 pt-10">
+                <CardTitle className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground">{title}</CardTitle>
+                <div className="p-3 bg-muted/50 rounded-2xl group-hover:bg-primary/10 transition-colors duration-500">
+                    <Icon className="h-5 w-5 text-primary" />
                 </div>
             </CardHeader>
-            <CardContent className="px-6 md:px-8 pb-8">
+            <CardContent className="px-10 pb-10">
                 {isLoading ? (
-                  <Skeleton className="h-10 w-2/3 mt-2" />
+                  <Skeleton className="h-12 w-2/3 mt-2 rounded-full" />
                 ) : (
-                  <div className="space-y-1">
-                    <div className="text-3xl md:text-4xl font-black tracking-tighter text-foreground">{value}</div>
-                    <div className="flex items-center gap-2">
-                        {trend && <span className="flex items-center text-[10px] font-black text-green-600"><TrendingUp className="h-3 w-3 mr-1" /> {trend}</span>}
+                  <div className="space-y-2">
+                    <div className="text-4xl md:text-5xl font-black tracking-tighter text-foreground">{value}</div>
+                    <div className="flex items-center gap-3 pt-1">
+                        {trend && <span className="flex items-center text-[10px] font-black text-green-600 bg-green-50 px-2 py-1 rounded-full"><TrendingUp className="h-3 w-3 mr-1" /> {trend}</span>}
                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{description}</p>
                     </div>
                   </div>
@@ -68,7 +67,6 @@ export default function AdminDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  // Real-time System Controls
   const [isBookingActive, setIsBookingActive] = useState(true);
   const [isPaymentActive, setIsPaymentActive] = useState(true);
 
@@ -96,15 +94,15 @@ export default function AdminDashboard() {
 
   if (userProfile && userProfile.role !== 'admin') {
     return (
-        <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6 px-4 text-center">
-            <div className="p-6 bg-amber-50 rounded-full">
-                <ShieldAlert className="h-12 w-12 text-amber-600" />
+        <div className="flex flex-col items-center justify-center min-h-[70vh] space-y-8 px-6 text-center">
+            <div className="p-8 bg-amber-50 rounded-full shadow-2xl shadow-amber-100">
+                <ShieldAlert className="h-16 w-16 text-amber-600" />
             </div>
-            <div className="space-y-2">
-                <h2 className="text-2xl font-black">Restricted Access</h2>
-                <p className="text-muted-foreground">Your account does not have authorization for this panel.</p>
+            <div className="space-y-3">
+                <h2 className="text-3xl font-black tracking-tighter">Restricted Access</h2>
+                <p className="text-muted-foreground font-medium text-lg">Your account does not have authorization for this panel.</p>
             </div>
-            <Button asChild className="rounded-full px-8 h-12 w-full max-w-xs">
+            <Button asChild className="rounded-full px-12 h-16 text-lg font-black transition-all active:scale-95 shadow-xl shadow-primary/20">
                 <Link href="/">Return to Site</Link>
             </Button>
         </div>
@@ -112,97 +110,99 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="space-y-8 md:space-y-10">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-        <div className="space-y-1">
-            <div className="flex items-center gap-2 mb-2">
-                <Badge className="bg-primary/10 text-primary border-0 font-black uppercase text-[9px] px-3 tracking-widest">Master Logic Engine</Badge>
-                <div className="flex items-center gap-1.5 ml-2">
+    <div className="space-y-12 md:space-y-20">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-10">
+        <div className="space-y-4">
+            <div className="flex items-center gap-3">
+                <Badge className="bg-primary/10 text-primary border-0 font-black uppercase text-[10px] px-5 py-2 rounded-full tracking-[0.2em] shadow-sm">Master Logic Engine</Badge>
+                <div className="flex items-center gap-2 px-4 py-2 bg-green-50 rounded-full">
                     <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-                    <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Real-time Sync</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-green-700">Real-time Node Active</span>
                 </div>
             </div>
-            <h1 className="font-headline text-4xl md:text-6xl font-black tracking-tight text-foreground">Intelligence</h1>
-            <p className="text-muted-foreground font-medium text-base md:text-lg">God-Mode Operational Dashboard.</p>
+            <div className="space-y-1">
+                <h1 className="font-headline text-5xl md:text-8xl font-black tracking-tighter text-foreground leading-[0.9]">Intelligence</h1>
+                <p className="text-muted-foreground font-medium text-xl md:text-2xl tracking-tight">God-Mode Operational Dashboard.</p>
+            </div>
         </div>
-        <div className="flex items-center gap-3 w-full md:w-auto">
-            <Button variant="outline" size="sm" onClick={loadData} className="w-full md:w-auto rounded-full h-14 px-8 font-black uppercase tracking-widest text-[10px] border-black/10 bg-white shadow-apple hover:shadow-apple-deep transition-all">
-                <RefreshCw className={cn("h-4 w-4 mr-3 text-primary", isLoading && "animate-spin")} />
+        <div className="flex items-center gap-4 w-full md:w-auto">
+            <Button variant="outline" size="lg" onClick={loadData} className="w-full md:w-auto rounded-full h-16 px-10 font-black uppercase tracking-[0.2em] text-[11px] border-black/10 bg-white shadow-apple hover:shadow-apple-deep transition-all duration-500">
+                <RefreshCw className={cn("h-5 w-5 mr-4 text-primary", isLoading && "animate-spin")} />
                 {isLoading ? 'Syncing Layers...' : 'Refresh Universe'}
             </Button>
         </div>
       </div>
 
       {/* GOD-MODE: System Switches */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="rounded-[2rem] border-black/5 bg-white shadow-apple p-6 md:p-8 flex items-center justify-between group">
-            <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                    <Zap className={cn("h-4 w-4", isBookingActive ? "text-primary" : "text-muted-foreground")} />
-                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Booking System</span>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <Card className="rounded-[2.5rem] border-black/5 bg-white shadow-apple p-8 md:p-10 flex items-center justify-between group hover:shadow-apple-deep transition-all duration-700">
+            <div className="space-y-2">
+                <div className="flex items-center gap-3">
+                    <Zap className={cn("h-5 w-5", isBookingActive ? "text-primary" : "text-muted-foreground")} />
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Booking Logic</span>
                 </div>
-                <p className="font-black text-lg">Accepting Stays</p>
+                <p className="font-black text-xl tracking-tight">Accepting Stays</p>
             </div>
-            <Switch checked={isBookingActive} onCheckedChange={setIsBookingActive} className="data-[state=checked]:bg-primary" />
+            <Switch checked={isBookingActive} onCheckedChange={setIsBookingActive} className="scale-125 data-[state=checked]:bg-primary" />
         </Card>
-        <Card className="rounded-[2rem] border-black/5 bg-white shadow-apple p-6 md:p-8 flex items-center justify-between group">
-            <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                    <IndianRupee className={cn("h-4 w-4", isPaymentActive ? "text-accent" : "text-muted-foreground")} />
-                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Razorpay Link</span>
+        <Card className="rounded-[2.5rem] border-black/5 bg-white shadow-apple p-8 md:p-10 flex items-center justify-between group hover:shadow-apple-deep transition-all duration-700">
+            <div className="space-y-2">
+                <div className="flex items-center gap-3">
+                    <IndianRupee className={cn("h-5 w-5", isPaymentActive ? "text-accent" : "text-muted-foreground")} />
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Payment Link</span>
                 </div>
-                <p className="font-black text-lg">Secure Gateway</p>
+                <p className="font-black text-xl tracking-tight">Secure Gateway</p>
             </div>
-            <Switch checked={isPaymentActive} onCheckedChange={setIsPaymentActive} className="data-[state=checked]:bg-accent" />
+            <Switch checked={isPaymentActive} onCheckedChange={setIsPaymentActive} className="scale-125 data-[state=checked]:bg-accent" />
         </Card>
-        <Card className="rounded-[2rem] border-destructive/10 bg-destructive/5 shadow-apple p-6 md:p-8 flex items-center justify-between group cursor-pointer hover:bg-destructive/10 transition-colors" onClick={() => alert('Emergency Global Shutdown is restricted to Super-Admin console.')}>
-            <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                    <ShieldCheck className="h-4 w-4 text-destructive" />
-                    <span className="text-[10px] font-black uppercase tracking-widest text-destructive/60">Danger Zone</span>
+        <Card className="rounded-[2.5rem] border-destructive/10 bg-destructive/5 shadow-apple p-8 md:p-10 flex items-center justify-between group cursor-pointer hover:bg-destructive/10 transition-all duration-700" onClick={() => alert('Emergency Global Shutdown is restricted to Super-Admin console.')}>
+            <div className="space-y-2">
+                <div className="flex items-center gap-3">
+                    <ShieldCheck className="h-5 w-5 text-destructive" />
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-destructive/60">Danger Zone</span>
                 </div>
-                <p className="font-black text-lg text-destructive">Kill Switch</p>
+                <p className="font-black text-xl text-destructive tracking-tight">Kill Switch</p>
             </div>
-            <div className="h-10 w-10 rounded-full bg-destructive/20 flex items-center justify-center">
-                <Power className="h-5 w-5 text-destructive" />
+            <div className="h-14 w-14 rounded-2xl bg-destructive/20 flex items-center justify-center transition-transform duration-500 group-hover:rotate-12">
+                <Power className="h-7 w-7 text-destructive" />
             </div>
         </Card>
       </div>
 
       {error && (
-        <Card className="rounded-[2.5rem] border-amber-200 bg-amber-50 overflow-hidden shadow-apple">
-            <CardContent className="p-8 flex flex-col md:flex-row items-center gap-6 text-center md:text-left">
-                <div className="p-4 bg-amber-100 rounded-full">
-                    <AlertTriangle className="h-8 w-8 text-amber-600" />
+        <Card className="rounded-[3rem] border-amber-200 bg-amber-50 overflow-hidden shadow-apple">
+            <CardContent className="p-10 flex flex-col md:flex-row items-center gap-8 text-center md:text-left">
+                <div className="p-6 bg-amber-100 rounded-3xl shadow-xl shadow-amber-200/20">
+                    <AlertTriangle className="h-10 w-10 text-amber-600" />
                 </div>
-                <div className="flex-1">
-                    <p className="font-black text-xl text-amber-900">Synchronization Lag</p>
-                    <p className="text-base text-amber-700/80 font-medium">{error}</p>
+                <div className="flex-1 space-y-1">
+                    <p className="font-black text-2xl text-amber-900 tracking-tight">Synchronization Lag</p>
+                    <p className="text-lg text-amber-700/80 font-medium leading-relaxed">{error}</p>
                 </div>
-                <Button onClick={loadData} variant="outline" size="lg" className="rounded-full w-full md:w-auto font-black uppercase tracking-widest text-xs border-amber-300 hover:bg-amber-100 transition-all">Re-establish Link</Button>
+                <Button onClick={loadData} variant="outline" size="lg" className="rounded-full w-full md:w-auto h-16 px-10 font-black uppercase tracking-widest text-xs border-amber-300 hover:bg-amber-100 transition-all shadow-lg shadow-amber-200/20">Re-establish Link</Button>
             </CardContent>
         </Card>
       )}
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
         <StatCard 
-            title="Revenue" 
+            title="Total Yield" 
             value={(data?.stats?.totalRevenue || 0).toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })} 
             icon={IndianRupee} 
             description="Confirmed earnings" 
             isLoading={isLoading} 
-            trend="+12%"
+            trend="+14%"
         />
         <StatCard 
-            title="Active Stays" 
+            title="Active Node" 
             value={data?.stats?.confirmedCount || 0} 
             icon={BookOpen} 
             description="Live reservations" 
             isLoading={isLoading}
-            trend="+4%"
+            trend="+6%"
         />
         <StatCard 
-            title="Properties" 
+            title="Assets" 
             value={data?.stats?.hotelCount || 0} 
             icon={Hotel} 
             description="Verified listings" 
@@ -217,58 +217,58 @@ export default function AdminDashboard() {
         />
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-3">
-        <Card className="lg:col-span-2 rounded-[2.5rem] md:rounded-[3rem] shadow-apple border-black/5 overflow-hidden bg-white">
-            <CardHeader className="bg-white border-b border-black/5 p-6 md:p-10">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div>
-                        <CardTitle className="text-xl md:text-3xl font-black tracking-tight text-foreground">Omni-Channel Stream</CardTitle>
-                        <CardDescription className="text-sm md:text-base font-medium text-muted-foreground">Latest transactions flowing through God-Mode.</CardDescription>
+      <div className="grid gap-10 lg:grid-cols-3">
+        <Card className="lg:col-span-2 rounded-[3rem] shadow-apple border-black/5 overflow-hidden bg-white">
+            <CardHeader className="bg-white border-b border-black/5 p-10 md:p-14">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
+                    <div className="space-y-2">
+                        <CardTitle className="text-3xl md:text-4xl font-black tracking-tighter text-foreground">Omni-Channel Stream</CardTitle>
+                        <CardDescription className="text-lg font-medium text-muted-foreground tracking-tight">Latest transactions flowing through God-Mode.</CardDescription>
                     </div>
-                    <Button variant="ghost" asChild size="sm" className="w-full md:w-auto rounded-full font-black uppercase text-[10px] tracking-widest h-12 px-8 hover:bg-muted/50 border border-black/5 shadow-sm transition-all">
-                        <Link href="/admin/bookings" className="flex items-center justify-center gap-2">Full Database <ArrowUpRight className="h-4 w-4" /></Link>
+                    <Button variant="ghost" asChild size="sm" className="w-full md:w-auto rounded-full font-black uppercase text-[11px] tracking-[0.2em] h-14 px-10 hover:bg-muted/50 border border-black/5 shadow-sm transition-all duration-500">
+                        <Link href="/admin/bookings" className="flex items-center justify-center gap-3">Full Database <ArrowUpRight className="h-5 w-5" /></Link>
                     </Button>
                 </div>
             </CardHeader>
             <CardContent className="p-0 overflow-x-auto">
-                <div className="min-w-[600px]">
+                <div className="min-w-[700px]">
                     <Table>
-                        <TableHeader className="bg-muted/20">
+                        <TableHeader className="bg-muted/10">
                             <TableRow className="border-0">
-                                <TableHead className="px-10 h-16 text-[10px] font-black uppercase tracking-widest">Guest Identity</TableHead>
-                                <TableHead className="h-16 text-[10px] font-black uppercase tracking-widest">Asset</TableHead>
-                                <TableHead className="h-16 text-[10px] font-black uppercase tracking-widest">Yield</TableHead>
-                                <TableHead className="px-10 h-16 text-right text-[10px] font-black uppercase tracking-widest">Status</TableHead>
+                                <TableHead className="px-14 h-20 text-[11px] font-black uppercase tracking-[0.25em]">Guest Identity</TableHead>
+                                <TableHead className="h-20 text-[11px] font-black uppercase tracking-[0.25em]">Asset</TableHead>
+                                <TableHead className="h-20 text-[11px] font-black uppercase tracking-[0.25em]">Yield</TableHead>
+                                <TableHead className="px-14 h-20 text-right text-[11px] font-black uppercase tracking-[0.25em]">Status</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {isLoading ? (
                                 Array.from({length: 5}).map((_, i) => (
-                                    <TableRow key={i}>
-                                        <TableCell colSpan={4} className="px-10 py-10"><Skeleton className="h-6 w-full rounded-full" /></TableCell>
+                                    <TableRow key={i} className="border-b border-black/5">
+                                        <TableCell colSpan={4} className="px-14 py-12"><Skeleton className="h-8 w-full rounded-full" /></TableCell>
                                     </TableRow>
                                 ))
                             ) : data?.recentBookings?.length > 0 ? (
                                 data.recentBookings.map((booking: any) => {
                                     const bookingDate = booking.createdAt ? parseISO(booking.createdAt) : null;
                                     return (
-                                        <TableRow key={booking.id} className="hover:bg-muted/5 transition-colors border-b border-black/5 last:border-0">
-                                            <TableCell className="px-10 py-8">
-                                                <div className="font-bold text-sm text-foreground">{booking.customerName || 'Explorer'}</div>
-                                                <div className="text-[9px] text-muted-foreground font-black tracking-widest uppercase mt-1.5 opacity-60">
-                                                    {bookingDate && isValid(bookingDate) ? format(bookingDate, 'dd MMM • HH:mm') : 'Just now'}
+                                        <TableRow key={booking.id} className="hover:bg-muted/5 transition-all duration-500 border-b border-black/5 last:border-0">
+                                            <TableCell className="px-14 py-10">
+                                                <div className="font-bold text-base text-foreground tracking-tight">{booking.customerName || 'Explorer'}</div>
+                                                <div className="text-[10px] text-muted-foreground font-black tracking-[0.15em] uppercase mt-2 opacity-60">
+                                                    {bookingDate && isValid(bookingDate) ? format(bookingDate, 'dd MMM • HH:mm') : 'Syncing...'}
                                                 </div>
                                             </TableCell>
-                                            <TableCell className="py-8">
-                                                <div className="font-bold text-sm text-foreground truncate max-w-[150px]">{booking.hotelName || 'Property'}</div>
-                                                <div className="text-[9px] font-black text-muted-foreground uppercase mt-1 tracking-widest">{booking.roomType}</div>
+                                            <TableCell className="py-10">
+                                                <div className="font-bold text-base text-foreground truncate max-w-[180px] tracking-tight">{booking.hotelName || 'Property'}</div>
+                                                <div className="text-[10px] font-black text-muted-foreground uppercase mt-2 tracking-widest opacity-50">{booking.roomType}</div>
                                             </TableCell>
-                                            <TableCell className="py-8 font-black text-primary text-base tracking-tighter">
+                                            <TableCell className="py-10 font-black text-primary text-lg tracking-tighter">
                                                 {(Number(booking.totalPrice) || 0).toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}
                                             </TableCell>
-                                            <TableCell className="px-10 py-8 text-right">
+                                            <TableCell className="px-14 py-10 text-right">
                                                 <Badge className={cn(
-                                                    "rounded-full font-black uppercase text-[8px] tracking-[0.15em] px-4 py-1.5 border-0 shadow-sm",
+                                                    "rounded-full font-black uppercase text-[9px] tracking-[0.2em] px-5 py-2 border-0 shadow-sm",
                                                     booking.status === 'CONFIRMED' ? "bg-green-100 text-green-700" : 
                                                     booking.status === 'CANCELLED' ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"
                                                 )}>
@@ -280,10 +280,12 @@ export default function AdminDashboard() {
                                 })
                             ) : (
                                 <TableRow>
-                                    <TableCell colSpan={4} className="px-10 py-48 text-center">
-                                        <div className="flex flex-col items-center justify-center space-y-4">
-                                            <Activity className="h-12 w-12 text-muted-foreground/20" />
-                                            <p className="text-muted-foreground font-black uppercase tracking-[0.2em] text-xs">No Events Logged.</p>
+                                    <TableCell colSpan={4} className="px-14 py-64 text-center">
+                                        <div className="flex flex-col items-center justify-center space-y-6">
+                                            <div className="p-10 bg-muted/20 rounded-full">
+                                                <Activity className="h-16 w-16 text-muted-foreground/20" />
+                                            </div>
+                                            <p className="text-muted-foreground font-black uppercase tracking-[0.3em] text-sm">No Active Events Logged.</p>
                                         </div>
                                     </TableCell>
                                 </TableRow>
@@ -294,41 +296,41 @@ export default function AdminDashboard() {
             </CardContent>
         </Card>
 
-        <div className="space-y-8">
-            <Card className="rounded-[2.5rem] md:rounded-[3rem] shadow-apple-deep border-0 bg-primary text-white overflow-hidden relative group">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-black/20" />
-                <CardHeader className="relative p-8 md:p-10">
-                    <CardTitle className="text-2xl md:text-4xl font-black tracking-tight">Cloud Instance</CardTitle>
-                    <CardDescription className="text-white/70 font-black uppercase text-[10px] tracking-[0.2em] mt-3">Node Status: Optimized</CardDescription>
+        <div className="space-y-10">
+            <Card className="rounded-[3rem] shadow-apple-deep border-0 bg-primary text-white overflow-hidden relative group h-fit">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-black/30" />
+                <CardHeader className="relative p-10 md:p-12">
+                    <CardTitle className="text-3xl md:text-5xl font-black tracking-tighter leading-none">Cloud Instance</CardTitle>
+                    <CardDescription className="text-white/70 font-black uppercase text-[11px] tracking-[0.25em] mt-4">Node: Optimized Production</CardDescription>
                 </CardHeader>
-                <CardContent className="relative px-8 md:px-10 pb-8 md:pb-10 space-y-6">
-                    <div className="flex justify-between items-center py-4 border-b border-white/10">
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">Data Latency</span>
-                        <Badge className="bg-green-400 text-green-900 border-0 font-black text-[8px] px-3 py-1 uppercase tracking-widest">14ms</Badge>
+                <CardContent className="relative px-10 md:px-12 pb-10 md:pb-12 space-y-8">
+                    <div className="flex justify-between items-center py-5 border-b border-white/10">
+                        <span className="text-[11px] font-black uppercase tracking-[0.25em]">Data Latency</span>
+                        <Badge className="bg-green-400 text-green-900 border-0 font-black text-[9px] px-4 py-1.5 rounded-full uppercase tracking-widest">12ms Stable</Badge>
                     </div>
-                    <div className="flex justify-between items-center py-4 border-b border-white/10">
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">Auth Layer</span>
-                        <Badge className="bg-blue-400 text-blue-900 border-0 font-black text-[8px] px-3 py-1 uppercase tracking-widest">Secure</Badge>
+                    <div className="flex justify-between items-center py-5 border-b border-white/10">
+                        <span className="text-[11px] font-black uppercase tracking-[0.25em]">Security Layer</span>
+                        <Badge className="bg-blue-400 text-blue-900 border-0 font-black text-[9px] px-4 py-1.5 rounded-full uppercase tracking-widest">Hardened</Badge>
                     </div>
-                    <div className="flex justify-between items-center py-4">
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">God-Mode</span>
-                        <Badge className="bg-purple-400 text-purple-900 border-0 font-black text-[8px] px-3 py-1 uppercase tracking-widest">Active</Badge>
+                    <div className="flex justify-between items-center py-5">
+                        <span className="text-[11px] font-black uppercase tracking-[0.25em]">God-Mode</span>
+                        <Badge className="bg-purple-400 text-purple-900 border-0 font-black text-[9px] px-4 py-1.5 rounded-full uppercase tracking-widest">Master Active</Badge>
                     </div>
                 </CardContent>
             </Card>
 
-            <div className="p-8 bg-muted/30 rounded-[2.5rem] md:rounded-[3rem] border border-black/5 space-y-6 group hover:bg-muted/50 transition-all duration-500 shadow-sm">
-                <div className="flex items-center gap-4">
-                    <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center">
-                        <ShieldCheck className="h-5 w-5 text-primary" />
+            <div className="p-10 bg-muted/30 rounded-[3rem] border border-black/5 space-y-8 group hover:bg-muted/50 transition-all duration-700 shadow-sm">
+                <div className="flex items-center gap-5">
+                    <div className="h-12 w-12 bg-primary/10 rounded-2xl flex items-center justify-center transition-transform duration-500 group-hover:scale-110">
+                        <ShieldCheck className="h-6 w-6 text-primary" />
                     </div>
-                    <span className="font-black uppercase tracking-[0.2em] text-[10px] text-muted-foreground">Admin Integrity</span>
+                    <span className="font-black uppercase tracking-[0.25em] text-[11px] text-muted-foreground">Admin Integrity</span>
                 </div>
-                <p className="text-sm font-medium text-muted-foreground leading-relaxed">
-                    You are in God-Mode. Every action is authenticated via production-grade Admin SDK sessions. Use your power responsibly.
+                <p className="text-base font-medium text-muted-foreground leading-relaxed tracking-tight">
+                    You are in God-Mode. Every transaction and record override is authenticated via production-grade Admin SDK sessions. Use your override power responsibly.
                 </p>
-                <div className="pt-4 border-t border-black/5">
-                    <p className="text-[9px] font-black uppercase tracking-widest text-primary">Identity Verified</p>
+                <div className="pt-6 border-t border-black/5">
+                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Identity Verified • Protocol Secure</p>
                 </div>
             </div>
         </div>
