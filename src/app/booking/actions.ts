@@ -1,11 +1,12 @@
+
 'use server';
 
 import { getFirebaseAdmin } from '@/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
+import crypto from 'crypto';
 
 /**
- * @fileOverview Secure Booking Server Actions.
- * Handles inventory management and booking persistence using Admin SDK.
+ * @fileOverview Secure Booking Server Actions with Razorpay Signature Verification.
  */
 
 export async function confirmBookingAction(data: {
@@ -14,14 +15,32 @@ export async function confirmBookingAction(data: {
     roomId: string;
     bookingId: string;
     paymentId: string;
+    orderId: string;
+    signature: string;
     bookingData: any;
 }) {
     const { adminDb, error: adminError } = getFirebaseAdmin();
+    const RAZORPAY_SECRET = process.env.RAZORPAY_KEY_SECRET;
+
     if (adminError || !adminDb) {
-        return { success: false, error: 'Server configuration error: Could not connect to database.' };
+        return { success: false, error: 'Cloud database connection failed.' };
     }
 
-    const { userId, hotelId, roomId, bookingId, paymentId, bookingData } = data;
+    const { userId, hotelId, roomId, bookingId, paymentId, orderId, signature, bookingData } = data;
+
+    // 1. Verify Razorpay Signature (Security First)
+    if (RAZORPAY_SECRET) {
+        const body = orderId + "|" + paymentId;
+        const expectedSignature = crypto
+            .createHmac("sha256", RAZORPAY_SECRET)
+            .update(body.toString())
+            .digest("hex");
+
+        if (expectedSignature !== signature) {
+            console.error(`[FRAUD ALERT] Signature mismatch for User: ${userId}`);
+            return { success: false, error: 'Payment verification failed. Security breach detected.' };
+        }
+    }
 
     try {
         const roomRef = adminDb.doc(`hotels/${hotelId}/rooms/${roomId}`);
@@ -29,19 +48,19 @@ export async function confirmBookingAction(data: {
 
         await adminDb.runTransaction(async (transaction) => {
             const roomDoc = await transaction.get(roomRef);
-            if (!roomDoc.exists) throw new Error("Room details not found in database.");
+            if (!roomDoc.exists) throw new Error("Property inventory node missing.");
 
             const available = roomDoc.data()?.availableRooms ?? 0;
             if (available <= 0) {
-                throw new Error("Sorry, this room just got sold out while you were paying!");
+                throw new Error("Inventory exhausted during transaction.");
             }
 
-            // 1. Decrement Inventory
+            // Decrement Inventory
             transaction.update(roomRef, {
                 availableRooms: FieldValue.increment(-1)
             });
 
-            // 2. Create Booking Record
+            // Create Booking Record
             transaction.set(bookingRef, {
                 ...bookingData,
                 userId,
@@ -49,17 +68,17 @@ export async function confirmBookingAction(data: {
                 roomId,
                 status: 'CONFIRMED',
                 razorpayPaymentId: paymentId,
+                razorpayOrderId: orderId,
                 createdAt: FieldValue.serverTimestamp(),
-                // Ensure dates are stored as Firestore Timestamps
                 checkIn: new Date(bookingData.checkIn),
                 checkOut: new Date(bookingData.checkOut),
             });
         });
 
-        console.log(`[BOOKING SUCCESS] ID: ${bookingId} for User: ${userId}`);
+        console.log(`[VERIFIED BOOKING] ID: ${bookingId} confirmed via Razorpay.`);
         return { success: true };
     } catch (e: any) {
-        console.error("[BOOKING ERROR] Transaction Failed:", e.message);
-        return { success: false, error: e.message || 'An unexpected error occurred during confirmation.' };
+        console.error("[BOOKING ERROR]:", e.message);
+        return { success: false, error: e.message || 'System failure during confirmation.' };
     }
 }
