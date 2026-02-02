@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Star, MapPin, Map } from 'lucide-react';
+import { Star, MapPin } from 'lucide-react';
 import * as React from 'react';
 
 import type { Hotel } from '@/lib/types';
@@ -39,7 +39,7 @@ export function HotelCard({ hotel, className }: HotelCardProps) {
 
   return (
     <div className={cn("booking-card group overflow-hidden bg-white", className)}>
-      <div className="flex flex-col">
+      <div className="flex flex-col h-full">
         {/* Gallery */}
         <div className="relative aspect-[16/10] w-full bg-muted">
             <Carousel className="w-full h-full">
@@ -108,7 +108,6 @@ export function HotelCard({ hotel, className }: HotelCardProps) {
           <div className="flex items-center gap-1.5 text-[12px] text-[#006ce4] font-bold">
             <MapPin className="h-3.5 w-3.5" />
             <span className="underline">{hotel.city}</span>
-            <span className="text-muted-foreground font-normal">• 2.5 km from center</span>
           </div>
 
           <div className="text-[12px] space-y-1">
@@ -122,13 +121,13 @@ export function HotelCard({ hotel, className }: HotelCardProps) {
           </div>
 
           <div className="mt-auto pt-4 flex flex-col items-end">
-            <span className="text-[12px] text-muted-foreground">1 night, 2 adults</span>
+            <span className="text-[12px] text-muted-foreground">Stay for 1 night</span>
             <div className="flex flex-col items-end">
                 {hotel.discount && <span className="text-[12px] text-red-600 line-through">₹{((hotel.minPrice || 0) * 1.2).toLocaleString()}</span>}
                 <span className="text-xl font-bold">
                   ₹{discountedMinPrice?.toLocaleString()}
                 </span>
-                <span className="text-[10px] text-muted-foreground">+ ₹500 taxes & charges</span>
+                <span className="text-[10px] text-muted-foreground">+ taxes & charges</span>
             </div>
             <Button size="sm" asChild className="bg-[#006ce4] hover:bg-[#005bb8] rounded-none mt-2 font-bold px-6">
                 <Link href={`/hotels/${hotel.id}`}>See availability</Link>
