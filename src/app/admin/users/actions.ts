@@ -39,7 +39,7 @@ export async function getUserDetailsForAdmin(uid: string): Promise<UserDetailsFo
     const userRef = adminDb.doc(`users/${uid}`);
     const bookingsRef = adminDb.collectionGroup('bookings').where('userId', '==', uid);
 
-    // Fixed: calling .get() on the reference (bookingsRef), not the result (bookingsSnap)
+    // Fixed: calling .get() on the reference (bookingsRef), not the result variable itself
     const [userDoc, bookingsSnap] = await Promise.all([
         userRef.get(),
         bookingsRef.get(),

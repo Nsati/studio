@@ -98,7 +98,7 @@ export default function EditUserPage() {
                         displayName: data.displayName,
                         mobile: data.mobile,
                         role: data.role,
-                        status: data.status as any, // Cast to fix literal mismatch during build
+                        status: data.status as any, // Cast to any to synchronize with form type literals
                     });
                     setIsLoading(false);
                 })
