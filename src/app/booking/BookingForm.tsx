@@ -111,7 +111,6 @@ export function BookingForm() {
         setIsBooking(true);
 
         try {
-            // 1. Create Order ID from Backend
             const orderRes = await fetch('/api/razorpay/order', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -124,7 +123,6 @@ export function BookingForm() {
                 throw new Error(orderData.details || orderData.error || 'Failed to initialize payment gateway.');
             }
 
-            // 2. Auth handling
             let currentAuthUser = user;
             if (!currentAuthUser && auth) {
                 const userCredential = await signInAnonymously(auth);
@@ -132,7 +130,7 @@ export function BookingForm() {
             }
 
             const options = {
-                key: 'rzp_live_SBCbtId0o91JAf', // Updated to latest provided Live Key ID
+                key: 'rzp_live_SBCbtId0o91JAf',
                 amount: orderData.amount,
                 currency: "INR",
                 name: "Uttarakhand Getaways",

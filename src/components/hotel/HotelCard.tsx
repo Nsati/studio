@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Star, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Star, MapPin } from 'lucide-react';
 import * as React from 'react';
 
 import type { Hotel } from '@/lib/types';
@@ -57,8 +57,6 @@ export function HotelCard({ hotel, className }: HotelCardProps) {
                 {/* Minimal arrows visible on hover */}
                 <CarouselPrevious className="absolute left-4 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 hover:bg-white border-0 h-8 w-8" />
                 <CarouselNext className="absolute right-4 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 hover:bg-white border-0 h-8 w-8" />
-                
-                {/* Custom dots or indicator could be added here, but keep it simple for now */}
               </Carousel>
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-muted">

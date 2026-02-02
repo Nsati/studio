@@ -94,9 +94,10 @@
   animation: slow-zoom 20s linear infinite alternate;
 }
 
-/* Staggered Entrance Helpers */
-.stagger-1 { animation-delay: 100ms; }
-.stagger-2 { animation-delay: 200ms; }
-.stagger-3 { animation-delay: 300ms; }
-.stagger-4 { animation-delay: 400ms; }
-.stagger-5 { animation-delay: 500ms; }
+.shadow-apple {
+  box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.04);
+}
+
+.shadow-apple-deep {
+  box-shadow: 0 20px 48px -10px rgba(0, 0, 0, 0.08);
+}

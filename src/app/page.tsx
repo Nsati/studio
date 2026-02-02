@@ -4,8 +4,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
-import { dummyCities, dummyTourPackages } from '@/lib/dummy-data';
-import { ArrowRight, Sparkles, MapPin, Compass, Mountain, Cloud, Star } from 'lucide-react';
+import { dummyCities } from '@/lib/dummy-data';
+import { ArrowRight, Sparkles, MapPin, Compass, Star } from 'lucide-react';
 import { HotelCard } from '@/components/hotel/HotelCard';
 
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
@@ -79,7 +79,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Industry destinations grid */}
+      {/* Destinations Grid */}
       <section id="cities" className="py-24 bg-white px-4 md:px-6">
         <div className="container mx-auto">
           <div className="text-center md:text-left mb-16 space-y-4">
@@ -143,7 +143,7 @@ export default function HomePage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
               {featuredHotels?.map((hotel, idx) => (
                 <div key={hotel.id} className="animate-in fade-in slide-in-from-bottom-12 duration-1000" style={{ animationDelay: `${idx * 150}ms` }}>
-                    <HotelCard hotel={hotel} />
+                    <HotelCard hotel={hotel as any} />
                 </div>
               ))}
             </div>
@@ -151,7 +151,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Trust & Safety Final CTA */}
+      {/* Final CTA */}
       <section className="py-24 px-4 md:px-6 container mx-auto">
         <div className="relative rounded-[3rem] md:rounded-[5rem] bg-primary overflow-hidden p-12 md:p-32 text-center text-white space-y-10 shadow-apple-deep group">
             <div className="absolute inset-0 z-0">
@@ -192,7 +192,7 @@ export default function HomePage() {
                         asChild
                         className="w-full sm:w-auto rounded-full px-12 h-20 border-2 border-white/40 bg-transparent text-white hover:bg-white/10 hover:border-white font-black text-xl transition-all shadow-none"
                     >
-                        <Link href="/contact">Help Center <HelpCircle className="ml-3 h-6 w-6" /></Link>
+                        <Link href="/contact">Help Center</Link>
                     </Button>
                 </div>
             </div>
@@ -200,25 +200,4 @@ export default function HomePage() {
       </section>
     </div>
   );
-}
-
-function HelpCircle(props: any) {
-    return (
-        <svg
-            {...props}
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <circle cx="12" cy="12" r="10" />
-            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-            <path d="M12 17h.01" />
-        </svg>
-    )
 }
