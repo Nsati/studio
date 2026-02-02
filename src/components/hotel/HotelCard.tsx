@@ -39,20 +39,19 @@ export function HotelCard({ hotel, className }: HotelCardProps) {
   return (
     <div className={cn("group block w-full", className)}>
       <div className="flex flex-col space-y-4">
-        {/* Airbnb Style Card Slider */}
+        {/* Professional Card Image Container */}
         <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[2.5rem] bg-muted shadow-apple transition-all duration-700 group-hover:shadow-apple-deep">
             <Carousel className="w-full h-full">
               <CarouselContent className="h-full ml-0">
                 {images.map((img, index) => {
-                  const url = getImageUrl(img);
+                  const imageUrl = getImageUrl(img);
                   return (
-                    <CarouselItem key={index} className="pl-0 h-full relative basis-full">
-                      <Link href={`/hotels/${hotel.id}`} className="block relative w-full h-full">
-                        {url ? (
+                    <CarouselItem key={index} className="pl-0 h-full relative">
+                      <Link href={`/hotels/${hotel.id}`} className="block w-full h-full relative">
+                        {imageUrl ? (
                           <Image
-                            src={url}
+                            src={imageUrl}
                             alt={`${hotel.name} - ${index + 1}`}
-                            data-ai-hint="hotel property"
                             fill
                             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                             className="object-cover transition-transform duration-1000 group-hover:scale-105"
@@ -60,7 +59,7 @@ export function HotelCard({ hotel, className }: HotelCardProps) {
                           />
                         ) : (
                           <div className="flex h-full w-full items-center justify-center bg-muted/50">
-                            <span className="text-muted-foreground text-[10px] font-black uppercase tracking-widest opacity-40">Visual Pending</span>
+                            <span className="text-muted-foreground text-[10px] font-black uppercase tracking-widest opacity-40">Visual Syncing...</span>
                           </div>
                         )}
                       </Link>
@@ -71,8 +70,8 @@ export function HotelCard({ hotel, className }: HotelCardProps) {
               {/* Minimal arrows visible on hover */}
               {images.length > 1 && (
                 <>
-                  <CarouselPrevious className="absolute left-4 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 hover:bg-white border-0 h-8 w-8 z-20" />
-                  <CarouselNext className="absolute right-4 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 hover:bg-white border-0 h-8 w-8 z-20" />
+                  <CarouselPrevious className="absolute left-4 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 hover:bg-white border-0 h-8 w-8 z-20 translate-x-0" />
+                  <CarouselNext className="absolute right-4 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 hover:bg-white border-0 h-8 w-8 z-20 translate-x-0" />
                 </>
               )}
             </Carousel>

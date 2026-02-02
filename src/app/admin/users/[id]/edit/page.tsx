@@ -98,7 +98,7 @@ export default function EditUserPage() {
                         displayName: data.displayName,
                         mobile: data.mobile,
                         role: data.role,
-                        status: data.status as any, 
+                        status: data.status as any, // Cast to any to handle literal type mismatch in reset
                     });
                     setIsLoading(false);
                 })
