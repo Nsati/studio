@@ -17,7 +17,13 @@ import { Button } from '@/components/ui/button';
 import Loading from './loading';
 import { WriteReviewForm } from '@/components/hotel/WriteReviewForm';
 import { Badge } from '@/components/ui/badge';
-import Link from 'next/link';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from '@/components/ui/carousel';
 
 export default function HotelPage() {
   const params = useParams();
@@ -54,6 +60,11 @@ export default function HotelPage() {
   if (!hotel || !rooms || !reviews) {
     notFound();
   }
+
+  const getImageUrl = (img: string) => {
+    if (img?.startsWith('http')) return img;
+    return PlaceHolderImages.find((p) => p.id === img)?.imageUrl || '';
+  };
 
   return (
     <div className="min-h-screen bg-background pb-32">
@@ -92,30 +103,37 @@ export default function HotelPage() {
         </div>
       </div>
 
-      {/* Gallery Section */}
+      {/* Luxury Gallery Slider Section */}
       <div className="container mx-auto px-4 md:px-6 mb-20">
-        <div className="grid grid-cols-2 md:grid-cols-4 grid-rows-3 md:grid-rows-2 gap-4 h-[400px] md:h-[750px] rounded-[3rem] overflow-hidden shadow-apple-deep">
-            <div className="col-span-2 row-span-2 relative group overflow-hidden">
-                <Image src={hotel.images[0]?.startsWith('http') ? hotel.images[0] : (PlaceHolderImages.find(i => i.id === hotel.images[0])?.imageUrl || '')} alt="Primary" fill className="object-cover transition-transform duration-2000 group-hover:scale-105" priority />
-            </div>
-            <div className="col-span-1 row-span-1 relative group overflow-hidden hidden md:block">
-                <Image src={hotel.images[1]?.startsWith('http') ? hotel.images[1] : (PlaceHolderImages.find(i => i.id === hotel.images[1])?.imageUrl || '')} alt="Gallery 1" fill className="object-cover transition-transform duration-2000 group-hover:scale-105" />
-            </div>
-            <div className="col-span-1 row-span-1 relative group overflow-hidden hidden md:block">
-                <Image src={hotel.images[2]?.startsWith('http') ? hotel.images[2] : (PlaceHolderImages.find(i => i.id === hotel.images[2])?.imageUrl || '')} alt="Gallery 2" fill className="object-cover transition-transform duration-2000 group-hover:scale-105" />
-            </div>
-            <div className="col-span-1 row-span-1 relative group overflow-hidden">
-                <Image src={hotel.images[1]?.startsWith('http') ? hotel.images[1] : (PlaceHolderImages.find(i => i.id === (hotel.images[3] || hotel.images[1]))?.imageUrl || '')} alt="Gallery 3" fill className="object-cover transition-transform duration-2000 group-hover:scale-105" />
-            </div>
-            <div className="col-span-1 row-span-1 relative group bg-primary overflow-hidden">
-                {hotel.images.length > 2 && (
-                    <Image src={hotel.images[2]?.startsWith('http') ? hotel.images[2] : (PlaceHolderImages.find(i => i.id === (hotel.images[4] || hotel.images[2]))?.imageUrl || '')} alt="Gallery 4" fill className="object-cover opacity-40" />
-                )}
-                <div className="absolute inset-0 flex items-center justify-center text-white font-black tracking-[0.2em] text-xs uppercase bg-black/20 backdrop-blur-sm group-hover:bg-black/40 transition-all cursor-pointer">
-                    View Photos
+        <Carousel className="w-full relative group">
+          <CarouselContent className="-ml-4">
+            {hotel.images.map((img, index) => (
+              <CarouselItem key={index} className="pl-4 basis-full md:basis-3/4 lg:basis-2/3">
+                <div className="relative aspect-[16/9] overflow-hidden rounded-[3rem] shadow-apple-deep">
+                  <Image
+                    src={getImageUrl(img)}
+                    alt={`${hotel.name} gallery ${index + 1}`}
+                    fill
+                    className="object-cover transition-transform duration-2000 hover:scale-105"
+                    priority={index === 0}
+                  />
                 </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          {/* Custom positioned arrows */}
+          <div className="absolute top-1/2 -translate-y-1/2 left-8 right-8 flex justify-between pointer-events-none">
+            <CarouselPrevious className="static pointer-events-auto h-14 w-14 rounded-full glass-morphism border-0 text-foreground translate-x-0" />
+            <CarouselNext className="static pointer-events-auto h-14 w-14 rounded-full glass-morphism border-0 text-foreground translate-x-0" />
+          </div>
+          
+          {/* Gallery Counter */}
+          <div className="absolute bottom-10 right-12 z-10">
+            <div className="glass-morphism px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg">
+              Collection • {hotel.images.length} Photos
             </div>
-        </div>
+          </div>
+        </Carousel>
       </div>
 
       <div className="container mx-auto px-4 md:px-6">
@@ -148,10 +166,11 @@ export default function HotelPage() {
                     </div>
                 </section>
 
-                {/* Policies Section - Standard Practice */}
+                {/* Policies Section */}
                 <section className="p-10 md:p-16 rounded-[3rem] bg-white shadow-apple-deep border border-black/5 space-y-12">
                     <div className="flex items-center gap-3 text-primary font-black uppercase tracking-[0.3em] text-xs">
-                        <Info className="h-6 w-6" /> Stay Policies
+                        <div className="h-6 w-6"><Info className="h-6 w-6" /></div>
+                        Stay Policies
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                         <div className="space-y-4">
@@ -192,7 +211,7 @@ export default function HotelPage() {
         </div>
       </div>
 
-      {/* Mobile Sticky CTA Bar - Standard Industry Practice */}
+      {/* Mobile Sticky CTA Bar */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 p-4 bg-white/80 backdrop-blur-2xl border-t border-black/5 shadow-2xl animate-in slide-in-from-bottom-full duration-500">
         <div className="container mx-auto flex items-center justify-between gap-4">
             <div className="flex flex-col">
@@ -205,7 +224,6 @@ export default function HotelPage() {
                 const bookingSection = document.getElementById('booking-section');
                 if (bookingSection) bookingSection.scrollIntoView({ behavior: 'smooth' });
                 else {
-                    // If no section, push to booking with defaults
                     router.push(`/booking?hotelId=${slug}&checkIn=${new Date().toISOString().split('T')[0]}&checkOut=${new Date(Date.now() + 86400000).toISOString().split('T')[0]}&guests=1`);
                 }
             }} className="h-14 rounded-full px-10 bg-accent hover:bg-accent/90 font-black uppercase text-xs tracking-widest shadow-xl shadow-accent/20">

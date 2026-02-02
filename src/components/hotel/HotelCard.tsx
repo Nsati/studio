@@ -2,12 +2,20 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Star, MapPin } from 'lucide-react';
+import { Star, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
+import * as React from 'react';
 
 import type { Hotel } from '@/lib/types';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from '@/components/ui/carousel';
 
 interface HotelCardProps {
   hotel: Hotel & { id: string };
@@ -15,32 +23,43 @@ interface HotelCardProps {
 }
 
 export function HotelCard({ hotel, className }: HotelCardProps) {
-  const imageUrl = hotel.images[0]?.startsWith('http')
-    ? hotel.images[0]
-    : PlaceHolderImages.find((img) => img.id === hotel.images[0])?.imageUrl;
-
-  const imageHint = !hotel.images[0]?.startsWith('http')
-    ? PlaceHolderImages.find((img) => img.id === hotel.images[0])?.imageHint
-    : undefined;
+  const getImageUrl = (img: string) => {
+    if (img?.startsWith('http')) return img;
+    return PlaceHolderImages.find((p) => p.id === img)?.imageUrl || '';
+  };
 
   const discountedMinPrice = hotel.minPrice && hotel.discount
     ? hotel.minPrice * (1 - hotel.discount / 100)
     : hotel.minPrice;
 
   return (
-    <Link href={`/hotels/${hotel.id}`} className={cn("group block w-full", className)}>
+    <div className={cn("group block w-full", className)}>
       <div className="flex flex-col space-y-4">
-        {/* Modern Tall Card Image - Airbnb Style */}
-        <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[2.5rem] bg-muted shadow-apple transition-all duration-700 group-hover:shadow-apple-deep group-hover:-translate-y-1">
-            {imageUrl ? (
-              <Image
-                src={imageUrl}
-                alt={hotel.name}
-                data-ai-hint={imageHint}
-                fill
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                className="object-cover transition-transform duration-1000 group-hover:scale-110"
-              />
+        {/* Airbnb Style Card Slider */}
+        <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[2.5rem] bg-muted shadow-apple transition-all duration-700 group-hover:shadow-apple-deep">
+            {hotel.images && hotel.images.length > 0 ? (
+              <Carousel className="w-full h-full">
+                <CarouselContent className="h-full ml-0">
+                  {hotel.images.map((img, index) => (
+                    <CarouselItem key={index} className="pl-0 h-full relative">
+                      <Link href={`/hotels/${hotel.id}`}>
+                        <Image
+                          src={getImageUrl(img)}
+                          alt={`${hotel.name} - ${index + 1}`}
+                          fill
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                          className="object-cover transition-transform duration-1000 group-hover:scale-105"
+                        />
+                      </Link>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                {/* Minimal arrows visible on hover */}
+                <CarouselPrevious className="absolute left-4 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 hover:bg-white border-0 h-8 w-8" />
+                <CarouselNext className="absolute right-4 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 hover:bg-white border-0 h-8 w-8" />
+                
+                {/* Custom dots or indicator could be added here, but keep it simple for now */}
+              </Carousel>
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-muted">
                 <span className="text-muted-foreground text-xs uppercase tracking-widest font-black">No Preview</span>
@@ -49,7 +68,7 @@ export function HotelCard({ hotel, className }: HotelCardProps) {
             
             {/* Minimal Badge Overlay */}
             {hotel.discount && hotel.discount > 0 ? (
-                <div className="absolute top-5 left-5">
+                <div className="absolute top-5 left-5 pointer-events-none z-10">
                     <Badge className="bg-accent text-white border-0 font-bold px-4 py-1.5 rounded-full shadow-lg text-[10px] tracking-widest uppercase">
                         {hotel.discount}% OFF
                     </Badge>
@@ -57,14 +76,14 @@ export function HotelCard({ hotel, className }: HotelCardProps) {
             ) : null}
 
             {/* Rating Overlay */}
-            <div className="absolute bottom-5 left-5 px-4 py-2 glass-morphism rounded-full flex items-center gap-1.5 shadow-sm border-white/30 backdrop-blur-md">
+            <div className="absolute bottom-5 left-5 px-4 py-2 glass-morphism rounded-full flex items-center gap-1.5 shadow-sm border-white/30 backdrop-blur-md pointer-events-none z-10">
                 <Star className="h-3.5 w-3.5 fill-accent text-accent" />
                 <span className="text-xs font-black text-foreground tracking-tight">{hotel.rating}</span>
             </div>
         </div>
 
-        {/* Minimal Details - Apple Style */}
-        <div className="px-2 space-y-1.5">
+        {/* Minimal Details */}
+        <Link href={`/hotels/${hotel.id}`} className="px-2 space-y-1.5 block">
           <h3 className="text-xl font-bold tracking-tight text-foreground leading-tight group-hover:text-primary transition-colors truncate">
               {hotel.name}
           </h3>
@@ -86,8 +105,8 @@ export function HotelCard({ hotel, className }: HotelCardProps) {
               <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Seasonal Pricing</span>
             )}
           </div>
-        </div>
+        </Link>
       </div>
-    </Link>
+    </div>
   );
 }
