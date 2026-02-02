@@ -6,18 +6,18 @@ import { useSearchParams, useRouter, notFound } from 'next/navigation';
 import Image from 'next/image';
 import { differenceInDays, format, parse } from 'date-fns';
 import { signInAnonymously } from 'firebase/auth';
-import type { Hotel, Room, Booking, Promotion } from '@/lib/types';
+import type { Hotel, Room, Booking } from '@/lib/types';
 import { useFirestore, useAuth, useUser, useDoc, useCollection, useMemoFirebase } from '@/firebase';
-import { doc, collection, getDoc } from 'firebase/firestore';
+import { doc, collection } from 'firebase/firestore';
 
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, Calendar, Users, BedDouble, ArrowLeft, Tag, ShieldCheck, ShieldAlert, CheckCircle2, Lock } from 'lucide-react';
+import { Loader2, Calendar, BedDouble, ArrowLeft, ShieldCheck, ShieldAlert, CheckCircle2, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { BookingFormSkeleton } from './BookingFormSkeleton';
 import { confirmBookingAction } from './actions';
@@ -65,15 +65,12 @@ export function BookingForm() {
     const [customerDetails, setCustomerDetails] = useState({ name: '', email: '', mobile: '' });
     const [isBooking, setIsBooking] = useState(false);
     const [termsAccepted, setTermsAccepted] = useState(false);
-    const [couponCode, setCouponCode] = useState('');
-    const [couponDiscount, setCouponDiscount] = useState(0);
-    const [couponMessage, setCouponMessage] = useState('');
 
     useEffect(() => {
         if (userProfile) {
             setCustomerDetails({ 
-                name: userProfile.displayName, 
-                email: userProfile.email,
+                name: userProfile.displayName || '', 
+                email: userProfile.email || '',
                 mobile: userProfile.mobile || ''
             });
         }
@@ -100,12 +97,16 @@ export function BookingForm() {
     const hotelDiscountPercent = hotel.discount || 0;
     const originalRoomPrice = room.price;
     const discountedRoomPrice = originalRoomPrice * (1 - hotelDiscountPercent / 100);
-    const basePriceAfterHotelDiscount = discountedRoomPrice * nights;
-    const totalPrice = Math.max(0, basePriceAfterHotelDiscount - couponDiscount);
+    const totalPrice = discountedRoomPrice * nights;
 
     const handlePayment = async () => {
         if (!customerDetails.name || !customerDetails.email || !customerDetails.mobile) {
             toast({ variant: 'destructive', title: 'Details Required', description: 'Please complete the guest information form.' });
+            return;
+        }
+
+        if (!window.Razorpay) {
+            toast({ variant: 'destructive', title: 'Payment Script Loading', description: 'Checkout script is still loading. Please wait a second.' });
             return;
         }
         
@@ -120,7 +121,10 @@ export function BookingForm() {
             });
 
             const orderData = await orderRes.json();
-            if (!orderRes.ok) throw new Error(orderData.error || 'Failed to initialize payment gateway.');
+            
+            if (!orderRes.ok) {
+                throw new Error(orderData.error || orderData.details || 'Failed to initialize payment gateway.');
+            }
 
             // 2. Ensure user is authenticated (anonymous if needed)
             let currentAuthUser = user;
@@ -130,11 +134,11 @@ export function BookingForm() {
             }
 
             const options = {
-                key: 'rzp_live_SBAuFmGWqZjkQM', // Live Key
+                key: 'rzp_live_SBAuFmGWqZjkQM', // Live Key ID provided by user
                 amount: orderData.amount,
                 currency: "INR",
                 name: "Uttarakhand Getaways",
-                description: `Himalayan Stay: ${hotel.name}`,
+                description: `Stay at ${hotel.name}`,
                 image: "https://geof.storyboardthat.com/images/default-avatar.png",
                 order_id: orderData.id,
                 handler: async (response: any) => {
@@ -174,12 +178,15 @@ export function BookingForm() {
                     email: customerDetails.email,
                     contact: customerDetails.mobile
                 },
-                notes: { address: hotel.address || hotel.city },
+                notes: { 
+                    user_id: currentAuthUser?.uid || 'guest',
+                    booking_tmp_id: `tmp_${Date.now()}`
+                },
                 theme: { color: "#388E3C" },
                 modal: {
                     ondismiss: () => {
                         setIsBooking(false);
-                        toast({ variant: 'destructive', title: 'Payment Canceled', description: 'Your Himalayan journey is waiting.' });
+                        toast({ variant: 'default', title: 'Payment Canceled', description: 'Your booking has not been processed.' });
                     }
                 }
             };
@@ -188,7 +195,12 @@ export function BookingForm() {
             rzp.open();
 
         } catch (e: any) {
-            toast({ variant: 'destructive', title: 'Gateway Connection Failed', description: e.message });
+            console.error("Payment initialization error:", e);
+            toast({ 
+                variant: 'destructive', 
+                title: 'Payment Gateway Error', 
+                description: e.message || 'Could not connect to Razorpay. Check your internet or try again later.' 
+            });
             setIsBooking(false);
         }
     };
@@ -197,59 +209,57 @@ export function BookingForm() {
         <div className="container mx-auto max-w-6xl py-10 px-4 md:px-6">
             <div className="mb-10">
                 <Link href={`/hotels/${hotelId}`} className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors">
-                    <ArrowLeft className="h-4 w-4" /> Back to Collection
+                    <ArrowLeft className="h-4 w-4" /> Back to Hotel
                 </Link>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
                 <div className="lg:col-span-1 space-y-8">
-                    <h1 className="text-3xl font-black tracking-tighter uppercase">Your <span className="text-primary italic">Adventure</span></h1>
+                    <h1 className="text-3xl font-black tracking-tighter uppercase Stagger-1">Your <span className="text-primary italic">Adventure</span></h1>
                     <Card className="rounded-[2.5rem] overflow-hidden shadow-apple border-black/5 bg-white">
                         {hotelImage && (
                             <div className="relative aspect-[16/10]">
                                 <Image src={hotelImage} alt={hotel.name} fill className="object-cover" />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                                 <div className="absolute bottom-6 left-6 right-6">
-                                    <h2 className="text-xl font-bold text-white leading-tight">{hotel.name}</h2>
+                                    <h2 className="text-xl font-bold text-white">{hotel.name}</h2>
                                     <p className="text-white/70 text-[9px] font-black uppercase tracking-widest mt-1">{hotel.city}</p>
                                 </div>
                             </div>
                         )}
-                        <CardContent className="p-8 space-y-6">
+                        <div className="p-8 space-y-6">
                             <div className="grid grid-cols-1 gap-5">
                                 <div className="flex items-center gap-4">
                                     <div className="h-10 w-10 bg-primary/5 rounded-full flex items-center justify-center text-primary"><BedDouble className="h-5 w-5" /></div>
                                     <div className="flex flex-col">
-                                        <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground leading-none mb-1">Accommodation</span>
-                                        <span className="font-bold text-sm tracking-tight">{room.type}</span>
+                                        <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1">Accommodation</span>
+                                        <span className="font-bold text-sm">{room.type}</span>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-4">
                                     <div className="h-10 w-10 bg-primary/5 rounded-full flex items-center justify-center text-primary"><Calendar className="h-5 w-5" /></div>
                                     <div className="flex flex-col">
-                                        <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground leading-none mb-1">Stay Window</span>
-                                        <span className="font-bold text-sm tracking-tight">{format(checkIn, 'MMM dd')} - {format(checkOut, 'MMM dd')} ({nights} Nights)</span>
+                                        <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1">Stay Window</span>
+                                        <span className="font-bold text-sm">{format(checkIn, 'MMM dd')} - {format(checkOut, 'MMM dd')} ({nights} Nights)</span>
                                     </div>
                                 </div>
                             </div>
-                        </CardContent>
+                        </div>
                     </Card>
 
                     <Card className="rounded-[2.5rem] bg-muted/30 border-black/5 p-8 space-y-6">
-                        <div className="space-y-3">
-                            <div className="flex justify-between items-baseline text-sm font-medium">
-                                <span className="text-muted-foreground">Base Investment</span>
-                                <span>{basePriceAfterHotelDiscount.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}</span>
+                        <div className="space-y-3 text-sm">
+                            <div className="flex justify-between items-baseline">
+                                <span className="text-muted-foreground">Price per night</span>
+                                <span>{(discountedRoomPrice).toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}</span>
                             </div>
-                            {couponDiscount > 0 && (
-                                <div className="flex justify-between items-baseline text-sm font-black text-green-600">
-                                    <span>Promotional Credit</span>
-                                    <span>- {couponDiscount.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}</span>
-                                </div>
-                            )}
+                            <div className="flex justify-between items-baseline">
+                                <span className="text-muted-foreground">Number of nights</span>
+                                <span>x {nights}</span>
+                            </div>
                         </div>
                         <div className="pt-6 border-t border-black/5 flex justify-between items-center">
-                            <span className="text-lg font-black tracking-tight uppercase">Final Amount</span>
+                            <span className="text-lg font-black tracking-tight uppercase">Total Amount</span>
                             <span className="text-3xl font-black text-primary tracking-tighter">
                                 {totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}
                             </span>
@@ -258,7 +268,7 @@ export function BookingForm() {
                 </div>
 
                 <div className="lg:col-span-2 space-y-10">
-                    <h2 className="text-3xl font-black tracking-tighter uppercase">Guest <span className="text-primary italic">Verification</span></h2>
+                    <h2 className="text-3xl font-black tracking-tighter uppercase Stagger-2">Guest <span className="text-primary italic">Verification</span></h2>
                     
                     <Card className="rounded-[3rem] shadow-apple-deep border-black/5 bg-white overflow-hidden">
                         <div className="p-10 space-y-10">
@@ -266,7 +276,7 @@ export function BookingForm() {
                                 <div className="space-y-3">
                                     <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-2">Full Legal Name</Label>
                                     <Input
-                                        placeholder="Name as on ID card"
+                                        placeholder="Enter guest name"
                                         value={customerDetails.name}
                                         onChange={(e) => setCustomerDetails({ ...customerDetails, name: e.target.value })}
                                         className="h-16 rounded-[1.5rem] bg-muted/50 border-0 focus-visible:ring-primary font-bold text-lg px-6"
@@ -276,20 +286,20 @@ export function BookingForm() {
                                     <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-2">Email Address</Label>
                                     <Input
                                         type="email"
-                                        placeholder="your@email.com"
+                                        placeholder="guest@example.com"
                                         value={customerDetails.email}
                                         onChange={(e) => setCustomerDetails({ ...customerDetails, email: e.target.value })}
                                         className="h-16 rounded-[1.5rem] bg-muted/50 border-0 focus-visible:ring-primary font-bold text-lg px-6"
                                     />
                                 </div>
                                 <div className="space-y-3 md:col-span-2">
-                                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-2">Contact Number</Label>
+                                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-2">Mobile Number</Label>
                                     <div className="flex gap-2">
                                         <div className="h-16 px-6 bg-muted/50 rounded-[1.5rem] flex items-center font-black text-muted-foreground opacity-60 text-lg">+91</div>
                                         <Input
                                             type="tel"
                                             maxLength={10}
-                                            placeholder="10-digit mobile number"
+                                            placeholder="10-digit mobile"
                                             value={customerDetails.mobile}
                                             onChange={(e) => setCustomerDetails({ ...customerDetails, mobile: e.target.value })}
                                             className="h-16 rounded-[1.5rem] bg-muted/50 border-0 focus-visible:ring-primary font-bold text-lg flex-1 px-6"
@@ -313,21 +323,21 @@ export function BookingForm() {
                                     disabled={isBooking || !termsAccepted}
                                 >
                                     {isBooking ? (
-                                        <><Loader2 className="mr-4 h-8 w-8 animate-spin" /> Link Active...</>
+                                        <><Loader2 className="mr-4 h-8 w-8 animate-spin" /> Connection Secure...</>
                                     ) : (
-                                        <><Lock className="mr-4 h-6 w-6 opacity-50 group-hover:opacity-100" /> Secure Checkout</>
+                                        <><Lock className="mr-4 h-6 w-6 opacity-50 group-hover:opacity-100" /> Pay Now & Reserve</>
                                     )}
                                 </Button>
 
                                 <div className="flex flex-col sm:flex-row items-center justify-center gap-10 opacity-40">
                                     <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest">
-                                        <CheckCircle2 className="h-4 w-4 text-green-600" /> Instant Confirmation
+                                        <CheckCircle2 className="h-4 w-4 text-green-600" /> Verified Stay
                                     </div>
                                     <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest">
-                                        <ShieldCheck className="h-4 w-4 text-primary" /> Razorpay Live Verified
+                                        <ShieldCheck className="h-4 w-4 text-primary" /> Secure Checkout
                                     </div>
                                     <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest">
-                                        <ShieldAlert className="h-4 w-4" /> 256-bit Encryption
+                                        <ShieldAlert className="h-4 w-4" /> SSL Encrypted
                                     </div>
                                 </div>
                             </div>

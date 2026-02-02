@@ -12,15 +12,21 @@ export async function POST(req: Request) {
   const key_secret = process.env.RAZORPAY_KEY_SECRET;
 
   if (!key_secret) {
-    console.error('RAZORPAY_KEY_SECRET is missing from environment variables.');
-    return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+    console.error('CRITICAL: RAZORPAY_KEY_SECRET is missing from environment variables.');
+    return NextResponse.json({ 
+      error: 'Gateway configuration error. Please contact admin to set RAZORPAY_KEY_SECRET.' 
+    }, { status: 500 });
   }
 
   try {
     const { amount, currency = 'INR' } = await req.json();
 
-    if (!amount || amount <= 0) {
-      return NextResponse.json({ error: 'Invalid amount' }, { status: 400 });
+    // Razorpay requires amount in paise. If user sends 1000 INR, we send 100000.
+    // We ensure it's at least 1 Rupee (100 paise)
+    const orderAmount = Math.round(Number(amount) * 100);
+
+    if (!orderAmount || orderAmount < 100) {
+      return NextResponse.json({ error: 'Invalid amount. Minimum amount should be ₹1.' }, { status: 400 });
     }
 
     const instance = new Razorpay({
@@ -28,13 +34,13 @@ export async function POST(req: Request) {
       key_secret: key_secret,
     });
 
-    // Amount must be in paise (e.g., 500 INR = 50000 paise)
     const options = {
-      amount: Math.round(amount * 100),
+      amount: orderAmount,
       currency,
       receipt: `receipt_${Date.now()}`,
     };
 
+    console.log(`[RAZORPAY] Creating order for ${orderAmount} paise`);
     const order = await instance.orders.create(options);
 
     return NextResponse.json({ 
@@ -45,6 +51,9 @@ export async function POST(req: Request) {
 
   } catch (error: any) {
     console.error('[RAZORPAY ORDER ERROR]:', error);
-    return NextResponse.json({ error: error.message || 'Failed to create order' }, { status: 500 });
+    return NextResponse.json({ 
+      error: error.message || 'Failed to create Razorpay order',
+      details: error.description || 'Internal Server Error'
+    }, { status: 500 });
   }
 }
