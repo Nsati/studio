@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -6,14 +5,14 @@ import { useSearchParams, useRouter, notFound } from 'next/navigation';
 import Image from 'next/image';
 import { differenceInDays, format, parse } from 'date-fns';
 import { signInAnonymously } from 'firebase/auth';
-import type { Hotel, Room, Booking } from '@/lib/types';
+import type { Hotel, Room } from '@/lib/types';
 import { useFirestore, useAuth, useUser, useDoc, useCollection, useMemoFirebase } from '@/firebase';
 import { doc, collection } from 'firebase/firestore';
 
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -95,8 +94,7 @@ export function BookingForm() {
         : PlaceHolderImages.find((img) => img.id === hotel.images[0])?.imageUrl;
     
     const hotelDiscountPercent = hotel.discount || 0;
-    const originalRoomPrice = room.price;
-    const discountedRoomPrice = originalRoomPrice * (1 - hotelDiscountPercent / 100);
+    const discountedRoomPrice = room.price * (1 - hotelDiscountPercent / 100);
     const totalPrice = discountedRoomPrice * nights;
 
     const handlePayment = async () => {
@@ -123,10 +121,10 @@ export function BookingForm() {
             const orderData = await orderRes.json();
             
             if (!orderRes.ok) {
-                throw new Error(orderData.error || orderData.details || 'Failed to initialize payment gateway.');
+                throw new Error(orderData.details || orderData.error || 'Failed to initialize payment gateway.');
             }
 
-            // 2. Ensure user is authenticated (anonymous if needed)
+            // 2. Auth handling
             let currentAuthUser = user;
             if (!currentAuthUser && auth) {
                 const userCredential = await signInAnonymously(auth);
@@ -134,7 +132,7 @@ export function BookingForm() {
             }
 
             const options = {
-                key: 'rzp_live_SBAuFmGWqZjkQM', // Live Key ID provided by user
+                key: 'rzp_live_SBAuFmGWqZjkQM', // Verified Live Key ID
                 amount: orderData.amount,
                 currency: "INR",
                 name: "Uttarakhand Getaways",
@@ -169,7 +167,7 @@ export function BookingForm() {
                     if (result.success) {
                         router.push(`/booking/success/${bookingId}`);
                     } else {
-                        toast({ variant: "destructive", title: "Booking Error", description: result.error });
+                        toast({ variant: "destructive", title: "Verification Failed", description: result.error });
                         setIsBooking(false);
                     }
                 },
@@ -178,15 +176,11 @@ export function BookingForm() {
                     email: customerDetails.email,
                     contact: customerDetails.mobile
                 },
-                notes: { 
-                    user_id: currentAuthUser?.uid || 'guest',
-                    booking_tmp_id: `tmp_${Date.now()}`
-                },
                 theme: { color: "#388E3C" },
                 modal: {
                     ondismiss: () => {
                         setIsBooking(false);
-                        toast({ variant: 'default', title: 'Payment Canceled', description: 'Your booking has not been processed.' });
+                        toast({ title: 'Payment Canceled', description: 'Your transaction was interrupted.' });
                     }
                 }
             };
@@ -198,8 +192,8 @@ export function BookingForm() {
             console.error("Payment initialization error:", e);
             toast({ 
                 variant: 'destructive', 
-                title: 'Payment Gateway Error', 
-                description: e.message || 'Could not connect to Razorpay. Check your internet or try again later.' 
+                title: 'Gateway Error', 
+                description: e.message || 'Could not reach Razorpay. Please check your internet.' 
             });
             setIsBooking(false);
         }
@@ -215,7 +209,7 @@ export function BookingForm() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
                 <div className="lg:col-span-1 space-y-8">
-                    <h1 className="text-3xl font-black tracking-tighter uppercase Stagger-1">Your <span className="text-primary italic">Adventure</span></h1>
+                    <h1 className="text-3xl font-black tracking-tighter uppercase">Your <span className="text-primary italic">Adventure</span></h1>
                     <Card className="rounded-[2.5rem] overflow-hidden shadow-apple border-black/5 bg-white">
                         {hotelImage && (
                             <div className="relative aspect-[16/10]">
@@ -268,7 +262,7 @@ export function BookingForm() {
                 </div>
 
                 <div className="lg:col-span-2 space-y-10">
-                    <h2 className="text-3xl font-black tracking-tighter uppercase Stagger-2">Guest <span className="text-primary italic">Verification</span></h2>
+                    <h2 className="text-3xl font-black tracking-tighter uppercase">Guest <span className="text-primary italic">Verification</span></h2>
                     
                     <Card className="rounded-[3rem] shadow-apple-deep border-black/5 bg-white overflow-hidden">
                         <div className="p-10 space-y-10">
@@ -323,7 +317,7 @@ export function BookingForm() {
                                     disabled={isBooking || !termsAccepted}
                                 >
                                     {isBooking ? (
-                                        <><Loader2 className="mr-4 h-8 w-8 animate-spin" /> Connection Secure...</>
+                                        <><Loader2 className="mr-4 h-8 w-8 animate-spin" /> Authenticating...</>
                                     ) : (
                                         <><Lock className="mr-4 h-6 w-6 opacity-50 group-hover:opacity-100" /> Pay Now & Reserve</>
                                     )}

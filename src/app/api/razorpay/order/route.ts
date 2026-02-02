@@ -1,33 +1,35 @@
-
 import { NextResponse } from 'next/server';
 import Razorpay from 'razorpay';
 
 /**
- * @fileOverview Razorpay Order Creation API (Server-Side)
- * Generates a unique Order ID for secure payments.
+ * @fileOverview Hardened Razorpay Order API
+ * Following industry standards for Live Mode.
  */
 
 export async function POST(req: Request) {
-  const key_id = process.env.RAZORPAY_KEY_ID || 'rzp_live_SBAuFmGWqZjkQM';
+  // Use environment variables strictly
+  const key_id = process.env.RAZORPAY_KEY_ID;
   const key_secret = process.env.RAZORPAY_KEY_SECRET;
 
-  if (!key_secret) {
-    console.error('CRITICAL: RAZORPAY_KEY_SECRET is missing from environment variables.');
+  if (!key_id || !key_secret) {
+    console.error('CRITICAL: Razorpay Credentials missing in environment variables.');
     return NextResponse.json({ 
-      error: 'Gateway configuration error. Please contact admin to set RAZORPAY_KEY_SECRET.' 
+      error: 'Gateway Configuration Error', 
+      details: 'API Keys are not configured on the server.' 
     }, { status: 500 });
   }
 
   try {
     const { amount, currency = 'INR' } = await req.json();
 
-    // Razorpay requires amount in paise. If user sends 1000 INR, we send 100000.
-    // We ensure it's at least 1 Rupee (100 paise)
-    const orderAmount = Math.round(Number(amount) * 100);
-
-    if (!orderAmount || orderAmount < 100) {
-      return NextResponse.json({ error: 'Invalid amount. Minimum amount should be ₹1.' }, { status: 400 });
+    // 1. Validation: Amount must be valid and minimum ₹1
+    const numericAmount = parseFloat(amount);
+    if (isNaN(numericAmount) || numericAmount < 1) {
+      return NextResponse.json({ error: 'Invalid amount. Minimum ₹1 required.' }, { status: 400 });
     }
+
+    // 2. Format: Amount in paise (Integer only)
+    const amountInPaise = Math.floor(numericAmount * 100);
 
     const instance = new Razorpay({
       key_id: key_id,
@@ -35,14 +37,18 @@ export async function POST(req: Request) {
     });
 
     const options = {
-      amount: orderAmount,
-      currency,
-      receipt: `receipt_${Date.now()}`,
+      amount: amountInPaise,
+      currency: currency,
+      receipt: `rcpt_${Date.now()}`,
+      payment_capture: 1, // Auto-capture payments
     };
 
-    console.log(`[RAZORPAY] Creating order for ${orderAmount} paise`);
+    console.log(`[RAZORPAY] Attempting to create order for ${amountInPaise} paise`);
+    
     const order = await instance.orders.create(options);
 
+    console.log(`[RAZORPAY] Order Created Successfully: ${order.id}`);
+    
     return NextResponse.json({ 
       id: order.id,
       amount: order.amount,
@@ -50,10 +56,17 @@ export async function POST(req: Request) {
     });
 
   } catch (error: any) {
-    console.error('[RAZORPAY ORDER ERROR]:', error);
+    // 3. Robust Error Logging
+    console.error('[RAZORPAY API ERROR]:', {
+      message: error.message,
+      description: error.description,
+      metadata: error.metadata,
+      code: error.code
+    });
+
     return NextResponse.json({ 
-      error: error.message || 'Failed to create Razorpay order',
-      details: error.description || 'Internal Server Error'
+      error: 'Order creation failed',
+      details: error.description || error.message || 'Internal Server Error'
     }, { status: 500 });
   }
 }
