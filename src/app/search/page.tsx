@@ -9,7 +9,8 @@ import Loading from './loading';
 import { SearchFilters } from './SearchFilters';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Filter, SlidersHorizontal, MapPin } from 'lucide-react';
+import { Filter, SlidersHorizontal, MapPin, Star } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import React from 'react';
 
 function SearchResults() {
@@ -165,6 +166,6 @@ export default function SearchPage() {
   );
 }
 
-function Label({ children, className }: any) {
+function Label({ children, className }: { children: React.ReactNode, className?: string }) {
     return <span className={cn("block", className)}>{children}</span>
 }
