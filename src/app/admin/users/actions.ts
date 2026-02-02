@@ -37,11 +37,11 @@ export async function getUserDetailsForAdmin(uid: string): Promise<UserDetailsFo
     }
 
     const userRef = adminDb.doc(`users/${uid}`);
-    const bookingsRef = adminDb.collection(`users/${uid}/bookings`);
+    const bookingsRef = adminDb.collectionGroup('bookings').where('userId', '==', uid);
 
     const [userDoc, bookingsSnap] = await Promise.all([
         userRef.get(),
-        bookingsRef.get(),
+        bookingsSnap.get(),
     ]);
 
     if (!userDoc.exists) {
@@ -53,10 +53,10 @@ export async function getUserDetailsForAdmin(uid: string): Promise<UserDetailsFo
     let totalBookings = 0;
 
     bookingsSnap.forEach(doc => {
-        const booking = doc.data() as Booking;
+        const booking = doc.data() as any;
         if (booking.status === 'CONFIRMED') {
             totalBookings++;
-            totalRevenue += booking.totalPrice;
+            totalRevenue += Number(booking.totalPrice) || 0;
         }
     });
 

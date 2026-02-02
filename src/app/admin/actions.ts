@@ -35,7 +35,7 @@ const serialize = (val: any): any => {
 
 export async function getAdminDashboardStats() {
   // Use Redis Cache for 5 minutes (300 seconds)
-  return withCache('admin_dashboard_stats', 300, async () => {
+  return withCache('admin_dashboard_stats_v2', 300, async () => {
     const { adminDb, error: sdkError } = getFirebaseAdmin();
     
     if (sdkError || !adminDb) {
@@ -95,7 +95,7 @@ export async function getAdminDashboardStats() {
 }
 
 export async function getAllBookingsForAdmin() {
-  return withCache('admin_all_bookings', 60, async () => {
+  return withCache('admin_all_bookings_v2', 60, async () => {
     const { adminDb, error: sdkError } = getFirebaseAdmin();
     if (sdkError || !adminDb) return { success: false, error: sdkError };
 

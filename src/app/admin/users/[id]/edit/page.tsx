@@ -23,16 +23,16 @@ interface UserDetails extends UserProfile {
 
 function StatCard({ title, value, icon: Icon, isLoading }: any) {
     return (
-        <Card>
+        <Card className="rounded-none border-border">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">{title}</CardTitle>
-                <Icon className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{title}</CardTitle>
+                <Icon className="h-4 w-4 text-[#003580]" />
             </CardHeader>
             <CardContent>
                 {isLoading ? (
                   <Skeleton className="h-8 w-1/2 mt-1" />
                 ) : (
-                  <div className="text-2xl font-bold">{value}</div>
+                  <div className="text-2xl font-bold text-[#1a1a1a]">{value}</div>
                 )}
             </CardContent>
         </Card>
@@ -98,7 +98,7 @@ export default function EditUserPage() {
                         displayName: data.displayName,
                         mobile: data.mobile,
                         role: data.role,
-                        status: data.status as any, // Cast to any to handle literal type mismatch in reset
+                        status: data.status as any, 
                     });
                     setIsLoading(false);
                 })
@@ -138,9 +138,11 @@ export default function EditUserPage() {
 
     return (
         <div className="space-y-6">
-            <div>
-                <h1 className="font-headline text-3xl font-bold">Manage User</h1>
-                <p className="text-muted-foreground">Editing profile for &quot;{user.displayName}&quot; ({user.email}).</p>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+                <div className="space-y-1">
+                    <h1 className="text-3xl font-bold tracking-tight text-[#1a1a1a]">Manage Explorer</h1>
+                    <p className="text-muted-foreground text-sm font-medium">Modifying profile for {user.displayName} ({user.email})</p>
+                </div>
             </div>
             
             <div className="grid gap-4 md:grid-cols-2">
@@ -151,46 +153,46 @@ export default function EditUserPage() {
                     isLoading={isLoading} 
                 />
                 <StatCard 
-                    title="Total Confirmed Bookings" 
+                    title="Verified Stays" 
                     value={user.totalBookings}
                     icon={BookOpen} 
                     isLoading={isLoading} 
                 />
             </div>
 
-            <Card>
-                <CardHeader>
-                    <CardTitle>Edit User Details</CardTitle>
-                    <CardDescription>Changes made here will be permanent and will reflect across the app.</CardDescription>
+            <Card className="rounded-none border-border bg-white shadow-sm">
+                <CardHeader className="bg-muted/20 border-b p-6">
+                    <CardTitle className="text-lg font-bold">Account Configuration</CardTitle>
+                    <CardDescription>Administrative modifications are logged for audit purposes.</CardDescription>
                 </CardHeader>
-                <CardContent className="pt-6">
+                <CardContent className="p-10">
                     <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <FormField control={form.control} name="displayName" render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Full Name</FormLabel>
-                                        <FormControl><Input {...field} /></FormControl>
+                                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Full Legal Name</FormLabel>
+                                        <FormControl><Input {...field} className="rounded-none h-12 focus-visible:ring-[#003580]" /></FormControl>
                                         <FormMessage />
                                     </FormItem>
                                 )} />
                                 <FormField control={form.control} name="mobile" render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Mobile Number</FormLabel>
-                                        <FormControl><Input {...field} /></FormControl>
+                                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Mobile Node</FormLabel>
+                                        <FormControl><Input {...field} className="rounded-none h-12 focus-visible:ring-[#003580]" /></FormControl>
                                         <FormMessage />
                                     </FormItem>
                                 )} />
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <FormField control={form.control} name="role" render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Role</FormLabel>
+                                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">System Role</FormLabel>
                                         <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                            <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                            <FormControl><SelectTrigger className="rounded-none h-12 focus:ring-[#003580]"><SelectValue /></SelectTrigger></FormControl>
                                             <SelectContent>
-                                                <SelectItem value="user">User</SelectItem>
-                                                <SelectItem value="admin">Admin</SelectItem>
+                                                <SelectItem value="user">User / Explorer</SelectItem>
+                                                <SelectItem value="admin">Administrator</SelectItem>
                                             </SelectContent>
                                         </Select>
                                         <FormMessage />
@@ -198,26 +200,26 @@ export default function EditUserPage() {
                                 )} />
                                 <FormField control={form.control} name="status" render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Account Status</FormLabel>
+                                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Account Integrity Status</FormLabel>
                                         <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                            <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                            <FormControl><SelectTrigger className="rounded-none h-12 focus:ring-[#003580]"><SelectValue /></SelectTrigger></FormControl>
                                             <SelectContent>
-                                                <SelectItem value="active">Active</SelectItem>
-                                                <SelectItem value="pending">Pending</SelectItem>
-                                                <SelectItem value="suspended">Suspended</SelectItem>
+                                                <SelectItem value="active">Active (Full Access)</SelectItem>
+                                                <SelectItem value="pending">Pending Verification</SelectItem>
+                                                <SelectItem value="suspended">Suspended (Blocked)</SelectItem>
                                             </SelectContent>
                                         </Select>
                                         <FormMessage />
                                     </FormItem>
                                 )} />
                             </div>
-                             <div className="flex items-center gap-4 pt-4 border-t">
-                                <Button type="submit" disabled={isSaving}>
+                             <div className="flex items-center gap-4 pt-8 border-t mt-4">
+                                <Button type="submit" disabled={isSaving} className="rounded-none h-12 px-8 font-bold bg-[#003580]">
                                     {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                                    Save Changes
+                                    Synchronize Records
                                 </Button>
-                                <Button variant="ghost" asChild>
-                                    <Link href="/admin/users">Cancel</Link>
+                                <Button variant="ghost" asChild className="rounded-none h-12 px-8 font-bold">
+                                    <Link href="/admin/users">Discard Changes</Link>
                                 </Button>
                              </div>
                         </form>

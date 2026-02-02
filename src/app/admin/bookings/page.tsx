@@ -22,9 +22,7 @@ import {
   RefreshCw, 
   AlertCircle, 
   Activity, 
-  Filter, 
-  Trash2,
-  ChevronRight
+  Trash2
 } from "lucide-react";
 import {
   AlertDialog,

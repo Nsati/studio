@@ -8,14 +8,11 @@ import {
   BookOpen, 
   IndianRupee, 
   TrendingUp, 
-  ArrowUpRight,
   RefreshCw,
-  Activity,
   ShieldAlert,
   AlertTriangle,
-  Zap,
-  ShieldCheck,
-  ChevronRight
+  ChevronRight,
+  ShieldCheck
 } from 'lucide-react';
 import { useUser } from '@/firebase';
 import { getAdminDashboardStats } from './actions';
@@ -24,6 +21,7 @@ import { format, isValid, parseISO } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertTitle } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
 import { 
   Table, 
@@ -120,12 +118,14 @@ export default function AdminDashboard() {
 
       {error && (
         <Alert variant="destructive" className="rounded-none border-red-200 bg-red-50">
-            <AlertTriangle className="h-4 w-4" />
+            <AlertTriangle className="h-4 w-4 mr-2" />
             <div className="flex-1">
-                <p className="font-bold text-red-900">Synchronization Error</p>
+                <AlertTitle className="font-bold text-red-900">Synchronization Error</AlertTitle>
                 <p className="text-sm text-red-700">{error}</p>
             </div>
-            <Button onClick={loadData} size="sm" variant="outline" className="h-8 border-red-300 text-red-900 hover:bg-red-100">Retry</Alert>
+            <Button onClick={loadData} size="sm" variant="outline" className="ml-4 h-8 border-red-300 text-red-900 hover:bg-red-100">
+                Retry
+            </Button>
         </Alert>
       )}
 
