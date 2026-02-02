@@ -10,6 +10,7 @@ import { withCache } from '@/lib/redis';
 const serialize = (val: any): any => {
     if (val === null || val === undefined) return null;
     
+    // Check for Firestore Timestamp
     if (val && typeof val === 'object' && 'toDate' in val && typeof val.toDate === 'function') {
         return val.toDate().toISOString();
     }
