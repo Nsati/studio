@@ -26,50 +26,53 @@ export function HotelCard({ hotel, className }: HotelCardProps) {
   const getImageUrl = (img: string) => {
     if (!img) return '';
     if (img.startsWith('http')) return img;
-    return PlaceHolderImages.find((p) => p.id === img)?.imageUrl || '';
+    const found = PlaceHolderImages.find((p) => p.id === img);
+    return found ? found.imageUrl : '';
   };
 
   const discountedMinPrice = hotel.minPrice && hotel.discount
     ? hotel.minPrice * (1 - hotel.discount / 100)
     : hotel.minPrice;
 
+  const images = hotel.images && hotel.images.length > 0 ? hotel.images : ['hero'];
+
   return (
     <div className={cn("group block w-full", className)}>
       <div className="flex flex-col space-y-4">
         {/* Airbnb Style Card Slider */}
         <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[2.5rem] bg-muted shadow-apple transition-all duration-700 group-hover:shadow-apple-deep">
-            {hotel.images && hotel.images.length > 0 ? (
-              <Carousel className="w-full h-full">
-                <CarouselContent className="h-full ml-0">
-                  {hotel.images.map((img, index) => (
-                    <CarouselItem key={index} className="pl-0 h-full relative">
-                      <Link href={`/hotels/${hotel.id}`} className="block w-full h-full relative">
-                        {getImageUrl(img) ? (
-                          <Image
-                            src={getImageUrl(img)}
-                            alt={`${hotel.name} - ${index + 1}`}
-                            fill
-                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                            className="object-cover transition-transform duration-1000 group-hover:scale-105"
-                          />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center bg-muted">
-                            <span className="text-muted-foreground text-[10px] font-black uppercase">No Image</span>
-                          </div>
-                        )}
-                      </Link>
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
-                {/* Minimal arrows visible on hover */}
-                <CarouselPrevious className="absolute left-4 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 hover:bg-white border-0 h-8 w-8" />
-                <CarouselNext className="absolute right-4 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 hover:bg-white border-0 h-8 w-8" />
-              </Carousel>
-            ) : (
-              <Link href={`/hotels/${hotel.id}`} className="flex h-full w-full items-center justify-center bg-muted">
-                <span className="text-muted-foreground text-xs uppercase tracking-widest font-black">No Preview</span>
-              </Link>
-            )}
+            <Carousel className="w-full h-full">
+              <CarouselContent className="h-full ml-0">
+                {images.map((img, index) => (
+                  <CarouselItem key={index} className="pl-0 h-full relative">
+                    <Link href={`/hotels/${hotel.id}`} className="block w-full h-full relative">
+                      {getImageUrl(img) ? (
+                        <Image
+                          src={getImageUrl(img)}
+                          alt={`${hotel.name} - ${index + 1}`}
+                          data-ai-hint="hotel property"
+                          fill
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                          className="object-cover transition-transform duration-1000 group-hover:scale-105"
+                          priority={index === 0}
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-muted/50">
+                          <span className="text-muted-foreground text-[10px] font-black uppercase tracking-widest opacity-40">Visual Pending</span>
+                        </div>
+                      )}
+                    </Link>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              {/* Minimal arrows visible on hover */}
+              {images.length > 1 && (
+                <>
+                  <CarouselPrevious className="absolute left-4 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 hover:bg-white border-0 h-8 w-8 z-20" />
+                  <CarouselNext className="absolute right-4 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 hover:bg-white border-0 h-8 w-8 z-20" />
+                </>
+              )}
+            </Carousel>
             
             {/* Minimal Badge Overlay */}
             {hotel.discount && hotel.discount > 0 ? (

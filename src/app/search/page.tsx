@@ -1,5 +1,5 @@
 'use client';
-import { Suspense, useState } from 'react';
+import { Suspense, useState, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
@@ -9,28 +9,50 @@ import Loading from './loading';
 import { SearchFilters } from './SearchFilters';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Filter, SlidersHorizontal, MapPin, Star } from 'lucide-react';
+import { SlidersHorizontal, MapPin, Star, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import React from 'react';
+import { Slider } from '@/components/ui/slider';
+import { Checkbox } from '@/components/ui/checkbox';
 
-function SearchResults() {
+function SearchResults({ filters }: { filters: any }) {
   const firestore = useFirestore();
   const searchParams = useSearchParams();
   const city = searchParams.get('city');
 
   const hotelsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-
     let q = query(collection(firestore, 'hotels'));
-
     if (city && city !== 'All') {
       q = query(q, where('city', '==', city));
     }
-    
     return q;
   }, [firestore, city]);
 
-  const { data: hotels, isLoading } = useCollection<Hotel>(hotelsQuery);
+  const { data: hotelsData, isLoading } = useCollection<Hotel>(hotelsQuery);
+
+  const filteredHotels = useMemo(() => {
+    if (!hotelsData) return [];
+    
+    return hotelsData.filter(hotel => {
+      // Price Filter
+      const price = hotel.minPrice || 0;
+      if (price < filters.priceRange[0] || price > filters.priceRange[1]) return false;
+
+      // Rating Filter
+      if (filters.ratings.length > 0 && !filters.ratings.includes(Math.floor(hotel.rating))) return false;
+
+      // Amenities Filter
+      if (filters.amenities.length > 0) {
+        const hasAllAmenities = filters.amenities.every((a: string) => 
+          hotel.amenities.map(h => h.toLowerCase()).includes(a.toLowerCase())
+        );
+        if (!hasAllAmenities) return false;
+      }
+
+      return true;
+    });
+  }, [hotelsData, filters]);
   
   if (isLoading) {
       return (
@@ -61,7 +83,7 @@ function SearchResults() {
                     {city && city !== 'All' ? city : 'Uttarakhand'}
                 </h1>
                 <p className="text-muted-foreground font-medium text-sm mt-1">
-                    {hotels ? `${hotels.length} luxury properties matched your vibe.` : 'Finding properties...'}
+                    {filteredHotels.length} luxury properties matched your vibe.
                 </p>
             </div>
             
@@ -75,9 +97,9 @@ function SearchResults() {
             </div>
         </div>
 
-      {hotels && hotels.length > 0 ? (
+      {filteredHotels.length > 0 ? (
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-          {hotels.map((hotel) => (
+          {filteredHotels.map((hotel) => (
             <HotelCard key={hotel.id} hotel={hotel} />
           ))}
         </div>
@@ -93,7 +115,29 @@ function SearchResults() {
 }
 
 export default function SearchPage() {
+  const [priceRange, setPriceRange] = useState([0, 50000]);
+  const [selectedRatings, setSelectedRatings] = useState<number[]>([]);
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+
   const formatPrice = (val: number) => val.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 });
+
+  const toggleRating = (rating: number) => {
+    setSelectedRatings(prev => 
+      prev.includes(rating) ? prev.filter(r => r !== rating) : [...prev, rating]
+    );
+  };
+
+  const toggleAmenity = (amenity: string) => {
+    setSelectedAmenities(prev => 
+      prev.includes(amenity) ? prev.filter(a => a !== amenity) : [...prev, amenity]
+    );
+  };
+
+  const clearFilters = () => {
+    setPriceRange([0, 50000]);
+    setSelectedRatings([]);
+    setSelectedAmenities([]);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -105,53 +149,85 @@ export default function SearchPage() {
 
         <div className="container mx-auto max-w-7xl py-12 px-4 md:px-6">
             <div className="flex flex-col lg:flex-row gap-16">
-                {/* Filters Sidebar - Desktop Only */}
+                {/* Filters Sidebar */}
                 <aside className="hidden lg:block w-72 space-y-10 shrink-0">
                     <div className="space-y-6">
                         <div className="flex items-center justify-between">
                             <h3 className="text-sm font-black uppercase tracking-widest">Filters</h3>
-                            <button className="text-[10px] font-black text-primary hover:underline uppercase tracking-widest">Clear All</button>
+                            <button 
+                                onClick={clearFilters}
+                                className="text-[10px] font-black text-primary hover:underline uppercase tracking-widest"
+                            >
+                                Clear All
+                            </button>
                         </div>
                         
-                        <div className="space-y-8">
-                            <div className="space-y-4">
+                        <div className="space-y-10">
+                            {/* Price Range */}
+                            <div className="space-y-6">
                                 <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Price Range</Label>
-                                <div className="space-y-2">
-                                    <div className="flex justify-between text-xs font-bold">
-                                        <span>{formatPrice(2000)}</span>
-                                        <span>{formatPrice(50000)}+</span>
-                                    </div>
-                                    <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                                        <div className="h-full w-1/2 bg-primary" />
+                                <div className="space-y-4 px-2">
+                                    <Slider 
+                                        defaultValue={[0, 50000]} 
+                                        max={50000} 
+                                        step={1000} 
+                                        value={priceRange}
+                                        onValueChange={setPriceRange}
+                                        className="py-4"
+                                    />
+                                    <div className="flex justify-between text-[10px] font-black uppercase text-muted-foreground">
+                                        <span>{formatPrice(priceRange[0])}</span>
+                                        <span>{formatPrice(priceRange[1])}+</span>
                                     </div>
                                 </div>
                             </div>
 
+                            {/* Star Rating */}
                             <div className="space-y-4">
                                 <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Star Rating</Label>
                                 <div className="space-y-3">
                                     {[5, 4, 3].map(star => (
-                                        <label key={star} className="flex items-center gap-3 cursor-pointer group">
-                                            <div className="h-5 w-5 rounded border-2 border-black/10 group-hover:border-primary transition-colors flex items-center justify-center">
-                                                {star === 5 && <div className="h-2.5 w-2.5 bg-primary rounded-sm" />}
+                                        <div 
+                                            key={star} 
+                                            className="flex items-center gap-3 cursor-pointer group"
+                                            onClick={() => toggleRating(star)}
+                                        >
+                                            <div className={cn(
+                                                "h-5 w-5 rounded border-2 transition-all flex items-center justify-center",
+                                                selectedRatings.includes(star) ? "border-primary bg-primary" : "border-black/10 group-hover:border-primary"
+                                            )}>
+                                                {selectedRatings.includes(star) && <Check className="h-3 w-3 text-white stroke-[4]" />}
                                             </div>
                                             <div className="flex items-center gap-1">
                                                 {Array.from({length: star}).map((_, i) => <Star key={i} className="h-3 w-3 fill-accent text-accent" />)}
                                                 <span className="text-sm font-bold ml-1">{star} Stars</span>
                                             </div>
-                                        </label>
+                                        </div>
                                     ))}
                                 </div>
                             </div>
 
+                            {/* Amenities */}
                             <div className="space-y-4">
                                 <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Amenities</Label>
                                 <div className="space-y-3">
-                                    {['WiFi', 'Spa', 'Pool', 'Mountain View'].map(item => (
-                                        <label key={item} className="flex items-center gap-3 cursor-pointer group">
-                                            <div className="h-5 w-5 rounded border-2 border-black/10 group-hover:border-primary transition-colors" />
-                                            <span className="text-sm font-bold text-muted-foreground group-hover:text-foreground">{item}</span>
-                                        </label>
+                                    {['WiFi', 'Spa', 'Pool', 'Mountain-View', 'Parking', 'Restaurant'].map(item => (
+                                        <div 
+                                            key={item} 
+                                            className="flex items-center gap-3 cursor-pointer group"
+                                            onClick={() => toggleAmenity(item)}
+                                        >
+                                            <div className={cn(
+                                                "h-5 w-5 rounded border-2 transition-all flex items-center justify-center",
+                                                selectedAmenities.includes(item) ? "border-primary bg-primary" : "border-black/10 group-hover:border-primary"
+                                            )}>
+                                                {selectedAmenities.includes(item) && <Check className="h-3 w-3 text-white stroke-[4]" />}
+                                            </div>
+                                            <span className={cn(
+                                                "text-sm font-bold transition-colors",
+                                                selectedAmenities.includes(item) ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"
+                                            )}>{item.replace('-', ' ')}</span>
+                                        </div>
                                     ))}
                                 </div>
                             </div>
@@ -160,7 +236,7 @@ export default function SearchPage() {
                 </aside>
 
                 <Suspense fallback={<Loading />}>
-                    <SearchResults />
+                    <SearchResults filters={{ priceRange, ratings: selectedRatings, amenities: selectedAmenities }} />
                 </Suspense>
             </div>
         </div>
