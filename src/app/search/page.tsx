@@ -93,6 +93,8 @@ function SearchResults() {
 }
 
 export default function SearchPage() {
+  const formatPrice = (val: number) => val.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 });
+
   return (
     <div className="min-h-screen bg-background">
         <div className="bg-white border-b border-black/5 py-10">
@@ -116,8 +118,8 @@ export default function SearchPage() {
                                 <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Price Range</Label>
                                 <div className="space-y-2">
                                     <div className="flex justify-between text-xs font-bold">
-                                        <span>₹2,000</span>
-                                        <span>₹50,000+</span>
+                                        <span>{formatPrice(2000)}</span>
+                                        <span>{formatPrice(50000)}+</span>
                                     </div>
                                     <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
                                         <div className="h-full w-1/2 bg-primary" />

@@ -1,4 +1,3 @@
-
 'use client';
 import { useMemo, useState } from 'react';
 import { useFirestore, useCollection, useMemoFirebase, type WithId } from '@/firebase';
@@ -45,7 +44,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, PlusCircle, Trash2, Edit, Tag, Percent, IndianRupee } from 'lucide-react';
+import { Loader2, PlusCircle, Trash2, Edit, Tag, Percent } from 'lucide-react';
 
 const promotionSchema = z.object({
   code: z.string().min(3, "Code must be at least 3 characters.").max(20).transform(v => v.toUpperCase()),
@@ -209,7 +208,9 @@ function PromotionsTable({ promotions, onEdit, onDelete }: { promotions: WithId<
                             {p.discountType === 'percentage' ? (
                                 <div className="flex items-center gap-1">{p.discountValue}<Percent className="h-4 w-4 text-muted-foreground" /></div>
                             ) : (
-                                <div className="flex items-center gap-1"><IndianRupee className="h-4 w-4 text-muted-foreground" />{p.discountValue}</div>
+                                <div className="flex items-center gap-1">
+                                    {p.discountValue.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}
+                                </div>
                             )}
                         </TableCell>
                         <TableCell>
