@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, MapPin, Calendar as CalendarIcon, Users } from 'lucide-react';
+import { MapPin, Calendar as CalendarIcon, Users } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
@@ -65,77 +65,66 @@ export function SearchFilters() {
     }
 
     return (
-        <form onSubmit={handleFormSubmit} className="flex flex-col lg:flex-row items-stretch lg:items-center gap-1 bg-white p-2 rounded-[2rem] lg:rounded-pill shadow-apple-deep">
-            {/* Location Pill */}
-            <div className="flex-1 flex items-center gap-4 px-6 lg:px-8 py-4 hover:bg-muted/50 rounded-full transition-all duration-300 group cursor-pointer border-b lg:border-b-0 lg:border-r border-black/5">
-                <div className="p-2.5 bg-primary/10 rounded-full text-primary group-hover:bg-primary group-hover:text-white transition-all duration-500">
-                    <MapPin className="h-5 w-5" />
-                </div>
-                <div className="flex flex-col items-start flex-1 min-w-0">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-0.5">Where to?</span>
+        <form onSubmit={handleFormSubmit} className="flex flex-col lg:flex-row items-stretch gap-1 bg-[#febb02] p-1 rounded-sm booking-shadow">
+            {/* Location */}
+            <div className="flex-1 flex items-center gap-3 bg-white px-4 py-3 rounded-sm border-2 border-transparent focus-within:border-accent">
+                <MapPin className="h-5 w-5 text-muted-foreground" />
+                <div className="flex-1">
                     <Select value={city} onValueChange={setCity}>
-                        <SelectTrigger className="border-0 bg-transparent p-0 h-auto focus:ring-0 shadow-none font-bold text-sm lg:text-base tracking-tight truncate w-full">
-                            <SelectValue placeholder="Select Destination" />
+                        <SelectTrigger className="border-0 bg-transparent p-0 h-auto focus:ring-0 shadow-none font-bold text-sm">
+                            <SelectValue placeholder="Where are you going?" />
                         </SelectTrigger>
-                        <SelectContent className="rounded-3xl border-black/5 shadow-apple-deep p-2">
-                            <SelectItem value="All" className="rounded-xl">All Locations</SelectItem>
+                        <SelectContent>
+                            <SelectItem value="All">All Uttarakhand</SelectItem>
                             {cities?.map((c) => (
-                                <SelectItem key={c} value={c} className="rounded-xl">{c}</SelectItem>
+                                <SelectItem key={c} value={c}>{c}</SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
                 </div>
             </div>
 
-            {/* Dates Pill */}
-            <div className="flex-1 flex items-center gap-4 px-6 lg:px-8 py-4 hover:bg-muted/50 rounded-full transition-all duration-300 group cursor-pointer border-b lg:border-b-0 lg:border-r border-black/5">
-                <div className="p-2.5 bg-primary/10 rounded-full text-primary group-hover:bg-primary group-hover:text-white transition-all duration-500">
-                    <CalendarIcon className="h-5 w-5" />
-                </div>
+            {/* Dates */}
+            <div className="flex-1 flex items-center gap-3 bg-white px-4 py-3 rounded-sm border-2 border-transparent focus-within:border-accent">
+                <CalendarIcon className="h-5 w-5 text-muted-foreground" />
                 <Popover>
                     <PopoverTrigger asChild>
-                        <button type="button" className="flex flex-col items-start flex-1 text-left min-w-0">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-0.5">When?</span>
-                            <span className="text-sm lg:text-base font-bold truncate tracking-tight w-full">
-                                {dates?.from ? (
-                                    dates.to ? `${format(dates.from, 'MMM dd')} - ${format(dates.to, 'MMM dd')}` : format(dates.from, 'MMM dd')
-                                ) : "Add Stay dates"}
-                            </span>
+                        <button type="button" className="text-sm font-bold truncate">
+                            {dates?.from ? (
+                                dates.to ? `${format(dates.from, 'EEE, MMM dd')} — ${format(dates.to, 'EEE, MMM dd')}` : format(dates.from, 'EEE, MMM dd')
+                            ) : "Check-in — Check-out"}
                         </button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-[300px] sm:w-auto p-4 md:p-6 rounded-[2rem] md:rounded-[2.5rem] border-black/5 shadow-apple-deep" align="center">
+                    <PopoverContent className="w-auto p-0" align="center">
                         <CalendarComponent
                             mode="range"
                             selected={dates}
                             onSelect={setDates}
                             disabled={{ before: new Date() }}
-                            className="rounded-2xl"
+                            numberOfMonths={2}
                         />
                     </PopoverContent>
                 </Popover>
             </div>
 
-            {/* Guests Pill */}
-            <div className="flex-[0.7] flex items-center gap-4 px-6 lg:px-8 py-4 hover:bg-muted/50 rounded-full transition-all duration-300 group cursor-pointer border-b lg:border-b-0 lg:border-r border-black/5">
-                <div className="p-2.5 bg-primary/10 rounded-full text-primary group-hover:bg-primary group-hover:text-white transition-all duration-500">
-                    <Users className="h-5 w-5" />
-                </div>
-                <div className="flex flex-col items-start flex-1 min-w-0">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-0.5">Who?</span>
+            {/* Guests */}
+            <div className="flex-[0.7] flex items-center gap-3 bg-white px-4 py-3 rounded-sm border-2 border-transparent focus-within:border-accent">
+                <Users className="h-5 w-5 text-muted-foreground" />
+                <div className="flex items-center gap-2">
                     <Input 
                         type="number" 
                         min="1"
                         value={guests}
                         onChange={(e) => setGuests(e.target.value)}
-                        className="border-0 bg-transparent p-0 h-auto focus-visible:ring-0 shadow-none font-bold text-sm lg:text-base tracking-tight"
+                        className="border-0 bg-transparent p-0 h-auto focus-visible:ring-0 shadow-none font-bold w-12 text-sm"
                     />
+                    <span className="text-sm font-bold text-muted-foreground">guests</span>
                 </div>
             </div>
             
-            {/* Modern Action Button */}
-            <Button type="submit" size="lg" className="lg:w-16 lg:h-16 w-full h-14 md:h-16 rounded-full bg-primary hover:bg-primary/90 text-white shadow-xl shadow-primary/20 transition-all duration-500 active:scale-95 mx-0 lg:mx-2 mt-2 lg:mt-0">
-                <Search className="h-5 w-5 md:h-6 md:w-6" />
-                <span className="lg:hidden ml-2 font-black tracking-tight text-base">Search Now</span>
+            {/* Search Button */}
+            <Button type="submit" size="lg" className="bg-[#006ce4] hover:bg-[#005bb8] text-white text-xl font-bold py-6 px-10 rounded-none h-auto">
+                Search
             </Button>
         </form>
     );

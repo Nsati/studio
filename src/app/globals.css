@@ -4,44 +4,41 @@
 
 @layer base {
   :root {
-    --background: 210 20% 98%; /* Ultra clean light gray/white */
-    --foreground: 20 10% 10%;
+    --background: 0 0% 100%;
+    --foreground: 214 100% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 20 10% 15%;
+    --card-foreground: 214 100% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 20 10% 15%;
+    --popover-foreground: 214 100% 10%;
 
-    --primary: 151 41% 29%; /* Forest Green */
+    --primary: 214 100% 25%; /* Booking Blue #003580 */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 10% 94%;
-    --secondary-foreground: 20 10% 20%;
+    --secondary: 214 15% 95%;
+    --secondary-foreground: 214 100% 15%;
 
-    --muted: 210 10% 94%;
-    --muted-foreground: 210 5% 45%;
+    --muted: 214 15% 95%;
+    --muted-foreground: 214 10% 40%;
 
-    --accent: 27 82% 53%; /* Earthy Orange */
-    --accent-foreground: 0 0% 100%;
+    --accent: 45 100% 50%; /* Booking Yellow #febb02 */
+    --accent-foreground: 214 100% 10%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 210 10% 90%;
-    --input: 210 10% 90%;
-    --ring: 151 41% 29%;
+    --border: 214 15% 90%;
+    --input: 214 15% 90%;
+    --ring: 214 100% 25%;
 
-    --radius: 2rem; /* Massive rounding for Apple feel */
+    --radius: 0.25rem; /* Standard web rounding */
   }
 
   .dark {
-    --background: 20 10% 8%;
+    --background: 214 100% 5%;
     --foreground: 0 0% 95%;
-    --card: 20 10% 12%;
-    --card-foreground: 0 0% 95%;
-    --primary: 151 41% 40%;
-    --border: 0 0% 15%;
+    --primary: 214 100% 40%;
   }
 }
 
@@ -50,54 +47,25 @@
     @apply border-border outline-none;
   }
   body {
-    @apply bg-background text-foreground selection:bg-primary/10 selection:text-primary;
+    @apply bg-background text-foreground;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     -webkit-font-smoothing: antialiased;
   }
-  h1, h2, h3, h4 {
-    @apply font-heading tracking-tight;
-  }
 }
 
-.glass-morphism {
-  @apply bg-white/70 backdrop-blur-xl border border-white/20 shadow-apple;
+.booking-shadow {
+  box-shadow: 0 2px 8px 0 rgba(0,0,0,0.16);
 }
 
-.apple-pill {
-  @apply rounded-full px-6 py-3 transition-all duration-300;
-}
-
-.smooth-transition {
-  @apply transition-all duration-500 ease-apple-ease;
-}
-
-.hero-gradient {
-  background: linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 50%, hsl(var(--background)) 100%);
-}
-
-@keyframes float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-20px); }
-  100% { transform: translateY(0px); }
-}
-
-.animate-float {
-  animation: float 6s ease-in-out infinite;
-}
-
-@keyframes slow-zoom {
-  from { transform: scale(1); }
-  to { transform: scale(1.1); }
+.booking-card {
+  @apply border border-border rounded-sm hover:bg-muted/10 transition-colors;
 }
 
 .animate-slow-zoom {
   animation: slow-zoom 20s linear infinite alternate;
 }
 
-.shadow-apple {
-  box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.04);
-}
-
-.shadow-apple-deep {
-  box-shadow: 0 20px 48px -10px rgba(0, 0, 0, 0.08);
+@keyframes slow-zoom {
+  from { transform: scale(1); }
+  to { transform: scale(1.1); }
 }

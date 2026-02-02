@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
 import { dummyCities } from '@/lib/dummy-data';
-import { ArrowRight, Sparkles, MapPin, Compass, Star } from 'lucide-react';
+import { ArrowRight, MapPin, Star, Building2, Trees, Waves } from 'lucide-react';
 import { HotelCard } from '@/components/hotel/HotelCard';
 
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
@@ -17,20 +17,15 @@ import React from 'react';
 
 function FeaturedHotelsSkeleton() {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="space-y-4">
-          <Skeleton className="aspect-[4/5] w-full rounded-[2.5rem]" />
-          <Skeleton className="h-6 w-3/4" />
-          <Skeleton className="h-4 w-1/2" />
-        </div>
+        <Skeleton key={i} className="aspect-[4/5] w-full rounded-none" />
       ))}
     </div>
   )
 }
 
 export default function HomePage() {
-  const heroImage = PlaceHolderImages.find((img) => img.id === 'hero');
   const firestore = useFirestore();
   const featuredHotelsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -41,80 +36,81 @@ export default function HomePage() {
 
   return (
     <div className="bg-background">
-      {/* Immersive Hero Section */}
-      <section className="relative min-h-[85vh] w-full flex flex-col items-center justify-center overflow-hidden px-4 md:px-6 pt-20 pb-32">
-        {heroImage && (
-          <div className="absolute inset-0 z-0">
-            <Image
-              src={heroImage.imageUrl}
-              alt={heroImage.description}
-              fill
-              className="object-cover animate-slow-zoom"
-              priority
-            />
-            <div className="absolute inset-0 bg-black/30 backdrop-blur-[1px]" />
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background" />
-          </div>
-        )}
-        
-        <div className="relative z-10 w-full max-w-6xl text-center space-y-12">
-          <div className="space-y-6">
-            <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white/10 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-[0.25em] border border-white/20 animate-in fade-in slide-in-from-bottom-4 duration-700">
-              <Compass className="h-3.5 w-3.5" /> Curating Himalayan Dreams
-            </div>
-            <h1 className="text-5xl sm:text-7xl md:text-9xl font-black text-white leading-[0.9] tracking-tighter animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
-              Book Your <br/><span className="italic font-heading font-medium text-accent">Escape</span>
+      {/* Search Header Hero */}
+      <section className="bg-[#003580] pt-8 pb-12 px-4">
+        <div className="container mx-auto">
+          <div className="max-w-4xl space-y-6 mb-10">
+            <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight">
+              Find your next stay
             </h1>
-            <p className="text-white/80 text-lg md:text-2xl font-medium max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-10 duration-1000 delay-400">
-                Experience the magic of Uttarakhand with handpicked stays and exclusive local journeys.
+            <p className="text-xl md:text-2xl text-white/90">
+              Search deals on hotels, homes, and much more...
             </p>
           </div>
           
-          {/* Prominent Standard Search Box */}
-          <div className="w-full max-w-5xl mx-auto animate-in fade-in zoom-in-95 duration-1000 delay-500">
-            <div className="bg-white p-2 md:p-4 rounded-[2.5rem] md:rounded-[4rem] shadow-apple-deep">
-                <SearchFilters />
-            </div>
+          <div className="relative -bottom-16 z-20 max-w-6xl mx-auto">
+            <SearchFilters />
           </div>
         </div>
       </section>
 
-      {/* Destinations Grid */}
-      <section id="cities" className="py-24 bg-white px-4 md:px-6">
+      {/* Spacing for Search Bar */}
+      <div className="h-20" />
+
+      {/* Destinations */}
+      <section className="py-16 px-4">
         <div className="container mx-auto">
-          <div className="text-center md:text-left mb-16 space-y-4">
-              <div className="flex items-center justify-center md:justify-start gap-3 text-[10px] font-black uppercase tracking-[0.3em] text-primary">
-                <MapPin className="h-4 w-4" /> Explore Destinations
-              </div>
-              <h2 className="text-4xl md:text-6xl font-black tracking-tighter">The Collection</h2>
+          <div className="mb-8 space-y-1">
+              <h2 className="text-2xl font-bold text-[#1a1a1a]">Trending destinations</h2>
+              <p className="text-muted-foreground">Most popular choices for travelers from India</p>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 md:gap-8">
-            {dummyCities.map((city, idx) => {
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {dummyCities.slice(0, 2).map((city) => {
               const cityImage = PlaceHolderImages.find((img) => img.id === city.image);
               return (
                 <Link
                   key={city.id}
                   href={`/search?city=${city.name}`}
-                  className="group relative block aspect-[3/4] overflow-hidden rounded-[2rem] shadow-apple transition-all duration-700 hover:shadow-apple-deep hover:-translate-y-2 animate-in fade-in slide-in-from-bottom-8 duration-1000"
-                  style={{ animationDelay: `${idx * 100}ms` }}
+                  className="group relative h-[280px] overflow-hidden rounded-lg shadow-sm"
                 >
                   {cityImage && (
                     <Image
                       src={cityImage.imageUrl}
                       alt={city.name}
                       fill
-                      sizes="(max-width: 768px) 50vw, 16vw"
-                      className="object-cover transition-transform duration-1000 group-hover:scale-110"
+                      className="object-cover transition-transform duration-700 group-hover:scale-105"
                     />
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
-                  <div className="absolute bottom-6 left-6 right-6">
-                    <h3 className="text-xl md:text-2xl font-bold text-white tracking-tight">
-                      {city.name}
+                  <div className="absolute inset-0 bg-black/20" />
+                  <div className="absolute top-6 left-6 text-white">
+                    <h3 className="text-3xl font-bold flex items-center gap-2">
+                      {city.name} <Image src="https://image2url.com/images/india-flag.png" width={24} height={16} alt="IN" className="rounded-sm" />
                     </h3>
-                    <div className="text-white/70 text-[9px] font-black uppercase tracking-widest mt-2 flex items-center gap-2 transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
-                      Discover <ArrowRight className="h-3 w-3" />
-                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+            {dummyCities.slice(2, 5).map((city) => {
+              const cityImage = PlaceHolderImages.find((img) => img.id === city.image);
+              return (
+                <Link
+                  key={city.id}
+                  href={`/search?city=${city.name}`}
+                  className="group relative h-[200px] overflow-hidden rounded-lg shadow-sm"
+                >
+                  {cityImage && (
+                    <Image
+                      src={cityImage.imageUrl}
+                      alt={city.name}
+                      fill
+                      className="object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+                  )}
+                  <div className="absolute inset-0 bg-black/20" />
+                  <div className="absolute top-4 left-4 text-white">
+                    <h3 className="text-2xl font-bold">{city.name}</h3>
                   </div>
                 </Link>
               );
@@ -123,78 +119,69 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Featured Stays */}
-      <section className="py-24 bg-muted/20 px-4 md:px-6">
+      {/* Browse by Property Type */}
+      <section className="py-12 bg-white px-4">
         <div className="container mx-auto">
-          <div className="flex flex-col md:flex-row items-center justify-between mb-16 gap-8">
-            <div className="space-y-4 text-center md:text-left">
-              <div className="flex items-center justify-center md:justify-start gap-3 text-[10px] font-black uppercase tracking-[0.3em] text-primary">
-                <Star className="h-4 w-4 fill-primary" /> Curated Stays
-              </div>
-              <h2 className="text-4xl md:text-6xl font-black tracking-tighter">Signature Experiences</h2>
+            <h2 className="text-2xl font-bold mb-6">Browse by property type</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {[
+                    { icon: Building2, label: 'Hotels' },
+                    { icon: Trees, label: 'Resorts' },
+                    { icon: Waves, label: 'Villas' },
+                    { icon: Star, label: 'Cabins' },
+                    { icon: Building2, label: 'Cottages' },
+                ].map((type, i) => (
+                    <div key={i} className="space-y-3 cursor-pointer group">
+                        <div className="aspect-[4/3] relative rounded-lg overflow-hidden bg-muted">
+                            <Image 
+                                src={`https://picsum.photos/seed/${i+50}/400/300`} 
+                                fill 
+                                className="object-cover group-hover:scale-105 transition-transform" 
+                                alt={type.label}
+                            />
+                        </div>
+                        <p className="font-bold text-[#1a1a1a]">{type.label}</p>
+                    </div>
+                ))}
             </div>
-            <Button variant="outline" asChild className="rounded-full px-10 h-14 border-black/10 hover:bg-primary hover:text-white transition-all font-bold text-base shadow-apple">
-              <Link href="/search">Explore All Properties</Link>
-            </Button>
+        </div>
+      </section>
+
+      {/* Homes guests love */}
+      <section className="py-16 px-4">
+        <div className="container mx-auto">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-2xl font-bold text-[#1a1a1a]">Signature Experiences</h2>
+            <Link href="/search" className="text-[#006ce4] font-bold hover:underline text-sm">
+              Discover all stays
+            </Link>
           </div>
           {areHotelsLoading ? (
             <FeaturedHotelsSkeleton />
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
-              {featuredHotels?.map((hotel, idx) => (
-                <div key={hotel.id} className="animate-in fade-in slide-in-from-bottom-12 duration-1000" style={{ animationDelay: `${idx * 150}ms` }}>
-                    <HotelCard hotel={hotel as any} />
-                </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {featuredHotels?.map((hotel) => (
+                <HotelCard key={hotel.id} hotel={hotel as any} />
               ))}
             </div>
           )}
         </div>
       </section>
 
-      {/* Final CTA */}
-      <section className="py-24 px-4 md:px-6 container mx-auto">
-        <div className="relative rounded-[3rem] md:rounded-[5rem] bg-primary overflow-hidden p-12 md:p-32 text-center text-white space-y-10 shadow-apple-deep group">
-            <div className="absolute inset-0 z-0">
-                <Image 
-                    src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=2070&auto=format&fit=crop"
-                    alt="Mountain range"
-                    fill
-                    className="object-cover opacity-30 mix-blend-overlay animate-slow-zoom"
+      {/* Subscription Banner */}
+      <section className="bg-[#003580] py-16 px-4 mt-12">
+        <div className="container mx-auto text-center text-white space-y-6">
+            <h2 className="text-3xl font-bold">Save time, save money!</h2>
+            <p className="text-white/80">Sign up and we&apos;ll send the best deals to you</p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 max-w-lg mx-auto">
+                <input 
+                    type="email" 
+                    placeholder="Your email address" 
+                    className="w-full h-12 px-4 rounded-sm text-black focus:outline-none"
                 />
-                <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/95 to-black/40" />
-            </div>
-
-            <div className="relative z-10 space-y-10">
-                <div className="space-y-6">
-                    <div className="inline-flex items-center gap-3 px-6 py-2 rounded-full bg-white/10 backdrop-blur-md text-accent text-[10px] font-black uppercase tracking-[0.4em] border border-white/10">
-                        <Sparkles className="h-4 w-4" /> Ready for the Heights?
-                    </div>
-                    <h2 className="text-5xl md:text-8xl font-black tracking-tighter leading-[0.9]">
-                        Your Journey <br/><span className="text-accent italic font-heading font-medium">Starts Here</span>
-                    </h2>
-                </div>
-                
-                <p className="text-white/80 text-lg md:text-2xl max-w-2xl mx-auto font-medium leading-relaxed">
-                    Verified hosts, secure payments, and 24/7 support for your perfect Himalayan retreat.
-                </p>
-
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-10">
-                    <Button 
-                        size="lg" 
-                        asChild
-                        className="w-full sm:w-auto rounded-full px-12 h-20 bg-white text-primary hover:bg-accent hover:text-white font-black text-xl shadow-2xl transition-all active:scale-95"
-                    >
-                        <Link href="/search">Find a Stay</Link>
-                    </Button>
-                    <Button 
-                        variant="outline" 
-                        size="lg" 
-                        asChild
-                        className="w-full sm:w-auto rounded-full px-12 h-20 border-2 border-white/40 bg-transparent text-white hover:bg-white/10 hover:border-white font-black text-xl transition-all shadow-none"
-                    >
-                        <Link href="/contact">Help Center</Link>
-                    </Button>
-                </div>
+                <Button className="bg-[#006ce4] hover:bg-[#005bb8] h-12 px-8 rounded-sm font-bold text-lg w-full sm:w-auto">
+                    Subscribe
+                </Button>
             </div>
         </div>
       </section>

@@ -2,7 +2,7 @@
 
 import { notFound, useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Star, MapPin, Compass, Share2, Heart, ShieldCheck, ArrowLeft, Clock, Info, ImageOff } from 'lucide-react';
+import { Star, MapPin, Share2, Heart, ShieldCheck, ArrowLeft, Clock, Info, Check } from 'lucide-react';
 import React from 'react';
 
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -17,13 +17,6 @@ import { Button } from '@/components/ui/button';
 import Loading from './loading';
 import { WriteReviewForm } from '@/components/hotel/WriteReviewForm';
 import { Badge } from '@/components/ui/badge';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from '@/components/ui/carousel';
 
 export default function HotelPage() {
   const params = useParams();
@@ -70,173 +63,137 @@ export default function HotelPage() {
   const images = hotel.images && hotel.images.length > 0 ? hotel.images : ['hero'];
 
   return (
-    <div className="min-h-screen bg-background pb-32">
-      {/* Editorial Header */}
-      <div className="container mx-auto px-4 md:px-6 pt-8 pb-10">
-        <div className="mb-8">
-            <Button variant="ghost" onClick={() => router.back()} className="rounded-full px-4 h-10 font-black text-[10px] uppercase tracking-widest text-muted-foreground hover:text-primary">
-                <ArrowLeft className="mr-2 h-4 w-4" /> Go Back
-            </Button>
-        </div>
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-10">
-            <div className="space-y-6 max-w-4xl">
-                <div className="flex items-center gap-4 flex-wrap">
-                    {hotel.isVerifiedPahadiHost && (
-                        <Badge className="bg-primary/10 text-primary border-0 px-5 py-1.5 rounded-full font-black uppercase text-[10px] tracking-[0.2em]">
-                            Verified Pahadi Host
-                        </Badge>
-                    )}
-                    <div className="flex items-center gap-2 text-accent font-black">
-                        <Star className="h-4 w-4 fill-accent" />
-                        <span className="text-xs tracking-widest uppercase">{hotel.rating} Excellence</span>
-                    </div>
-                </div>
-                <h1 className="text-4xl md:text-8xl font-black tracking-tighter leading-[0.95] text-foreground">{hotel.name}</h1>
-                <div className="flex items-center gap-6 text-muted-foreground font-bold text-lg">
-                    <div className="flex items-center gap-2">
-                        <MapPin className="h-5 w-5 text-primary" />
-                        <span>{hotel.city}, Uttarakhand</span>
-                    </div>
-                </div>
-            </div>
-            <div className="flex items-center gap-3">
-                <Button variant="outline" size="icon" className="rounded-full h-14 w-14 hover:bg-primary/5 transition-all shadow-apple"><Share2 className="h-5 w-5" /></Button>
-                <Button variant="outline" size="icon" className="rounded-full h-14 w-14 hover:bg-destructive/5 transition-all shadow-apple"><Heart className="h-5 w-5" /></Button>
-            </div>
+    <div className="min-h-screen bg-white pb-32">
+      {/* Path Breadcrumbs */}
+      <div className="bg-[#f5f5f5] py-2">
+        <div className="container mx-auto px-4 text-[12px] text-[#006ce4]">
+            Home &gt; Uttarakhand &gt; {hotel.city} &gt; <span className="text-muted-foreground">{hotel.name}</span>
         </div>
       </div>
 
-      {/* Luxury Gallery Slider Section */}
-      <div className="container mx-auto px-4 md:px-6 mb-20">
-        <Carousel className="w-full relative group">
-          <CarouselContent className="-ml-4">
-            {images.map((img, index) => (
-              <CarouselItem key={index} className="pl-4 basis-full md:basis-3/4 lg:basis-2/3">
-                <div className="relative aspect-[16/9] overflow-hidden rounded-[3rem] shadow-apple-deep bg-muted">
-                  {getImageUrl(img) ? (
-                    <Image
-                      src={getImageUrl(img)}
-                      alt={`${hotel.name} gallery ${index + 1}`}
-                      fill
-                      className="object-cover transition-transform duration-2000 hover:scale-105"
-                      priority={index === 0}
-                    />
-                  ) : (
-                    <div className="flex flex-col items-center justify-center h-full w-full text-muted-foreground">
-                        <ImageOff className="h-12 w-12 opacity-20 mb-2" />
-                        <span className="text-xs font-black uppercase tracking-widest opacity-40">Visual Syncing...</span>
-                    </div>
-                  )}
-                </div>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          <div className="absolute top-1/2 -translate-y-1/2 left-8 right-8 flex justify-between pointer-events-none">
-            <CarouselPrevious className="static pointer-events-auto h-14 w-14 rounded-full glass-morphism border-0 text-foreground translate-x-0" />
-            <CarouselNext className="static pointer-events-auto h-14 w-14 rounded-full glass-morphism border-0 text-foreground translate-x-0" />
-          </div>
-          
-          <div className="absolute bottom-10 right-12 z-10">
-            <div className="glass-morphism px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg">
-              Collection • {images.length} Photos
-            </div>
-          </div>
-        </Carousel>
-      </div>
-
-      <div className="container mx-auto px-4 md:px-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-20">
-            {/* Left Content */}
-            <div className="lg:col-span-2 space-y-24">
-                <section className="space-y-8">
-                    <div className="flex items-center gap-3 text-xs font-black uppercase tracking-[0.3em] text-primary">
-                        <Compass className="h-5 w-5" /> The Experience
-                    </div>
-                    <h2 className="text-4xl md:text-5xl font-black tracking-tight">Immerse Yourself</h2>
-                    <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed font-medium">
-                        {hotel.description}
-                    </p>
-                </section>
-
-                <Separator className="opacity-30" />
-
-                <section className="space-y-12">
-                    <h2 className="text-3xl md:text-4xl font-black tracking-tight">Luxury Amenities</h2>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-10">
-                        {hotel.amenities.map((amenity) => (
-                            <div key={amenity} className="flex items-center gap-5 group">
-                                <div className="p-5 bg-white shadow-apple rounded-[2rem] group-hover:bg-primary group-hover:text-white transition-all duration-500 transform group-hover:scale-110 shrink-0">
-                                    <AmenityIcon amenity={amenity} className="h-7 w-7" />
-                                </div>
-                                <span className="font-bold tracking-tight text-lg capitalize">{amenity.replace('-', ' ')}</span>
-                            </div>
-                        ))}
-                    </div>
-                </section>
-
-                {/* Policies Section */}
-                <section className="p-10 md:p-16 rounded-[3rem] bg-white shadow-apple-deep border border-black/5 space-y-12">
-                    <div className="flex items-center gap-3 text-primary font-black uppercase tracking-[0.3em] text-xs">
-                        <div className="h-6 w-6"><Info className="h-6 w-6" /></div>
-                        Stay Policies
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                        <div className="space-y-4">
-                            <div className="flex items-center gap-3 font-black uppercase text-[10px] tracking-widest text-muted-foreground">
-                                <Clock className="h-4 w-4" /> Timing
-                            </div>
-                            <div className="space-y-2">
-                                <p className="font-bold text-lg">Check-in: <span className="text-primary ml-2">12:00 PM</span></p>
-                                <p className="font-bold text-lg">Check-out: <span className="text-primary ml-2">11:00 AM</span></p>
+      <div className="container mx-auto px-4 pt-6">
+        <div className="flex flex-col lg:flex-row gap-8">
+            {/* Left Content Area */}
+            <div className="flex-1 space-y-6">
+                <div className="flex justify-between items-start">
+                    <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                            <Badge className="bg-[#febb02] text-black rounded-none border-0 text-[10px] font-bold">Resort</Badge>
+                            <div className="flex gap-0.5">
+                                {[...Array(Math.floor(hotel.rating))].map((_, i) => (
+                                    <Star key={i} className="h-3 w-3 fill-[#febb02] text-[#febb02]" />
+                                ))}
                             </div>
                         </div>
+                        <h1 className="text-2xl font-bold text-[#1a1a1a]">{hotel.name}</h1>
+                        <div className="flex items-center gap-2 text-sm text-[#006ce4] underline-offset-2 hover:underline cursor-pointer">
+                            <MapPin className="h-4 w-4 text-primary" />
+                            <span>{hotel.address || `${hotel.city}, Uttarakhand`} — Excellent location - show map</span>
+                        </div>
+                    </div>
+                    <div className="flex gap-2">
+                        <Button variant="ghost" size="icon" className="text-[#006ce4] hover:bg-[#006ce4]/10"><Heart className="h-6 w-6" /></Button>
+                        <Button variant="ghost" size="icon" className="text-[#006ce4] hover:bg-[#006ce4]/10"><Share2 className="h-6 w-6" /></Button>
+                        <Button className="bg-[#006ce4] hover:bg-[#005bb8] rounded-none font-bold px-6">Reserve</Button>
+                    </div>
+                </div>
+
+                {/* Gallery Grid */}
+                <div className="grid grid-cols-4 gap-2 h-[450px]">
+                    <div className="col-span-2 row-span-2 relative group overflow-hidden">
+                        <Image src={getImageUrl(images[0])} alt="Main" fill className="object-cover" />
+                    </div>
+                    {images.slice(1, 5).map((img, i) => (
+                        <div key={i} className="relative group overflow-hidden">
+                            <Image src={getImageUrl(img)} alt={`Gallery ${i}`} fill className="object-cover" />
+                            {i === 3 && images.length > 5 && (
+                                <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white font-bold text-xl">
+                                    +{images.length - 5} photos
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                </div>
+
+                {/* Description & Reviews Summary */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="lg:col-span-2 space-y-6">
+                        <p className="text-[#1a1a1a] leading-relaxed">
+                            {hotel.description}
+                        </p>
                         <div className="space-y-4">
-                            <div className="flex items-center gap-3 font-black uppercase text-[10px] tracking-widest text-muted-foreground">
-                                <ShieldCheck className="h-4 w-4" /> Safety
+                            <h3 className="text-lg font-bold">Most popular facilities</h3>
+                            <div className="flex flex-wrap gap-4">
+                                {hotel.amenities.map(a => (
+                                    <div key={a} className="flex items-center gap-2 text-sm text-green-700 font-medium">
+                                        <AmenityIcon amenity={a} className="h-4 w-4" />
+                                        <span className="capitalize">{a.replace('-', ' ')}</span>
+                                    </div>
+                                ))}
                             </div>
+                        </div>
+                    </div>
+                    <div className="space-y-4">
+                        <div className="bg-[#f0f6ff] p-4 rounded-lg flex justify-between items-center">
+                            <div>
+                                <p className="font-bold">Excellent</p>
+                                <p className="text-[12px] text-muted-foreground">{Math.floor(hotel.rating * 100)} reviews</p>
+                            </div>
+                            <div className="bg-[#003580] text-white h-10 w-10 flex items-center justify-center font-bold rounded-t-lg rounded-br-lg">
+                                {hotel.rating}
+                            </div>
+                        </div>
+                        <div className="bg-[#f0f6ff] p-4 rounded-lg space-y-3">
+                            <h4 className="font-bold text-sm">Property highlights</h4>
                             <div className="space-y-2">
-                                <p className="text-sm font-medium text-muted-foreground leading-relaxed">
-                                    Valid ID proof (Aadhar/Passport) is mandatory for all guests during check-in.
-                                </p>
+                                <div className="flex gap-2 text-sm">
+                                    <Check className="h-4 w-4 text-green-700 shrink-0" />
+                                    <span>Top Location: Highly rated by recent guests</span>
+                                </div>
+                                <div className="flex gap-2 text-sm">
+                                    <Check className="h-4 w-4 text-green-700 shrink-0" />
+                                    <span>Breakfast Info: Continental, Buffet</span>
+                                </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <Separator />
+
+                {/* Room Availability */}
+                <section id="booking-section">
+                    <h2 className="text-2xl font-bold mb-6">Availability</h2>
+                    <RoomBookingCard hotel={hotel as any} rooms={rooms || []} isLoadingRooms={isLoadingRooms} />
+                </section>
+
+                <Separator />
+
+                {/* Policies */}
+                <section className="space-y-6">
+                    <h2 className="text-2xl font-bold">House Rules</h2>
+                    <div className="border rounded-lg overflow-hidden">
+                        <div className="grid grid-cols-4 p-4 border-b">
+                            <div className="font-bold flex items-center gap-2"><Clock className="h-4 w-4" /> Check-in</div>
+                            <div className="col-span-3">From 12:00 PM</div>
+                        </div>
+                        <div className="grid grid-cols-4 p-4 border-b">
+                            <div className="font-bold flex items-center gap-2"><Clock className="h-4 w-4" /> Check-out</div>
+                            <div className="col-span-3">Until 11:00 AM</div>
+                        </div>
+                        <div className="grid grid-cols-4 p-4">
+                            <div className="font-bold flex items-center gap-2"><Info className="h-4 w-4" /> Pets</div>
+                            <div className="col-span-3">Pets are not allowed.</div>
                         </div>
                     </div>
                 </section>
 
                 {user && !user.isAnonymous && (
-                    <section className="pt-12">
+                    <section className="pt-8">
                         <WriteReviewForm hotelId={slug} userId={user.uid} userHasReviewed={false} />
                     </section>
                 )}
             </div>
-
-            {/* Desktop Sticky Booking Card */}
-            <div className="lg:col-span-1 hidden lg:block">
-                <div className="sticky top-28">
-                    <RoomBookingCard hotel={hotel as any} rooms={rooms || []} isLoadingRooms={isLoadingRooms} />
-                </div>
-            </div>
-        </div>
-      </div>
-
-      {/* Mobile Sticky CTA Bar */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 p-4 bg-white/80 backdrop-blur-2xl border-t border-black/5 shadow-2xl animate-in slide-in-from-bottom-full duration-500">
-        <div className="container mx-auto flex items-center justify-between gap-4">
-            <div className="flex flex-col">
-                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Starting From</span>
-                <span className="text-2xl font-black text-primary tracking-tighter">
-                    {hotel.minPrice?.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}
-                </span>
-            </div>
-            <Button size="lg" onClick={() => {
-                const bookingSection = document.getElementById('booking-section');
-                if (bookingSection) bookingSection.scrollIntoView({ behavior: 'smooth' });
-                else {
-                    router.push(`/booking?hotelId=${slug}&checkIn=${new Date().toISOString().split('T')[0]}&checkOut=${new Date(Date.now() + 86400000).toISOString().split('T')[0]}&guests=1`);
-                }
-            }} className="h-14 rounded-full px-10 bg-accent hover:bg-accent/90 font-black uppercase text-xs tracking-widest shadow-xl shadow-accent/20">
-                Reserve Stay
-            </Button>
         </div>
       </div>
     </div>
