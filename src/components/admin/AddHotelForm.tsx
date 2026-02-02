@@ -1,4 +1,3 @@
-
 'use client';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -35,9 +34,7 @@ import { dummyCities } from '@/lib/dummy-data';
 import { Loader2, Trash2, PlusCircle } from 'lucide-react';
 import { Separator } from '../ui/separator';
 import { Card, CardContent, CardHeader } from '../ui/card';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
-
-const hotelImagePlaceholders = PlaceHolderImages.filter(p => p.id.startsWith('hotel-'));
+import { ImageUpload } from './ImageUpload';
 
 const allAmenities = ['wifi', 'parking', 'restaurant', 'bar', 'spa', 'pool', 'gym', 'mountain-view', 'garden', 'library', 'river-view', 'ghat', 'adventure', 'trekking', 'skiing', 'heritage', 'safari'];
 const allSpiritualAmenities = ['meditation-friendly', 'silent-zone', 'sunrise-view', 'temple-nearby', 'yoga-sessions'];
@@ -58,9 +55,8 @@ const formSchema = z.object({
   rating: z.coerce.number().min(1).max(5).positive(),
   discount: z.coerce.number().min(0).max(100).optional(),
   amenities: z.array(z.string()).min(1, 'Please select at least one amenity.'),
-  images: z.array(z.string()).min(1, 'Please select at least one image.'),
+  images: z.array(z.string()).min(1, 'Please upload at least one image.'),
   rooms: z.array(roomSchema).min(1, 'Please add at least one room type.'),
-  // New feature fields
   isVerifiedPahadiHost: z.boolean().default(false),
   ecoPractices: z.object({
     waterSaving: z.boolean().default(false),
@@ -126,13 +122,12 @@ export function AddHotelForm() {
     });
 
     for (const room of rooms) {
-        // Add a random suffix to the room ID to prevent collisions if adding multiple rooms of the same type
         const roomId = slugify(`${values.name} ${room.type} ${Math.random().toString(36).substring(2, 7)}`, { lower: true, strict: true });
         const roomRef = doc(firestore, 'hotels', hotelId, 'rooms', roomId);
         batch.set(roomRef, {
             hotelId: hotelId,
             ...room,
-            availableRooms: room.totalRooms, // On creation, all rooms are available
+            availableRooms: room.totalRooms,
         });
     }
     
@@ -149,7 +144,7 @@ export function AddHotelForm() {
         toast({
             variant: 'destructive',
             title: 'Error',
-            description: error.message || 'Could not add hotel. The ID might already exist.',
+            description: error.message || 'Could not add hotel.',
         });
       } finally {
         setIsLoading(false);
@@ -159,7 +154,6 @@ export function AddHotelForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        {/* === BASIC INFO === */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <FormField control={form.control} name="name" render={({ field }) => (
                 <FormItem>
@@ -207,7 +201,6 @@ export function AddHotelForm() {
                 <FormItem>
                 <FormLabel>Discount (%)</FormLabel>
                 <FormControl><Input type="number" step="1" min="0" max="100" placeholder="e.g. 15" {...field} onChange={event => field.onChange(+event.target.value)} /></FormControl>
-                <FormDescription>Optional: Enter a discount percentage (0-100).</FormDescription>
                 <FormMessage />
                 </FormItem>
             )} />
@@ -215,7 +208,21 @@ export function AddHotelForm() {
 
         <Separator />
 
-        {/* === UNIQUE FEATURES === */}
+        <div>
+            <h3 className="text-lg font-black tracking-tight">Gallery Management</h3>
+            <FormDescription className="text-[10px] font-black uppercase tracking-widest">Upload original high-quality photos of the property.</FormDescription>
+        </div>
+        <FormField control={form.control} name="images" render={({ field }) => (
+            <FormItem>
+                <FormControl>
+                    <ImageUpload value={field.value} onChange={field.onChange} maxImages={15} />
+                </FormControl>
+                <FormMessage />
+            </FormItem>
+        )} />
+
+        <Separator />
+
         <div>
             <h3 className="text-lg font-medium">Unique Features</h3>
             <FormDescription>Add special details that make this hotel stand out.</FormDescription>
@@ -224,85 +231,17 @@ export function AddHotelForm() {
             <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
                 <div className="space-y-0.5">
                     <FormLabel>Verified Pahadi Host</FormLabel>
-                    <FormDescription>
-                        Enable this badge for locally owned and operated properties.
-                    </FormDescription>
+                    <FormDescription>Enable this badge for locally owned properties.</FormDescription>
                 </div>
-                <FormControl>
-                    <Switch checked={field.value} onCheckedChange={field.onChange}/>
-                </FormControl>
+                <FormControl><Switch checked={field.value} onCheckedChange={field.onChange}/></FormControl>
             </FormItem>
         )} />
-        <FormField control={form.control} name="ecoPractices" render={() => (
-             <FormItem className="rounded-lg border p-3 shadow-sm">
-                <div className="space-y-0.5 mb-4">
-                    <FormLabel>Eco-Friendly Practices</FormLabel>
-                    <FormDescription>
-                        Select all eco-friendly practices the hotel follows.
-                    </FormDescription>
-                </div>
-                <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8">
-                    <FormField control={form.control} name="ecoPractices.waterSaving" render={({ field }) => (
-                        <FormItem className="flex items-center space-x-3 space-y-0">
-                            <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                            <FormLabel className="text-sm font-normal">Water Saving</FormLabel>
-                        </FormItem>
-                    )} />
-                     <FormField control={form.control} name="ecoPractices.plasticFree" render={({ field }) => (
-                        <FormItem className="flex items-center space-x-3 space-y-0">
-                            <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                            <FormLabel className="text-sm font-normal">Plastic-Free Initiative</FormLabel>
-                        </FormItem>
-                    )} />
-                     <FormField control={form.control} name="ecoPractices.localSourcing" render={({ field }) => (
-                        <FormItem className="flex items-center space-x-3 space-y-0">
-                            <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                            <FormLabel className="text-sm font-normal">Sources Locally</FormLabel>
-                        </FormItem>
-                    )} />
-                </div>
-             </FormItem>
-        )} />
-        <div className="p-3 border rounded-lg shadow-sm space-y-4">
-            <div className="space-y-0.5">
-                <FormLabel>Safety & Emergency Info</FormLabel>
-                <FormDescription>Provide details for traveler safety.</FormDescription>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                 <FormField control={form.control} name="safetyInfo.nearestHospital" render={({ field }) => (
-                    <FormItem>
-                        <FormLabel className="text-xs">Nearest Hospital</FormLabel>
-                        <FormControl><Input placeholder="e.g. BD Pandey Hospital (5km)" {...field} /></FormControl>
-                    </FormItem>
-                )} />
-                <FormField control={form.control} name="safetyInfo.policeStation" render={({ field }) => (
-                    <FormItem>
-                        <FormLabel className="text-xs">Police Station</FormLabel>
-                        <FormControl><Input placeholder="e.g. Mallital Thana (3km)" {...field} /></FormControl>
-                    </FormItem>
-                )} />
-                <FormField control={form.control} name="safetyInfo.networkCoverage" render={({ field }) => (
-                    <FormItem>
-                        <FormLabel className="text-xs">Mobile Network</FormLabel>
-                         <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl><SelectTrigger><SelectValue placeholder="Select network quality" /></SelectTrigger></FormControl>
-                            <SelectContent>
-                                <SelectItem value="good">Good</SelectItem>
-                                <SelectItem value="average">Average</SelectItem>
-                                <SelectItem value="poor">Poor / None</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </FormItem>
-                )} />
-            </div>
-        </div>
         
         <Separator />
         
-        {/* === AMENITIES & IMAGES === */}
         <FormField control={form.control} name="amenities" render={() => (
             <FormItem>
-                <div className="mb-4"><FormLabel className="text-base">Standard Amenities</FormLabel><FormDescription>Select all standard amenities that apply.</FormDescription></div>
+                <div className="mb-4"><FormLabel className="text-base">Standard Amenities</FormLabel></div>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-2 border rounded-md">
                 {allAmenities.map((item) => (
                     <FormField key={item} control={form.control} name="amenities" render={({ field }) => (
@@ -316,55 +255,12 @@ export function AddHotelForm() {
                 <FormMessage className="mt-2" />
             </FormItem>
         )} />
-        <FormField control={form.control} name="spiritualAmenities" render={() => (
-            <FormItem>
-                <div className="mb-4"><FormLabel className="text-base">Spiritual & Wellness Amenities</FormLabel><FormDescription>Highlight features for spiritual and wellness travelers.</FormDescription></div>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-2 border rounded-md">
-                {allSpiritualAmenities.map((item) => (
-                    <FormField key={item} control={form.control} name="spiritualAmenities" render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                            <FormControl><Checkbox checked={field.value?.includes(item)} onCheckedChange={(checked) => (checked ? field.onChange([...(field.value || []), item]) : field.onChange((field.value || [])?.filter((value) => value !== item)))}/></FormControl>
-                            <FormLabel className="text-sm font-normal capitalize">{item.replace('-', ' ')}</FormLabel>
-                        </FormItem>
-                    )} />
-                ))}
-                </div>
-                <FormMessage className="mt-2" />
-            </FormItem>
-        )} />
-        <FormField control={form.control} name="images" render={() => (
-            <FormItem>
-                <div className="mb-4"><FormLabel className="text-base">Hotel Images</FormLabel><FormDescription>Select one or more images for the hotel gallery.</FormDescription></div>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-2 border rounded-md max-h-60 overflow-y-auto">
-                    {hotelImagePlaceholders.map((item) => (
-                        <FormField key={item.id} control={form.control} name="images" render={({ field }) => {
-                            return (
-                            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                                <FormControl>
-                                <Checkbox
-                                    checked={field.value?.includes(item.id)}
-                                    onCheckedChange={(checked) => {
-                                    return checked ? field.onChange([...(field.value || []), item.id]) : field.onChange((field.value || [])?.filter((value) => value !== item.id));
-                                    }}
-                                />
-                                </FormControl>
-                                <FormLabel className="text-sm font-normal">{item.description}</FormLabel>
-                            </FormItem>
-                            );
-                        }} />
-                    ))}
-                </div>
-                <FormMessage className="mt-2" />
-            </FormItem>
-        )} />
 
         <Separator />
         
-        {/* === ROOMS === */}
         <div>
             <h3 className="text-lg font-medium">Room Types</h3>
             <FormDescription>Define the rooms available in this hotel.</FormDescription>
-            <FormField control={form.control} name="rooms" render={() => (<FormItem><FormMessage className="mt-2" /></FormItem>)} />
         </div>
 
         <div className="space-y-4">
@@ -379,7 +275,7 @@ export function AddHotelForm() {
                         <FormItem>
                         <FormLabel>Type</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl><SelectTrigger><SelectValue placeholder="Select a type" /></SelectTrigger></FormControl>
+                            <FormControl><SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger></FormControl>
                             <SelectContent>
                                 <SelectItem value="Standard">Standard</SelectItem>
                                 <SelectItem value="Deluxe">Deluxe</SelectItem>
@@ -390,25 +286,13 @@ export function AddHotelForm() {
                         </FormItem>
                     )} />
                      <FormField control={form.control} name={`rooms.${index}.price`} render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Price / night</FormLabel>
-                        <FormControl><Input type="number" placeholder="e.g. 5000" {...field} /></FormControl>
-                        <FormMessage />
-                        </FormItem>
+                        <FormItem><FormLabel>Price/night</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
                     <FormField control={form.control} name={`rooms.${index}.capacity`} render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Capacity</FormLabel>
-                        <FormControl><Input type="number" placeholder="e.g. 2" {...field} /></FormControl>
-                        <FormMessage />
-                        </FormItem>
+                        <FormItem><FormLabel>Capacity</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
                      <FormField control={form.control} name={`rooms.${index}.totalRooms`} render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Total Units</FormLabel>
-                        <FormControl><Input type="number" placeholder="e.g. 10" {...field} /></FormControl>
-                        <FormMessage />
-                        </FormItem>
+                        <FormItem><FormLabel>Total Units</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
                 </CardContent>
             </Card>
@@ -417,9 +301,9 @@ export function AddHotelForm() {
         </div>
 
         <div className="flex items-center justify-start pt-8 border-t">
-            <Button type="submit" disabled={isLoading}>
+            <Button type="submit" disabled={isLoading} className="h-14 px-10 rounded-full font-black text-lg">
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isLoading ? 'Saving...' : 'Add Hotel'}
+                {isLoading ? 'Saving Property...' : 'Register Hotel'}
             </Button>
         </div>
       </form>
