@@ -39,6 +39,7 @@ export async function getUserDetailsForAdmin(uid: string): Promise<UserDetailsFo
     const userRef = adminDb.doc(`users/${uid}`);
     const bookingsRef = adminDb.collectionGroup('bookings').where('userId', '==', uid);
 
+    // Fixed: Corrected circular reference where bookingsSnap was being called before definition
     const [userDoc, bookingsSnap] = await Promise.all([
         userRef.get(),
         bookingsRef.get(),

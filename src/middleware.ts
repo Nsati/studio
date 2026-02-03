@@ -10,7 +10,7 @@ export function middleware(request: NextRequest) {
   // Apply CORS only to API routes
   if (request.nextUrl.pathname.startsWith('/api')) {
     const origin = request.headers.get('origin');
-    // In production, you might want to use an environment variable for allowed origins
+    // Allow the specific local origin for development
     const allowedOrigin = 'http://localhost:3000';
 
     // Handle preflight requests
