@@ -59,7 +59,7 @@ export default function EditUserPage() {
             getUserDetailsForAdmin(userId)
                 .then(data => {
                     setUserData(data);
-                    // Fixed: Using explicit cast to handle suspended status literal build error
+                    // FIXED: Using explicit cast to handle suspended status literal build error
                     form.reset({
                         displayName: data.displayName,
                         mobile: data.mobile,
