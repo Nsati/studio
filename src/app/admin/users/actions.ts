@@ -1,3 +1,4 @@
+
 'use server';
 
 import { getFirebaseAdmin } from '@/firebase/admin';
@@ -28,7 +29,7 @@ interface UserDetailsForAdmin extends UserProfile {
 
 /**
  * Fetches a user's profile and calculates their booking stats.
- * Fixed: Variable name clashing resolved.
+ * Fixed: Variable name clashing resolved by separating reference and snapshot logic.
  */
 export async function getUserDetailsForAdmin(uid: string): Promise<UserDetailsForAdmin> {
     const { adminDb, error } = getFirebaseAdmin();
@@ -38,12 +39,11 @@ export async function getUserDetailsForAdmin(uid: string): Promise<UserDetailsFo
     }
 
     const userRef = adminDb.doc(`users/${uid}`);
-    const bookingsRef = adminDb.collectionGroup('bookings').where('userId', '==', uid);
+    const bookingsQuery = adminDb.collectionGroup('bookings').where('userId', '==', uid);
 
-    // Use specific reference for parallel execution
     const [userDoc, bookingsSnapshot] = await Promise.all([
         userRef.get(),
-        bookingsRef.get(), 
+        bookingsQuery.get(), 
     ]);
 
     if (!userDoc.exists) {
