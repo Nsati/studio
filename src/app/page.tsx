@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
 import { dummyCities } from '@/lib/dummy-data';
-import { ShieldCheck, CloudSun, Users, IndianRupee, ThermometerSnowflake, Mountain, MapPin, Loader2, AlertTriangle } from 'lucide-react';
+import { ShieldCheck, CloudSun, Users, IndianRupee, ThermometerSnowflake, Mountain, MapPin, Loader2, AlertTriangle, CloudRain, Snowflake, Sun } from 'lucide-react';
 import { HotelCard } from '@/components/hotel/HotelCard';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, limit, query } from 'firebase/firestore';
@@ -18,30 +18,29 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 
 function SeasonTruthMeter() {
-    const [weather, setWeather] = useState<{ temp: number, condition: string, icon: string } | null>(null);
+    const [weather, setWeather] = useState<{ temp: number, condition: string, raw: string } | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        // Fetching live weather for Dehradun (Capital of Uttarakhand) as a state-wide proxy
         const fetchWeather = async () => {
+            const apiKey = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY || 'bd5e378503939ddaee76f12ad7a97608';
             try {
-                // Using a reliable weather API (simulated for immediate live results in prototype)
-                const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=30.3165&longitude=78.0322&current_weather=true`);
+                // Fetching for Dehradun as a state proxy
+                const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=Dehradun,IN&units=metric&appid=${apiKey}`);
+                if (!response.ok) throw new Error('API limit or error');
                 const data = await response.json();
                 
-                const temp = data.current_weather.temperature;
-                const code = data.current_weather.weathercode;
+                const temp = Math.round(data.main.temp);
+                const condition = data.weather[0].main;
                 
-                let condition = 'Clear';
-                if (code >= 1 && code <= 3) condition = 'Partly Cloudy';
-                if (code >= 51 && code <= 67) condition = 'Rainy';
-                if (code >= 71 && code <= 77) condition = 'Snow Possible';
-                if (code >= 95) condition = 'Stormy';
-
-                setWeather({ temp, condition, icon: 'CloudSun' });
+                setWeather({ 
+                    temp, 
+                    condition: data.weather[0].description,
+                    raw: condition 
+                });
             } catch (e) {
                 console.error("Weather fetch failed:", e);
-                setWeather({ temp: 18, condition: 'Clear Skies', icon: 'CloudSun' });
+                setWeather({ temp: 18, condition: 'Clear Skies', raw: 'Clear' });
             } finally {
                 setIsLoading(false);
             }
@@ -51,14 +50,17 @@ function SeasonTruthMeter() {
 
     const isPeakSeason = [4, 5, 6, 10].includes(new Date().getMonth() + 1);
     
+    // Logic based on real-time data
+    const isRisky = weather?.raw === 'Rain' || weather?.raw === 'Snow' || weather?.raw === 'Thunderstorm';
+
     const metrics = [
         { label: 'Crowd', value: isPeakSeason ? 'High' : 'Moderate', color: isPeakSeason ? 'text-red-600' : 'text-amber-600', icon: Users },
         { label: 'Cost', value: isPeakSeason ? 'Peak Rates' : 'Standard', color: isPeakSeason ? 'text-red-600' : 'text-green-600', icon: IndianRupee },
         { label: 'Weather', value: isLoading ? 'Syncing...' : `${weather?.temp}°C - ${weather?.condition}`, color: 'text-blue-600', icon: CloudSun },
         { 
             label: 'Safety', 
-            value: (weather?.condition === 'Rainy' || weather?.condition === 'Snow Possible') ? 'Watch Roads' : 'Stable Roads', 
-            color: (weather?.condition === 'Rainy' || weather?.condition === 'Snow Possible') ? 'text-amber-600' : 'text-green-700', 
+            value: isRisky ? 'Caution: Roads' : 'Stable Roads', 
+            color: isRisky ? 'text-red-600' : 'text-green-700', 
             icon: ShieldCheck 
         },
     ];
@@ -72,7 +74,7 @@ function SeasonTruthMeter() {
                         <h2 className="text-2xl font-black tracking-tight">Season Truth Meter™</h2>
                     </div>
                     <span className="text-[10px] bg-[#003580] text-white px-3 py-1 rounded-full font-black uppercase tracking-widest md:ml-4">
-                        {isLoading ? <span className="flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin" /> Verifying live satellite data</span> : 'Live Uttarakhand Status'}
+                        {isLoading ? <span className="flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin" /> Verifying satellite data</span> : 'Live Uttarakhand Status'}
                     </span>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -81,7 +83,7 @@ function SeasonTruthMeter() {
                             <CardContent className="p-6 flex flex-col items-center text-center space-y-2">
                                 <m.icon className="h-5 w-5 text-muted-foreground" />
                                 <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{m.label}</p>
-                                <p className={`text-sm md:text-base font-black ${m.color}`}>{m.value}</p>
+                                <p className={`text-sm md:text-base font-black capitalize ${m.color}`}>{m.value}</p>
                             </CardContent>
                         </Card>
                     ))}

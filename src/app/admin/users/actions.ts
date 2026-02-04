@@ -50,7 +50,7 @@ export async function getUserDetailsForAdmin(uid: string): Promise<UserDetailsFo
         throw new Error("User not found.");
     }
 
-    const userProfile = userDoc.data() as UserProfile;
+    const userProfileData = userDoc.data() as UserProfile;
     let totalRevenue = 0;
     let totalBookings = 0;
 
@@ -63,7 +63,7 @@ export async function getUserDetailsForAdmin(uid: string): Promise<UserDetailsFo
     });
 
     return {
-        ...userProfile,
+        ...userProfileData,
         totalRevenue,
         totalBookings,
     };
