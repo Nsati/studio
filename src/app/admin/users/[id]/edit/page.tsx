@@ -60,7 +60,7 @@ export default function EditUserPage() {
             getUserDetailsForAdmin(userId)
                 .then(data => {
                     setUserData(data);
-                    // Fixed: Explicit cast to status enum type to avoid literal mismatch error
+                    // Fixed: Explicitly casting status to satisfy Zod/TypeScript enum mismatch
                     form.reset({
                         displayName: data.displayName,
                         email: data.email,
@@ -164,7 +164,7 @@ export default function EditUserPage() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <FormField control={form.control} name="mobile" render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Mobile Node</FormLabel>
+                                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Mobile Node</Label>
                                         <FormControl><Input {...field} className="rounded-none h-12 focus-visible:ring-[#003580]" /></FormControl>
                                         <FormMessage />
                                     </FormItem>

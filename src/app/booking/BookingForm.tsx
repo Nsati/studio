@@ -105,7 +105,6 @@ export function BookingForm() {
         setIsBooking(true);
 
         try {
-            // 1. Create Order via API
             const orderRes = await fetch('/api/razorpay/order', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -115,7 +114,6 @@ export function BookingForm() {
 
             if (!orderRes.ok) throw new Error(orderData.details || 'Gateway Order Creation Failed');
 
-            // 2. Open Razorpay Checkout
             const options = {
                 key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_SC2oQHkSXdvVp8',
                 amount: orderData.amount,
@@ -195,10 +193,9 @@ export function BookingForm() {
             <div className="container mx-auto py-8 px-4 md:px-6">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div className="lg:col-span-2 space-y-6">
-                        {/* Guest Details */}
-                        <Card className="rounded-sm border-border">
-                            <CardHeader className="border-b bg-muted/10">
-                                <CardTitle className="text-lg font-black uppercase tracking-tighter">Guest Information</CardTitle>
+                        <Card className="rounded-none border-border">
+                            <CardHeader className="border-b bg-muted/10 p-4">
+                                <CardTitle className="text-base font-black uppercase tracking-widest">Guest Information</CardTitle>
                             </CardHeader>
                             <CardContent className="p-6 space-y-6">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -218,30 +215,28 @@ export function BookingForm() {
                             </CardContent>
                         </Card>
 
-                        {/* Special Mountain Requests */}
-                        <Card className="rounded-sm border-border">
-                            <CardHeader className="border-b bg-muted/10">
-                                <CardTitle className="text-lg font-black uppercase tracking-tighter">Mountain Services</CardTitle>
+                        <Card className="rounded-none border-border">
+                            <CardHeader className="border-b bg-muted/10 p-4">
+                                <CardTitle className="text-base font-black uppercase tracking-widest">Mountain Services</CardTitle>
                             </CardHeader>
                             <CardContent className="p-6 space-y-4">
-                                <div className="flex items-center space-x-2">
+                                <div className="flex items-center space-x-3">
                                     <Checkbox id="split" checked={splitPayment} onCheckedChange={(checked) => setSplitPayment(checked === true)} />
                                     <label htmlFor="split" className="text-sm font-bold cursor-pointer">Split Payment (Pay part now, balance at hotel)</label>
                                 </div>
-                                <div className="flex items-center space-x-2">
+                                <div className="flex items-center space-x-3">
                                     <Checkbox id="early" checked={earlyCheckIn} onCheckedChange={(checked) => setEarlyCheckIn(checked === true)} />
                                     <label htmlFor="early" className="text-sm font-bold cursor-pointer">Request Early Check-in (Pahadi hospitality ready)</label>
                                 </div>
                             </CardContent>
                         </Card>
 
-                        {/* Weather Disclaimer */}
-                        <div className="p-6 bg-red-50 border border-red-100 rounded-sm space-y-4">
+                        <div className="p-6 bg-red-50 border border-red-100 rounded-none space-y-4">
                             <div className="flex items-center gap-3 text-red-800 font-black uppercase tracking-tighter text-lg">
                                 <CloudAlert className="h-6 w-6" /> Weather Risk Disclaimer
                             </div>
                             <p className="text-sm text-red-700 leading-relaxed font-medium">
-                                Travel in Uttarakhand mountains is subject to weather conditions. By booking, you acknowledge that landslides or heavy snow may affect road access. We recommend keeping 1 extra day buffer for your return.
+                                Travel in Uttarakhand mountains is subject to weather conditions. By booking, you acknowledge that landslides or heavy snow may affect road access.
                             </p>
                             <div className="flex items-center space-x-3 pt-2">
                                 <Checkbox id="weather" checked={weatherRiskAccepted} onCheckedChange={(checked) => setWeatherRiskAccepted(checked === true)} className="border-red-400" />
@@ -250,7 +245,7 @@ export function BookingForm() {
                         </div>
 
                         <div className="space-y-4">
-                            <div className="flex items-start gap-3 p-4 bg-white border rounded-sm">
+                            <div className="flex items-start gap-3 p-4 bg-white border rounded-none">
                                 <Checkbox id="terms" checked={termsAccepted} onCheckedChange={(checked) => setTermsAccepted(checked === true)} className="mt-1" />
                                 <label htmlFor="terms" className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
                                     I accept the <Link href="/terms" className="text-[#006ce4] font-bold hover:underline">Booking Terms</Link>.
@@ -258,15 +253,15 @@ export function BookingForm() {
                             </div>
 
                             <Button onClick={handlePayment} size="lg" className="w-full sm:w-auto h-12 px-10 rounded-none text-base font-black bg-[#006ce4] hover:bg-[#005bb8] text-white shadow-sm" disabled={isBooking || !termsAccepted || !weatherRiskAccepted}>
-                                {isBooking ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Finalizing Stay...</> : <><Lock className="mr-2 h-4 w-4" /> Secure Reservation</>}
+                                {isBooking ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</> : <><Lock className="mr-2 h-4 w-4" /> Secure Reservation</>}
                             </Button>
                         </div>
                     </div>
 
                     <div className="space-y-6">
-                        <Card className="rounded-sm border-border sticky top-24">
-                            <CardHeader className="bg-[#003580] text-white">
-                                <CardTitle className="text-base font-black uppercase tracking-widest">Order Summary</CardTitle>
+                        <Card className="rounded-none border-border sticky top-24">
+                            <CardHeader className="bg-[#003580] text-white p-4">
+                                <CardTitle className="text-sm font-black uppercase tracking-widest">Order Summary</CardTitle>
                             </CardHeader>
                             <CardContent className="p-4 space-y-4">
                                 <div className="space-y-1">
@@ -274,31 +269,18 @@ export function BookingForm() {
                                     <p className="text-sm font-black">{hotel.name}</p>
                                 </div>
                                 <div className="space-y-1">
-                                    <p className="text-[10px] font-black uppercase text-muted-foreground">Room Type</p>
-                                    <p className="text-sm font-black">{room.type}</p>
+                                    <p className="text-[10px] font-black uppercase text-muted-foreground">Stay window</p>
+                                    <p className="text-sm font-black">{format(checkIn, 'dd MMM')} — {format(checkOut, 'dd MMM yyyy')}</p>
                                 </div>
                                 <Separator />
                                 <div className="flex justify-between items-center">
-                                    <span className="text-lg font-black">Total Price</span>
+                                    <span className="text-base font-black">Total Price</span>
                                     <span className="text-xl font-black text-[#1a1a1a]">
                                         {totalPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}
                                     </span>
                                 </div>
                             </CardContent>
                         </Card>
-
-                        {/* Low Network / Offline Alert */}
-                        <div className="p-6 bg-amber-50 border border-amber-100 rounded-sm space-y-4">
-                            <div className="flex items-center gap-2 text-amber-800 font-black uppercase tracking-tighter">
-                                <Info className="h-5 w-5" /> Travel Tip
-                            </div>
-                            <p className="text-xs text-amber-700 font-medium leading-relaxed">
-                                Going to a remote zone? Download your booking confirmation now for offline access.
-                            </p>
-                            <Button variant="outline" className="w-full h-10 rounded-none border-amber-300 text-amber-800 hover:bg-amber-100 font-bold text-xs">
-                                <Download className="mr-2 h-4 w-4" /> Save Offline Voucher
-                            </Button>
-                        </div>
                     </div>
                 </div>
             </div>
