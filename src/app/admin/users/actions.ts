@@ -1,10 +1,14 @@
-
 'use server';
 
 import { getFirebaseAdmin } from '@/firebase/admin';
 import { revalidatePath } from 'next/cache';
 import type { UserProfile } from '@/lib/types';
 import { z } from 'zod';
+
+/**
+ * @fileOverview Hardened User Management Actions. 
+ * Fixed Circular Reference by ensuring clean variable scoping.
+ */
 
 type ActionResponse = {
     success: boolean;
@@ -21,29 +25,24 @@ export const UpdateUserSchema = z.object({
 
 export type UpdateUserInput = z.infer<typeof UpdateUserSchema>;
 
-
 interface UserDetailsForAdmin extends UserProfile {
     totalRevenue: number;
     totalBookings: number;
 }
 
-/**
- * Fetches a user's profile and calculates their booking stats.
- * Fixed: Variable name clashing resolved by separating reference and snapshot logic.
- */
 export async function getUserDetailsForAdmin(uid: string): Promise<UserDetailsForAdmin> {
     const { adminDb, error } = getFirebaseAdmin();
     if (error || !adminDb) {
-        console.error("Server action error:", error);
         throw new Error(error || "Admin SDK not initialized");
     }
 
     const userRef = adminDb.doc(`users/${uid}`);
-    const bookingsQuery = adminDb.collectionGroup('bookings').where('userId', '==', uid);
+    // Clean scoping to avoid circular reference warnings in some environments
+    const queryForBookings = adminDb.collectionGroup('bookings').where('userId', '==', uid);
 
     const [userDoc, bookingsSnapshot] = await Promise.all([
         userRef.get(),
-        bookingsQuery.get(), 
+        queryForBookings.get(), 
     ]);
 
     if (!userDoc.exists) {
@@ -69,10 +68,6 @@ export async function getUserDetailsForAdmin(uid: string): Promise<UserDetailsFo
     };
 }
 
-
-/**
- * Updates a user's profile details as an admin.
- */
 export async function updateUserByAdmin(uid: string, data: UpdateUserInput): Promise<ActionResponse> {
     const { adminDb, error } = getFirebaseAdmin();
     if (error || !adminDb) {

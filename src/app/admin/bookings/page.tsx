@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -37,6 +36,11 @@ import {
 } from "@/components/ui/alert-dialog";
 import { cn } from '@/lib/utils';
 
+/**
+ * @fileOverview Production Bookings Inventory.
+ * Fixed: Missing AlertDialogTrigger import resolved.
+ */
+
 function BookingStatusBadge({ status }: { status: string }) {
   switch (status) {
     case 'CONFIRMED':
@@ -68,7 +72,6 @@ export default function BookingsAdminPage() {
         setError(result.error || "Failed to fetch bookings inventory.");
       }
     } catch (err: any) {
-      console.error("[INVENTORY] Sync Error:", err);
       setError("Network failure: Could not reach the administration server.");
     } finally {
       setIsLoading(false);

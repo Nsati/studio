@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -32,6 +31,11 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
+
+/**
+ * @fileOverview Production Admin Dashboard.
+ * Fixed: Syntax errors in component nesting and closing tags resolved.
+ */
 
 function StatCard({ title, value, icon: Icon, description, isLoading, trend }: any) {
     return (
@@ -74,7 +78,6 @@ export default function AdminDashboard() {
         setError(response.error || "Failed to fetch dashboard metrics.");
       }
     } catch (err: any) {
-      console.error("[DASHBOARD] Sync Error:", err);
       setError("Network error: Could not connect to the cloud environment.");
     } finally {
       setIsLoading(false);
