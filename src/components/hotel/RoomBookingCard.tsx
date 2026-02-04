@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Calendar as CalendarIcon, ShieldCheck, ChevronRight } from 'lucide-react';
+import { Calendar as CalendarIcon, ShieldCheck, ChevronRight, Users, Info } from 'lucide-react';
 import { differenceInDays, format } from 'date-fns';
 import type { DateRange } from 'react-day-picker';
 import { useRouter } from 'next/navigation';
@@ -28,6 +28,7 @@ import { cn } from '@/lib/utils';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '../ui/skeleton';
 import { Badge } from '../ui/badge';
+import { Separator } from '../ui/separator';
 
 export function RoomBookingCard({ hotel, rooms, isLoadingRooms }: { hotel: WithId<Hotel>, rooms: WithId<Room>[], isLoadingRooms: boolean }) {
   const [dates, setDates] = useState<DateRange | undefined>();
@@ -44,7 +45,7 @@ export function RoomBookingCard({ hotel, rooms, isLoadingRooms }: { hotel: WithI
 
   const handleBookNow = () => {
     if (!selectedRoom || !isDateRangeValid || !dates?.from || !dates.to) {
-        toast({ variant: 'destructive', title: 'Action Required', description: 'Please select your dates and preferred room type.' });
+        toast({ variant: 'destructive', title: 'Selection Missing', description: 'Please select dates and a room type to continue.' });
         return;
     }
     const params = new URLSearchParams({
@@ -58,65 +59,73 @@ export function RoomBookingCard({ hotel, rooms, isLoadingRooms }: { hotel: WithI
   }
 
   return (
-    <Card className="sticky top-28 rounded-[3rem] shadow-apple-deep border-black/5 overflow-hidden transition-all duration-700 bg-white">
-      <CardHeader className="bg-[#003580] p-10 text-white space-y-2">
+    <Card className="sticky top-24 rounded-sm border-border bg-white shadow-sm overflow-hidden">
+      <CardHeader className="bg-[#003580] p-6 text-white space-y-1">
         <div className="flex justify-between items-baseline">
-            <CardTitle className="text-4xl font-black tracking-tighter">
+            <span className="text-[10px] font-bold opacity-80 uppercase tracking-wider">Prices from</span>
+            <CardTitle className="text-2xl font-bold">
                 {hotel.minPrice?.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}
             </CardTitle>
-            <span className="text-[10px] font-black opacity-80 uppercase tracking-widest">Starting / night</span>
         </div>
-        <CardDescription className="text-white/70 flex items-center gap-2 font-bold text-xs uppercase tracking-widest">
-            <ShieldCheck className="h-4 w-4" /> Best Price Authenticated
+        <CardDescription className="text-white/70 flex items-center gap-1.5 font-medium text-xs">
+            <ShieldCheck className="h-3.5 w-3.5 text-green-400" /> Pre-verified best mountain rates
         </CardDescription>
       </CardHeader>
       
-      <CardContent className="p-10 space-y-10">
-        <div className="grid grid-cols-1 gap-6">
-          <div className="space-y-3">
-            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-2">Stay Period</label>
+      <CardContent className="p-4 space-y-6">
+        {/* Date & Guest Selectors - Compact */}
+        <div className="grid grid-cols-1 gap-3">
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Check-in — Check-out</label>
             <Popover>
                 <PopoverTrigger asChild>
-                <Button variant="outline" className="w-full h-16 rounded-[1.5rem] justify-start font-bold border-black/10 hover:bg-muted/50 transition-all duration-300 text-lg">
-                    <CalendarIcon className="mr-3 h-5 w-5 text-[#003580]" />
+                <Button variant="outline" className="w-full h-10 rounded-none justify-start font-bold border-input hover:bg-muted/50 transition-colors text-sm">
+                    <CalendarIcon className="mr-2 h-4 w-4 text-[#003580]" />
                     {dates?.from ? (
                     dates.to ? `${format(dates.from, 'MMM dd')} - ${format(dates.to, 'MMM dd')}` : format(dates.from, 'MMM dd')
-                    ) : "Check-in — Check-out"}
+                    ) : "Select dates"}
                 </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-6 rounded-[2.5rem] shadow-apple-deep border-black/5" align="end">
-                <Calendar mode="range" selected={dates} onSelect={setDates} disabled={{ before: new Date() }} className="rounded-2xl" />
+                <PopoverContent className="w-auto p-0 rounded-sm border-border" align="end">
+                    <Calendar mode="range" selected={dates} onSelect={setDates} disabled={{ before: new Date() }} />
                 </PopoverContent>
             </Popover>
           </div>
 
-          <div className="space-y-3">
-            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-2">Travelers</label>
-            <div className="flex items-center gap-3 h-16 w-full rounded-[1.5rem] border border-black/10 px-6 bg-background/50">
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Guests</label>
+            <div className="flex items-center gap-2 h-10 w-full rounded-none border border-input px-3 bg-background">
+                <Users className="h-4 w-4 text-[#003580]" />
                 <input 
                     type="number" 
                     min="1" 
                     value={guests} 
                     onChange={e => setGuests(e.target.value)}
-                    className="flex-1 bg-transparent font-black text-lg focus:outline-none"
+                    className="flex-1 bg-transparent font-bold text-sm focus:outline-none"
                 />
-                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Adults</span>
+                <span className="text-[10px] font-bold text-muted-foreground uppercase">Adults</span>
             </div>
           </div>
         </div>
 
-        <div className="space-y-6">
-          <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-2">The Collection</h4>
+        <Separator />
+
+        {/* Room Selection Area */}
+        <div className="space-y-3">
+          <h4 className="text-[10px] font-black uppercase tracking-wider text-[#1a1a1a] ml-1">Select Room Type</h4>
           {isLoadingRooms ? (
-            <Skeleton className="h-48 w-full rounded-[2rem]" />
+            <div className="space-y-2">
+                <Skeleton className="h-14 w-full" />
+                <Skeleton className="h-14 w-full" />
+            </div>
           ) : rooms.length === 0 ? (
-            <Alert className="rounded-[2rem] bg-amber-50 border-amber-100"><AlertDescription>Pricing currently unavailable.</AlertDescription></Alert>
+            <Alert className="rounded-none bg-amber-50 border-amber-100 p-3"><AlertDescription className="text-xs">No rooms found for this property.</AlertDescription></Alert>
           ) : !isDateRangeValid ? (
-            <div className="p-8 bg-muted/30 rounded-[2.5rem] border-2 border-dashed border-black/5 text-center space-y-3">
-                <p className="text-sm font-black text-muted-foreground uppercase tracking-widest">Enter dates to unlock inventory</p>
+            <div className="p-6 bg-muted/20 border border-dashed border-border text-center">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-relaxed">Enter your travel dates <br/> to see dynamic pricing</p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-2">
               {rooms.map((room) => {
                 const isSelected = selectedRoom?.id === room.id;
                 const isSoldOut = room.availableRooms !== undefined && room.availableRooms <= 0;
@@ -127,18 +136,18 @@ export function RoomBookingCard({ hotel, rooms, isLoadingRooms }: { hotel: WithI
                         key={room.id}
                         onClick={() => !isSoldOut && setSelectedRoom(room)}
                         className={cn(
-                            'p-6 rounded-[2rem] transition-all duration-500 border-2 cursor-pointer flex items-center justify-between group',
-                            isSelected ? 'border-[#003580] bg-[#003580]/5 shadow-apple' : 'border-black/5 hover:border-black/10 bg-white',
+                            'p-3 border transition-all cursor-pointer flex items-center justify-between group rounded-sm',
+                            isSelected ? 'border-[#003580] bg-[#ebf3ff]' : 'border-border hover:bg-muted/30 bg-white',
                             isSoldOut && 'opacity-40 grayscale cursor-not-allowed'
                         )}
                     >
-                        <div className="space-y-1.5">
-                            <p className="font-black text-lg tracking-tight group-hover:text-[#003580] transition-colors">{room.type}</p>
-                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Cap: {room.capacity} Guests</p>
+                        <div className="space-y-0.5">
+                            <p className="font-bold text-sm text-[#1a1a1a]">{room.type}</p>
+                            <p className="text-[10px] font-medium text-muted-foreground">Sleeps {room.capacity}</p>
                         </div>
                         <div className="text-right">
-                            <p className="font-black text-[#003580] text-xl tracking-tighter">{price.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}</p>
-                            {isSelected && <Badge className="text-[9px] h-5 rounded-full mt-2 bg-[#003580] text-white font-black tracking-widest">SELECTED</Badge>}
+                            <p className="font-bold text-[#003580] text-base">{price.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}</p>
+                            {isSelected && <Badge className="text-[8px] h-4 rounded-none mt-1 bg-[#003580] text-white font-black tracking-widest px-1">SELECTED</Badge>}
                         </div>
                     </div>
                 )
@@ -147,18 +156,19 @@ export function RoomBookingCard({ hotel, rooms, isLoadingRooms }: { hotel: WithI
           )}
         </div>
 
+        {/* Final Action - Smaller & Focused */}
         {selectedRoom && isDateRangeValid && (
-          <div className='pt-6 animate-in fade-in slide-in-from-top-6 duration-700 ease-apple-ease'>
+          <div className='pt-2 space-y-3 animate-in fade-in slide-in-from-top-2'>
             <Button
               onClick={handleBookNow}
               size="lg"
-              className="w-full h-20 rounded-full text-xl font-black bg-[#febb02] text-[#003580] hover:bg-[#febb02]/90 shadow-apple-deep shadow-[#febb02]/30 tracking-tight transition-all active:scale-95"
+              className="w-full h-12 rounded-none text-base font-bold bg-[#febb02] text-[#003580] hover:bg-[#febb02]/90 shadow-sm transition-all active:scale-95"
             >
-              Confirm Reservation <ChevronRight className="ml-3 h-6 w-6" />
+              Reserve Room <ChevronRight className="ml-2 h-4 w-4" />
             </Button>
-            <p className="text-center text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mt-6">
-                Instant confirmation available
-            </p>
+            <div className="flex items-center justify-center gap-1.5 text-[10px] font-bold text-green-700 uppercase tracking-tight">
+                <Info className="h-3 w-3" /> Instant Confirmation via SMS
+            </div>
           </div>
         )}
       </CardContent>
