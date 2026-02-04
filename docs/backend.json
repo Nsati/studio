@@ -7,295 +7,79 @@
       "type": "object",
       "description": "Represents a user's profile in the Uttarakhand Getaways application.",
       "properties": {
-        "uid": {
-          "type": "string",
-          "description": "Unique identifier for the user, matching Firebase Auth UID."
-        },
-        "displayName": {
-          "type": "string",
-          "description": "The user's full name."
-        },
-        "email": {
-          "type": "string",
-          "description": "The user's email address.",
-          "format": "email"
-        },
-        "mobile": {
-          "type": "string",
-          "description": "The user's 10-digit mobile number."
-        },
-        "role": {
-          "type": "string",
-          "description": "The user's role within the application (e.g., 'user', 'admin').",
-          "enum": ["user", "admin"]
-        },
-        "status": {
-            "type": "string",
-            "description": "The status of the user account.",
-            "enum": ["pending", "active"]
-        }
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "mobile": { "type": "string" },
+        "role": { "type": "string", "enum": ["user", "admin"] },
+        "status": { "type": "string", "enum": ["pending", "active", "suspended"] }
       },
-      "required": [
-        "uid",
-        "displayName",
-        "email",
-        "mobile",
-        "role",
-        "status"
-      ]
+      "required": ["uid", "displayName", "email", "role", "status"]
     },
     "Hotel": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Hotel",
       "type": "object",
-      "description": "Represents a hotel located in Uttarakhand.",
+      "description": "Smart Hotel entity with Mountain Safety and Local Intel.",
       "properties": {
-        "name": {
-          "type": "string",
-          "description": "The name of the hotel."
-        },
-        "city": {
-          "type": "string",
-          "description": "The city in Uttarakhand where the hotel is located."
-        },
-        "description": {
-          "type": "string",
-          "description": "A description of the hotel."
-        },
-        "address": {
-          "type": "string",
-          "description": "The full address of the hotel."
-        },
-        "images": {
-          "type": "array",
-          "description": "An array of URLs pointing to images of the hotel.",
-          "items": {
-            "type": "string"
-          }
-        },
-        "amenities": {
-          "type": "array",
-          "description": "An array of amenities offered by the hotel.",
-          "items": {
-            "type": "string"
-          }
-        },
-        "rating": {
-          "type": "number",
-          "description": "The rating of the hotel (e.g., out of 5)."
-        },
-        "minPrice": {
-          "type": "number",
-          "description": "The minimum price for a room in this hotel."
-        },
-        "discount": {
-          "type": "number",
-          "description": "A promotional discount percentage for the hotel."
-        }
+        "name": { "type": "string" },
+        "city": { "type": "string" },
+        "description": { "type": "string" },
+        "address": { "type": "string" },
+        "images": { "type": "array", "items": { "type": "string" } },
+        "amenities": { "type": "array", "items": { "type": "string" } },
+        "rating": { "type": "number" },
+        "minPrice": { "type": "number" },
+        "discount": { "type": "number" },
+        "mountainSafetyScore": { "type": "number", "description": "Score from 0-100" },
+        "landslideRisk": { "type": "string", "enum": ["Low", "Medium", "High"] },
+        "roadCondition": { "type": "string" },
+        "networkJio": { "type": "boolean" },
+        "networkAirtel": { "type": "boolean" },
+        "networkBsnl": { "type": "boolean" },
+        "isSnowFriendly": { "type": "boolean" },
+        "isElderlySafe": { "type": "boolean" },
+        "hasPowerBackup": { "type": "boolean" },
+        "nearestAtmKm": { "type": "number" },
+        "cabFareToCenter": { "type": "number" },
+        "balconyWorthIt": { "type": "boolean" }
       },
-      "required": [
-        "name",
-        "city",
-        "description",
-        "images",
-        "amenities",
-        "rating"
-      ]
-    },
-    "Room": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Room",
-      "type": "object",
-      "description": "Represents a room within a hotel.",
-      "properties": {
-        "hotelId": {
-          "type": "string",
-          "description": "Reference to Hotel. (Relationship: Hotel 1:N Room)"
-        },
-        "type": {
-          "type": "string",
-          "description": "The type of room (e.g., 'Deluxe', 'Suite')."
-        },
-        "price": {
-          "type": "number",
-          "description": "The price per night for the room."
-        },
-        "capacity": {
-          "type": "number",
-          "description": "The maximum capacity of the room (number of guests)."
-        },
-        "totalRooms": {
-          "type": "number",
-          "description": "The total number of rooms of this type in the hotel."
-        },
-        "availableRooms": {
-            "type": "number",
-            "description": "The number of rooms of this type currently available."
-        }
-      },
-      "required": [
-        "hotelId",
-        "type",
-        "price",
-        "capacity",
-        "totalRooms"
-      ]
+      "required": ["name", "city", "rating", "mountainSafetyScore"]
     },
     "Booking": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Booking",
       "type": "object",
-      "description": "Represents a booking made by a user for a room at a hotel.",
       "properties": {
-        "userId": {
-          "type": "string",
-          "description": "Reference to User. (Relationship: User 1:N Booking)"
-        },
-        "hotelId": {
-          "type": "string",
-          "description": "Reference to Hotel."
-        },
-        "roomId": {
-          "type": "string",
-          "description": "Reference to Room. (Relationship: Room 1:N Booking)"
-        },
-        "roomType": {
-          "type": "string",
-          "description": "The type of room booked."
-        },
-        "checkIn": {
-          "type": "string",
-          "description": "The check-in date for the booking.",
-          "format": "date-time"
-        },
-        "checkOut": {
-          "type": "string",
-          "description": "The check-out date for the booking.",
-          "format": "date-time"
-        },
-        "guests": {
-          "type": "number",
-          "description": "Number of guests for the booking."
-        },
-        "totalPrice": {
-          "type": "number",
-          "description": "The total price paid for the booking."
-        },
-        "customerName": {
-          "type": "string",
-          "description": "The name of the customer who made the booking."
-        },
-        "customerEmail": {
-          "type": "string",
-          "description": "The email of the customer who made the booking.",
-          "format": "email"
-        },
-        "status": {
-          "type": "string",
-          "description": "The status of the booking.",
-          "enum": ["CONFIRMED", "CANCELLED", "PENDING"]
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "The timestamp when the booking was created.",
-          "format": "date-time"
-        },
-        "razorpayPaymentId": {
-          "type": "string",
-          "description": "The payment ID from the Razorpay transaction."
-        }
-      },
-      "required": [
-        "userId",
-        "hotelId",
-        "roomId",
-        "roomType",
-        "checkIn",
-        "checkOut",
-        "guests",
-        "totalPrice",
-        "customerName",
-        "customerEmail",
-        "status",
-        "createdAt"
-      ]
+        "userId": { "type": "string" },
+        "hotelId": { "type": "string" },
+        "hotelName": { "type": "string" },
+        "status": { "type": "string", "enum": ["CONFIRMED", "CANCELLED", "PENDING"] },
+        "weatherRiskAccepted": { "type": "boolean" },
+        "splitPayment": { "type": "boolean" },
+        "earlyCheckInRequested": { "type": "boolean" }
+      }
     }
   },
   "auth": {
-    "providers": [
-      "password",
-      "anonymous"
-    ]
+    "providers": ["password", "google", "anonymous"]
   },
   "firestore": {
     "structure": [
       {
         "path": "/users/{userId}",
-        "definition": {
-          "entityName": "UserProfile",
-          "schema": {
-            "$ref": "#/backend/entities/UserProfile"
-          },
-          "description": "Stores user profiles. Uses path-based ownership for private data.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user."
-            }
-          ]
-        },
+        "definition": { "entityName": "UserProfile", "schema": { "$ref": "#/backend/entities/UserProfile" } },
         "subcollections": [
           {
             "path": "/users/{userId}/bookings/{bookingId}",
-            "definition": {
-                "entityName": "Booking",
-                "schema": { "$ref": "#/backend/entities/Booking"},
-                "description": "Stores bookings for a specific user.",
-                "params": [
-                    { "name": "userId", "description": "The unique identifier of the user." },
-                    { "name": "bookingId", "description": "The unique identifier of the booking." }
-                ]
-            }
+            "definition": { "entityName": "Booking", "schema": { "$ref": "#/backend/entities/Booking" } }
           }
         ]
       },
       {
         "path": "/hotels/{hotelId}",
-        "definition": {
-          "entityName": "Hotel",
-          "schema": {
-            "$ref": "#/backend/entities/Hotel"
-          },
-          "description": "Stores hotel details.",
-          "params": [
-            {
-              "name": "hotelId",
-              "description": "The unique identifier of the hotel."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/hotels/{hotelId}/rooms/{roomId}",
-        "definition": {
-          "entityName": "Room",
-          "schema": {
-            "$ref": "#/backend/entities/Room"
-          },
-          "description": "Stores room details for each hotel. Includes denormalized 'hotelId' for authorization independence.",
-          "params": [
-            {
-              "name": "hotelId",
-              "description": "The unique identifier of the hotel."
-            },
-            {
-              "name": "roomId",
-              "description": "The unique identifier of the room."
-            }
-          ]
-        }
+        "definition": { "entityName": "Hotel", "schema": { "$ref": "#/backend/entities/Hotel" } }
       }
-    ],
-    "reasoning": "The Firestore structure is designed to optimize for security, scalability, and real-time updates in the Uttarakhand Getaways hotel booking application. It follows the core design principles of Authorization Independence, Clarity of Intent, DBAC, and QAPs. Authorization Independence is achieved through denormalization, specifically by including relevant authorization data (like hotelId) in subcollections (like rooms and bookings). This avoids the need for `get()` calls in security rules. Structural Segregation is enforced by maintaining distinct collections for users, hotels, rooms, and bookings, each with homogeneous security requirements. Access Modeling leverages a 'userId' field within top-level collections like `bookings` to link data to users, enabling queries while still allowing for simple authorization rules. Global roles (DBAC) are implemented by having a 'role' field on the user document. QAPs are supported by the segregated structure. Listing hotels or rooms does not require filtering based on user roles; separate collections ensure the rules are not used as filters. Explicit State Modeling uses the `status` field in bookings to clearly represent the booking state (locked, confirmed, cancelled)."
+    ]
   }
 }

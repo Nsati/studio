@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -15,10 +16,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { MapPin, Calendar as CalendarIcon, Users } from 'lucide-react';
+import { MapPin, Calendar as CalendarIcon, Users, Compass, Tent } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 
 export function SearchFilters() {
     const firestore = useFirestore();
@@ -41,10 +43,14 @@ export function SearchFilters() {
     const [city, setCity] = useState(searchParams.get('city') || 'All');
     const [dates, setDates] = useState<DateRange | undefined>();
     const [guests, setGuests] = useState(searchParams.get('guests') || '2');
+    const [mode, setMode] = useState<'standard' | 'chardham' | 'trek'>(
+        (searchParams.get('mode') as any) || 'standard'
+    );
     
     useEffect(() => {
         setCity(searchParams.get('city') || 'All');
         setGuests(searchParams.get('guests') || '2');
+        setMode((searchParams.get('mode') as any) || 'standard');
         const checkIn = searchParams.get('checkIn');
         const checkOut = searchParams.get('checkOut');
         if (checkIn && checkOut) {
@@ -59,73 +65,109 @@ export function SearchFilters() {
         const params = new URLSearchParams(searchParams.toString());
         if (city && city !== 'All') params.set('city', city); else params.delete('city');
         params.set('guests', guests);
+        params.set('mode', mode);
         if (dates?.from) params.set('checkIn', format(dates.from, 'yyyy-MM-dd'));
         if (dates?.to) params.set('checkOut', format(dates.to, 'yyyy-MM-dd'));
         router.push(`/search?${params.toString()}`);
     }
 
     return (
-        <form onSubmit={handleFormSubmit} className="flex flex-col lg:flex-row items-stretch gap-1 bg-[#febb02] p-1 rounded-sm booking-shadow">
-            {/* Location */}
-            <div className="flex-1 flex items-center gap-3 bg-white px-4 py-3 rounded-sm border-2 border-transparent focus-within:border-accent">
-                <MapPin className="h-5 w-5 text-muted-foreground" />
-                <div className="flex-1">
-                    <Select value={city} onValueChange={setCity}>
-                        <SelectTrigger className="border-0 bg-transparent p-0 h-auto focus:ring-0 shadow-none font-bold text-sm">
-                            <SelectValue placeholder="Where are you going?" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="All">All Uttarakhand</SelectItem>
-                            {cities?.map((c) => (
-                                <SelectItem key={c} value={c}>{c}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+        <div className="space-y-4">
+            <form onSubmit={handleFormSubmit} className="flex flex-col lg:flex-row items-stretch gap-1 bg-[#febb02] p-1 rounded-sm booking-shadow">
+                {/* Location */}
+                <div className="flex-1 flex items-center gap-3 bg-white px-4 py-3 rounded-sm border-2 border-transparent focus-within:border-accent">
+                    <MapPin className="h-5 w-5 text-muted-foreground" />
+                    <div className="flex-1">
+                        <Select value={city} onValueChange={setCity}>
+                            <SelectTrigger className="border-0 bg-transparent p-0 h-auto focus:ring-0 shadow-none font-bold text-sm">
+                                <SelectValue placeholder="Where are you going?" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="All">All Uttarakhand</SelectItem>
+                                {cities?.map((c) => (
+                                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
                 </div>
-            </div>
 
-            {/* Dates */}
-            <div className="flex-1 flex items-center gap-3 bg-white px-4 py-3 rounded-sm border-2 border-transparent focus-within:border-accent">
-                <CalendarIcon className="h-5 w-5 text-muted-foreground" />
-                <Popover>
-                    <PopoverTrigger asChild>
-                        <button type="button" className="text-sm font-bold truncate">
-                            {dates?.from ? (
-                                dates.to ? `${format(dates.from, 'EEE, MMM dd')} — ${format(dates.to, 'EEE, MMM dd')}` : format(dates.from, 'EEE, MMM dd')
-                            ) : "Check-in — Check-out"}
-                        </button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="center">
-                        <CalendarComponent
-                            mode="range"
-                            selected={dates}
-                            onSelect={setDates}
-                            disabled={{ before: new Date() }}
-                            numberOfMonths={2}
+                {/* Dates */}
+                <div className="flex-1 flex items-center gap-3 bg-white px-4 py-3 rounded-sm border-2 border-transparent focus-within:border-accent">
+                    <CalendarIcon className="h-5 w-5 text-muted-foreground" />
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <button type="button" className="text-sm font-bold truncate">
+                                {dates?.from ? (
+                                    dates.to ? `${format(dates.from, 'EEE, MMM dd')} — ${format(dates.to, 'EEE, MMM dd')}` : format(dates.from, 'EEE, MMM dd')
+                                ) : "Check-in — Check-out"}
+                            </button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="center">
+                            <CalendarComponent
+                                mode="range"
+                                selected={dates}
+                                onSelect={setDates}
+                                disabled={{ before: new Date() }}
+                                numberOfMonths={2}
+                            />
+                        </PopoverContent>
+                    </Popover>
+                </div>
+
+                {/* Guests */}
+                <div className="flex-[0.7] flex items-center gap-3 bg-white px-4 py-3 rounded-sm border-2 border-transparent focus-within:border-accent">
+                    <Users className="h-5 w-5 text-muted-foreground" />
+                    <div className="flex items-center gap-2">
+                        <Input 
+                            type="number" 
+                            min="1"
+                            value={guests}
+                            onChange={(e) => setGuests(e.target.value)}
+                            className="border-0 bg-transparent p-0 h-auto focus-visible:ring-0 shadow-none font-bold w-12 text-sm"
                         />
-                    </PopoverContent>
-                </Popover>
-            </div>
-
-            {/* Guests */}
-            <div className="flex-[0.7] flex items-center gap-3 bg-white px-4 py-3 rounded-sm border-2 border-transparent focus-within:border-accent">
-                <Users className="h-5 w-5 text-muted-foreground" />
-                <div className="flex items-center gap-2">
-                    <Input 
-                        type="number" 
-                        min="1"
-                        value={guests}
-                        onChange={(e) => setGuests(e.target.value)}
-                        className="border-0 bg-transparent p-0 h-auto focus-visible:ring-0 shadow-none font-bold w-12 text-sm"
-                    />
-                    <span className="text-sm font-bold text-muted-foreground">guests</span>
+                        <span className="text-sm font-bold text-muted-foreground">guests</span>
+                    </div>
                 </div>
+                
+                {/* Search Button */}
+                <Button type="submit" size="lg" className="bg-[#006ce4] hover:bg-[#005bb8] text-white text-xl font-bold py-6 px-10 rounded-none h-auto">
+                    Search
+                </Button>
+            </form>
+
+            <div className="flex gap-2 justify-center lg:justify-start">
+                <Button 
+                    variant="ghost" 
+                    onClick={() => setMode('standard')}
+                    className={cn(
+                        "h-8 rounded-full text-[10px] font-black uppercase tracking-widest px-4 border-2 transition-all",
+                        mode === 'standard' ? "bg-white text-[#003580] border-white shadow-md" : "text-white/80 border-white/20 hover:bg-white/10"
+                    )}
+                >
+                    Standard Stay
+                </Button>
+                <Button 
+                    variant="ghost" 
+                    onClick={() => setMode('chardham')}
+                    className={cn(
+                        "h-8 rounded-full text-[10px] font-black uppercase tracking-widest px-4 border-2 transition-all flex items-center gap-2",
+                        mode === 'chardham' ? "bg-white text-[#003580] border-white shadow-md" : "text-white/80 border-white/20 hover:bg-white/10"
+                    )}
+                >
+                    <Compass className="h-3 w-3" /> Char Dham Mode
+                </Button>
+                <Button 
+                    variant="ghost" 
+                    onClick={() => setMode('trek')}
+                    className={cn(
+                        "h-8 rounded-full text-[10px] font-black uppercase tracking-widest px-4 border-2 transition-all flex items-center gap-2",
+                        mode === 'trek' ? "bg-white text-[#003580] border-white shadow-md" : "text-white/80 border-white/20 hover:bg-white/10"
+                    )}
+                >
+                    <Tent className="h-3 w-3" /> Trek Mode
+                </Button>
             </div>
-            
-            {/* Search Button */}
-            <Button type="submit" size="lg" className="bg-[#006ce4] hover:bg-[#005bb8] text-white text-xl font-bold py-6 px-10 rounded-none h-auto">
-                Search
-            </Button>
-        </form>
+        </div>
     );
 }

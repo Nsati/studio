@@ -10,39 +10,31 @@ export interface Hotel {
   minPrice?: number;
   discount?: number;
 
-  // God-Mode Features
-  isVerifiedPahadiHost?: boolean;
-  isForceClosed?: boolean; // Emergency manual shutdown
-  isPremiumListing?: boolean;
-  adminNotes?: string;
+  // Smart Uttarakhand Features
+  mountainSafetyScore: number;
+  landslideRisk: 'Low' | 'Medium' | 'High';
+  roadCondition: string;
+  networkJio: boolean;
+  networkAirtel: boolean;
+  networkBsnl: boolean;
+  isSnowFriendly: boolean;
+  isElderlySafe: boolean;
+  hasPowerBackup: boolean;
+  nearestAtmKm: number;
+  cabFareToCenter: number;
+  balconyWorthIt: boolean;
   
-  ecoPractices?: {
-    waterSaving: boolean;
-    plasticFree: boolean;
-    localSourcing: boolean;
-  };
-  safetyInfo?: {
-    nearestHospital: string;
-    policeStation: string;
-    networkCoverage: 'good' | 'average' | 'poor' | '';
-  };
-  spiritualAmenities?: string[];
+  isVerifiedPahadiHost?: boolean;
 }
 
 export interface Room {
+  id: string;
   hotelId: string;
   type: 'Standard' | 'Deluxe' | 'Suite';
   price: number;
   capacity: number;
   totalRooms: number;
   availableRooms?: number;
-  isInventoryOverridden?: boolean;
-}
-
-export interface City {
-  id: string;
-  name: string;
-  image: string;
 }
 
 export interface UserProfile {
@@ -52,41 +44,39 @@ export interface UserProfile {
   mobile: string;
   role: 'user' | 'admin';
   status: 'pending' | 'active' | 'suspended';
-  isVip?: boolean;
-  lastLogin?: Date;
 }
 
 export interface Booking {
+  id: string;
   userId: string;
   hotelId: string;
   hotelName: string;
   hotelCity: string;
-  hotelAddress: string;
-  roomId: string;
   roomType: string;
-  checkIn: Date;
-  checkOut: Date;
+  checkIn: any;
+  checkOut: any;
   guests: number;
   totalPrice: number;
   customerName: string;
   customerEmail: string;
-  status: 'CONFIRMED' | 'CANCELLED' | 'PENDING' | 'REJECTED';
-  createdAt: Date;
-  razorpayPaymentId?: string;
-  couponCode?: string;
-  adminNote?: string;
-  isOverridden?: boolean;
+  customerMobile: string;
+  status: 'CONFIRMED' | 'CANCELLED' | 'PENDING';
+  createdAt: any;
+  
+  // Smart Checkout Fields
+  weatherRiskAccepted: boolean;
+  splitPayment: boolean;
+  earlyCheckInRequested: boolean;
 }
 
-export interface SystemSettings {
-  isBookingEnabled: boolean;
-  isPaymentEnabled: boolean;
-  isCouponSystemActive: boolean;
-  emergencyAlertMessage?: string;
-  globalMaintenanceMode: boolean;
+export interface City {
+  id: string;
+  name: string;
+  image: string;
 }
 
 export interface TourPackage {
+  id: string;
   title: string;
   duration: string;
   destinations: string[];
@@ -96,6 +86,7 @@ export interface TourPackage {
 }
 
 export interface Promotion {
+  id: string;
   code: string;
   description: string;
   discountType: 'percentage' | 'fixed';
@@ -104,11 +95,12 @@ export interface Promotion {
 }
 
 export interface Review {
+  id: string;
   hotelId: string;
   userId: string;
   authorName: string;
   rating: number;
   text: string;
   title: string;
-  createdAt: Date;
+  createdAt: any;
 }

@@ -1,8 +1,9 @@
+
 'use client';
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Star, MapPin } from 'lucide-react';
+import { Star, MapPin, ShieldAlert, Signal, Car } from 'lucide-react';
 import * as React from 'react';
 
 import type { Hotel } from '@/lib/types';
@@ -17,6 +18,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/components/ui/carousel';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 
 interface HotelCardProps {
   hotel: Hotel & { id: string };
@@ -38,8 +40,7 @@ export function HotelCard({ hotel, className }: HotelCardProps) {
   const images = hotel.images && hotel.images.length > 0 ? hotel.images : ['hero'];
 
   return (
-    <div className={cn("booking-card group overflow-hidden bg-white", className)}>
-      <div className="flex flex-col h-full">
+    <div className={cn("booking-card group overflow-hidden bg-white flex flex-col", className)}>
         {/* Gallery */}
         <div className="relative aspect-[16/10] w-full bg-muted">
             <Carousel className="w-full h-full">
@@ -75,13 +76,18 @@ export function HotelCard({ hotel, className }: HotelCardProps) {
               )}
             </Carousel>
             
-            {hotel.discount && hotel.discount > 0 ? (
-                <div className="absolute top-2 left-2 z-10">
+            <div className="absolute top-2 left-2 z-10 flex flex-col gap-1">
+                {hotel.discount && hotel.discount > 0 && (
                     <Badge className="bg-[#d4111e] text-white rounded-none border-0 font-bold px-2 py-1 text-[10px]">
                         Save {hotel.discount}%
                     </Badge>
-                </div>
-            ) : null}
+                )}
+                {hotel.mountainSafetyScore >= 80 && (
+                    <Badge className="bg-green-600 text-white rounded-none border-0 font-bold px-2 py-1 text-[10px] flex items-center gap-1">
+                        High Safety {hotel.mountainSafetyScore}
+                    </Badge>
+                )}
+            </div>
         </div>
 
         {/* Content */}
@@ -92,16 +98,8 @@ export function HotelCard({ hotel, className }: HotelCardProps) {
                     {hotel.name}
                 </h3>
             </Link>
-            <div className="flex flex-col items-end">
-                <div className="flex items-center gap-2">
-                    <div className="flex flex-col items-end leading-none">
-                        <span className="text-sm font-bold">Excellent</span>
-                        <span className="text-[10px] text-muted-foreground">{Math.floor(hotel.rating * 100)} reviews</span>
-                    </div>
-                    <div className="bg-[#003580] text-white h-8 w-8 flex items-center justify-center font-bold rounded-t-lg rounded-br-lg text-sm">
-                        {hotel.rating}
-                    </div>
-                </div>
+            <div className="bg-[#003580] text-white h-8 w-8 shrink-0 flex items-center justify-center font-bold rounded-t-lg rounded-br-lg text-sm">
+                {hotel.rating}
             </div>
           </div>
           
@@ -110,31 +108,57 @@ export function HotelCard({ hotel, className }: HotelCardProps) {
             <span className="underline">{hotel.city}</span>
           </div>
 
+          <div className="flex items-center gap-3 py-1">
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <div className={cn("flex items-center gap-1 text-[10px] font-bold", hotel.landslideRisk === 'Low' ? 'text-green-600' : 'text-amber-600')}>
+                            <ShieldAlert className="h-3 w-3" /> {hotel.landslideRisk} Risk
+                        </div>
+                    </TooltipTrigger>
+                    <TooltipContent className="text-[10px] font-bold">Mountain landslide probability based on recent terrain data.</TooltipContent>
+                </Tooltip>
+                
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <div className="flex items-center gap-1 text-[10px] font-bold text-blue-600">
+                            <Signal className="h-3 w-3" /> Jio/Airtel OK
+                        </div>
+                    </TooltipTrigger>
+                    <TooltipContent className="text-[10px] font-bold">Verified network stability for remote work.</TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <div className="flex items-center gap-1 text-[10px] font-bold text-muted-foreground">
+                            <Car className="h-3 w-3" /> {hotel.roadCondition || 'Good Road'}
+                        </div>
+                    </TooltipTrigger>
+                    <TooltipContent className="text-[10px] font-bold">Verified road accessibility for small cars.</TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+          </div>
+
           <div className="text-[12px] space-y-1">
             <div className="flex items-center gap-1 text-green-700 font-bold">
-                <span className="px-1 border border-green-700 text-[10px]">Free Cancellation</span>
-                <span>Breakfast Included</span>
+                <span className="px-1 border border-green-700 text-[10px]">Snow-friendly</span>
+                <span>Power Backup</span>
             </div>
-            <p className="text-muted-foreground line-clamp-2 leading-relaxed">
-                {hotel.description}
-            </p>
           </div>
 
           <div className="mt-auto pt-4 flex flex-col items-end">
-            <span className="text-[12px] text-muted-foreground">Stay for 1 night</span>
+            <span className="text-[12px] text-muted-foreground">Starting / night</span>
             <div className="flex flex-col items-end">
-                {hotel.discount && <span className="text-[12px] text-red-600 line-through">₹{((hotel.minPrice || 0) * 1.2).toLocaleString()}</span>}
-                <span className="text-xl font-bold">
+                <span className="text-xl font-bold text-[#1a1a1a]">
                   ₹{discountedMinPrice?.toLocaleString()}
                 </span>
                 <span className="text-[10px] text-muted-foreground">+ taxes & charges</span>
             </div>
-            <Button size="sm" asChild className="bg-[#006ce4] hover:bg-[#005bb8] rounded-none mt-2 font-bold px-6">
+            <Button size="sm" asChild className="bg-[#006ce4] hover:bg-[#005bb8] rounded-none mt-3 font-bold px-6 w-full">
                 <Link href={`/hotels/${hotel.id}`}>See availability</Link>
             </Button>
           </div>
         </div>
-      </div>
     </div>
   );
 }
