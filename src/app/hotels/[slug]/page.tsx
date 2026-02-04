@@ -1,8 +1,8 @@
-
 'use client';
 
 import { notFound, useParams } from 'next/navigation';
 import Image from 'next/image';
+import Link from 'next/link';
 import { Star, MapPin, Share2, Heart, ShieldAlert, Signal, Info, Check, IndianRupee, Car, CloudSun, CreditCard } from 'lucide-react';
 import React from 'react';
 

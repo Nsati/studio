@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 
 /**
  * @fileOverview Hardened Global Middleware.
- * Handles CORS, Security Headers, and provideshooks for Rate Limiting.
+ * Handles CORS, Security Headers, and provides hooks for Rate Limiting.
  */
 
 export function middleware(request: NextRequest) {
@@ -24,7 +24,7 @@ export function middleware(request: NextRequest) {
     return new NextResponse(null, {
       status: 204,
       headers: {
-        'Access-Control-Allow-Origin': allowedOrigin,
+        'Access-Control-Allow-Origin': allowedOrigin || '*',
         'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
         'Access-Control-Max-Age': '86400',

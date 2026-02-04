@@ -39,8 +39,8 @@ export async function getUserDetailsForAdmin(uid: string): Promise<UserDetailsFo
     const userRef = adminDb.doc(`users/${uid}`);
     const bookingsRef = adminDb.collectionGroup('bookings').where('userId', '==', uid);
 
-    // FIXED: Circular reference where bookingsSnap was called in the same initializer.
-    const [userDoc, bookingsSnap] = await Promise.all([
+    // Destructure response and avoid circular identifier usage in the same initializer
+    const [userDoc, bookingsSnapshot] = await Promise.all([
         userRef.get(),
         bookingsRef.get(), 
     ]);
@@ -53,7 +53,7 @@ export async function getUserDetailsForAdmin(uid: string): Promise<UserDetailsFo
     let totalRevenue = 0;
     let totalBookings = 0;
 
-    bookingsSnap.forEach(doc => {
+    bookingsSnapshot.forEach(doc => {
         const booking = doc.data() as any;
         if (booking.status === 'CONFIRMED') {
             totalBookings++;

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -17,6 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Separator } from '@/components/ui/separator';
 import { Loader2, ArrowLeft, ShieldCheck, Lock, Info, Star, CloudAlert, Download } from 'lucide-react';
 import Link from 'next/link';
 import { BookingFormSkeleton } from './BookingFormSkeleton';
