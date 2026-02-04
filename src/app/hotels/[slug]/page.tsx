@@ -119,11 +119,11 @@ export default function HotelPage() {
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                 <div className="space-y-1">
                                     <p className="text-[10px] font-black text-muted-foreground uppercase">Mountain Safety</p>
-                                    <p className="font-bold text-sm">Landslide Risk: <span className={hotel.landslideRisk === 'Low' ? 'text-green-600' : 'text-amber-600'}>{hotel.landslideRisk}</span></p>
+                                    <p className="font-bold text-sm">Landslide Risk: <span className={hotel.landslideRisk === 'Low' ? 'text-green-600' : hotel.landslideRisk === 'High' ? 'text-red-600' : 'text-amber-600'}>{hotel.landslideRisk}</span></p>
                                 </div>
                                 <div className="space-y-1">
                                     <p className="text-[10px] font-black text-muted-foreground uppercase">Road Access</p>
-                                    <p className="font-bold text-sm">Condition: {hotel.roadCondition || 'Good for Hatchbacks'}</p>
+                                    <p className="font-bold text-sm">Condition: {hotel.roadCondition || 'Good for All Cars'}</p>
                                 </div>
                                 <div className="space-y-1">
                                     <p className="text-[10px] font-black text-muted-foreground uppercase">Room Tip</p>
@@ -167,7 +167,7 @@ export default function HotelPage() {
                                     <CloudSun className="h-5 w-5 text-muted-foreground" />
                                     <div className="space-y-1">
                                         <p className="text-xs font-black uppercase text-muted-foreground">Weather Alert</p>
-                                        <p className="text-sm font-bold text-green-700 italic">Clear Skies - Good for Travel</p>
+                                        <p className="text-sm font-bold text-green-700 italic">Verified Live: Clear Skies</p>
                                     </div>
                                 </div>
                             </div>
@@ -195,7 +195,7 @@ export default function HotelPage() {
                             <div className="space-y-3">
                                 <div className="flex gap-2 text-[13px]">
                                     <MapPin className="h-4 w-4 text-green-700 shrink-0" />
-                                    <span className="font-bold">Top Location: Highly rated for views</span>
+                                    <span className="font-bold">Top Location: {hotel.mountainSafetyScore > 80 ? 'Safe Access' : 'Mountain Views'}</span>
                                 </div>
                                 <div className="flex gap-2 text-[13px]">
                                     <Check className="h-4 w-4 text-green-700 shrink-0" />

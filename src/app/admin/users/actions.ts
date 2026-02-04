@@ -39,9 +39,10 @@ export async function getUserDetailsForAdmin(uid: string): Promise<UserDetailsFo
     const userRef = adminDb.doc(`users/${uid}`);
     const bookingsRef = adminDb.collectionGroup('bookings').where('userId', '==', uid);
 
+    // FIXED: Correct variable usage to avoid circular initialization error
     const [userDoc, bookingsSnapshot] = await Promise.all([
         userRef.get(),
-        bookingsRef.get(), // Fixed circular variable clash
+        bookingsRef.get(), 
     ]);
 
     if (!userDoc.exists) {
