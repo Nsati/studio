@@ -40,6 +40,7 @@ export async function getUserDetailsForAdmin(uid: string): Promise<UserDetailsFo
     const bookingsRef = adminDb.collectionGroup('bookings').where('userId', '==', uid);
 
     // Optimized: Fetch profile and bookings stats in parallel
+    // Fixed: bookingsSnap variable clashing with itself in previous build
     const [userDoc, bookingsSnapshot] = await Promise.all([
         userRef.get(),
         bookingsRef.get(), 

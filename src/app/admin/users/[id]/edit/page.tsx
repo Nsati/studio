@@ -60,13 +60,13 @@ export default function EditUserPage() {
             getUserDetailsForAdmin(userId)
                 .then(data => {
                     setUserData(data);
-                    // Explicit cast to handle status literal build error
+                    // Fixed: Explicit cast to status enum type to avoid literal mismatch error
                     form.reset({
                         displayName: data.displayName,
                         email: data.email,
                         mobile: data.mobile,
-                        role: data.role,
-                        status: data.status as any,
+                        role: data.role as 'user' | 'admin',
+                        status: data.status as 'pending' | 'active' | 'suspended',
                     });
                     setIsLoading(false);
                 })

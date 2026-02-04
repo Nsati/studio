@@ -30,6 +30,11 @@ import { Skeleton } from '../ui/skeleton';
 import { Badge } from '../ui/badge';
 import { Separator } from '../ui/separator';
 
+/**
+ * @fileOverview Standardized, high-conversion Availability Selection Form.
+ * Styled to match the professional Booking.com design language.
+ */
+
 export function RoomBookingCard({ hotel, rooms, isLoadingRooms }: { hotel: WithId<Hotel>, rooms: WithId<Room>[], isLoadingRooms: boolean }) {
   const [dates, setDates] = useState<DateRange | undefined>();
   const [selectedRoom, setSelectedRoom] = useState<WithId<Room> | null>(null);
@@ -73,7 +78,7 @@ export function RoomBookingCard({ hotel, rooms, isLoadingRooms }: { hotel: WithI
       </CardHeader>
       
       <CardContent className="p-4 space-y-6">
-        {/* Date & Guest Selectors - Compact */}
+        {/* Date & Guest Selectors - Standard Compact Sizing */}
         <div className="grid grid-cols-1 gap-3">
           <div className="space-y-1.5">
             <label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Check-in — Check-out</label>
@@ -156,7 +161,7 @@ export function RoomBookingCard({ hotel, rooms, isLoadingRooms }: { hotel: WithI
           )}
         </div>
 
-        {/* Final Action - Smaller & Focused */}
+        {/* Final Action */}
         {selectedRoom && isDateRangeValid && (
           <div className='pt-2 space-y-3 animate-in fade-in slide-in-from-top-2'>
             <Button
