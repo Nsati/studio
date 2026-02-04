@@ -48,6 +48,7 @@ export default function EditUserPage() {
         resolver: zodResolver(UpdateUserSchema),
         defaultValues: {
             displayName: '',
+            email: '',
             mobile: '',
             role: 'user',
             status: 'pending',
@@ -59,9 +60,10 @@ export default function EditUserPage() {
             getUserDetailsForAdmin(userId)
                 .then(data => {
                     setUserData(data);
-                    // FIXED: Using explicit cast to handle suspended status literal build error
+                    // Explicit cast to handle status literal build error
                     form.reset({
                         displayName: data.displayName,
+                        email: data.email,
                         mobile: data.mobile,
                         role: data.role,
                         status: data.status as any,
@@ -151,6 +153,15 @@ export default function EditUserPage() {
                                         <FormMessage />
                                     </FormItem>
                                 )} />
+                                <FormField control={form.control} name="email" render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Email Access</FormLabel>
+                                        <FormControl><Input {...field} type="email" className="rounded-none h-12 focus-visible:ring-[#003580]" /></FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )} />
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <FormField control={form.control} name="mobile" render={({ field }) => (
                                     <FormItem>
                                         <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Mobile Node</FormLabel>
@@ -158,8 +169,6 @@ export default function EditUserPage() {
                                         <FormMessage />
                                     </FormItem>
                                 )} />
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <FormField control={form.control} name="role" render={({ field }) => (
                                     <FormItem>
                                         <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">System Role</FormLabel>
@@ -173,6 +182,8 @@ export default function EditUserPage() {
                                         <FormMessage />
                                     </FormItem>
                                 )} />
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <FormField control={form.control} name="status" render={({ field }) => (
                                     <FormItem>
                                         <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Account Integrity Status</FormLabel>

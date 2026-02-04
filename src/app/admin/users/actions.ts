@@ -12,6 +12,7 @@ type ActionResponse = {
 
 export const UpdateUserSchema = z.object({
   displayName: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
+  email: z.string().email({ message: 'Please enter a valid email address.' }),
   mobile: z.string().length(10, { message: 'Mobile number must be 10 digits.' }),
   role: z.enum(['user', 'admin']),
   status: z.enum(['pending', 'active', 'suspended']),
@@ -27,7 +28,6 @@ interface UserDetailsForAdmin extends UserProfile {
 
 /**
  * Fetches a user's profile and calculates their booking stats.
- * Securely corrected from circular reference build error.
  */
 export async function getUserDetailsForAdmin(uid: string): Promise<UserDetailsForAdmin> {
     const { adminDb, error } = getFirebaseAdmin();
@@ -39,10 +39,9 @@ export async function getUserDetailsForAdmin(uid: string): Promise<UserDetailsFo
     const userRef = adminDb.doc(`users/${uid}`);
     const bookingsRef = adminDb.collectionGroup('bookings').where('userId', '==', uid);
 
-    // Destructure response and avoid circular identifier usage in the same initializer
     const [userDoc, bookingsSnapshot] = await Promise.all([
         userRef.get(),
-        bookingsRef.get(), 
+        bookingsRef.get(), // Fixed circular variable clash
     ]);
 
     if (!userDoc.exists) {
@@ -71,7 +70,6 @@ export async function getUserDetailsForAdmin(uid: string): Promise<UserDetailsFo
 
 /**
  * Updates a user's profile details as an admin.
- * Includes Input Validation via Zod.
  */
 export async function updateUserByAdmin(uid: string, data: UpdateUserInput): Promise<ActionResponse> {
     const { adminDb, error } = getFirebaseAdmin();

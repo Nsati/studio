@@ -18,7 +18,6 @@ import { Button } from '@/components/ui/button';
 import Loading from './loading';
 import { WriteReviewForm } from '@/components/hotel/WriteReviewForm';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function HotelPage() {
   const params = useParams();
@@ -39,6 +38,10 @@ export default function HotelPage() {
   }, [firestore, slug]);
 
   const { data: rooms, isLoading: isLoadingRooms } = useCollection<Room>(roomsQuery);
+
+  const scrollToAvailability = () => {
+    document.getElementById('availability')?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   if (isLoading || isLoadingRooms) {
     return <Loading />;
@@ -90,7 +93,7 @@ export default function HotelPage() {
                     <div className="flex items-center gap-2">
                         <Button variant="ghost" size="icon" className="text-[#006ce4] hover:bg-[#006ce4]/10"><Heart className="h-6 w-6" /></Button>
                         <Button variant="ghost" size="icon" className="text-[#006ce4] hover:bg-[#006ce4]/10"><Share2 className="h-6 w-6" /></Button>
-                        <Button className="bg-[#006ce4] hover:bg-[#005bb8] rounded-none font-bold px-8 h-11 text-base">Reserve Now</Button>
+                        <Button onClick={scrollToAvailability} className="bg-[#006ce4] hover:bg-[#005bb8] rounded-none font-bold px-8 h-11 text-base">Reserve Now</Button>
                     </div>
                 </div>
 
@@ -203,7 +206,7 @@ export default function HotelPage() {
                                     <span className="font-bold">Accepts UPI & Major Cards</span>
                                 </div>
                             </div>
-                            <Button className="w-full bg-[#006ce4] hover:bg-[#005bb8] rounded-none font-bold py-6">Check Availability</Button>
+                            <Button onClick={scrollToAvailability} className="w-full bg-[#006ce4] hover:bg-[#005bb8] rounded-none font-bold py-6">Check Availability</Button>
                         </div>
                     </div>
                 </div>
@@ -211,7 +214,10 @@ export default function HotelPage() {
                 <Separator className="my-8" />
 
                 <section id="availability">
-                    <h2 className="text-2xl font-bold mb-6 text-[#1a1a1a]">Availability</h2>
+                    <div className="flex items-center gap-2 mb-6">
+                        <div className="bg-primary h-8 w-1 rounded-full" />
+                        <h2 className="text-2xl font-black text-[#1a1a1a] tracking-tight">Select Your Stay</h2>
+                    </div>
                     <RoomBookingCard hotel={hotel as any} rooms={rooms || []} isLoadingRooms={isLoadingRooms} />
                 </section>
 
