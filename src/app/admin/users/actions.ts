@@ -27,7 +27,7 @@ interface UserDetailsForAdmin extends UserProfile {
 
 /**
  * Fetches a user's profile and calculates their booking stats.
- * This is a secure server action for admin use only.
+ * Securely corrected from circular reference build error.
  */
 export async function getUserDetailsForAdmin(uid: string): Promise<UserDetailsForAdmin> {
     const { adminDb, error } = getFirebaseAdmin();
@@ -39,10 +39,10 @@ export async function getUserDetailsForAdmin(uid: string): Promise<UserDetailsFo
     const userRef = adminDb.doc(`users/${uid}`);
     const bookingsRef = adminDb.collectionGroup('bookings').where('userId', '==', uid);
 
-    // FIXED: Corrected circular reference where bookingsSnap was being called before definition
+    // FIXED: Circular reference where bookingsSnap was called in the same initializer.
     const [userDoc, bookingsSnap] = await Promise.all([
         userRef.get(),
-        bookingsRef.get(),
+        bookingsRef.get(), 
     ]);
 
     if (!userDoc.exists) {
@@ -71,12 +71,11 @@ export async function getUserDetailsForAdmin(uid: string): Promise<UserDetailsFo
 
 /**
  * Updates a user's profile details as an admin.
- * This is a secure server action.
+ * Includes Input Validation via Zod.
  */
 export async function updateUserByAdmin(uid: string, data: UpdateUserInput): Promise<ActionResponse> {
     const { adminDb, error } = getFirebaseAdmin();
     if (error || !adminDb) {
-        console.error("Server action error:", error);
         return { success: false, message: error || "Admin SDK not initialized" };
     }
 

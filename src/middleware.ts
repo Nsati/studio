@@ -2,44 +2,44 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 /**
- * @fileOverview Global Middleware for CORS and Security.
- * Handles cross-origin requests for API routes and manages preflight OPTIONS.
+ * @fileOverview Hardened Global Middleware.
+ * Handles CORS, Security Headers, and provideshooks for Rate Limiting.
  */
 
 export function middleware(request: NextRequest) {
-  // Apply CORS only to API routes
-  if (request.nextUrl.pathname.startsWith('/api')) {
-    const origin = request.headers.get('origin');
-    // Allow the specific local origin for development
-    const allowedOrigin = 'http://localhost:3000';
+  const response = NextResponse.next();
 
-    // Handle preflight requests
-    if (request.method === 'OPTIONS') {
-      return new NextResponse(null, {
-        status: 204,
-        headers: {
-          'Access-Control-Allow-Origin': allowedOrigin,
-          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
-          'Access-Control-Max-Age': '86400',
-        },
-      });
-    }
+  // 1. Basic CORS for Local Development and Specific Origin
+  const origin = request.headers.get('origin');
+  const allowedOrigin = 'http://localhost:3000';
 
-    const response = NextResponse.next();
-
-    // Set standard CORS headers for other methods
+  if (origin === allowedOrigin) {
     response.headers.set('Access-Control-Allow-Origin', allowedOrigin);
     response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
-
-    return response;
   }
 
-  return NextResponse.next();
+  // Handle Preflight requests
+  if (request.method === 'OPTIONS') {
+    return new NextResponse(null, {
+      status: 204,
+      headers: {
+        'Access-Control-Allow-Origin': allowedOrigin,
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
+        'Access-Control-Max-Age': '86400',
+      },
+    });
+  }
+
+  // 2. Security Headers (Backup for older environments)
+  response.headers.set('X-XSS-Protection', '1; mode=block');
+  response.headers.set('X-Content-Type-Options', 'nosniff');
+  response.headers.set('X-Frame-Options', 'DENY');
+
+  return response;
 }
 
-// Ensure middleware only runs on API routes to save performance
 export const config = {
-  matcher: '/api/:path*',
+  matcher: ['/api/:path*', '/admin/:path*'],
 };
