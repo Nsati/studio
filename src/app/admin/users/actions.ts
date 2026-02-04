@@ -28,6 +28,7 @@ interface UserDetailsForAdmin extends UserProfile {
 
 /**
  * Fetches a user's profile and calculates their booking stats.
+ * Fixed: Variable name clashing resolved.
  */
 export async function getUserDetailsForAdmin(uid: string): Promise<UserDetailsForAdmin> {
     const { adminDb, error } = getFirebaseAdmin();
@@ -39,8 +40,7 @@ export async function getUserDetailsForAdmin(uid: string): Promise<UserDetailsFo
     const userRef = adminDb.doc(`users/${uid}`);
     const bookingsRef = adminDb.collectionGroup('bookings').where('userId', '==', uid);
 
-    // Optimized: Fetch profile and bookings stats in parallel
-    // Fixed: bookingsSnap variable clashing with itself in previous build
+    // Use specific reference for parallel execution
     const [userDoc, bookingsSnapshot] = await Promise.all([
         userRef.get(),
         bookingsRef.get(), 

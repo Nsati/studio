@@ -4,20 +4,18 @@ import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, useRouter, notFound } from 'next/navigation';
 import Image from 'next/image';
 import { differenceInDays, format, parse } from 'date-fns';
-import { signInAnonymously } from 'firebase/auth';
 import type { Hotel, Room } from '@/lib/types';
-import { useFirestore, useAuth, useUser, useDoc, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirestore, useUser, useDoc, useCollection, useMemoFirebase } from '@/firebase';
 import { doc, collection } from 'firebase/firestore';
 
 import { useToast } from '@/hooks/use-toast';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, ArrowLeft, ShieldCheck, Lock, Info, Star, CloudAlert, Download } from 'lucide-react';
+import { Loader2, ArrowLeft, Lock, Info, CloudAlert, Download } from 'lucide-react';
 import Link from 'next/link';
 import { BookingFormSkeleton } from './BookingFormSkeleton';
 import { confirmBookingAction } from './actions';
@@ -33,7 +31,6 @@ export function BookingForm() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const { user, userProfile, isLoading: isUserLoading } = useUser();
-    const auth = useAuth();
     const { toast } = useToast();
     const firestore = useFirestore();
 
@@ -106,42 +103,81 @@ export function BookingForm() {
         }
 
         setIsBooking(true);
-        // Razorpay Logic simulation...
-        const bookingId = `BK_${Date.now()}`;
-        try {
-            const result = await confirmBookingAction({
-                userId: user?.uid || 'anon',
-                hotelId: hotelId!,
-                roomId: roomId!,
-                bookingId,
-                paymentId: 'SIM_PAY_123',
-                orderId: 'SIM_ORD_123',
-                signature: 'SIM_SIG_123',
-                bookingData: {
-                    hotelName: hotel.name,
-                    hotelCity: hotel.city,
-                    hotelAddress: hotel.address || '',
-                    roomType: room.type,
-                    checkIn: checkInStr,
-                    checkOut: checkOutStr,
-                    guests: parseInt(guests),
-                    totalPrice: totalPrice,
-                    customerName: customerDetails.name,
-                    customerEmail: customerDetails.email,
-                    customerMobile: customerDetails.mobile,
-                    weatherRiskAccepted,
-                    splitPayment,
-                    earlyCheckInRequested: earlyCheckIn
-                }
-            });
 
-            if (result.success) {
-                router.push(`/booking/success/${bookingId}`);
-            } else {
-                toast({ variant: "destructive", title: "Action Failed", description: result.error });
+        try {
+            // 1. Create Order via API
+            const orderRes = await fetch('/api/razorpay/order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ amount: totalPrice }),
+            });
+            const orderData = await orderRes.json();
+
+            if (!orderRes.ok) throw new Error(orderData.details || 'Gateway Order Creation Failed');
+
+            // 2. Open Razorpay Checkout
+            const options = {
+                key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_SC2oQHkSXdvVp8',
+                amount: orderData.amount,
+                currency: "INR",
+                name: "Uttarakhand Getaways",
+                description: `Stay at ${hotel.name}`,
+                order_id: orderData.id,
+                handler: async function (response: any) {
+                    const bookingId = `BK_${Date.now()}`;
+                    const confirmRes = await confirmBookingAction({
+                        userId: user?.uid || 'anon',
+                        hotelId: hotelId!,
+                        roomId: roomId!,
+                        bookingId,
+                        paymentId: response.razorpay_payment_id,
+                        orderId: response.razorpay_order_id,
+                        signature: response.razorpay_signature,
+                        bookingData: {
+                            hotelName: hotel.name,
+                            hotelCity: hotel.city,
+                            hotelAddress: hotel.address || '',
+                            roomType: room.type,
+                            checkIn: checkInStr,
+                            checkOut: checkOutStr,
+                            guests: parseInt(guests),
+                            totalPrice: totalPrice,
+                            customerName: customerDetails.name,
+                            customerEmail: customerDetails.email,
+                            customerMobile: customerDetails.mobile,
+                            weatherRiskAccepted,
+                            splitPayment,
+                            earlyCheckInRequested: earlyCheckIn
+                        }
+                    });
+
+                    if (confirmRes.success) {
+                        router.push(`/booking/success/${bookingId}`);
+                    } else {
+                        toast({ variant: "destructive", title: "Verification Failed", description: confirmRes.error });
+                        setIsBooking(false);
+                    }
+                },
+                prefill: {
+                    name: customerDetails.name,
+                    email: customerDetails.email,
+                    contact: customerDetails.mobile
+                },
+                theme: {
+                    color: "#003580"
+                }
+            };
+
+            const rzp = new (window as any).Razorpay(options);
+            rzp.on('payment.failed', function (response: any) {
+                toast({ variant: 'destructive', title: 'Payment Failed', description: response.error.description });
                 setIsBooking(false);
-            }
+            });
+            rzp.open();
+
         } catch (e: any) {
+            console.error("Razorpay Error:", e);
+            toast({ variant: 'destructive', title: 'Payment Gateway Error', description: e.message });
             setIsBooking(false);
         }
     };
@@ -175,6 +211,10 @@ export function BookingForm() {
                                         <Input type="email" value={customerDetails.email} onChange={(e) => setCustomerDetails({ ...customerDetails, email: e.target.value })} className="h-10 rounded-none focus-visible:ring-[#006ce4]" />
                                     </div>
                                 </div>
+                                <div className="space-y-2">
+                                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Mobile Node</Label>
+                                    <Input value={customerDetails.mobile} onChange={(e) => setCustomerDetails({ ...customerDetails, mobile: e.target.value })} placeholder="9876543210" className="h-10 rounded-none focus-visible:ring-[#006ce4]" />
+                                </div>
                             </CardContent>
                         </Card>
 
@@ -186,7 +226,7 @@ export function BookingForm() {
                             <CardContent className="p-6 space-y-4">
                                 <div className="flex items-center space-x-2">
                                     <Checkbox id="split" checked={splitPayment} onCheckedChange={(checked) => setSplitPayment(checked === true)} />
-                                    <label htmlFor="split" className="text-sm font-bold cursor-pointer">Split Payment (Pay ₹{Math.floor(totalPrice/2)} now, balance at hotel)</label>
+                                    <label htmlFor="split" className="text-sm font-bold cursor-pointer">Split Payment (Pay part now, balance at hotel)</label>
                                 </div>
                                 <div className="flex items-center space-x-2">
                                     <Checkbox id="early" checked={earlyCheckIn} onCheckedChange={(checked) => setEarlyCheckIn(checked === true)} />
