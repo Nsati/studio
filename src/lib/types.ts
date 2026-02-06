@@ -10,7 +10,7 @@ export interface Hotel {
   minPrice?: number;
   discount?: number;
 
-  // Smart Uttarakhand Features
+  // Smart Uttarakhand Features (Mandatory for core logic)
   mountainSafetyScore: number;
   landslideRisk: 'Low' | 'Medium' | 'High';
   roadCondition: string;

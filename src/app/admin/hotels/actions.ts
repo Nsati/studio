@@ -57,8 +57,8 @@ export async function bulkUploadHotels(hotelsData: HotelUploadData[]): Promise<{
             const hotelId = slugify(hotel.name, { lower: true, strict: true });
             const hotelRef = adminDb.collection('hotels').doc(hotelId);
 
-            // Using partial type for local collection to avoid interface errors during build
-            const roomsData: Omit<Room, 'id' | 'hotelId' | 'availableRooms'>[] = [];
+            // Use internal helper type to avoid missing 'id' error during push
+            const roomsArray: Array<Omit<Room, 'id' | 'hotelId' | 'availableRooms'>> = [];
             
             // Process up to 3 rooms
             for (let i = 1; i <= 3; i++) {
@@ -68,7 +68,7 @@ export async function bulkUploadHotels(hotelsData: HotelUploadData[]): Promise<{
                 const totalRooms = hotel[`room_${i}_total` as 'room_1_total' | 'room_2_total' | 'room_3_total'];
 
                 if (type && price && capacity && totalRooms) {
-                    roomsData.push({ 
+                    roomsArray.push({ 
                         type: type as 'Standard' | 'Deluxe' | 'Suite', 
                         price, 
                         capacity, 
@@ -77,11 +77,11 @@ export async function bulkUploadHotels(hotelsData: HotelUploadData[]): Promise<{
                 }
             }
 
-            if (roomsData.length === 0) {
+            if (roomsArray.length === 0) {
                  throw new Error(`Hotel "${hotel.name}" must have at least one valid room definition.`);
             }
 
-            const minPrice = Math.min(...roomsData.map(r => r.price));
+            const minPrice = Math.min(...roomsArray.map(r => r.price));
 
             const hotelDoc: Hotel = {
                 name: hotel.name,
@@ -109,7 +109,7 @@ export async function bulkUploadHotels(hotelsData: HotelUploadData[]): Promise<{
 
             batch.set(hotelRef, hotelDoc);
 
-            for (const r of roomsData) {
+            for (const r of roomsArray) {
                 const roomId = slugify(`${hotel.name} ${r.type} ${Math.random().toString(36).substring(2, 7)}`, { lower: true, strict: true });
                 const roomRef = hotelRef.collection('rooms').doc(roomId);
                 

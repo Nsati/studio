@@ -1,3 +1,4 @@
+
 import { Hotel, Room, City, TourPackage, Review } from './types';
 
 type WithId<T> = T & { id: string };
@@ -22,6 +23,18 @@ export const dummyHotels: WithId<Hotel>[] = [
     rating: 4.8,
     minPrice: 8000,
     discount: 15,
+    mountainSafetyScore: 92,
+    landslideRisk: 'Low',
+    roadCondition: 'Smooth asphalt',
+    networkJio: true,
+    networkAirtel: true,
+    networkBsnl: false,
+    isSnowFriendly: true,
+    isElderlySafe: true,
+    hasPowerBackup: true,
+    nearestAtmKm: 0.5,
+    cabFareToCenter: 150,
+    balconyWorthIt: true
   },
   {
     id: 'jw-marriott-mussoorie',
@@ -32,6 +45,18 @@ export const dummyHotels: WithId<Hotel>[] = [
     amenities: ['wifi', 'restaurant', 'pool', 'spa', 'gym', 'bar'],
     rating: 4.9,
     minPrice: 25000,
+    mountainSafetyScore: 95,
+    landslideRisk: 'Low',
+    roadCondition: 'Main highway access',
+    networkJio: true,
+    networkAirtel: true,
+    networkBsnl: true,
+    isSnowFriendly: true,
+    isElderlySafe: true,
+    hasPowerBackup: true,
+    nearestAtmKm: 1,
+    cabFareToCenter: 400,
+    balconyWorthIt: true
   },
   {
     id: 'aloha-on-the-ganges',
@@ -43,6 +68,18 @@ export const dummyHotels: WithId<Hotel>[] = [
     rating: 4.6,
     minPrice: 10000,
     discount: 10,
+    mountainSafetyScore: 88,
+    landslideRisk: 'Low',
+    roadCondition: 'Good city roads',
+    networkJio: true,
+    networkAirtel: true,
+    networkBsnl: false,
+    isSnowFriendly: false,
+    isElderlySafe: true,
+    hasPowerBackup: true,
+    nearestAtmKm: 2,
+    cabFareToCenter: 200,
+    balconyWorthIt: true
   },
   {
     id: 'aahana-resort',
@@ -53,6 +90,18 @@ export const dummyHotels: WithId<Hotel>[] = [
     amenities: ['wifi', 'restaurant', 'pool', 'spa', 'safari'],
     rating: 4.7,
     minPrice: 18000,
+    mountainSafetyScore: 85,
+    landslideRisk: 'Low',
+    roadCondition: 'Forest gravel road',
+    networkJio: true,
+    networkAirtel: false,
+    networkBsnl: false,
+    isSnowFriendly: false,
+    isElderlySafe: true,
+    hasPowerBackup: true,
+    nearestAtmKm: 5,
+    cabFareToCenter: 600,
+    balconyWorthIt: false
   },
     {
     id: 'shervani-hilltop',
@@ -63,6 +112,18 @@ export const dummyHotels: WithId<Hotel>[] = [
     amenities: ['wifi', 'restaurant', 'garden', 'parking', 'bar'],
     rating: 4.4,
     minPrice: 7000,
+    mountainSafetyScore: 82,
+    landslideRisk: 'Medium',
+    roadCondition: 'Steep inclines',
+    networkJio: true,
+    networkAirtel: true,
+    networkBsnl: false,
+    isSnowFriendly: true,
+    isElderlySafe: false,
+    hasPowerBackup: true,
+    nearestAtmKm: 1.5,
+    cabFareToCenter: 300,
+    balconyWorthIt: true
   },
   {
     id: 'the-savoy',
@@ -73,6 +134,18 @@ export const dummyHotels: WithId<Hotel>[] = [
     amenities: ['wifi', 'restaurant', 'bar', 'heritage', 'spa', 'gym'],
     rating: 4.5,
     minPrice: 16000,
+    mountainSafetyScore: 90,
+    landslideRisk: 'Low',
+    roadCondition: 'Central mall road access',
+    networkJio: true,
+    networkAirtel: true,
+    networkBsnl: true,
+    isSnowFriendly: true,
+    isElderlySafe: true,
+    hasPowerBackup: true,
+    nearestAtmKm: 0.2,
+    cabFareToCenter: 50,
+    balconyWorthIt: true
   },
 ];
 
