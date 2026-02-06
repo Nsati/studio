@@ -30,29 +30,30 @@ interface UserDetailsForAdmin extends UserProfile {
 }
 
 export async function getUserDetailsForAdmin(uid: string): Promise<UserDetailsForAdmin> {
-    const { adminDb, error } = getFirebaseAdmin();
-    if (error || !adminDb) {
-        throw new Error(error || "Admin SDK not initialized");
+    const { adminDb, error: adminError } = getFirebaseAdmin();
+    if (adminError || !adminDb) {
+        throw new Error(adminError || "Admin SDK not initialized");
     }
 
     try {
         const userRef = adminDb.doc(`users/${uid}`);
-        const statsQuery = adminDb.collectionGroup('bookings').where('userId', '==', uid);
+        // Hardened Query Logic to prevent logic clashing
+        const userBookingsQuery = adminDb.collectionGroup('bookings').where('userId', '==', uid);
 
-        const [userDoc, statsSnapshot] = await Promise.all([
+        const [userDoc, bookingsSnapshot] = await Promise.all([
             userRef.get(),
-            statsQuery.get(), 
+            userBookingsQuery.get(), 
         ]);
 
         if (!userDoc.exists) {
-            throw new Error("User not found.");
+            throw new Error("User profile node missing in Tripzy cloud.");
         }
 
         const userProfileData = userDoc.data() as UserProfile;
         let revenueSum = 0;
         let bookingsCount = 0;
 
-        statsSnapshot.forEach(doc => {
+        bookingsSnapshot.forEach(doc => {
             const booking = doc.data() as any;
             if (booking.status === 'CONFIRMED') {
                 bookingsCount++;
@@ -66,15 +67,15 @@ export async function getUserDetailsForAdmin(uid: string): Promise<UserDetailsFo
             totalBookings: bookingsCount,
         };
     } catch (e: any) {
-        console.error("[ADMIN USER ACTION] Fetch Failure:", e.message);
+        console.error("[ADMIN USER ACTION] Production Fetch Failure:", e.message);
         throw e;
     }
 }
 
 export async function updateUserByAdmin(uid: string, data: UpdateUserInput): Promise<ActionResponse> {
-    const { adminDb, error } = getFirebaseAdmin();
-    if (error || !adminDb) {
-        return { success: false, message: error || "Admin SDK not initialized" };
+    const { adminDb, error: adminError } = getFirebaseAdmin();
+    if (adminError || !adminDb) {
+        return { success: false, message: adminError || "Admin SDK not initialized" };
     }
 
     const validation = UpdateUserSchema.safeParse(data);
@@ -89,9 +90,9 @@ export async function updateUserByAdmin(uid: string, data: UpdateUserInput): Pro
         revalidatePath('/admin/users');
         revalidatePath(`/admin/users/${uid}/edit`);
 
-        return { success: true, message: 'User profile updated successfully.' };
+        return { success: true, message: 'Tripzy Explorer profile synchronized successfully.' };
     } catch (e: any) {
         console.error("Failed to update user profile:", e);
-        return { success: false, message: e.message || 'An unexpected error occurred.' };
+        return { success: false, message: e.message || 'An unexpected error occurred during record sync.' };
     }
 }

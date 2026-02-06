@@ -1,4 +1,3 @@
-
 'use server';
 
 import { getFirebaseAdmin } from '@/firebase/admin';
@@ -52,12 +51,13 @@ export async function bulkUploadHotels(hotelsData: HotelUploadData[]): Promise<{
                 throw new Error(`Invalid data for hotel "${hotelData.name}": ${validation.error.message}`);
             }
 
-            const hotel = validation.data; // Use the validated data with correct types
+            const hotel = validation.data; 
 
             const hotelId = slugify(hotel.name, { lower: true, strict: true });
             const hotelRef = adminDb.collection('hotels').doc(hotelId);
 
-            const rooms: Omit<Room, 'hotelId' | 'availableRooms'>[] = [];
+            // FIX: Explicitly omit id, hotelId, and availableRooms for the temp storage
+            const rooms: Omit<Room, 'id' | 'hotelId' | 'availableRooms'>[] = [];
             
             // Process up to 3 rooms
             for (let i = 1; i <= 3; i++) {
@@ -87,24 +87,40 @@ export async function bulkUploadHotels(hotelsData: HotelUploadData[]): Promise<{
                 amenities: hotel.amenities.split(',').map(a => a.trim()).filter(Boolean),
                 images: hotel.images.split(',').map(i => i.trim()).filter(Boolean),
                 minPrice,
+                // Hardened default features for Tripzy Smart Standard
+                mountainSafetyScore: 85,
+                landslideRisk: 'Low',
+                roadCondition: 'Good for all vehicles',
+                networkJio: true,
+                networkAirtel: true,
+                networkBsnl: false,
+                isSnowFriendly: true,
+                isElderlySafe: true,
+                hasPowerBackup: true,
+                nearestAtmKm: 2,
+                cabFareToCenter: 300,
+                balconyWorthIt: true
             };
 
             batch.set(hotelRef, hotelDoc);
 
-            for (const room of rooms) {
-                const roomId = slugify(`${hotel.name} ${room.type} ${Math.random().toString(36).substring(2, 7)}`, { lower: true, strict: true });
+            for (const roomData of rooms) {
+                const roomId = slugify(`${hotel.name} ${roomData.type} ${Math.random().toString(36).substring(2, 7)}`, { lower: true, strict: true });
                 const roomRef = hotelRef.collection('rooms').doc(roomId);
+                
+                // Construct full Room object to satisfy TypeScript and interface
                 const roomDoc: Room = {
-                    ...room,
+                    ...roomData,
+                    id: roomId,
                     hotelId,
-                    availableRooms: room.totalRooms,
+                    availableRooms: roomData.totalRooms,
                 };
                 batch.set(roomRef, roomDoc);
             }
         }
 
         await batch.commit();
-        return { success: true, message: `Successfully uploaded ${hotelsData.length} hotels.` };
+        return { success: true, message: `Successfully uploaded ${hotelsData.length} hotels to Tripzy.` };
 
     } catch (e: any) {
         console.error("Failed to bulk upload hotels:", e);
