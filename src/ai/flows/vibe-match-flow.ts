@@ -20,7 +20,6 @@ type VibeMatchResult = {
   error?: string;
 };
 
-// FIXED: Using standard model name recognized by Genkit 1.x
 const suggestionPrompt = ai.definePrompt({
   name: 'vibeMatchPrompt',
   model: 'googleai/gemini-1.5-flash',
