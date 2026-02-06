@@ -8,6 +8,7 @@ import { z } from 'zod';
 
 /**
  * @fileOverview Hardened User Management Actions for Tripzy.
+ * Fixed circular variable referencing and hardened for production.
  */
 
 type ActionResponse = {

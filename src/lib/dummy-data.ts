@@ -35,7 +35,10 @@ export const dummyHotels: WithId<Hotel>[] = [
     nearestAtmKm: 0.5,
     cabFareToCenter: 150,
     balconyWorthIt: true,
-    isVerifiedPahadiHost: true
+    isVerifiedPahadiHost: true,
+    ecoPractices: { waterSaving: true, plasticFree: true, localSourcing: true },
+    safetyInfo: { nearestHospital: 'Nainital District Hospital', policeStation: 'Mallital PS', networkCoverage: 'good' },
+    spiritualAmenities: ['silent-zone', 'sunrise-view']
   },
   {
     id: 'jw-marriott-mussoorie',
@@ -58,37 +61,16 @@ export const dummyHotels: WithId<Hotel>[] = [
     hasPowerBackup: true,
     nearestAtmKm: 1,
     cabFareToCenter: 400,
-    balconyWorthIt: true
-  },
-  {
-    id: 'aloha-on-the-ganges',
-    name: 'Aloha on the Ganges',
-    city: 'Rishikesh',
-    description: 'Located right on the banks of the Ganges River.',
-    images: ['hotel-10-1'],
-    amenities: ['wifi', 'restaurant', 'spa', 'river-view'],
-    rating: 4.6,
-    minPrice: 10000,
-    discount: 10,
-    mountainSafetyScore: 88,
-    landslideRisk: 'Low',
-    roadCondition: 'Good city roads',
-    networkJio: true,
-    networkAirtel: true,
-    networkBsnl: false,
-    isSnowFriendly: false,
-    isElderlySafe: true,
-    hasPowerBackup: true,
-    nearestAtmKm: 2,
-    cabFareToCenter: 200,
-    balconyWorthIt: true
+    balconyWorthIt: true,
+    ecoPractices: { waterSaving: true, plasticFree: true, localSourcing: true },
+    safetyInfo: { nearestHospital: 'Landour Community Hospital', policeStation: 'Mussoorie PS', networkCoverage: 'good' },
+    spiritualAmenities: ['yoga-sessions']
   }
 ];
 
 export const dummyRooms: WithId<Room>[] = [
   { id: 'nr-std', hotelId: 'the-naini-retreat', type: 'Standard', price: 8000, capacity: 2, totalRooms: 10 },
   { id: 'jw-std', hotelId: 'jw-marriott-mussoorie', type: 'Standard', price: 25000, capacity: 2, totalRooms: 20 },
-  { id: 'ag-std', hotelId: 'aloha-on-the-ganges', type: 'Standard', price: 10000, capacity: 2, totalRooms: 15 },
 ];
 
 export const dummyTourPackages: WithId<TourPackage>[] = [

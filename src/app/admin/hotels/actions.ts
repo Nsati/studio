@@ -46,21 +46,18 @@ export async function bulkUploadHotels(hotelsData: HotelUploadData[]): Promise<{
 
     try {
         for (const hotelData of hotelsData) {
-            // Validate each row
             const validation = HotelUploadSchema.safeParse(hotelData);
             if (!validation.success) {
                 throw new Error(`Invalid data for hotel "${hotelData.name}": ${validation.error.message}`);
             }
 
             const hotel = validation.data; 
-
             const hotelId = slugify(hotel.name, { lower: true, strict: true });
             const hotelRef = adminDb.collection('hotels').doc(hotelId);
 
-            // FIXED: Explicitly define the room array to match Omit type but ensure logic handles 'id' later
-            const roomsArray: Array<Omit<Room, 'id' | 'hotelId' | 'availableRooms'>> = [];
+            // Using a separate type for intermediate room data
+            const roomsToCreate: Array<Omit<Room, 'id' | 'hotelId' | 'availableRooms'>> = [];
             
-            // Process up to 3 rooms
             for (let i = 1; i <= 3; i++) {
                 const type = hotel[`room_${i}_type` as 'room_1_type' | 'room_2_type' | 'room_3_type'];
                 const price = hotel[`room_${i}_price` as 'room_1_price' | 'room_2_price' | 'room_3_price'];
@@ -68,7 +65,7 @@ export async function bulkUploadHotels(hotelsData: HotelUploadData[]): Promise<{
                 const totalRooms = hotel[`room_${i}_total` as 'room_1_total' | 'room_2_total' | 'room_3_total'];
 
                 if (type && price && capacity && totalRooms) {
-                    roomsArray.push({ 
+                    roomsToCreate.push({ 
                         type: type as 'Standard' | 'Deluxe' | 'Suite', 
                         price, 
                         capacity, 
@@ -77,11 +74,11 @@ export async function bulkUploadHotels(hotelsData: HotelUploadData[]): Promise<{
                 }
             }
 
-            if (roomsArray.length === 0) {
+            if (roomsToCreate.length === 0) {
                  throw new Error(`Hotel "${hotel.name}" must have at least one valid room definition.`);
             }
 
-            const minPrice = Math.min(...roomsArray.map(r => r.price));
+            const minPrice = Math.min(...roomsToCreate.map(r => r.price));
 
             const hotelDoc: Hotel = {
                 name: hotel.name,
@@ -104,12 +101,15 @@ export async function bulkUploadHotels(hotelsData: HotelUploadData[]): Promise<{
                 hasPowerBackup: true,
                 nearestAtmKm: 2,
                 cabFareToCenter: 300,
-                balconyWorthIt: true
+                balconyWorthIt: true,
+                ecoPractices: { waterSaving: true, plasticFree: false, localSourcing: true },
+                safetyInfo: { networkCoverage: 'good' },
+                spiritualAmenities: []
             };
 
             batch.set(hotelRef, hotelDoc);
 
-            for (const r of roomsArray) {
+            for (const r of roomsToCreate) {
                 const roomId = slugify(`${hotel.name} ${r.type} ${Math.random().toString(36).substring(2, 7)}`, { lower: true, strict: true });
                 const roomRef = hotelRef.collection('rooms').doc(roomId);
                 

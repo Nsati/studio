@@ -20,7 +20,7 @@ type VibeMatchResult = {
   error?: string;
 };
 
-// FIXED: Using standard model string 'googleai/gemini-1.5-flash' which Genkit handles correctly via the plugin.
+// FIXED: Using standard model name recognized by Genkit 1.x
 const suggestionPrompt = ai.definePrompt({
   name: 'vibeMatchPrompt',
   model: 'googleai/gemini-1.5-flash',
@@ -34,7 +34,7 @@ User Vibe:
 - Traveling with: {{{travelerType}}}
 - Atmosphere: {{{atmosphere}}}
 
-Suggest a destination in Uttarakhand that fits this vibe perfectly.`,
+Suggest a destination in Uttarakhand that fits this vibe perfectly. Mention specific local spots or unique stay types if possible.`,
 });
 
 const vibeMatchFlow = ai.defineFlow(
@@ -44,9 +44,14 @@ const vibeMatchFlow = ai.defineFlow(
     outputSchema: VibeMatchOutputSchema,
   },
   async (input) => {
-    const { output } = await suggestionPrompt(input);
-    if (!output) throw new Error('AI failed to generate a matching vibe.');
-    return output;
+    try {
+      const { output } = await suggestionPrompt(input);
+      if (!output) throw new Error('AI failed to generate a matching vibe.');
+      return output;
+    } catch (e: any) {
+      console.error('Gemini Execution Error:', e);
+      throw e;
+    }
   }
 );
 
