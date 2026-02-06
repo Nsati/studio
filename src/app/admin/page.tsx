@@ -42,7 +42,7 @@ function StatCard({ title, value, icon: Icon, description, isLoading, trend }: a
         <Card className="rounded-none border-border bg-white hover:shadow-sm transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{title}</CardTitle>
-                <Icon className="h-4 w-4 text-[#003580]" />
+                <Icon className="h-4 w-4 text-[#1E90FF]" />
             </CardHeader>
             <CardContent>
                 {isLoading ? (
@@ -98,7 +98,7 @@ export default function AdminDashboard() {
                 <h2 className="text-2xl font-bold">Unauthorized Access</h2>
                 <p className="text-muted-foreground">Your account does not have permission to view the Tripzy Admin Extranet.</p>
             </div>
-            <Button asChild className="rounded-none px-10 h-12 font-bold bg-[#003580]">
+            <Button asChild className="rounded-none px-10 h-12 font-bold bg-[#1E90FF]">
                 <Link href="/">Return to Site</Link>
             </Button>
         </div>
@@ -114,7 +114,7 @@ export default function AdminDashboard() {
         </div>
         <div className="flex items-center gap-3">
             <Button variant="outline" size="sm" onClick={loadData} className="rounded-none h-10 border-border bg-white font-bold px-6">
-                <RefreshCw className={cn("h-4 w-4 mr-2 text-[#003580]", isLoading && "animate-spin")} />
+                <RefreshCw className={cn("h-4 w-4 mr-2 text-[#1E90FF]", isLoading && "animate-spin")} />
                 {isLoading ? 'Syncing...' : 'Refresh Data'}
             </Button>
         </div>
@@ -171,7 +171,7 @@ export default function AdminDashboard() {
             <CardHeader className="border-b bg-muted/30 p-6">
                 <div className="flex justify-between items-center">
                     <CardTitle className="text-lg font-bold">Latest Transactions</CardTitle>
-                    <Button variant="link" asChild size="sm" className="text-[#006ce4] font-bold h-auto p-0">
+                    <Button variant="link" asChild size="sm" className="text-[#1E90FF] font-bold h-auto p-0">
                         <Link href="/admin/bookings" className="flex items-center">View all <ChevronRight className="ml-1 h-4 w-4" /></Link>
                     </Button>
                 </div>
@@ -238,7 +238,7 @@ export default function AdminDashboard() {
         </Card>
 
         <div className="space-y-6">
-            <Card className="rounded-none border-0 bg-[#003580] text-white overflow-hidden relative shadow-sm">
+            <Card className="rounded-none border-0 bg-[#1E90FF] text-white overflow-hidden relative shadow-sm">
                 <CardHeader className="p-6">
                     <CardTitle className="text-xl font-bold">Tripzy Nodes</CardTitle>
                     <CardDescription className="text-white/70">Operational Instance: Himalayan Hub</CardDescription>
@@ -261,7 +261,7 @@ export default function AdminDashboard() {
 
             <div className="p-6 bg-white border border-border space-y-4 shadow-sm">
                 <div className="flex items-center gap-3">
-                    <ShieldCheck className="h-5 w-5 text-[#003580]" />
+                    <ShieldCheck className="h-5 w-5 text-[#1E90FF]" />
                     <span className="font-bold text-sm text-[#1a1a1a]">Admin Integrity</span>
                 </div>
                 <p className="text-xs text-muted-foreground leading-relaxed">

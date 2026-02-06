@@ -138,7 +138,7 @@ export default function BookingsAdminPage() {
         </div>
         <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={loadBookings} className="rounded-none h-10 font-bold border-border bg-white px-6">
-                <RefreshCw className={cn("mr-2 h-4 w-4 text-[#003580]", isLoading && "animate-spin")} /> {isLoading ? 'Syncing...' : 'Refresh'}
+                <RefreshCw className={cn("mr-2 h-4 w-4 text-[#1E90FF]", isLoading && "animate-spin")} /> {isLoading ? 'Syncing...' : 'Refresh'}
             </Button>
         </div>
       </div>
@@ -188,7 +188,7 @@ export default function BookingsAdminPage() {
                     <TableRow key={booking.id} className="hover:bg-muted/5 transition-colors">
                         <TableCell>
                         <div className="font-bold text-sm text-[#1a1a1a]">{booking.customerName}</div>
-                        <div className="text-[11px] text-[#006ce4] truncate max-w-[180px] hover:underline cursor-pointer">{booking.customerEmail}</div>
+                        <div className="text-[11px] text-[#1E90FF] truncate max-w-[180px] hover:underline cursor-pointer">{booking.customerEmail}</div>
                         </TableCell>
                         <TableCell>
                         <div className="font-bold text-sm text-[#1a1a1a]">{booking.hotelName}</div>
@@ -212,7 +212,7 @@ export default function BookingsAdminPage() {
                             <Button 
                                 variant="outline" 
                                 size="sm" 
-                                className="h-8 rounded-none text-[11px] font-bold border-[#006ce4] text-[#006ce4] hover:bg-[#006ce4]/10"
+                                className="h-8 rounded-none text-[11px] font-bold border-[#1E90FF] text-[#1E90FF] hover:bg-[#1E90FF]/10"
                                 disabled={isUpdating === booking.id}
                                 onClick={() => handleStatusUpdate(booking.userId, booking.id, 'CONFIRMED')}
                             >

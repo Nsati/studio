@@ -23,6 +23,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '../ui/skeleton';
 import { cn } from '@/lib/utils';
 import React from 'react';
+import { Logo } from './Logo';
 
 const navLinks = [
   { href: '/search', label: 'Stays' },
@@ -49,7 +50,7 @@ function UserNav() {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="relative h-8 w-8 rounded-full ring-2 ring-white/20">
+          <Button variant="ghost" className="relative h-8 w-8 rounded-full ring-2 ring-primary/20">
             <Avatar className="h-8 w-8">
                <AvatarImage src={user.photoURL || ''} alt={userProfile?.displayName || 'User'} />
               <AvatarFallback className="bg-muted text-xs font-bold text-primary">
@@ -91,7 +92,7 @@ function UserNav() {
       <Button variant="ghost" asChild className="text-white hover:bg-white/10 font-bold text-sm hidden sm:flex">
         <Link href="/login">List your property</Link>
       </Button>
-      <Button asChild className="bg-white text-primary hover:bg-white/90 font-bold text-sm rounded-none px-4">
+      <Button asChild className="bg-white text-[#1E90FF] hover:bg-white/90 font-bold text-sm rounded-none px-4 shadow-sm">
         <Link href="/signup">Register</Link>
       </Button>
       <Button variant="ghost" asChild className="text-white hover:bg-white/10 font-bold text-sm rounded-none px-4 border border-white">
@@ -105,23 +106,24 @@ export default function Header() {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-[#003580] py-4 border-b border-white/10">
+    <header className="sticky top-0 z-50 w-full bg-[#1E90FF] py-4 border-b border-white/10 shadow-sm">
       <div className="container flex h-14 items-center justify-between">
-        <div className="flex items-center gap-8">
-            <Link href="/" className="flex items-center gap-2">
-                <span className="text-3xl font-black text-white tracking-tighter">
-                    Trip<span className="text-[#febb02]">zy</span>
+        <div className="flex items-center gap-6">
+            <Link href="/" className="flex items-center gap-3 group">
+                <Logo />
+                <span className="text-3xl font-black text-white tracking-tighter transition-transform group-hover:scale-105">
+                    Trip<span className="text-[#FF6F3C]">zy</span>
                 </span>
             </Link>
             
-            <nav className="hidden lg:flex items-center gap-4">
+            <nav className="hidden lg:flex items-center gap-2">
                 {navLinks.map((link) => (
                     <Link
                     key={link.href}
                     href={link.href}
                     className={cn(
-                        "text-sm font-semibold text-white px-4 py-2 rounded-full transition-all border border-transparent",
-                        pathname === link.href ? "border-white bg-white/10" : "hover:bg-white/10"
+                        "text-xs font-black uppercase tracking-widest text-white px-4 py-2 rounded-full transition-all border border-transparent",
+                        pathname === link.href ? "bg-white/20 border-white/20 shadow-inner" : "hover:bg-white/10"
                     )}
                     >
                     {link.label}
@@ -145,14 +147,14 @@ export default function Header() {
                         <Menu className="h-6 w-6" />
                     </Button>
                 </SheetTrigger>
-                <SheetContent side="right" className="bg-[#003580] text-white border-0">
+                <SheetContent side="right" className="bg-[#1E90FF] text-white border-0">
                     <nav className="grid gap-4 mt-12">
                         {navLinks.map((link) => (
                           <SheetClose asChild key={link.href}>
                             <Link
                               href={link.href}
                               className={cn(
-                                "p-4 font-bold text-lg border-b border-white/10",
+                                "p-4 font-black text-lg border-b border-white/10 uppercase tracking-widest",
                                 pathname === link.href ? "bg-white/10" : ""
                               )}
                             >

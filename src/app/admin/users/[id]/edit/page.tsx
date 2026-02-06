@@ -25,7 +25,7 @@ function StatCard({ title, value, icon: Icon, isLoading }: any) {
         <Card className="rounded-none border-border">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{title}</CardTitle>
-                <Icon className="h-4 w-4 text-[#003580]" />
+                <Icon className="h-4 w-4 text-[#1E90FF]" />
             </CardHeader>
             <CardContent>
                 {isLoading ? (
@@ -154,14 +154,14 @@ export default function EditUserPage() {
                                 <FormField control={form.control} name="displayName" render={({ field }) => (
                                     <FormItem>
                                         <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Full Legal Name</FormLabel>
-                                        <FormControl><Input {...field} className="rounded-none h-12 focus-visible:ring-[#003580]" /></FormControl>
+                                        <FormControl><Input {...field} className="rounded-none h-12 focus-visible:ring-[#1E90FF]" /></FormControl>
                                         <FormMessage />
                                     </FormItem>
                                 )} />
                                 <FormField control={form.control} name="email" render={({ field }) => (
                                     <FormItem>
                                         <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Email Access</FormLabel>
-                                        <FormControl><Input {...field} type="email" className="rounded-none h-12 focus-visible:ring-[#003580]" /></FormControl>
+                                        <FormControl><Input {...field} type="email" className="rounded-none h-12 focus-visible:ring-[#1E90FF]" /></FormControl>
                                         <FormMessage />
                                     </FormItem>
                                 )} />
@@ -170,7 +170,7 @@ export default function EditUserPage() {
                                 <FormField control={form.control} name="mobile" render={({ field }) => (
                                     <FormItem>
                                         <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Mobile Node</FormLabel>
-                                        <FormControl><Input {...field} className="rounded-none h-12 focus-visible:ring-[#003580]" /></FormControl>
+                                        <FormControl><Input {...field} className="rounded-none h-12 focus-visible:ring-[#1E90FF]" /></FormControl>
                                         <FormMessage />
                                     </FormItem>
                                 )} />
@@ -178,7 +178,7 @@ export default function EditUserPage() {
                                     <FormItem>
                                         <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">System Role</FormLabel>
                                         <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                            <FormControl><SelectTrigger className="rounded-none h-12 focus:ring-[#003580]"><SelectValue /></SelectTrigger></FormControl>
+                                            <FormControl><SelectTrigger className="rounded-none h-12 focus:ring-[#1E90FF]"><SelectValue /></SelectTrigger></FormControl>
                                             <SelectContent>
                                                 <SelectItem value="user">User / Explorer</SelectItem>
                                                 <SelectItem value="admin">Administrator</SelectItem>
@@ -193,7 +193,7 @@ export default function EditUserPage() {
                                     <FormItem>
                                         <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Account Status</FormLabel>
                                         <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                            <FormControl><SelectTrigger className="rounded-none h-12 focus:ring-[#003580]"><SelectValue /></SelectTrigger></FormControl>
+                                            <FormControl><SelectTrigger className="rounded-none h-12 focus:ring-[#1E90FF]"><SelectValue /></SelectTrigger></FormControl>
                                             <SelectContent>
                                                 <SelectItem value="active">Active (Full Access)</SelectItem>
                                                 <SelectItem value="pending">Pending Verification</SelectItem>
@@ -205,7 +205,7 @@ export default function EditUserPage() {
                                 )} />
                             </div>
                              <div className="flex items-center gap-4 pt-8 border-t mt-4">
-                                <Button type="submit" disabled={isSaving} className="rounded-none h-12 px-8 font-bold bg-[#003580]">
+                                <Button type="submit" disabled={isSaving} className="rounded-none h-12 px-8 font-bold bg-[#1E90FF]">
                                     {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                                     Synchronize Records
                                 </Button>
