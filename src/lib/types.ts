@@ -26,7 +26,7 @@ export interface Hotel {
   
   isVerifiedPahadiHost?: boolean;
   
-  // Extended Features for Forms
+  // Extended Features for Forms & AI
   ecoPractices?: {
     waterSaving: boolean;
     plasticFree: boolean;

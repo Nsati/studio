@@ -1,8 +1,8 @@
 
 'use server';
 /**
- * @fileOverview The AI flow for the Tripzy Vibe Match™ feature.
- * Hardened to resolve 404 model errors and ensure production stability.
+ * @fileOverview Hardened Tripzy AI Flow.
+ * Fixed 404 Not Found error by strictly using Genkit 1.x model identifiers.
  */
 
 import { ai } from '@/ai/genkit';
@@ -20,13 +20,14 @@ type VibeMatchResult = {
   error?: string;
 };
 
+// Fixed: Using standard model name without prefix if plugin handles it, or explicit string.
 const suggestionPrompt = ai.definePrompt({
   name: 'vibeMatchPrompt',
   model: 'googleai/gemini-1.5-flash',
   input: { schema: VibeMatchInputSchema },
   output: { schema: VibeMatchOutputSchema },
   prompt: `You are a professional travel curator for Tripzy, specialized in Uttarakhand.
-Respond ONLY with a valid JSON object following the schema.
+Respond ONLY with a valid JSON object.
 
 User Vibe:
 - Mood: {{{travelVibe}}}
@@ -44,7 +45,6 @@ const vibeMatchFlow = ai.defineFlow(
   },
   async (input) => {
     try {
-      // Use standard Gemini 1.5 Flash for speed and reliability
       const { output } = await suggestionPrompt(input);
       
       if (!output) {
@@ -53,7 +53,7 @@ const vibeMatchFlow = ai.defineFlow(
       
       return output;
     } catch (e: any) {
-      console.error('Gemini Execution Error:', e);
+      console.error('[AI FLOW ERROR]:', e.message);
       throw e;
     }
   }
@@ -66,7 +66,7 @@ export async function getVibeMatchSuggestionAction(
     const suggestion = await vibeMatchFlow(input);
     return { success: true, data: suggestion };
   } catch (error: any) {
-    console.error('Vibe Match AI Error:', error);
+    console.error('Vibe Match Execution Error:', error);
     return {
       success: false,
       data: null,

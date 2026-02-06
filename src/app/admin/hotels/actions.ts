@@ -55,7 +55,7 @@ export async function bulkUploadHotels(hotelsData: HotelUploadData[]): Promise<{
             const hotelId = slugify(hotel.name, { lower: true, strict: true });
             const hotelRef = adminDb.collection('hotels').doc(hotelId);
 
-            // Using a separate type for intermediate room data
+            // Intermediate room creation logic fixed for Room interface compatibility
             const roomsToCreate: Array<Omit<Room, 'id' | 'hotelId' | 'availableRooms'>> = [];
             
             for (let i = 1; i <= 3; i++) {

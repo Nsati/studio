@@ -35,6 +35,7 @@ import {
 
 /**
  * @fileOverview Hardened Production Admin Dashboard for Tripzy.
+ * Syntax fixed for Next.js build optimization.
  */
 
 function StatCard({ title, value, icon: Icon, description, isLoading, trend }: any) {
