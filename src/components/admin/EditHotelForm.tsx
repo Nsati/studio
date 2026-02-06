@@ -1,3 +1,4 @@
+
 'use client';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -39,8 +40,6 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { ImageUpload } from './ImageUpload';
 
 const allAmenities = ['wifi', 'parking', 'restaurant', 'bar', 'spa', 'pool', 'gym', 'mountain-view', 'garden', 'library', 'river-view', 'ghat', 'adventure', 'trekking', 'skiing', 'heritage', 'safari'];
-const allSpiritualAmenities = ['meditation-friendly', 'silent-zone', 'sunrise-view', 'temple-nearby', 'yoga-sessions'];
-
 
 const roomSchema = z.object({
   id: z.string().optional(),
@@ -50,7 +49,6 @@ const roomSchema = z.object({
   totalRooms: z.coerce.number().min(1, 'Total rooms must be at least 1.'),
   availableRooms: z.coerce.number().optional(),
 });
-
 
 const formSchema = z.object({
   name: z.string().min(3, 'Hotel name must be at least 3 characters long.'),
@@ -158,8 +156,8 @@ export function EditHotelForm({ hotel, rooms: initialRooms }: EditHotelFormProps
         }
     }
 
-    for (const roomId of roomsToDelete) {
-        const roomRef = doc(firestore, 'hotels', hotelId, 'rooms', roomId);
+    for (const rid of roomsToDelete) {
+        const roomRef = doc(firestore, 'hotels', hotelId, 'rooms', rid);
         batch.delete(roomRef);
     }
     
@@ -185,8 +183,8 @@ export function EditHotelForm({ hotel, rooms: initialRooms }: EditHotelFormProps
              getDocs(collection(firestore, 'hotels', hotel.id, 'rooms')),
              getDocs(collection(firestore, 'hotels', hotel.id, 'reviews'))
         ]);
-        roomsSnap.forEach(doc => batch.delete(doc.ref));
-        reviewsSnap.forEach(doc => batch.delete(doc.ref));
+        roomsSnap.forEach(d => batch.delete(doc(firestore, 'hotels', hotel.id, 'rooms', d.id)));
+        reviewsSnap.forEach(d => batch.delete(doc(firestore, 'hotels', hotel.id, 'reviews', d.id)));
         batch.delete(hotelRef);
         await batch.commit();
         toast({ title: 'Hotel Deleted' });
@@ -221,8 +219,8 @@ export function EditHotelForm({ hotel, rooms: initialRooms }: EditHotelFormProps
         <Separator />
 
         <div>
-            <h3 className="text-lg font-black tracking-tight">Gallery Management</h3>
-            <FormDescription className="text-[10px] font-black uppercase tracking-widest">Update property images via direct storage.</FormDescription>
+            <h3 className="text-lg font-black tracking-tight text-primary uppercase">Gallery Management</h3>
+            <FormDescription className="text-[10px] font-black uppercase tracking-widest">Upload high-res property photos.</FormDescription>
         </div>
         <FormField control={form.control} name="images" render={({ field }) => (
             <FormItem>
@@ -247,24 +245,26 @@ export function EditHotelForm({ hotel, rooms: initialRooms }: EditHotelFormProps
         <Separator />
         
         <div className="flex items-center justify-between pt-8 border-t">
-            <Button type="submit" disabled={isLoading} className="h-14 px-10 rounded-full font-black">
+            <Button type="submit" disabled={isLoading} className="h-14 px-10 rounded-full font-black text-lg shadow-xl shadow-primary/20">
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isLoading ? 'Saving Changes...' : 'Update Records'}
+                {isLoading ? 'Saving Changes...' : 'Update Property'}
             </Button>
             <AlertDialog>
                 <AlertDialogTrigger asChild>
-                    <Button type="button" variant="destructive" disabled={isDeleting} className="h-14 px-8 rounded-full">
-                        Delete Property
+                    <Button type="button" variant="destructive" disabled={isDeleting} className="h-14 px-8 rounded-full font-bold">
+                        Delete Forever
                     </Button>
                 </AlertDialogTrigger>
-                <AlertDialogContent className="rounded-[2.5rem]">
+                <AlertDialogContent className="rounded-[2.5rem] border-0 shadow-2xl">
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Permanent Deletion?</AlertDialogTitle>
-                        <AlertDialogDescription>This will remove all room inventory and reviews for this property.</AlertDialogDescription>
+                        <AlertDialogTitle className="text-2xl font-black tracking-tight">Permanent Deletion?</AlertDialogTitle>
+                        <AlertDialogDescription className="text-muted-foreground font-medium">
+                            This will wipe all room inventory, reviews, and bookings association for this property from Tripzy cloud.
+                        </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel className="rounded-full">Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDeleteHotel} className="bg-destructive hover:bg-destructive/90 rounded-full">Yes, Delete</AlertDialogAction>
+                    <AlertDialogFooter className="pt-6">
+                        <AlertDialogCancel className="rounded-full h-12 px-8 font-bold border-black/5">Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDeleteHotel} className="bg-destructive hover:bg-destructive/90 rounded-full h-12 px-8 font-bold">Confirm Delete</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>

@@ -25,6 +25,19 @@ export interface Hotel {
   balconyWorthIt: boolean;
   
   isVerifiedPahadiHost?: boolean;
+  
+  // Extended Features for Forms
+  ecoPractices?: {
+    waterSaving: boolean;
+    plasticFree: boolean;
+    localSourcing: boolean;
+  };
+  safetyInfo?: {
+    nearestHospital?: string;
+    policeStation?: string;
+    networkCoverage?: 'good' | 'average' | 'poor' | '';
+  };
+  spiritualAmenities?: string[];
 }
 
 export interface Room {

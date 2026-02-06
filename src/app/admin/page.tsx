@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -125,10 +126,10 @@ export default function AdminDashboard() {
                 <AlertTriangle className="h-5 w-5 text-red-600" />
                 <div>
                     <AlertTitle className="font-bold text-red-900">Synchronization Error</AlertTitle>
-                    <AlertDescription className="text-sm text-red-700">{error}</AlertDescription>
+                    <AlertDescription className="text-sm text-red-700 font-medium">{error}</AlertDescription>
                 </div>
             </div>
-            <Button onClick={loadData} size="sm" variant="outline" className="h-8 border-red-300 text-red-900 hover:bg-red-100">
+            <Button onClick={loadData} size="sm" variant="outline" className="h-8 border-red-300 text-red-900 hover:bg-red-100 font-bold">
                 Retry
             </Button>
         </Alert>
@@ -246,15 +247,15 @@ export default function AdminDashboard() {
                 </CardHeader>
                 <CardContent className="px-6 pb-6 space-y-4">
                     <div className="flex justify-between items-center py-3 border-b border-white/10 text-sm">
-                        <span className="opacity-70">Cloud Gateway</span>
+                        <span className="opacity-70 font-medium">Cloud Gateway</span>
                         <span className="font-bold text-green-400">Stable</span>
                     </div>
                     <div className="flex justify-between items-center py-3 border-b border-white/10 text-sm">
-                        <span className="opacity-70">Payment Node</span>
+                        <span className="opacity-70 font-medium">Payment Node</span>
                         <span className="font-bold text-green-400">Active</span>
                     </div>
                     <div className="flex justify-between items-center py-3 text-sm">
-                        <span className="opacity-70">Security Layer</span>
+                        <span className="opacity-70 font-medium">Security Layer</span>
                         <span className="font-bold text-blue-300">Hardened</span>
                     </div>
                 </CardContent>

@@ -1,3 +1,4 @@
+
 'use server';
 
 import { getFirebaseAdmin } from '@/firebase/admin';
@@ -56,8 +57,8 @@ export async function bulkUploadHotels(hotelsData: HotelUploadData[]): Promise<{
             const hotelId = slugify(hotel.name, { lower: true, strict: true });
             const hotelRef = adminDb.collection('hotels').doc(hotelId);
 
-            // FIX: Explicitly omit id, hotelId, and availableRooms for the temp storage
-            const rooms: Omit<Room, 'id' | 'hotelId' | 'availableRooms'>[] = [];
+            // Using partial type for local collection to avoid interface errors during build
+            const roomsData: Omit<Room, 'id' | 'hotelId' | 'availableRooms'>[] = [];
             
             // Process up to 3 rooms
             for (let i = 1; i <= 3; i++) {
@@ -67,15 +68,20 @@ export async function bulkUploadHotels(hotelsData: HotelUploadData[]): Promise<{
                 const totalRooms = hotel[`room_${i}_total` as 'room_1_total' | 'room_2_total' | 'room_3_total'];
 
                 if (type && price && capacity && totalRooms) {
-                    rooms.push({ type, price, capacity, totalRooms });
+                    roomsData.push({ 
+                        type: type as 'Standard' | 'Deluxe' | 'Suite', 
+                        price, 
+                        capacity, 
+                        totalRooms 
+                    });
                 }
             }
 
-            if (rooms.length === 0) {
+            if (roomsData.length === 0) {
                  throw new Error(`Hotel "${hotel.name}" must have at least one valid room definition.`);
             }
 
-            const minPrice = Math.min(...rooms.map(r => r.price));
+            const minPrice = Math.min(...roomsData.map(r => r.price));
 
             const hotelDoc: Hotel = {
                 name: hotel.name,
@@ -87,7 +93,6 @@ export async function bulkUploadHotels(hotelsData: HotelUploadData[]): Promise<{
                 amenities: hotel.amenities.split(',').map(a => a.trim()).filter(Boolean),
                 images: hotel.images.split(',').map(i => i.trim()).filter(Boolean),
                 minPrice,
-                // Hardened default features for Tripzy Smart Standard
                 mountainSafetyScore: 85,
                 landslideRisk: 'Low',
                 roadCondition: 'Good for all vehicles',
@@ -104,16 +109,15 @@ export async function bulkUploadHotels(hotelsData: HotelUploadData[]): Promise<{
 
             batch.set(hotelRef, hotelDoc);
 
-            for (const roomData of rooms) {
-                const roomId = slugify(`${hotel.name} ${roomData.type} ${Math.random().toString(36).substring(2, 7)}`, { lower: true, strict: true });
+            for (const r of roomsData) {
+                const roomId = slugify(`${hotel.name} ${r.type} ${Math.random().toString(36).substring(2, 7)}`, { lower: true, strict: true });
                 const roomRef = hotelRef.collection('rooms').doc(roomId);
                 
-                // Construct full Room object to satisfy TypeScript and interface
                 const roomDoc: Room = {
-                    ...roomData,
+                    ...r,
                     id: roomId,
                     hotelId,
-                    availableRooms: roomData.totalRooms,
+                    availableRooms: r.totalRooms,
                 };
                 batch.set(roomRef, roomDoc);
             }

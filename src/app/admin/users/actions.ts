@@ -1,3 +1,4 @@
+
 'use server';
 
 import { getFirebaseAdmin } from '@/firebase/admin';
@@ -37,12 +38,13 @@ export async function getUserDetailsForAdmin(uid: string): Promise<UserDetailsFo
 
     try {
         const userRef = adminDb.doc(`users/${uid}`);
-        // Hardened Query Logic to prevent logic clashing
-        const userBookingsQuery = adminDb.collectionGroup('bookings').where('userId', '==', uid);
+        
+        // Fixed Circular Reference: Using unique variable names to avoid logic clashing
+        const bookingsQuery = adminDb.collectionGroup('bookings').where('userId', '==', uid);
 
         const [userDoc, bookingsSnapshot] = await Promise.all([
             userRef.get(),
-            userBookingsQuery.get(), 
+            bookingsQuery.get(), 
         ]);
 
         if (!userDoc.exists) {
@@ -53,11 +55,11 @@ export async function getUserDetailsForAdmin(uid: string): Promise<UserDetailsFo
         let revenueSum = 0;
         let bookingsCount = 0;
 
-        bookingsSnapshot.forEach(doc => {
-            const booking = doc.data() as any;
-            if (booking.status === 'CONFIRMED') {
+        bookingsSnapshot.forEach(docSnap => {
+            const b = docSnap.data() as any;
+            if (b.status === 'CONFIRMED') {
                 bookingsCount++;
-                revenueSum += Number(booking.totalPrice) || 0;
+                revenueSum += Number(b.totalPrice) || 0;
             }
         });
 
