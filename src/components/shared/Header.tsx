@@ -109,8 +109,8 @@ export default function Header() {
       <div className="container flex h-14 items-center justify-between">
         <div className="flex items-center gap-8">
             <Link href="/" className="flex items-center gap-2">
-                <span className="text-2xl font-black text-white tracking-tighter">
-                    Uttarakhand<span className="text-white/80">Getaways</span>
+                <span className="text-3xl font-black text-white tracking-tighter">
+                    Trip<span className="text-[#febb02]">zy</span>
                 </span>
             </Link>
             

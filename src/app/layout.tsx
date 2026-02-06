@@ -20,8 +20,8 @@ const fontHeading = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: 'Uttarakhand Getaways',
-  description: 'Book your dream getaway in the mountains of Uttarakhand.',
+  title: 'Tripzy - Smart Uttarakhand Stays',
+  description: 'Book your dream getaway in the mountains of Uttarakhand with real-time safety scores.',
 };
 
 export default function RootLayout({

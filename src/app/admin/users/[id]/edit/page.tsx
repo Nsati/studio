@@ -15,6 +15,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { BookOpen, IndianRupee, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
+/**
+ * @fileOverview Edit User Page for Tripzy.
+ * Fixed: Type-casting for status to resolve suspended/pending literal mismatches.
+ */
+
 function StatCard({ title, value, icon: Icon, isLoading }: any) {
     return (
         <Card className="rounded-none border-border">
@@ -60,7 +65,7 @@ export default function EditUserPage() {
             getUserDetailsForAdmin(userId)
                 .then(data => {
                     setUserData(data);
-                    // Fixed: Explicitly casting status to satisfy Zod/TypeScript enum mismatch
+                    // Explicitly cast to match Zod union types
                     form.reset({
                         displayName: data.displayName,
                         email: data.email,
@@ -140,7 +145,7 @@ export default function EditUserPage() {
             <Card className="rounded-none border-border bg-white shadow-sm">
                 <CardHeader className="bg-muted/20 border-b p-6">
                     <CardTitle className="text-lg font-bold">Account Configuration</CardTitle>
-                    <CardDescription>Administrative modifications are logged for audit purposes.</CardDescription>
+                    <CardDescription>Administrative modifications are logged for Tripzy audit purposes.</CardDescription>
                 </CardHeader>
                 <CardContent className="p-10">
                     <Form {...form}>
@@ -164,7 +169,7 @@ export default function EditUserPage() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <FormField control={form.control} name="mobile" render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Mobile Node</Label>
+                                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Mobile Node</FormLabel>
                                         <FormControl><Input {...field} className="rounded-none h-12 focus-visible:ring-[#003580]" /></FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -186,7 +191,7 @@ export default function EditUserPage() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <FormField control={form.control} name="status" render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Account Integrity Status</FormLabel>
+                                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Account Status</FormLabel>
                                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                                             <FormControl><SelectTrigger className="rounded-none h-12 focus:ring-[#003580]"><SelectValue /></SelectTrigger></FormControl>
                                             <SelectContent>

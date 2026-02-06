@@ -82,7 +82,7 @@ export default function AdminLayout({
     <div className="flex min-h-screen bg-[#f5f5f5]">
       {/* Mobile Header */}
       <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-[#003580] z-50 px-4 flex items-center justify-between text-white">
-        <span className="font-bold tracking-tight">Admin Console</span>
+        <span className="font-bold tracking-tight">Tripzy Admin</span>
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="text-white">
@@ -103,8 +103,8 @@ export default function AdminLayout({
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex w-64 flex-col border-r bg-white sticky top-0 h-screen">
         <div className="p-6 border-b bg-[#003580]">
-            <Link href="/" className="text-white text-xl font-bold tracking-tight block">
-                Uttarakhand<span className="opacity-70">Getaways</span>
+            <Link href="/" className="text-white text-3xl font-black tracking-tighter block">
+                Trip<span className="text-[#febb02]">zy</span>
             </Link>
             <p className="text-[10px] text-white/60 font-bold uppercase tracking-widest mt-1">Admin Extranet</p>
         </div>

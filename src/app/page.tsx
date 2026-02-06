@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -7,7 +6,7 @@ import Link from 'next/link';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
 import { dummyCities } from '@/lib/dummy-data';
-import { ShieldCheck, CloudSun, Users, IndianRupee, ThermometerSnowflake, Mountain, MapPin, Loader2, AlertTriangle, CloudRain, Snowflake, Sun } from 'lucide-react';
+import { ShieldCheck, CloudSun, Users, IndianRupee, ThermometerSnowflake, Mountain, MapPin, Loader2, AlertTriangle } from 'lucide-react';
 import { HotelCard } from '@/components/hotel/HotelCard';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, limit, query } from 'firebase/firestore';
@@ -23,9 +22,8 @@ function SeasonTruthMeter() {
 
     useEffect(() => {
         const fetchWeather = async () => {
-            const apiKey = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY || 'bd5e378503939ddaee76f12ad7a97608';
+            const apiKey = 'bd5e378503939ddaee76f12ad7a97608';
             try {
-                // Fetching for Dehradun as a state proxy
                 const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=Dehradun,IN&units=metric&appid=${apiKey}`);
                 if (!response.ok) throw new Error('API limit or error');
                 const data = await response.json();
@@ -49,8 +47,6 @@ function SeasonTruthMeter() {
     }, []);
 
     const isPeakSeason = [4, 5, 6, 10].includes(new Date().getMonth() + 1);
-    
-    // Logic based on real-time data
     const isRisky = weather?.raw === 'Rain' || weather?.raw === 'Snow' || weather?.raw === 'Thunderstorm';
 
     const metrics = [
@@ -74,7 +70,7 @@ function SeasonTruthMeter() {
                         <h2 className="text-2xl font-black tracking-tight">Season Truth Meter™</h2>
                     </div>
                     <span className="text-[10px] bg-[#003580] text-white px-3 py-1 rounded-full font-black uppercase tracking-widest md:ml-4">
-                        {isLoading ? <span className="flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin" /> Verifying satellite data</span> : 'Live Uttarakhand Status'}
+                        {isLoading ? <span className="flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin" /> Verifying satellite data</span> : 'Live Tripzy Status'}
                     </span>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -112,10 +108,10 @@ export default function HomePage() {
         <div className="container mx-auto relative z-10">
           <div className="max-w-4xl space-y-6 mb-10">
             <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter">
-              Your Uttarakhand <br/> <span className="text-[#febb02]">Smart Companion</span>
+              Your Tripzy <br/> <span className="text-[#febb02]">Smart Companion</span>
             </h1>
             <p className="text-xl md:text-2xl text-white/90 font-medium">
-              Real-time safety scores, weather alerts, and mountain-ready stays.
+              Real-time safety scores, weather alerts, and mountain-ready stays in Uttarakhand.
             </p>
           </div>
           

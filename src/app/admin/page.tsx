@@ -33,8 +33,8 @@ import {
 } from "@/components/ui/table";
 
 /**
- * @fileOverview Production Admin Dashboard.
- * Fixed: Syntax errors in component nesting and closing tags resolved.
+ * @fileOverview Production Admin Dashboard for Tripzy.
+ * Fixed: Resolved syntax error in Alert vs Button tags.
  */
 
 function StatCard({ title, value, icon: Icon, description, isLoading, trend }: any) {
@@ -75,10 +75,10 @@ export default function AdminDashboard() {
       if (response.success) {
         setData(response.data);
       } else {
-        setError(response.error || "Failed to fetch dashboard metrics.");
+        setError(response.error || "Failed to fetch metrics.");
       }
     } catch (err: any) {
-      setError("Network error: Could not connect to the cloud environment.");
+      setError("Network error: Could not connect to Tripzy Cloud.");
     } finally {
       setIsLoading(false);
     }
@@ -96,7 +96,7 @@ export default function AdminDashboard() {
             </div>
             <div className="space-y-2">
                 <h2 className="text-2xl font-bold">Unauthorized Access</h2>
-                <p className="text-muted-foreground">Your account does not have permission to view the Admin Extranet.</p>
+                <p className="text-muted-foreground">Your account does not have permission to view the Tripzy Admin Extranet.</p>
             </div>
             <Button asChild className="rounded-none px-10 h-12 font-bold bg-[#003580]">
                 <Link href="/">Return to Site</Link>
@@ -110,7 +110,7 @@ export default function AdminDashboard() {
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
         <div className="space-y-1">
             <h1 className="text-3xl font-bold tracking-tight text-[#1a1a1a]">Management Dashboard</h1>
-            <p className="text-muted-foreground font-medium">Real-time overview of your Himalayan properties and bookings.</p>
+            <p className="text-muted-foreground font-medium">Real-time overview of Himalayan properties and Tripzy bookings.</p>
         </div>
         <div className="flex items-center gap-3">
             <Button variant="outline" size="sm" onClick={loadData} className="rounded-none h-10 border-border bg-white font-bold px-6">
@@ -146,7 +146,7 @@ export default function AdminDashboard() {
             title="Live Bookings" 
             value={data?.stats?.confirmedCount || 0} 
             icon={BookOpen} 
-            description="Confirmed reservations" 
+            description="Confirmed Tripzy stays" 
             isLoading={isLoading}
             trend="+6%"
         />
@@ -240,8 +240,8 @@ export default function AdminDashboard() {
         <div className="space-y-6">
             <Card className="rounded-none border-0 bg-[#003580] text-white overflow-hidden relative shadow-sm">
                 <CardHeader className="p-6">
-                    <CardTitle className="text-xl font-bold">System Status</CardTitle>
-                    <CardDescription className="text-white/70">Operational Instance: Himalayan Node</CardDescription>
+                    <CardTitle className="text-xl font-bold">Tripzy Nodes</CardTitle>
+                    <CardDescription className="text-white/70">Operational Instance: Himalayan Hub</CardDescription>
                 </CardHeader>
                 <CardContent className="px-6 pb-6 space-y-4">
                     <div className="flex justify-between items-center py-3 border-b border-white/10 text-sm">
@@ -265,7 +265,7 @@ export default function AdminDashboard() {
                     <span className="font-bold text-sm text-[#1a1a1a]">Admin Integrity</span>
                 </div>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                    Every modification is logged and verified via the production Admin SDK. Always verify property details before overriding pricing or inventory.
+                    Every Tripzy modification is logged and verified via production Admin SDK. Always verify property details before overriding pricing.
                 </p>
             </div>
         </div>

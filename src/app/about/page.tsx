@@ -1,4 +1,3 @@
-
 import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,23 +27,23 @@ const teamMembers = [
 const whyChooseUs = [
     {
         icon: Star,
-        title: 'Curated Experiences',
-        description: 'We don’t just offer stays; we offer handpicked experiences that connect you with the soul of Uttarakhand.'
+        title: 'Smart Insights',
+        description: 'We use real-time weather and landslide data to keep your mountain journey safe and informed.'
     },
     {
         icon: Shield,
         title: 'Trusted & Secure',
-        description: 'With a secure booking platform and 24/7 support, your peace of mind is our top priority.'
+        description: 'With a secure booking platform and verified properties, your peace of mind is our top priority.'
     },
     {
         icon: Globe,
-        title: 'Local Expertise',
-        description: 'Our team’s deep-rooted connection to the region ensures you get the most authentic and enriching journey.'
+        title: 'Local Hospitality',
+        description: 'Our deep-rooted connection to Pahadi hospitality ensures you get the most authentic Himalayan journey.'
     },
      {
         icon: Heart,
-        title: 'Passionate Service',
-        description: 'We are a team of passionate travelers dedicated to making your vacation unforgettable.'
+        title: 'Tripzy Promise',
+        description: 'We are dedicated to making every Himalayan getaway unforgettable and hassle-free.'
     },
 ]
 
@@ -68,9 +67,9 @@ export default function AboutPage() {
         )}
         <div className="absolute inset-0 bg-black/60" />
         <div className="relative z-10 p-4" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
-          <h1 className="font-headline text-4xl font-bold md:text-6xl">About Uttarakhand Getaways</h1>
+          <h1 className="font-headline text-4xl font-bold md:text-6xl">About Tripzy</h1>
           <p className="mt-4 max-w-2xl mx-auto text-lg md:text-xl">
-            Crafting Unforgettable Journeys in the Heart of the Himalayas.
+            Smart Himalayan Stays. Crafting Unforgettable Journeys.
           </p>
         </div>
       </section>
@@ -81,7 +80,7 @@ export default function AboutPage() {
             <Mountain className="h-16 w-16 mx-auto text-primary mb-4" />
           <h2 className="font-headline text-3xl font-bold mb-4">Our Mission</h2>
           <p className="text-lg text-muted-foreground leading-relaxed">
-            To be the most trusted and passionate gateway to the majestic beauty of Uttarakhand. We aim to connect travelers with the authentic culture, breathtaking landscapes, and warm hospitality of the Himalayas, creating memories that last a lifetime while promoting sustainable and responsible tourism.
+            To be the most trusted smart gateway to the majestic beauty of Uttarakhand. Tripzy aims to connect travelers with authentic culture, breathtaking landscapes, and warm hospitality, while providing real-time data to navigate the unique challenges of mountain travel.
           </p>
         </div>
       </section>
@@ -90,8 +89,8 @@ export default function AboutPage() {
        <section className="bg-background py-16 px-4 md:px-6">
             <div className="container mx-auto">
                 <div className="text-center mb-12">
-                    <h2 className="font-headline text-3xl font-bold">Why Choose Us?</h2>
-                    <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">We are more than just a booking platform. We are your travel partners.</p>
+                    <h2 className="font-headline text-3xl font-bold">Why Tripzy?</h2>
+                    <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">We are more than just a booking platform. We are your smart mountain companion.</p>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                     {whyChooseUs.map((item) => (
@@ -116,7 +115,7 @@ export default function AboutPage() {
         <div className="container mx-auto">
           <div className="text-center mb-12">
             <h2 className="font-headline text-3xl font-bold">Meet Our Core Team</h2>
-            <p className="text-muted-foreground mt-2">The passionate individuals behind your perfect getaway.</p>
+            <p className="text-muted-foreground mt-2">The passionate individuals behind your perfect Tripzy getaway.</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {teamMembers.map((member) => {

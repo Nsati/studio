@@ -37,8 +37,8 @@ import {
 import { cn } from '@/lib/utils';
 
 /**
- * @fileOverview Production Bookings Inventory.
- * Fixed: Missing AlertDialogTrigger import resolved.
+ * @fileOverview Production Bookings Inventory for Tripzy.
+ * Fixed: Explicit AlertDialogTrigger import.
  */
 
 function BookingStatusBadge({ status }: { status: string }) {
@@ -72,7 +72,7 @@ export default function BookingsAdminPage() {
         setError(result.error || "Failed to fetch bookings inventory.");
       }
     } catch (err: any) {
-      setError("Network failure: Could not reach the administration server.");
+      setError("Network failure: Could not reach the Tripzy server.");
     } finally {
       setIsLoading(false);
     }
@@ -134,7 +134,7 @@ export default function BookingsAdminPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div className="space-y-1">
           <h1 className="text-3xl font-bold tracking-tight text-[#1a1a1a]">Reservations</h1>
-          <p className="text-muted-foreground text-sm font-medium">Manage and monitor all hotel stay requests.</p>
+          <p className="text-muted-foreground text-sm font-medium">Manage and monitor all Tripzy stay requests.</p>
         </div>
         <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={loadBookings} className="rounded-none h-10 font-bold border-border bg-white px-6">

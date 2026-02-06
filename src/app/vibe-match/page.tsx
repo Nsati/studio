@@ -24,7 +24,7 @@ function ResultSkeleton() {
             <CardHeader className="text-center">
                 <Loader2 className="mx-auto h-10 w-10 animate-spin text-primary" />
                 <CardTitle className="font-headline text-2xl mt-4">Finding Your Perfect Vibe...</CardTitle>
-                <CardDescription>Our Devbhoomi Dost is looking for the best spots just for you.</CardDescription>
+                <CardDescription>Our Tripzy Expert is looking for the best spots just for you.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
                 <Skeleton className="h-8 w-3/4 mx-auto" />
@@ -45,12 +45,12 @@ function ResultDisplay({ result }: { result: VibeMatchOutput }) {
                  <div className="p-3 bg-primary rounded-full text-primary-foreground">
                     <Sparkles className="h-8 w-8" />
                 </div>
-                <CardTitle className="font-headline text-3xl mt-4">Your Devbhoomi Vibe Match!</CardTitle>
-                <CardDescription>Our expert recommendation based on your mood.</CardDescription>
+                <CardTitle className="font-headline text-3xl mt-4">Your Tripzy Vibe Match!</CardTitle>
+                <CardDescription>Our smart recommendation based on your current mood.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
                 <div className="text-center bg-background p-6 rounded-lg border">
-                    <p className="text-muted-foreground">We recommend</p>
+                    <p className="text-muted-foreground">Tripzy recommends</p>
                     <h3 className="text-4xl font-bold font-headline text-primary">{result.suggestedLocation}</h3>
                 </div>
                 
@@ -78,7 +78,7 @@ function ResultDisplay({ result }: { result: VibeMatchOutput }) {
                         </CardHeader>
                         <CardContent>
                            <p className="font-semibold text-lg">{result.silentZoneScore} / 10</p>
-                           <p className="text-xs text-muted-foreground">{result.silentZoneScore > 7 ? "Pure Himalayan peace" : "A balanced vibe"}</p>
+                           <p className="text-xs text-muted-foreground">{result.silentZoneScore > 7 ? "Pure peace" : "A balanced vibe"}</p>
                         </CardContent>
                     </Card>
                      <Card>
@@ -95,7 +95,7 @@ function ResultDisplay({ result }: { result: VibeMatchOutput }) {
                 <Button asChild size="lg" className="w-full mt-6">
                     <Link href={`/search?city=${result.suggestedLocation}`}>
                         <Search className="mr-2 h-5 w-5" />
-                        Find Hotels in {result.suggestedLocation}
+                        Find Tripzy Hotels in {result.suggestedLocation}
                     </Link>
                 </Button>
 
@@ -140,9 +140,9 @@ export default function VibeMatchPage() {
     return (
         <div className="container mx-auto max-w-4xl py-12 px-4 md:px-6">
             <div className="text-center mb-12">
-                <h1 className="font-headline text-4xl md:text-5xl font-bold">Devbhoomi Vibe Match™</h1>
+                <h1 className="font-headline text-4xl md:text-5xl font-bold">Tripzy Vibe Match™</h1>
                 <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-                    Tell us your mood, and our AI-powered local expert, "Devbhoomi Dost", will find the perfect Himalayan escape for you.
+                    Tell us your mood, and our Tripzy smart expert will find the perfect Himalayan escape for you.
                 </p>
             </div>
             
@@ -196,7 +196,7 @@ export default function VibeMatchPage() {
 
                         <Button type="submit" size="lg" className="w-full h-14 text-lg" disabled={isLoading}>
                             {isLoading ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : <Wand2 className="mr-2 h-6 w-6" />}
-                            {isLoading ? "Finding your vibe..." : "Find My Devbhoomi Escape"}
+                            {isLoading ? "Finding your vibe..." : "Find My Tripzy Escape"}
                         </Button>
                     </form>
                 </Form>

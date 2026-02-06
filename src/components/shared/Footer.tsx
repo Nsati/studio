@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Facebook, Twitter, Instagram } from 'lucide-react';
@@ -36,12 +35,12 @@ export default function Footer() {
             <div className="col-span-2 flex flex-col items-start gap-4">
                 <Link href="/" className="flex items-center gap-3">
                     <Logo />
-                    <span className="font-heading text-xl font-bold text-foreground">
-                        Uttarakhand Getaways
+                    <span className="font-heading text-2xl font-black text-foreground tracking-tighter">
+                        Tripzy
                     </span>
                 </Link>
                 <p className="max-w-xs text-sm text-muted-foreground">
-                  Your gateway to serene stays in the heart of the Himalayas.
+                  Your smart gateway to serene stays in the heart of the Himalayas.
                 </p>
                 <div className="flex items-center gap-4 mt-4">
                   <a href="#" aria-label="Facebook" className="text-muted-foreground transition-colors hover:text-primary">
@@ -75,7 +74,7 @@ export default function Footer() {
         
         <div className="mt-12 border-t pt-8">
             <p className="text-center text-sm text-muted-foreground">
-                © {new Date().getFullYear()} Uttarakhand Getaways. All rights reserved.
+                © {new Date().getFullYear()} Tripzy. All rights reserved.
             </p>
         </div>
       </div>

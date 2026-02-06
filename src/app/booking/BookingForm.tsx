@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, ArrowLeft, Lock, Info, CloudAlert, Download } from 'lucide-react';
+import { Loader2, ArrowLeft, Lock, CloudAlert } from 'lucide-react';
 import Link from 'next/link';
 import { BookingFormSkeleton } from './BookingFormSkeleton';
 import { confirmBookingAction } from './actions';
@@ -26,6 +26,11 @@ declare global {
     Razorpay: any;
   }
 }
+
+/**
+ * @fileOverview Tripzy Checkout Form. 
+ * Functional features: Split Payment and Early Check-in request.
+ */
 
 export function BookingForm() {
     const searchParams = useSearchParams();
@@ -88,8 +93,7 @@ export function BookingForm() {
     const checkOut = parse(checkOutStr, 'yyyy-MM-dd', new Date());
     const nights = differenceInDays(checkOut, checkIn);
 
-    const hotelDiscountPercent = hotel.discount || 0;
-    const discountedRoomPrice = room.price * (1 - hotelDiscountPercent / 100);
+    const discountedRoomPrice = hotel.discount ? room.price * (1 - hotel.discount / 100) : room.price;
     const totalPrice = discountedRoomPrice * nights;
 
     const handlePayment = async () => {
@@ -118,7 +122,7 @@ export function BookingForm() {
                 key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_SC2oQHkSXdvVp8',
                 amount: orderData.amount,
                 currency: "INR",
-                name: "Uttarakhand Getaways",
+                name: "Tripzy",
                 description: `Stay at ${hotel.name}`,
                 order_id: orderData.id,
                 handler: async function (response: any) {
@@ -236,7 +240,7 @@ export function BookingForm() {
                                 <CloudAlert className="h-6 w-6" /> Weather Risk Disclaimer
                             </div>
                             <p className="text-sm text-red-700 leading-relaxed font-medium">
-                                Travel in Uttarakhand mountains is subject to weather conditions. By booking, you acknowledge that landslides or heavy snow may affect road access.
+                                Tripzy mountain stays are subject to weather conditions. By booking, you acknowledge that landslides or heavy snow may affect road access.
                             </p>
                             <div className="flex items-center space-x-3 pt-2">
                                 <Checkbox id="weather" checked={weatherRiskAccepted} onCheckedChange={(checked) => setWeatherRiskAccepted(checked === true)} className="border-red-400" />
@@ -248,12 +252,12 @@ export function BookingForm() {
                             <div className="flex items-start gap-3 p-4 bg-white border rounded-none">
                                 <Checkbox id="terms" checked={termsAccepted} onCheckedChange={(checked) => setTermsAccepted(checked === true)} className="mt-1" />
                                 <label htmlFor="terms" className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
-                                    I accept the <Link href="/terms" className="text-[#006ce4] font-bold hover:underline">Booking Terms</Link>.
+                                    I accept the <Link href="/terms" className="text-[#006ce4] font-bold hover:underline">Tripzy Booking Terms</Link>.
                                 </label>
                             </div>
 
                             <Button onClick={handlePayment} size="lg" className="w-full sm:w-auto h-12 px-10 rounded-none text-base font-black bg-[#006ce4] hover:bg-[#005bb8] text-white shadow-sm" disabled={isBooking || !termsAccepted || !weatherRiskAccepted}>
-                                {isBooking ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</> : <><Lock className="mr-2 h-4 w-4" /> Secure Reservation</>}
+                                {isBooking ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</> : <><Lock className="mr-2 h-4 w-4" /> Secure Tripzy Reservation</>}
                             </Button>
                         </div>
                     </div>
