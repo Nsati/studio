@@ -57,7 +57,7 @@ export async function bulkUploadHotels(hotelsData: HotelUploadData[]): Promise<{
             const hotelId = slugify(hotel.name, { lower: true, strict: true });
             const hotelRef = adminDb.collection('hotels').doc(hotelId);
 
-            // Use internal helper type to avoid missing 'id' error during push
+            // FIXED: Explicitly define the room array to match Omit type but ensure logic handles 'id' later
             const roomsArray: Array<Omit<Room, 'id' | 'hotelId' | 'availableRooms'>> = [];
             
             // Process up to 3 rooms
