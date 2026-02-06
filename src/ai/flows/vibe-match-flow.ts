@@ -44,8 +44,13 @@ const vibeMatchFlow = ai.defineFlow(
   },
   async (input) => {
     try {
+      // Use standard Gemini 1.5 Flash for speed and reliability
       const { output } = await suggestionPrompt(input);
-      if (!output) throw new Error('AI failed to generate a matching vibe.');
+      
+      if (!output) {
+        throw new Error('AI failed to generate a matching vibe.');
+      }
+      
       return output;
     } catch (e: any) {
       console.error('Gemini Execution Error:', e);
