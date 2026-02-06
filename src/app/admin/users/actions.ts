@@ -6,8 +6,7 @@ import type { UserProfile } from '@/lib/types';
 import { z } from 'zod';
 
 /**
- * @fileOverview Hardened User Management Actions. 
- * Fixed Circular Reference by ensuring clean variable scoping.
+ * @fileOverview Hardened User Management Actions for Tripzy.
  */
 
 type ActionResponse = {
@@ -36,36 +35,40 @@ export async function getUserDetailsForAdmin(uid: string): Promise<UserDetailsFo
         throw new Error(error || "Admin SDK not initialized");
     }
 
-    const userRef = adminDb.doc(`users/${uid}`);
-    // Fixed: Using a different variable name to avoid scoping clash
-    const statsQuery = adminDb.collectionGroup('bookings').where('userId', '==', uid);
+    try {
+        const userRef = adminDb.doc(`users/${uid}`);
+        const statsQuery = adminDb.collectionGroup('bookings').where('userId', '==', uid);
 
-    const [userDoc, bookingsSnapshot] = await Promise.all([
-        userRef.get(),
-        statsQuery.get(), 
-    ]);
+        const [userDoc, statsSnapshot] = await Promise.all([
+            userRef.get(),
+            statsQuery.get(), 
+        ]);
 
-    if (!userDoc.exists) {
-        throw new Error("User not found.");
-    }
-
-    const userProfileData = userDoc.data() as UserProfile;
-    let totalRevenue = 0;
-    let totalBookings = 0;
-
-    bookingsSnapshot.forEach(doc => {
-        const booking = doc.data() as any;
-        if (booking.status === 'CONFIRMED') {
-            totalBookings++;
-            totalRevenue += Number(booking.totalPrice) || 0;
+        if (!userDoc.exists) {
+            throw new Error("User not found.");
         }
-    });
 
-    return {
-        ...userProfileData,
-        totalRevenue,
-        totalBookings,
-    };
+        const userProfileData = userDoc.data() as UserProfile;
+        let revenueSum = 0;
+        let bookingsCount = 0;
+
+        statsSnapshot.forEach(doc => {
+            const booking = doc.data() as any;
+            if (booking.status === 'CONFIRMED') {
+                bookingsCount++;
+                revenueSum += Number(booking.totalPrice) || 0;
+            }
+        });
+
+        return {
+            ...userProfileData,
+            totalRevenue: revenueSum,
+            totalBookings: bookingsCount,
+        };
+    } catch (e: any) {
+        console.error("[ADMIN USER ACTION] Fetch Failure:", e.message);
+        throw e;
+    }
 }
 
 export async function updateUserByAdmin(uid: string, data: UpdateUserInput): Promise<ActionResponse> {

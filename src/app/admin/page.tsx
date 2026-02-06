@@ -21,7 +21,7 @@ import { format, isValid, parseISO } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertTitle } from '@/components/ui/alert';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
 import { 
   Table, 
@@ -33,8 +33,7 @@ import {
 } from "@/components/ui/table";
 
 /**
- * @fileOverview Production Admin Dashboard for Tripzy.
- * Fixed: Resolved syntax error in Alert vs Button tags.
+ * @fileOverview Hardened Production Admin Dashboard for Tripzy.
  */
 
 function StatCard({ title, value, icon: Icon, description, isLoading, trend }: any) {
@@ -121,13 +120,15 @@ export default function AdminDashboard() {
       </div>
 
       {error && (
-        <Alert variant="destructive" className="rounded-none border-red-200 bg-red-50">
-            <AlertTriangle className="h-4 w-4 mr-2" />
-            <div className="flex-1">
-                <AlertTitle className="font-bold text-red-900">Synchronization Error</AlertTitle>
-                <p className="text-sm text-red-700">{error}</p>
+        <Alert variant="destructive" className="rounded-none border-red-200 bg-red-50 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+                <AlertTriangle className="h-5 w-5 text-red-600" />
+                <div>
+                    <AlertTitle className="font-bold text-red-900">Synchronization Error</AlertTitle>
+                    <AlertDescription className="text-sm text-red-700">{error}</AlertDescription>
+                </div>
             </div>
-            <Button onClick={loadData} size="sm" variant="outline" className="ml-4 h-8 border-red-300 text-red-900 hover:bg-red-100">
+            <Button onClick={loadData} size="sm" variant="outline" className="h-8 border-red-300 text-red-900 hover:bg-red-100">
                 Retry
             </Button>
         </Alert>

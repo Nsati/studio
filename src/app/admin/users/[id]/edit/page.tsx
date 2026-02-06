@@ -16,8 +16,7 @@ import { BookOpen, IndianRupee, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
 /**
- * @fileOverview Edit User Page for Tripzy.
- * Fixed: Type-casting for status to resolve suspended/pending literal mismatches.
+ * @fileOverview Production-Hardened Edit User Page for Tripzy.
  */
 
 function StatCard({ title, value, icon: Icon, isLoading }: any) {
@@ -65,13 +64,13 @@ export default function EditUserPage() {
             getUserDetailsForAdmin(userId)
                 .then(data => {
                     setUserData(data);
-                    // Explicitly cast to match Zod union types
+                    // Explicitly cast literals to match Zod union types for build stability
                     form.reset({
-                        displayName: data.displayName,
-                        email: data.email,
-                        mobile: data.mobile,
-                        role: data.role as 'user' | 'admin',
-                        status: data.status as 'pending' | 'active' | 'suspended',
+                        displayName: data.displayName || '',
+                        email: data.email || '',
+                        mobile: data.mobile || '',
+                        role: (data.role as 'user' | 'admin') || 'user',
+                        status: (data.status as 'pending' | 'active' | 'suspended') || 'pending',
                     });
                     setIsLoading(false);
                 })
@@ -177,7 +176,7 @@ export default function EditUserPage() {
                                 <FormField control={form.control} name="role" render={({ field }) => (
                                     <FormItem>
                                         <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">System Role</FormLabel>
-                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                        <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
                                             <FormControl><SelectTrigger className="rounded-none h-12 focus:ring-[#1E90FF]"><SelectValue /></SelectTrigger></FormControl>
                                             <SelectContent>
                                                 <SelectItem value="user">User / Explorer</SelectItem>
@@ -192,7 +191,7 @@ export default function EditUserPage() {
                                 <FormField control={form.control} name="status" render={({ field }) => (
                                     <FormItem>
                                         <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Account Status</FormLabel>
-                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                        <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
                                             <FormControl><SelectTrigger className="rounded-none h-12 focus:ring-[#1E90FF]"><SelectValue /></SelectTrigger></FormControl>
                                             <SelectContent>
                                                 <SelectItem value="active">Active (Full Access)</SelectItem>

@@ -37,8 +37,7 @@ import {
 import { cn } from '@/lib/utils';
 
 /**
- * @fileOverview Production Bookings Inventory for Tripzy.
- * Fixed: Explicit AlertDialogTrigger import.
+ * @fileOverview Hardened Production Bookings Inventory for Tripzy.
  */
 
 function BookingStatusBadge({ status }: { status: string }) {
