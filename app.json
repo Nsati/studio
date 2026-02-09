@@ -19,10 +19,7 @@
       "bundleIdentifier": "com.tripzy.app"
     },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#1E90FF"
-      },
+      "backgroundColor": "#1E90FF",
       "package": "com.tripzy.app"
     },
     "web": {

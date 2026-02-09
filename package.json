@@ -10,8 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest",
     "native": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios"
+    "android": "expo run:android",
+    "ios": "expo run:ios"
   },
   "dependencies": {
     "@genkit-ai/google-genai": "^1.0.0",
