@@ -1,3 +1,4 @@
+
 import { Hotel, Room, City, TourPackage, Review } from './types';
 
 type WithId<T> = T & { id: string };
