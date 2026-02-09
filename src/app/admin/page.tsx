@@ -181,7 +181,7 @@ export default function AdminDashboard() {
                                 <TableHead className="text-[11px] font-bold uppercase tracking-wider">Guest</TableHead>
                                 <TableHead className="text-[11px] font-bold uppercase tracking-wider">Property</TableHead>
                                 <TableHead className="text-[11px] font-bold uppercase tracking-wider text-right">Amount</TableHead>
-                                <TableHead className="text-[11px) font-bold uppercase tracking-wider text-center">Status</TableHead>
+                                <TableHead className="text-[11px] font-bold uppercase tracking-wider text-center">Status</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
