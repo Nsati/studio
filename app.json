@@ -15,6 +15,11 @@
     "android": {
       "backgroundColor": "#1E90FF",
       "package": "com.tripzy.app"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "5f5690eb-b21a-4205-87c5-8657dd019282"
+      }
     }
   }
 }
