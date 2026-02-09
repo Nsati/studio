@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -16,13 +17,19 @@ import { SearchFilters } from '@/app/search/SearchFilters';
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 
+/**
+ * @fileOverview Tripzy Homepage - Production Hardened.
+ * Implements strict hydration safety for dynamic date and weather logic.
+ */
+
 function SeasonTruthMeter() {
     const [weather, setWeather] = useState<{ temp: number, condition: string, raw: string } | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isPeakSeason, setIsPeakSeason] = useState(false);
+    const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
-        // Hydration-safe logic: only execute on client
+        setMounted(true);
         const currentMonth = new Date().getMonth() + 1;
         setIsPeakSeason([4, 5, 6, 10].includes(currentMonth));
 
@@ -30,19 +37,14 @@ function SeasonTruthMeter() {
             const apiKey = 'bd5e378503939ddaee76f12ad7a97608';
             try {
                 const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=Dehradun,IN&units=metric&appid=${apiKey}`);
-                if (!response.ok) throw new Error('API limit or error');
+                if (!response.ok) throw new Error('API limit');
                 const data = await response.json();
-                
-                const temp = Math.round(data.main.temp);
-                const condition = data.weather[0].main;
-                
                 setWeather({ 
-                    temp, 
+                    temp: Math.round(data.main.temp), 
                     condition: data.weather[0].description,
-                    raw: condition 
+                    raw: data.weather[0].main 
                 });
             } catch (e) {
-                console.error("Weather fetch failed:", e);
                 setWeather({ temp: 18, condition: 'Clear Skies', raw: 'Clear' });
             } finally {
                 setIsLoading(false);
@@ -51,18 +53,15 @@ function SeasonTruthMeter() {
         fetchWeather();
     }, []);
 
+    if (!mounted) return <div className="h-32 w-full animate-pulse bg-muted/20" />;
+
     const isRisky = weather?.raw === 'Rain' || weather?.raw === 'Snow' || weather?.raw === 'Thunderstorm';
 
     const metrics = [
         { label: 'Crowd', value: isPeakSeason ? 'High' : 'Moderate', color: isPeakSeason ? 'text-red-600' : 'text-amber-600', icon: Users },
         { label: 'Cost', value: isPeakSeason ? 'Peak Rates' : 'Standard', color: isPeakSeason ? 'text-red-600' : 'text-green-600', icon: IndianRupee },
         { label: 'Weather', value: isLoading ? 'Syncing...' : `${weather?.temp}°C - ${weather?.condition}`, color: 'text-blue-600', icon: CloudSun },
-        { 
-            label: 'Safety', 
-            value: isRisky ? 'Caution: Roads' : 'Stable Roads', 
-            color: isRisky ? 'text-red-600' : 'text-green-700', 
-            icon: ShieldCheck 
-        },
+        { label: 'Safety', value: isRisky ? 'Caution: Roads' : 'Stable Roads', color: isRisky ? 'text-red-600' : 'text-green-700', icon: ShieldCheck },
     ];
 
     return (
@@ -74,7 +73,7 @@ function SeasonTruthMeter() {
                         <h2 className="text-2xl font-black tracking-tight">Season Truth Meter™</h2>
                     </div>
                     <span className="text-[10px] bg-[#003580] text-white px-3 py-1 rounded-full font-black uppercase tracking-widest md:ml-4">
-                        {isLoading ? <span className="flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin" /> Verifying satellite data</span> : 'Live Tripzy Status'}
+                        {isLoading ? <span className="flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin" /> Satellite Sync</span> : 'Live Tripzy Status'}
                     </span>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -104,10 +103,9 @@ export default function HomePage() {
 
   return (
     <div className="bg-background">
-      {/* Search Header Hero */}
       <section className="bg-[#003580] pt-12 pb-24 px-4 relative overflow-hidden">
         <div className="absolute inset-0 opacity-10">
-            <Image src="https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?auto=format&fit=crop&q=80&w=1080" fill className="object-cover" alt="bg" />
+            <Image src="https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?auto=format&fit=crop&q=80&w=1080" fill className="object-cover" alt="bg" priority />
         </div>
         <div className="container mx-auto relative z-10">
           <div className="max-w-4xl space-y-6 mb-10">
@@ -118,16 +116,12 @@ export default function HomePage() {
               Real-time safety scores, weather alerts, and mountain-ready stays in Uttarakhand.
             </p>
           </div>
-          
-          <div className="max-w-6xl mx-auto">
-            <SearchFilters />
-          </div>
+          <div className="max-w-6xl mx-auto"><SearchFilters /></div>
         </div>
       </section>
 
       <SeasonTruthMeter />
 
-      {/* Trending Destinations */}
       <section className="py-16 px-4">
         <div className="container mx-auto">
           <div className="mb-8 space-y-1">
@@ -138,25 +132,12 @@ export default function HomePage() {
             {dummyCities.slice(0, 2).map((city) => {
               const cityImage = PlaceHolderImages.find((img) => img.id === city.image);
               return (
-                <Link
-                  key={city.id}
-                  href={`/search?city=${city.name}`}
-                  className="group relative h-[320px] overflow-hidden rounded-sm shadow-sm"
-                >
-                  {cityImage && (
-                    <Image
-                      src={cityImage.imageUrl}
-                      alt={city.name}
-                      fill
-                      className="object-cover transition-transform duration-700 group-hover:scale-105"
-                    />
-                  )}
+                <Link key={city.id} href={`/search?city=${city.name}`} className="group relative h-[320px] overflow-hidden rounded-sm shadow-sm">
+                  {cityImage && <Image src={cityImage.imageUrl} alt={city.name} fill className="object-cover transition-transform duration-700 group-hover:scale-105" />}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
                   <div className="absolute bottom-6 left-6 text-white">
                     <h3 className="text-3xl font-black">{city.name}</h3>
-                    <p className="text-white/70 text-sm font-bold flex items-center gap-2 mt-1">
-                        <Mountain className="h-4 w-4" /> Explore Smart Collection
-                    </p>
+                    <p className="text-white/70 text-sm font-bold flex items-center gap-2 mt-1"><Mountain className="h-4 w-4" /> Explore Smart Collection</p>
                   </div>
                 </Link>
               );
@@ -165,7 +146,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Smart Suggestions */}
       <section className="py-16 bg-[#f0f6ff] px-4">
         <div className="container mx-auto">
           <div className="flex items-center justify-between mb-8">
@@ -173,9 +153,7 @@ export default function HomePage() {
                 <h2 className="text-2xl font-bold text-[#1a1a1a]">Smart Suggestions</h2>
                 <p className="text-muted-foreground text-sm font-medium">Verified for safety and mountain comfort</p>
             </div>
-            <Link href="/search" className="text-[#006ce4] font-bold hover:underline text-sm flex items-center gap-1">
-              View all Stays
-            </Link>
+            <Link href="/search" className="text-[#006ce4] font-bold hover:underline text-sm flex items-center gap-1">View all Stays</Link>
           </div>
           {areHotelsLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -183,32 +161,9 @@ export default function HomePage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {featuredHotels?.map((hotel) => (
-                <HotelCard key={hotel.id} hotel={hotel as any} />
-              ))}
+              {featuredHotels?.map((hotel) => (<HotelCard key={hotel.id} hotel={hotel as any} />))}
             </div>
           )}
-        </div>
-      </section>
-
-      {/* Mode Promo */}
-      <section className="bg-[#003580] py-20 px-4 text-white">
-        <div className="container mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-            <div className="space-y-6">
-                <h2 className="text-4xl font-black tracking-tighter">Plan your spiritual <br/> or adventure quest.</h2>
-                <p className="text-white/70 text-lg">Switch to Char Dham Mode for temple proximity or Trek Mode for base-camp essentials.</p>
-                <div className="flex gap-4">
-                    <Button asChild className="bg-[#febb02] text-[#003580] hover:bg-[#febb02]/90 rounded-none font-bold px-8 h-12">
-                        <Link href="/search?mode=chardham">Char Dham Mode</Link>
-                    </Button>
-                    <Button asChild variant="outline" className="border-white text-white hover:bg-white/10 rounded-none font-bold px-8 h-12">
-                        <Link href="/search?mode=trek">Trek Mode</Link>
-                    </Button>
-                </div>
-            </div>
-            <div className="relative aspect-video rounded-lg overflow-hidden shadow-2xl">
-                <Image src="https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?auto=format&fit=crop&q=80&w=1080" fill className="object-cover" alt="mountains" />
-            </div>
         </div>
       </section>
     </div>

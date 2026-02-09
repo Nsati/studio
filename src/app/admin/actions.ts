@@ -1,20 +1,18 @@
+
 'use server';
 
 import { getFirebaseAdmin } from '@/firebase/admin';
 import { withCache } from '@/lib/redis';
 
 /**
- * @fileOverview High-performance Admin Analytics with Redis Caching & Strict Serialization.
+ * @fileOverview High-performance Admin Analytics with Strict Serialization logic.
+ * Final Hardened version for Production stability.
  */
 
-/**
- * Robust serialization helper to convert Firestore-specific types (Timestamps, etc.)
- * into plain JSON-compatible objects before passing to client components.
- */
 const serialize = (val: any): any => {
     if (val === null || val === undefined) return null;
     
-    // Handle Firestore Timestamp
+    // Handle Firestore Timestamp specifically
     if (val && typeof val === 'object' && 'toDate' in val && typeof val.toDate === 'function') {
         return val.toDate().toISOString();
     }
@@ -22,7 +20,7 @@ const serialize = (val: any): any => {
     // Handle JS Date
     if (val instanceof Date) return val.toISOString();
     
-    // Handle Arrays
+    // Handle Arrays recursively
     if (Array.isArray(val)) {
         return val.map(serialize);
     }
@@ -42,7 +40,7 @@ const serialize = (val: any): any => {
 };
 
 export async function getAdminDashboardStats() {
-  return withCache('admin_dashboard_stats_v5', 300, async () => {
+  return withCache('admin_dashboard_stats_v6', 300, async () => {
     const { adminDb, error: sdkError } = getFirebaseAdmin();
     
     if (sdkError || !adminDb) {
@@ -50,7 +48,6 @@ export async function getAdminDashboardStats() {
     }
 
     try {
-      // Fetching core data nodes
       const [bookingsSnap, hotelsSnap, usersSnap] = await Promise.all([
         adminDb.collectionGroup('bookings').limit(100).get(),
         adminDb.collection('hotels').get(),
@@ -74,7 +71,6 @@ export async function getAdminDashboardStats() {
         };
       });
 
-      // Sort by recent first
       bookings.sort((a: any, b: any) => {
         const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
         const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
@@ -86,7 +82,7 @@ export async function getAdminDashboardStats() {
 
       return {
         success: true,
-        data: {
+        data: serialize({
           stats: {
             totalRevenue,
             confirmedCount: confirmedBookings.length,
@@ -94,17 +90,17 @@ export async function getAdminDashboardStats() {
             userCount: usersSnap.size,
           },
           recentBookings: bookings.slice(0, 10),
-        }
+        })
       };
     } catch (e: any) {
-      console.error('[ADMIN ANALYTICS] Production Fetch Failure:', e.message);
+      console.error('[ADMIN ANALYTICS ERROR]:', e.message);
       return { success: false, error: e.message };
     }
   });
 }
 
 export async function getAllBookingsForAdmin() {
-  return withCache('admin_all_bookings_v5', 60, async () => {
+  return withCache('admin_all_bookings_v6', 60, async () => {
     const { adminDb, error: sdkError } = getFirebaseAdmin();
     if (sdkError || !adminDb) return { success: false, error: sdkError };
 
@@ -134,9 +130,9 @@ export async function getAllBookingsForAdmin() {
         return dateB - dateA;
       });
 
-      return { success: true, data: bookings };
+      return { success: true, data: serialize(bookings) };
     } catch (e: any) {
-      console.error('[ADMIN INVENTORY] Production Retrieval Failure:', e.message);
+      console.error('[ADMIN INVENTORY ERROR]:', e.message);
       return { success: false, error: e.message };
     }
   });
