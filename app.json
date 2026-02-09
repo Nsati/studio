@@ -1,8 +1,7 @@
-
 {
   "expo": {
     "name": "Tripzy",
-    "slug": "tripzy-mobile",
+    "slug": "tripzy",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -12,10 +11,15 @@
       "resizeMode": "contain",
       "backgroundColor": "#1E90FF"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.tripzy.app"
+      "bundleIdentifier": "com.tripzy.app",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -26,9 +30,6 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    },
-    "extra": {
-      "eas": {}
     }
   }
 }

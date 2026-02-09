@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -32,10 +31,6 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-
-/**
- * @fileOverview Hardened Production Admin Dashboard for Tripzy.
- */
 
 function StatCard({ title, value, icon: Icon, description, isLoading, trend }: any) {
     return (
