@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Tripzy",
-    "slug": "tripzy",
+    "slug": "tripzy-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -16,10 +16,7 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.tripzy.app",
-      "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
-      }
+      "bundleIdentifier": "com.tripzy.app"
     },
     "android": {
       "adaptiveIcon": {
@@ -30,6 +27,11 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": null
+      }
     }
   }
 }
