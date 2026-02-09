@@ -35,7 +35,6 @@ import {
 
 /**
  * @fileOverview Hardened Production Admin Dashboard for Tripzy.
- * Syntax fixed for Next.js build optimization.
  */
 
 function StatCard({ title, value, icon: Icon, description, isLoading, trend }: any) {
@@ -96,8 +95,8 @@ export default function AdminDashboard() {
                 <ShieldAlert className="h-12 w-12 text-red-600" />
             </div>
             <div className="space-y-2">
-                <h2 className="text-2xl font-bold">Unauthorized Access</h2>
-                <p className="text-muted-foreground">Your account does not have permission to view the Tripzy Admin Extranet.</p>
+                <h2 className="text-2xl font-bold text-[#1a1a1a]">Unauthorized Access</h2>
+                <p className="text-muted-foreground font-medium">Your account does not have permission to view the Tripzy Admin Extranet.</p>
             </div>
             <Button asChild className="rounded-none px-10 h-12 font-bold bg-[#1E90FF]">
                 <Link href="/">Return to Site</Link>

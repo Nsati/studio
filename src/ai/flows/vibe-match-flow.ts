@@ -1,8 +1,8 @@
 
 'use server';
 /**
- * @fileOverview Hardened Tripzy AI Flow.
- * Fixed 404 Not Found error by strictly using Genkit 1.x model identifiers.
+ * @fileOverview Tripzy AI Destination Vibe Matcher.
+ * Uses Gemini 1.5 Flash to suggest the perfect Himalayan escape.
  */
 
 import { ai } from '@/ai/genkit';
@@ -20,21 +20,20 @@ type VibeMatchResult = {
   error?: string;
 };
 
-// Fixed: Using standard model name without prefix if plugin handles it, or explicit string.
 const suggestionPrompt = ai.definePrompt({
   name: 'vibeMatchPrompt',
   model: 'googleai/gemini-1.5-flash',
   input: { schema: VibeMatchInputSchema },
   output: { schema: VibeMatchOutputSchema },
   prompt: `You are a professional travel curator for Tripzy, specialized in Uttarakhand.
-Respond ONLY with a valid JSON object.
+Respond ONLY with a valid JSON object matching the requested schema.
 
 User Vibe:
 - Mood: {{{travelVibe}}}
 - Traveling with: {{{travelerType}}}
 - Atmosphere: {{{atmosphere}}}
 
-Suggest a destination in Uttarakhand that fits this vibe perfectly. Mention specific local spots or unique stay types if possible.`,
+Suggest a specific destination in Uttarakhand (like Kanatal, Chopta, Munsiyari, or Landour) that fits this vibe perfectly. Mention specific local spots or unique stay types if possible.`,
 });
 
 const vibeMatchFlow = ai.defineFlow(
@@ -46,15 +45,11 @@ const vibeMatchFlow = ai.defineFlow(
   async (input) => {
     try {
       const { output } = await suggestionPrompt(input);
-      
-      if (!output) {
-        throw new Error('AI failed to generate a matching vibe.');
-      }
-      
+      if (!output) throw new Error('AI failed to generate a matching vibe.');
       return output;
     } catch (e: any) {
       console.error('[AI FLOW ERROR]:', e.message);
-      throw e;
+      throw new Error("The Tripzy AI Expert is currently trekking. Please try again soon.");
     }
   }
 );
@@ -66,11 +61,10 @@ export async function getVibeMatchSuggestionAction(
     const suggestion = await vibeMatchFlow(input);
     return { success: true, data: suggestion };
   } catch (error: any) {
-    console.error('Vibe Match Execution Error:', error);
     return {
       success: false,
       data: null,
-      error: "The Tripzy AI Expert is taking a short mountain walk. Please try again soon.",
+      error: error.message || "The Tripzy AI Expert is taking a short mountain walk.",
     };
   }
 }

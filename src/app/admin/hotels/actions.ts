@@ -55,21 +55,24 @@ export async function bulkUploadHotels(hotelsData: HotelUploadData[]): Promise<{
             const hotelId = slugify(hotel.name, { lower: true, strict: true });
             const hotelRef = adminDb.collection('hotels').doc(hotelId);
 
-            // Intermediate room creation logic fixed for Room interface compatibility
-            const roomsToCreate: Array<Omit<Room, 'id' | 'hotelId' | 'availableRooms'>> = [];
+            const roomsToCreate: Room[] = [];
             
             for (let i = 1; i <= 3; i++) {
                 const type = hotel[`room_${i}_type` as 'room_1_type' | 'room_2_type' | 'room_3_type'];
                 const price = hotel[`room_${i}_price` as 'room_1_price' | 'room_2_price' | 'room_3_price'];
-                const capacity = hotel[`room_${i}_capacity` as 'room_1_capacity' | 'room_2_capacity' | 'room_3_capacity'];
-                const totalRooms = hotel[`room_${i}_total` as 'room_1_total' | 'room_2_total' | 'room_3_total'];
+                const capacity = hotel[`room_${i}_capacity' | 'room_2_capacity' | 'room_3_capacity` as 'room_1_capacity' | 'room_2_capacity' | 'room_3_capacity'];
+                const totalRooms = hotel[`room_${i}_total' | 'room_2_total' | 'room_3_total` as 'room_1_total' | 'room_2_total' | 'room_3_total'];
 
                 if (type && price && capacity && totalRooms) {
+                    const tempRoomId = slugify(`${hotel.name} ${type} ${Math.random().toString(36).substring(2, 7)}`, { lower: true, strict: true });
                     roomsToCreate.push({ 
+                        id: tempRoomId,
+                        hotelId,
                         type: type as 'Standard' | 'Deluxe' | 'Suite', 
                         price, 
                         capacity, 
-                        totalRooms 
+                        totalRooms,
+                        availableRooms: totalRooms
                     });
                 }
             }
@@ -110,16 +113,8 @@ export async function bulkUploadHotels(hotelsData: HotelUploadData[]): Promise<{
             batch.set(hotelRef, hotelDoc);
 
             for (const r of roomsToCreate) {
-                const roomId = slugify(`${hotel.name} ${r.type} ${Math.random().toString(36).substring(2, 7)}`, { lower: true, strict: true });
-                const roomRef = hotelRef.collection('rooms').doc(roomId);
-                
-                const roomDoc: Room = {
-                    ...r,
-                    id: roomId,
-                    hotelId,
-                    availableRooms: r.totalRooms,
-                };
-                batch.set(roomRef, roomDoc);
+                const roomRef = hotelRef.collection('rooms').doc(r.id);
+                batch.set(roomRef, r);
             }
         }
 
