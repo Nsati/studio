@@ -1,10 +1,11 @@
+
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore, Firestore } from 'firebase-admin/firestore';
 import { getAuth, Auth } from 'firebase-admin/auth';
 
 /**
  * @fileOverview Production-grade Firebase Admin SDK Singleton.
- * Provides clear error messages for missing environment variables.
+ * Hardened for environment variable parsing and multi-invocation stability.
  */
 
 type AdminServices = {
@@ -15,13 +16,16 @@ type AdminServices = {
 let adminInstance: AdminServices | null = null;
 
 export function getFirebaseAdmin(): { adminDb: Firestore | null; adminAuth: Auth | null; error: string | null; } {
+    // 1. Safety check for browser environment
     if (typeof window !== 'undefined') {
         return { adminDb: null, adminAuth: null, error: "Admin SDK cannot be used on client." };
     }
 
+    // 2. Singleton check
     if (adminInstance) return { ...adminInstance, error: null };
 
     try {
+        // 3. Reuse existing app if already initialized
         if (getApps().length > 0) {
             const app = getApps()[0];
             adminInstance = { adminDb: getFirestore(app), adminAuth: getAuth(app) };
@@ -38,18 +42,23 @@ export function getFirebaseAdmin(): { adminDb: Firestore | null; adminAuth: Auth
         if (!privateKey) missing.push('FIREBASE_PRIVATE_KEY');
 
         if (missing.length > 0) {
-            const errorMsg = `Missing Environment Variables: ${missing.join(', ')}. Please add them to your deployment platform settings.`;
+            const errorMsg = `Critical: Missing Environment Variables [${missing.join(', ')}]. Deployment requires these for production access.`;
             console.error(`[ADMIN SDK] ${errorMsg}`);
             return { adminDb: null, adminAuth: null, error: errorMsg };
         }
 
-        // Handle private key formatting for different environments
-        if (privateKey!.startsWith('"') && privateKey!.endsWith('"')) {
-            privateKey = privateKey!.substring(1, privateKey!.length - 1);
+        // 4. Hardened Private Key Normalization
+        // Some platforms wrap the key in quotes or escape newlines differently
+        let formattedKey = privateKey!;
+        
+        if (formattedKey.startsWith('"') && formattedKey.endsWith('"')) {
+            formattedKey = formattedKey.substring(1, formattedKey.length - 1);
         }
         
-        const formattedKey = privateKey!.replace(/\\n/g, '\n').replace(/\n/g, '\n').trim();
+        // Handle escaped newlines (\n) correctly
+        formattedKey = formattedKey.replace(/\\n/g, '\n');
 
+        // 5. Initialize Firebase App
         const app = initializeApp({
             credential: cert({
                 projectId,
@@ -59,11 +68,11 @@ export function getFirebaseAdmin(): { adminDb: Firestore | null; adminAuth: Auth
         });
 
         adminInstance = { adminDb: getFirestore(app), adminAuth: getAuth(app) };
-        console.log("✅ [ADMIN SDK] Initialized successfully.");
+        console.log("✅ [ADMIN SDK] Production Node Connected Successfully.");
         return { ...adminInstance, error: null };
 
     } catch (err: any) {
-        console.error("[ADMIN SDK] Initialization Error:", err.message);
+        console.error("[ADMIN SDK CRITICAL FAILURE]:", err.message);
         return { adminDb: null, adminAuth: null, error: `Initialization Error: ${err.message}` };
     }
 }

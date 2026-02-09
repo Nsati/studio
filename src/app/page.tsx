@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -6,7 +7,7 @@ import Link from 'next/link';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
 import { dummyCities } from '@/lib/dummy-data';
-import { ShieldCheck, CloudSun, Users, IndianRupee, ThermometerSnowflake, Mountain, MapPin, Loader2, AlertTriangle } from 'lucide-react';
+import { ShieldCheck, CloudSun, Users, IndianRupee, ThermometerSnowflake, Mountain, Loader2 } from 'lucide-react';
 import { HotelCard } from '@/components/hotel/HotelCard';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, limit, query } from 'firebase/firestore';
@@ -19,8 +20,12 @@ import { Card, CardContent } from '@/components/ui/card';
 function SeasonTruthMeter() {
     const [weather, setWeather] = useState<{ temp: number, condition: string, raw: string } | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [isPeakSeason, setIsPeakSeason] = useState(false);
 
     useEffect(() => {
+        // Hydration-safe logic
+        setIsPeakSeason([4, 5, 6, 10].includes(new Date().getMonth() + 1));
+
         const fetchWeather = async () => {
             const apiKey = 'bd5e378503939ddaee76f12ad7a97608';
             try {
@@ -46,7 +51,6 @@ function SeasonTruthMeter() {
         fetchWeather();
     }, []);
 
-    const isPeakSeason = [4, 5, 6, 10].includes(new Date().getMonth() + 1);
     const isRisky = weather?.raw === 'Rain' || weather?.raw === 'Snow' || weather?.raw === 'Thunderstorm';
 
     const metrics = [
@@ -170,7 +174,7 @@ export default function HomePage() {
                 <p className="text-muted-foreground text-sm font-medium">Verified for safety and mountain comfort</p>
             </div>
             <Link href="/search" className="text-[#006ce4] font-bold hover:underline text-sm flex items-center gap-1">
-              View all < IndianRupee className="h-3 w-3" />
+              View all Stays
             </Link>
           </div>
           {areHotelsLoading ? (

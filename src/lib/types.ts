@@ -1,3 +1,4 @@
+
 export interface Hotel {
   name: string;
   city: string;
@@ -6,8 +7,8 @@ export interface Hotel {
   images: string[];
   amenities: string[];
   rating: number;
-  minPrice?: number;
-  discount?: number;
+  minPrice: number;
+  discount: number;
 
   // Smart Uttarakhand Features (Mandatory for core logic)
   mountainSafetyScore: number;

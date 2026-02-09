@@ -1,3 +1,4 @@
+
 'use server';
 
 import { getFirebaseAdmin } from '@/firebase/admin';
@@ -10,12 +11,15 @@ import { withCache } from '@/lib/redis';
 const serialize = (val: any): any => {
     if (val === null || val === undefined) return null;
     
+    // Handle Firestore Timestamp specifically
     if (val && typeof val === 'object' && 'toDate' in val && typeof val.toDate === 'function') {
         return val.toDate().toISOString();
     }
     
+    // Handle JS Date
     if (val instanceof Date) return val.toISOString();
     
+    // Recursively handle objects
     if (typeof val === 'object' && !Array.isArray(val)) {
         const plain: any = {};
         for (const key in val) {
@@ -26,16 +30,17 @@ const serialize = (val: any): any => {
         return plain;
     }
     
+    // Recursively handle arrays
     if (Array.isArray(val)) {
         return val.map(serialize);
     }
     
+    // Primitive values
     return val;
 };
 
 export async function getAdminDashboardStats() {
-  // Use Redis Cache for 5 minutes (300 seconds)
-  return withCache('admin_dashboard_stats_v2', 300, async () => {
+  return withCache('admin_dashboard_stats_v3', 300, async () => {
     const { adminDb, error: sdkError } = getFirebaseAdmin();
     
     if (sdkError || !adminDb) {
@@ -43,6 +48,7 @@ export async function getAdminDashboardStats() {
     }
 
     try {
+      // Fetching core data nodes
       const [bookingsSnap, hotelsSnap, usersSnap] = await Promise.all([
         adminDb.collectionGroup('bookings').limit(100).get(),
         adminDb.collection('hotels').get(),
@@ -66,6 +72,7 @@ export async function getAdminDashboardStats() {
         };
       });
 
+      // Sort by recent first
       bookings.sort((a: any, b: any) => {
         const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
         const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
@@ -95,7 +102,7 @@ export async function getAdminDashboardStats() {
 }
 
 export async function getAllBookingsForAdmin() {
-  return withCache('admin_all_bookings_v2', 60, async () => {
+  return withCache('admin_all_bookings_v3', 60, async () => {
     const { adminDb, error: sdkError } = getFirebaseAdmin();
     if (sdkError || !adminDb) return { success: false, error: sdkError };
 

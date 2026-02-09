@@ -1,3 +1,4 @@
+
 import { Hotel, Room, City, TourPackage, Review } from './types';
 
 type WithId<T> = T & { id: string };
@@ -69,6 +70,7 @@ export const dummyHotels: WithId<Hotel>[] = [
 
 export const dummyRooms: WithId<Room>[] = [
   { id: 'nr-std', hotelId: 'the-naini-retreat', type: 'Standard', price: 8000, capacity: 2, totalRooms: 10 },
+  { id: 'nr-deluxe', hotelId: 'the-naini-retreat', type: 'Deluxe', price: 12000, capacity: 2, totalRooms: 5 },
   { id: 'jw-std', hotelId: 'jw-marriott-mussoorie', type: 'Standard', price: 25000, capacity: 2, totalRooms: 20 },
 ];
 
