@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -24,7 +23,8 @@ function SeasonTruthMeter() {
 
     useEffect(() => {
         // Hydration-safe logic: only execute on client
-        setIsPeakSeason([4, 5, 6, 10].includes(new Date().getMonth() + 1));
+        const currentMonth = new Date().getMonth() + 1;
+        setIsPeakSeason([4, 5, 6, 10].includes(currentMonth));
 
         const fetchWeather = async () => {
             const apiKey = 'bd5e378503939ddaee76f12ad7a97608';

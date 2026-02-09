@@ -1,4 +1,3 @@
-
 'use server';
 
 import { getFirebaseAdmin } from '@/firebase/admin';
@@ -43,7 +42,7 @@ const serialize = (val: any): any => {
 };
 
 export async function getAdminDashboardStats() {
-  return withCache('admin_dashboard_stats_v4', 300, async () => {
+  return withCache('admin_dashboard_stats_v5', 300, async () => {
     const { adminDb, error: sdkError } = getFirebaseAdmin();
     
     if (sdkError || !adminDb) {
@@ -105,7 +104,7 @@ export async function getAdminDashboardStats() {
 }
 
 export async function getAllBookingsForAdmin() {
-  return withCache('admin_all_bookings_v4', 60, async () => {
+  return withCache('admin_all_bookings_v5', 60, async () => {
     const { adminDb, error: sdkError } = getFirebaseAdmin();
     if (sdkError || !adminDb) return { success: false, error: sdkError };
 
