@@ -23,7 +23,7 @@ function SeasonTruthMeter() {
     const [isPeakSeason, setIsPeakSeason] = useState(false);
 
     useEffect(() => {
-        // Hydration-safe logic
+        // Hydration-safe logic: only execute on client
         setIsPeakSeason([4, 5, 6, 10].includes(new Date().getMonth() + 1));
 
         const fetchWeather = async () => {

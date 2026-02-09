@@ -48,14 +48,14 @@ export function getFirebaseAdmin(): { adminDb: Firestore | null; adminAuth: Auth
         }
 
         // 4. Hardened Private Key Normalization
-        // Some platforms wrap the key in quotes or escape newlines differently
         let formattedKey = privateKey!;
         
+        // Remove surrounding quotes if they exist
         if (formattedKey.startsWith('"') && formattedKey.endsWith('"')) {
             formattedKey = formattedKey.substring(1, formattedKey.length - 1);
         }
         
-        // Handle escaped newlines (\n) correctly
+        // Properly handle escaped newlines
         formattedKey = formattedKey.replace(/\\n/g, '\n');
 
         // 5. Initialize Firebase App

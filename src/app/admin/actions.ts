@@ -8,10 +8,14 @@ import { withCache } from '@/lib/redis';
  * @fileOverview High-performance Admin Analytics with Redis Caching & Strict Serialization.
  */
 
+/**
+ * Robust serialization helper to convert Firestore-specific types (Timestamps, etc.)
+ * into plain JSON-compatible objects before passing to client components.
+ */
 const serialize = (val: any): any => {
     if (val === null || val === undefined) return null;
     
-    // Handle Firestore Timestamp specifically
+    // Handle Firestore Timestamp
     if (val && typeof val === 'object' && 'toDate' in val && typeof val.toDate === 'function') {
         return val.toDate().toISOString();
     }
@@ -19,8 +23,13 @@ const serialize = (val: any): any => {
     // Handle JS Date
     if (val instanceof Date) return val.toISOString();
     
-    // Recursively handle objects
-    if (typeof val === 'object' && !Array.isArray(val)) {
+    // Handle Arrays
+    if (Array.isArray(val)) {
+        return val.map(serialize);
+    }
+    
+    // Handle Objects recursively
+    if (typeof val === 'object' && val !== null) {
         const plain: any = {};
         for (const key in val) {
             if (Object.prototype.hasOwnProperty.call(val, key)) {
@@ -30,17 +39,11 @@ const serialize = (val: any): any => {
         return plain;
     }
     
-    // Recursively handle arrays
-    if (Array.isArray(val)) {
-        return val.map(serialize);
-    }
-    
-    // Primitive values
     return val;
 };
 
 export async function getAdminDashboardStats() {
-  return withCache('admin_dashboard_stats_v3', 300, async () => {
+  return withCache('admin_dashboard_stats_v4', 300, async () => {
     const { adminDb, error: sdkError } = getFirebaseAdmin();
     
     if (sdkError || !adminDb) {
@@ -102,7 +105,7 @@ export async function getAdminDashboardStats() {
 }
 
 export async function getAllBookingsForAdmin() {
-  return withCache('admin_all_bookings_v3', 60, async () => {
+  return withCache('admin_all_bookings_v4', 60, async () => {
     const { adminDb, error: sdkError } = getFirebaseAdmin();
     if (sdkError || !adminDb) return { success: false, error: sdkError };
 
