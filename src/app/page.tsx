@@ -1,170 +1,185 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
-import Image from 'next/image';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { Button } from '@/components/ui/button';
-import { dummyCities } from '@/lib/dummy-data';
-import { ShieldCheck, CloudSun, Users, IndianRupee, ThermometerSnowflake, Mountain, Loader2 } from 'lucide-react';
-import { HotelCard } from '@/components/hotel/HotelCard';
+import Image from 'next/image';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, limit, query } from 'firebase/firestore';
-import type { Hotel } from '@/lib/types';
-import { Skeleton } from '@/components/ui/skeleton';
-import { SearchFilters } from '@/app/search/SearchFilters';
-import React from 'react';
+import { collection, query, limit } from 'firebase/firestore';
+import type { Hotel, City, TourPackage } from '@/lib/types';
+
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Search, MapPin, Star, ShieldCheck, Compass, ThermometerSun, Wind } from 'lucide-react';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 /**
- * @fileOverview Tripzy Homepage - Production Hardened.
- * Fixed hydration error by moving all dynamic date/weather logic to useEffect.
+ * @fileOverview Tripzy Home - Smart Uttarakhand Getaways.
+ * Hardened to prevent hydration mismatches and production crashes.
  */
 
 function SeasonTruthMeter() {
-    const [weather, setWeather] = useState<{ temp: number, condition: string, raw: string } | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isPeakSeason, setIsPeakSeason] = useState(false);
-    const [mounted, setMounted] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+  const [currentDate, setCurrentDate] = useState('');
 
-    useEffect(() => {
-        setMounted(true);
-        // Date logic must be inside useEffect to avoid hydration mismatch
-        const currentMonth = new Date().getMonth() + 1;
-        setIsPeakSeason([4, 5, 6, 10].includes(currentMonth));
+  useEffect(() => {
+    setIsClient(true);
+    setCurrentDate(new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }));
+  }, []);
 
-        const fetchWeather = async () => {
-            const apiKey = 'bd5e378503939ddaee76f12ad7a97608';
-            try {
-                const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=Dehradun,IN&units=metric&appid=${apiKey}`);
-                if (!response.ok) throw new Error('API limit');
-                const data = await response.json();
-                setWeather({ 
-                    temp: Math.round(data.main.temp), 
-                    condition: data.weather[0].description,
-                    raw: data.weather[0].main 
-                });
-            } catch (e) {
-                setWeather({ temp: 18, condition: 'Clear Skies', raw: 'Clear' });
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        fetchWeather();
-    }, []);
-
-    if (!mounted) return <div className="h-32 w-full animate-pulse bg-muted/20" />;
-
-    const isRisky = weather?.raw === 'Rain' || weather?.raw === 'Snow' || weather?.raw === 'Thunderstorm';
-
-    const metrics = [
-        { label: 'Crowd', value: isPeakSeason ? 'High' : 'Moderate', color: isPeakSeason ? 'text-red-600' : 'text-amber-600', icon: Users },
-        { label: 'Cost', value: isPeakSeason ? 'Peak Rates' : 'Standard', color: isPeakSeason ? 'text-red-600' : 'text-green-600', icon: IndianRupee },
-        { label: 'Weather', value: isLoading ? 'Syncing...' : `${weather?.temp}°C - ${weather?.condition}`, color: 'text-blue-600', icon: CloudSun },
-        { label: 'Safety', value: isRisky ? 'Caution: Roads' : 'Stable Roads', color: isRisky ? 'text-red-600' : 'text-green-700', icon: ShieldCheck },
-    ];
-
-    return (
-        <section className="py-12 px-4 bg-white border-b">
-            <div className="container mx-auto">
-                <div className="flex flex-col md:flex-row md:items-center gap-2 mb-8">
-                    <div className="flex items-center gap-2">
-                        <ThermometerSnowflake className="text-primary h-6 w-6" />
-                        <h2 className="text-2xl font-black tracking-tight">Season Truth Meter™</h2>
-                    </div>
-                    <span className="text-[10px] bg-[#003580] text-white px-3 py-1 rounded-full font-black uppercase tracking-widest md:ml-4">
-                        {isLoading ? <span className="flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin" /> Satellite Sync</span> : 'Live Tripzy Status'}
-                    </span>
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {metrics.map((m) => (
-                        <Card key={m.label} className="rounded-none border-dashed border-2 hover:border-primary/40 transition-colors">
-                            <CardContent className="p-6 flex flex-col items-center text-center space-y-2">
-                                <m.icon className="h-5 w-5 text-muted-foreground" />
-                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{m.label}</p>
-                                <p className={`text-sm md:text-base font-black capitalize ${m.color}`}>{m.value}</p>
-                            </CardContent>
-                        </Card>
-                    ))}
-                </div>
-            </div>
-        </section>
-    );
-}
-
-export default function HomePage() {
-  const firestore = useFirestore();
-  const featuredHotelsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return query(collection(firestore, 'hotels'), limit(4));
-  }, [firestore]);
-
-  const { data: featuredHotels, isLoading: areHotelsLoading } = useCollection<Hotel>(featuredHotelsQuery);
+  if (!isClient) return <div className="h-10 w-48 bg-muted animate-pulse rounded-full" />;
 
   return (
-    <div className="bg-background">
-      <section className="bg-[#003580] pt-12 pb-24 px-4 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-            <Image src="https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?auto=format&fit=crop&q=80&w=1080" fill className="object-cover" alt="bg" priority />
-        </div>
-        <div className="container mx-auto relative z-10">
-          <div className="max-w-4xl space-y-6 mb-10">
-            <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter">
-              Your Tripzy <br/> <span className="text-[#febb02]">Smart Companion</span>
-            </h1>
-            <p className="text-xl md:text-2xl text-white/90 font-medium">
-              Real-time safety scores, weather alerts, and mountain-ready stays in Uttarakhand.
-            </p>
+    <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/20 text-white text-[10px] font-black uppercase tracking-widest">
+      <ThermometerSun className="h-3 w-3 text-[#febb02]" />
+      Verified {currentDate}: Mountain Access Stable
+    </div>
+  );
+}
+
+export default function Home() {
+  const firestore = useFirestore();
+
+  const featuredHotelsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, 'hotels'), limit(6));
+  }, [firestore]);
+
+  const { data: featuredHotels, isLoading: hotelsLoading } = useCollection<Hotel>(featuredHotelsQuery);
+
+  const getImageUrl = (id: string) => {
+    return PlaceHolderImages.find((p) => p.id === id)?.imageUrl || '';
+  };
+
+  return (
+    <div className="flex flex-col min-h-screen">
+      {/* Hero Section */}
+      <section className="relative h-[600px] flex items-center justify-center overflow-hidden">
+        <Image
+          src={getImageUrl('hero')}
+          alt="Himalayan Landscape"
+          fill
+          priority
+          className="object-cover brightness-[0.7]"
+          data-ai-hint="mountain landscape"
+        />
+        <div className="container relative z-10 px-4 text-center space-y-6">
+          <SeasonTruthMeter />
+          <h1 className="text-4xl md:text-7xl font-black text-white tracking-tighter leading-none">
+            SMART STAYS IN <br /> <span className="text-[#febb02]">UTTARAKHAND</span>
+          </h1>
+          <p className="text-lg md:text-xl text-white/90 max-w-2xl mx-auto font-medium">
+            Real-time landslide risk scores, verified Pahadi hosts, and local mountain intel for a safe getaway.
+          </p>
+
+          <div className="max-w-4xl mx-auto bg-white p-2 rounded-none md:rounded-full shadow-2xl flex flex-col md:flex-row gap-2 mt-8">
+            <div className="flex-1 flex items-center px-4 gap-3 border-b md:border-b-0 md:border-r border-gray-100 py-3">
+              <Search className="h-5 w-5 text-primary" />
+              <Input
+                placeholder="Where do you want to go?"
+                className="border-0 focus-visible:ring-0 text-base font-bold placeholder:font-medium rounded-none"
+              />
+            </div>
+            <div className="flex-1 flex items-center px-4 gap-3 py-3">
+              <Compass className="h-5 w-5 text-primary" />
+              <Input
+                placeholder="Choose travel vibe"
+                className="border-0 focus-visible:ring-0 text-base font-bold placeholder:font-medium rounded-none"
+              />
+            </div>
+            <Button className="rounded-full px-10 h-14 text-lg font-black bg-[#006ce4] hover:bg-[#005bb8] transition-all">
+              FIND MY STAY
+            </Button>
           </div>
-          <div className="max-w-6xl mx-auto"><SearchFilters /></div>
         </div>
       </section>
 
-      <SeasonTruthMeter />
-
-      <section className="py-16 px-4">
-        <div className="container mx-auto">
-          <div className="mb-8 space-y-1">
-              <h2 className="text-2xl font-bold text-[#1a1a1a]">Mountain Hubs</h2>
-              <p className="text-muted-foreground font-medium">Safe routes and verified properties in top cities</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {dummyCities.slice(0, 2).map((city) => {
-              const cityImage = PlaceHolderImages.find((img) => img.id === city.image);
-              return (
-                <Link key={city.id} href={`/search?city=${city.name}`} className="group relative h-[320px] overflow-hidden rounded-sm shadow-sm">
-                  {cityImage && <Image src={cityImage.imageUrl} alt={city.name} fill className="object-cover transition-transform duration-700 group-hover:scale-105" />}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                  <div className="absolute bottom-6 left-6 text-white">
-                    <h3 className="text-3xl font-black">{city.name}</h3>
-                    <p className="text-white/70 text-sm font-bold flex items-center gap-2 mt-1"><Mountain className="h-4 w-4" /> Explore Smart Collection</p>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
+      {/* Trust Badges */}
+      <section className="bg-white border-b py-6">
+        <div className="container px-4 flex flex-wrap justify-center md:justify-between items-center gap-8">
+            <div className="flex items-center gap-2 text-muted-foreground">
+                <ShieldCheck className="h-5 w-5 text-green-600" />
+                <span className="text-[10px] font-black uppercase tracking-widest">Verified Mountain Safety</span>
+            </div>
+             <div className="flex items-center gap-2 text-muted-foreground">
+                <Wind className="h-5 w-5 text-blue-500" />
+                <span className="text-[10px] font-black uppercase tracking-widest">Live Weather Insights</span>
+            </div>
+             <div className="flex items-center gap-2 text-muted-foreground">
+                <Star className="h-5 w-5 text-[#febb02]" />
+                <span className="text-[10px] font-black uppercase tracking-widest">Pahadi Hospitality Only</span>
+            </div>
         </div>
       </section>
 
-      <section className="py-16 bg-[#f0f6ff] px-4">
-        <div className="container mx-auto">
-          <div className="flex items-center justify-between mb-8">
+      {/* Featured Stays */}
+      <section className="py-20 bg-[#f8fafc]">
+        <div className="container px-4">
+          <div className="flex justify-between items-end mb-12">
             <div>
-                <h2 className="text-2xl font-bold text-[#1a1a1a]">Smart Suggestions</h2>
-                <p className="text-muted-foreground text-sm font-medium">Verified for safety and mountain comfort</p>
+                <h2 className="text-3xl md:text-5xl font-black tracking-tighter text-slate-900 mb-2 uppercase">Smart Suggestions</h2>
+                <p className="text-slate-500 font-bold">Hand-picked properties with high safety scores.</p>
             </div>
-            <Link href="/search" className="text-[#006ce4] font-bold hover:underline text-sm flex items-center gap-1">View all Stays</Link>
+            <Button variant="outline" className="hidden md:flex rounded-full font-black border-2">VIEW ALL STAYS</Button>
           </div>
-          {areHotelsLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {Array.from({length: 4}).map((_, i) => <Skeleton key={i} className="h-80 w-full" />)}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {featuredHotels?.map((hotel) => (<HotelCard key={hotel.id} hotel={hotel as any} />))}
-            </div>
-          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {hotelsLoading ? (
+               [...Array(6)].map((_, i) => (
+                   <Card key={i} className="animate-pulse h-[400px] rounded-2xl bg-slate-200" />
+               ))
+            ) : (
+                featuredHotels?.map((hotel) => (
+                    <Link key={hotel.id} href={`/hotels/${hotel.id}`}>
+                        <Card className="group overflow-hidden rounded-2xl border-0 shadow-sm hover:shadow-xl transition-all duration-500 cursor-pointer bg-white">
+                            <CardContent className="p-0 relative">
+                                <div className="relative h-64 w-full overflow-hidden">
+                                    <Image
+                                        src={getImageUrl(hotel.images[0]) || 'https://picsum.photos/seed/hotel/800/600'}
+                                        alt={hotel.name}
+                                        fill
+                                        className="object-cover group-hover:scale-110 transition-transform duration-700"
+                                    />
+                                    <div className="absolute top-4 left-4 flex gap-2">
+                                        <Badge className="bg-[#febb02] text-black border-0 font-black px-3 py-1 text-[10px]">
+                                            SAFETY: {hotel.mountainSafetyScore}/100
+                                        </Badge>
+                                        {hotel.discount > 0 && (
+                                            <Badge className="bg-red-500 text-white border-0 font-black px-3 py-1 text-[10px]">
+                                                SAVE {hotel.discount}%
+                                            </Badge>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="p-6">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <h3 className="text-xl font-black text-slate-900 group-hover:text-primary transition-colors leading-tight">
+                                            {hotel.name}
+                                        </h3>
+                                        <div className="flex items-center gap-1 bg-[#febb02]/10 px-2 py-1 rounded">
+                                            <Star className="h-3 w-3 fill-[#febb02] text-[#febb02]" />
+                                            <span className="text-xs font-black">{hotel.rating}</span>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-1 text-slate-500 text-xs font-bold mb-4 uppercase tracking-widest">
+                                        <MapPin className="h-3 w-3" />
+                                        {hotel.city}
+                                    </div>
+                                    <div className="flex items-baseline gap-2">
+                                        <span className="text-2xl font-black text-slate-900">
+                                            ₹{hotel.minPrice.toLocaleString()}
+                                        </span>
+                                        <span className="text-sm text-slate-400 font-bold">/ night</span>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </Link>
+                ))
+            )}
+          </div>
         </div>
       </section>
     </div>
