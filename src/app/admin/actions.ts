@@ -8,7 +8,7 @@ import { z } from 'zod';
 
 /**
  * @fileOverview Hardened User Management Actions.
- * Hardened for production with strict serialization.
+ * Improved serialization logic to prevent production JSON errors.
  */
 
 type ActionResponse = {
@@ -32,7 +32,7 @@ interface UserDetailsForAdmin extends UserProfile {
 }
 
 /**
- * Helper to convert Firestore Timestamps and complex objects into plain JSON-serializable types.
+ * Robust JSON serialization helper for complex Firestore types.
  */
 function toPlainObject(obj: any): any {
     if (obj === null || typeof obj !== 'object') return obj;
