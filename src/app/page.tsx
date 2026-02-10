@@ -18,8 +18,8 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 
 /**
- * @fileOverview Tripzy Homepage - Production Hardened.
- * Implements strict hydration safety for dynamic date and weather logic.
+ * @fileOverview Tripzy Homepage - Hardened for Production.
+ * Resolves Hydration Mismatches by deferring dynamic logic to useEffect.
  */
 
 function SeasonTruthMeter() {

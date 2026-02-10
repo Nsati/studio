@@ -5,8 +5,8 @@ import { getFirebaseAdmin } from '@/firebase/admin';
 import { withCache } from '@/lib/redis';
 
 /**
- * @fileOverview High-performance Admin Analytics with Strict Serialization logic.
- * Final Hardened version for Production stability.
+ * @fileOverview High-performance Admin Analytics with Recursive Serialization.
+ * Hardened for production to prevent runtime crashes.
  */
 
 const serialize = (val: any): any => {
@@ -40,7 +40,7 @@ const serialize = (val: any): any => {
 };
 
 export async function getAdminDashboardStats() {
-  return withCache('admin_dashboard_stats_v6', 300, async () => {
+  return withCache('admin_dashboard_stats_v7', 300, async () => {
     const { adminDb, error: sdkError } = getFirebaseAdmin();
     
     if (sdkError || !adminDb) {
@@ -100,7 +100,7 @@ export async function getAdminDashboardStats() {
 }
 
 export async function getAllBookingsForAdmin() {
-  return withCache('admin_all_bookings_v6', 60, async () => {
+  return withCache('admin_all_bookings_v7', 60, async () => {
     const { adminDb, error: sdkError } = getFirebaseAdmin();
     if (sdkError || !adminDb) return { success: false, error: sdkError };
 

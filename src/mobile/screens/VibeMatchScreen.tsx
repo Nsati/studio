@@ -6,7 +6,7 @@ import { getVibeMatchSuggestionAction } from '@/ai/flows/vibe-match-flow';
 
 /**
  * @fileOverview Tripzy AI Vibe Match Screen for Mobile.
- * Refactored to use standard StyleSheet to resolve TypeScript className mismatch.
+ * Standardized using StyleSheet to resolve TypeScript className mismatch.
  */
 
 export function VibeMatchScreen() {
@@ -90,17 +90,17 @@ export function VibeMatchScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8fafc' },
   contentContainer: { padding: 24, paddingBottom: 60 },
-  header: { itemsCenter: 'center', marginBottom: 40, alignItems: 'center' },
+  header: { alignItems: 'center', marginBottom: 40 },
   iconCircle: { backgroundColor: 'rgba(255, 111, 60, 0.1)', padding: 24, borderRadius: 100, marginBottom: 16 },
   title: { fontSize: 28, fontWeight: '900', textAlign: 'center', color: '#1a1a1a', letterSpacing: -0.5 },
   subtitle: { fontSize: 15, color: '#64748b', textAlign: 'center', marginTop: 8, fontWeight: '500', lineHeight: 22 },
   actionButton: { backgroundColor: '#1E90FF', height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center', shadowColor: '#1E90FF', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 8 },
   buttonContent: { flexDirection: 'row', alignItems: 'center' },
-  buttonText: { color: 'white', fontWeight: '900', fontSize: 18, ml: 10, marginLeft: 10 },
+  buttonText: { color: 'white', fontWeight: '900', fontSize: 18, marginLeft: 10 },
   loadingContainer: { padding: 40, alignItems: 'center' },
   loadingText: { marginTop: 16, color: '#1E90FF', fontWeight: '700', fontSize: 14 },
   resultCard: { backgroundColor: 'white', padding: 32, borderRadius: 40, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 20, elevation: 4, borderWidth: 1, borderColor: '#f1f5f9' },
-  matchBadge: { backgroundColor: '#f0fdf4', alignSelf: 'flex-start', px: 16, py: 6, borderRadius: 20, marginBottom: 16, paddingHorizontal: 12, paddingVertical: 4 },
+  matchBadge: { backgroundColor: '#f0fdf4', alignSelf: 'flex-start', borderRadius: 20, marginBottom: 16, paddingHorizontal: 12, paddingVertical: 4 },
   matchBadgeText: { color: '#16a34a', fontSize: 10, fontWeight: '900', letterSpacing: 1 },
   locationTitle: { fontSize: 42, fontWeight: '900', color: '#1E90FF', letterSpacing: -2, marginBottom: 12 },
   reasoning: { fontSize: 16, color: '#4b5563', lineHeight: 24, fontStyle: 'italic', fontWeight: '500' },
