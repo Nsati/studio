@@ -7,8 +7,8 @@ import type { UserProfile } from '@/lib/types';
 import { z } from 'zod';
 
 /**
- * @fileOverview Hardened User Management Actions.
- * Improved serialization logic to prevent production JSON errors.
+ * @fileOverview Hardened User & Admin Management Actions.
+ * Robust serialization logic to prevent production JSON errors.
  */
 
 type ActionResponse = {
@@ -26,17 +26,16 @@ export const UpdateUserSchema = z.object({
 
 export type UpdateUserInput = z.infer<typeof UpdateUserSchema>;
 
-interface UserDetailsForAdmin extends UserProfile {
-    totalRevenue: number;
-    totalBookings: number;
-}
-
 /**
  * Robust JSON serialization helper for complex Firestore types.
  */
 function toPlainObject(obj: any): any {
     if (obj === null || typeof obj !== 'object') return obj;
-    if (obj.toDate && typeof obj.toDate === 'function') return obj.toDate().toISOString();
+    // Handle Firestore Timestamps
+    if (typeof obj.toDate === 'function') return obj.toDate().toISOString();
+    // Handle ServerTimestamps/FieldValues (approximation for JSON)
+    if (obj._seconds !== undefined) return new Date(obj._seconds * 1000).toISOString();
+    
     if (Array.isArray(obj)) return obj.map(toPlainObject);
     
     const plain: any = {};
@@ -48,31 +47,85 @@ function toPlainObject(obj: any): any {
     return plain;
 }
 
-export async function getUserDetailsForAdmin(uid: string): Promise<UserDetailsForAdmin> {
-    const { adminDb, error: adminError } = getFirebaseAdmin();
-    if (adminError || !adminDb) {
-        throw new Error(adminError || "Admin SDK not initialized");
+export async function getAdminDashboardStats() {
+    const { adminDb, error } = getFirebaseAdmin();
+    if (error || !adminDb) return { success: false, error: error || "Admin SDK Error" };
+
+    try {
+        const [hotelsSnap, usersSnap, bookingsSnap] = await Promise.all([
+            adminDb.collection('hotels').get(),
+            adminDb.collection('users').get(),
+            adminDb.collectionGroup('bookings').orderBy('createdAt', 'desc').limit(5).get()
+        ]);
+
+        let totalRevenue = 0;
+        let confirmedCount = 0;
+
+        // Note: In production, we'd use a more efficient query for revenue
+        const allBookings = await adminDb.collectionGroup('bookings').where('status', '==', 'CONFIRMED').get();
+        allBookings.forEach(doc => {
+            totalRevenue += Number(doc.data().totalPrice) || 0;
+            confirmedCount++;
+        });
+
+        const recentBookings = bookingsSnap.docs.map(doc => ({
+            id: doc.id,
+            ...toPlainObject(doc.data())
+        }));
+
+        return {
+            success: true,
+            data: {
+                stats: {
+                    hotelCount: hotelsSnap.size,
+                    userCount: usersSnap.size,
+                    totalRevenue,
+                    confirmedCount
+                },
+                recentBookings
+            }
+        };
+    } catch (e: any) {
+        console.error("Dashboard Stats Error:", e);
+        return { success: false, error: e.message };
     }
+}
+
+export async function getAllBookingsForAdmin() {
+    const { adminDb, error } = getFirebaseAdmin();
+    if (error || !adminDb) return { success: false, error: error || "Admin SDK Error" };
+
+    try {
+        const snapshot = await adminDb.collectionGroup('bookings').orderBy('createdAt', 'desc').get();
+        const data = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...toPlainObject(doc.data())
+        }));
+        return { success: true, data };
+    } catch (e: any) {
+        console.error("Fetch All Bookings Error:", e);
+        return { success: false, error: e.message };
+    }
+}
+
+export async function getUserDetailsForAdmin(uid: string) {
+    const { adminDb, error } = getFirebaseAdmin();
+    if (error || !adminDb) throw new Error(error || "Admin SDK Error");
 
     try {
         const userRef = adminDb.doc(`users/${uid}`);
+        const userDoc = await userRef.get();
+
+        if (!userDoc.exists) throw new Error("User profile not found.");
+
         const bookingsQuery = adminDb.collectionGroup('bookings').where('userId', '==', uid);
+        const bookingsSnapshot = await bookingsQuery.get();
 
-        const [userDoc, bookingsSnapshot] = await Promise.all([
-            userRef.get(),
-            bookingsQuery.get(), 
-        ]);
-
-        if (!userDoc.exists) {
-            throw new Error("User profile not found.");
-        }
-
-        const userProfileData = toPlainObject(userDoc.data());
         let revenueSum = 0;
         let bookingsCount = 0;
 
         bookingsSnapshot.forEach(docSnap => {
-            const b = docSnap.data() as any;
+            const b = docSnap.data();
             if (b.status === 'CONFIRMED') {
                 bookingsCount++;
                 revenueSum += Number(b.totalPrice) || 0;
@@ -80,21 +133,19 @@ export async function getUserDetailsForAdmin(uid: string): Promise<UserDetailsFo
         });
 
         return {
-            ...userProfileData,
+            ...toPlainObject(userDoc.data()),
             totalRevenue: revenueSum,
             totalBookings: bookingsCount,
         };
     } catch (e: any) {
-        console.error("[ADMIN USER ACTION] Fetch Failure:", e.message);
+        console.error("User Details Error:", e);
         throw e;
     }
 }
 
 export async function updateUserByAdmin(uid: string, data: UpdateUserInput): Promise<ActionResponse> {
-    const { adminDb, error: adminError } = getFirebaseAdmin();
-    if (adminError || !adminDb) {
-        return { success: false, message: adminError || "Admin SDK not initialized" };
-    }
+    const { adminDb, error } = getFirebaseAdmin();
+    if (error || !adminDb) return { success: false, message: error || "Admin SDK Error" };
 
     const validation = UpdateUserSchema.safeParse(data);
     if (!validation.success) {
@@ -108,9 +159,8 @@ export async function updateUserByAdmin(uid: string, data: UpdateUserInput): Pro
         revalidatePath('/admin/users');
         revalidatePath(`/admin/users/${uid}/edit`);
 
-        return { success: true, message: 'User profile updated successfully.' };
+        return { success: true, message: 'User updated successfully.' };
     } catch (e: any) {
-        console.error("Failed to update user profile:", e);
-        return { success: false, message: e.message || 'An unexpected error occurred.' };
+        return { success: false, message: e.message || 'Update failed.' };
     }
 }

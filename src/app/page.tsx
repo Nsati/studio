@@ -26,13 +26,14 @@ function SeasonTruthMeter() {
 
   useEffect(() => {
     setIsClient(true);
+    // Execute dynamic logic ONLY on client to prevent hydration mismatch
     setCurrentDate(new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }));
   }, []);
 
   if (!isClient) return <div className="h-10 w-48 bg-muted animate-pulse rounded-full" />;
 
   return (
-    <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/20 text-white text-[10px] font-black uppercase tracking-widest">
+    <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/20 text-white text-[10px] font-black uppercase tracking-widest animate-in fade-in duration-500">
       <ThermometerSun className="h-3 w-3 text-[#febb02]" />
       Verified {currentDate}: Mountain Access Stable
     </div>
@@ -54,7 +55,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-background">
       {/* Hero Section */}
       <section className="relative h-[600px] flex items-center justify-center overflow-hidden">
         <Image
@@ -171,7 +172,7 @@ export default function Home() {
                                     </div>
                                     <div className="flex items-baseline gap-2">
                                         <span className="text-2xl font-black text-slate-900">
-                                            ₹{hotel.minPrice.toLocaleString()}
+                                            ₹{hotel.minPrice?.toLocaleString()}
                                         </span>
                                         <span className="text-sm text-slate-400 font-bold">/ night</span>
                                     </div>
