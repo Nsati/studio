@@ -18,8 +18,8 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 
 /**
- * @fileOverview Tripzy Homepage - Hardened for Production.
- * Resolves Hydration Mismatches by deferring dynamic logic to useEffect.
+ * @fileOverview Tripzy Homepage - Production Hardened.
+ * Fixed hydration error by moving all dynamic date/weather logic to useEffect.
  */
 
 function SeasonTruthMeter() {
@@ -30,6 +30,7 @@ function SeasonTruthMeter() {
 
     useEffect(() => {
         setMounted(true);
+        // Date logic must be inside useEffect to avoid hydration mismatch
         const currentMonth = new Date().getMonth() + 1;
         setIsPeakSeason([4, 5, 6, 10].includes(currentMonth));
 

@@ -6,7 +6,7 @@ import { getVibeMatchSuggestionAction } from '@/ai/flows/vibe-match-flow';
 
 /**
  * @fileOverview Tripzy AI Vibe Match Screen for Mobile.
- * Standardized using StyleSheet to resolve TypeScript className mismatch.
+ * Final Hardened version: Replaced className with standard StyleSheet to fix TS errors.
  */
 
 export function VibeMatchScreen() {

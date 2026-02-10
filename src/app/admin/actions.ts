@@ -5,8 +5,8 @@ import { getFirebaseAdmin } from '@/firebase/admin';
 import { withCache } from '@/lib/redis';
 
 /**
- * @fileOverview High-performance Admin Analytics with Recursive Serialization.
- * Hardened for production to prevent runtime crashes.
+ * @fileOverview High-performance Admin Analytics with Strict Serialization logic.
+ * Hardened for Production stability to prevent "plain object" errors.
  */
 
 const serialize = (val: any): any => {
