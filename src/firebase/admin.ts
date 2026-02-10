@@ -5,7 +5,7 @@ import { getAuth, Auth } from 'firebase-admin/auth';
 
 /**
  * @fileOverview Production-grade Firebase Admin SDK Singleton.
- * Robust handling for private key formatting and server-side safety.
+ * Hardened private key parsing for stability in all environments.
  */
 
 type AdminServices = {
@@ -38,7 +38,7 @@ export function getFirebaseAdmin(): { adminDb: Firestore | null; adminAuth: Auth
             return { adminDb: null, adminAuth: null, error: errorMsg };
         }
 
-        // Production Hardening: Properly escaping newline characters in the private key
+        // Production Hardening: Bulletproof private key parsing
         let formattedKey = privateKey.trim();
         if (formattedKey.startsWith('"') && formattedKey.endsWith('"')) {
             formattedKey = formattedKey.substring(1, formattedKey.length - 1);

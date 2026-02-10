@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, limit } from 'firebase/firestore';
-import type { Hotel, City, TourPackage } from '@/lib/types';
+import type { Hotel } from '@/lib/types';
 
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -122,7 +122,9 @@ export default function Home() {
                 <h2 className="text-3xl md:text-5xl font-black tracking-tighter text-slate-900 mb-2 uppercase">Smart Suggestions</h2>
                 <p className="text-slate-500 font-bold">Hand-picked properties with high safety scores.</p>
             </div>
-            <Button variant="outline" className="hidden md:flex rounded-full font-black border-2">VIEW ALL STAYS</Button>
+            <Button variant="outline" className="hidden md:flex rounded-full font-black border-2" asChild>
+                <Link href="/search">VIEW ALL STAYS</Link>
+            </Button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

@@ -41,7 +41,9 @@ function toPlainObject(obj: any): any {
     
     const plain: any = {};
     for (const key in obj) {
-        plain[key] = toPlainObject(obj[key]);
+        if (Object.prototype.hasOwnProperty.call(obj, key)) {
+            plain[key] = toPlainObject(obj[key]);
+        }
     }
     return plain;
 }
