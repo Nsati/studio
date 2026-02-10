@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Search, MapPin, Star, ShieldCheck, Compass, ThermometerSun, Wind, ArrowRight } from 'lucide-react';
+import { Search, MapPin, Star, ShieldCheck, Compass, ThermometerSun, Wind, ArrowRight, Sparkles } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 /**
@@ -91,8 +91,8 @@ export default function Home() {
                 className="border-0 focus-visible:ring-0 text-lg font-bold placeholder:font-medium rounded-none"
               />
             </div>
-            <Button className="rounded-full px-12 h-16 text-xl font-black bg-[#006ce4] hover:bg-[#005bb8] transition-all shadow-lg hover:scale-105 active:scale-95">
-              SEARCH STAYS
+            <Button asChild className="rounded-full px-12 h-16 text-xl font-black bg-[#006ce4] hover:bg-[#005bb8] transition-all shadow-lg hover:scale-105 active:scale-95">
+              <Link href="/search">SEARCH STAYS</Link>
             </Button>
           </div>
         </div>
