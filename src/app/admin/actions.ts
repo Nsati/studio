@@ -1,4 +1,3 @@
-
 'use server';
 
 import { getFirebaseAdmin } from '@/firebase/admin';
@@ -28,12 +27,15 @@ export type UpdateUserInput = z.infer<typeof UpdateUserSchema>;
 
 /**
  * Robust JSON serialization helper for complex Firestore types.
+ * Converts Timestamps and FieldValues to plain strings/numbers.
  */
 function toPlainObject(obj: any): any {
     if (obj === null || typeof obj !== 'object') return obj;
+    
     // Handle Firestore Timestamps
     if (typeof obj.toDate === 'function') return obj.toDate().toISOString();
-    // Handle ServerTimestamps/FieldValues (approximation for JSON)
+    
+    // Handle ServerTimestamps/FieldValues (internal structure)
     if (obj._seconds !== undefined) return new Date(obj._seconds * 1000).toISOString();
     
     if (Array.isArray(obj)) return obj.map(toPlainObject);

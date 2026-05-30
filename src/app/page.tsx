@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -66,7 +65,7 @@ export default function Home() {
           fill
           priority
           className="object-cover brightness-[0.6]"
-          data-ai-hint="mountain peaks"
+          data-ai-hint="mountain landscape"
         />
         <div className="container relative z-10 px-4 text-center space-y-8">
           <SeasonTruthMeter />
