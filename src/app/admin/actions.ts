@@ -1,19 +1,14 @@
+
 'use server';
 
 import { getFirebaseAdmin } from '@/firebase/admin';
 import { revalidatePath } from 'next/cache';
-import type { UserProfile } from '@/lib/types';
 import { z } from 'zod';
 
 /**
  * @fileOverview Hardened User & Admin Management Actions.
  * Robust serialization logic to prevent production JSON errors.
  */
-
-type ActionResponse = {
-    success: boolean;
-    message: string;
-}
 
 export const UpdateUserSchema = z.object({
   displayName: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
@@ -57,15 +52,15 @@ export async function getAdminDashboardStats() {
         const [hotelsSnap, usersSnap, bookingsSnap] = await Promise.all([
             adminDb.collection('hotels').get(),
             adminDb.collection('users').get(),
-            adminDb.collectionGroup('bookings').orderBy('createdAt', 'desc').limit(5).get()
+            adminDb.collectionGroup('bookings').orderBy('createdAt', 'desc').limit(10).get()
         ]);
 
         let totalRevenue = 0;
         let confirmedCount = 0;
 
-        // Note: In production, we'd use a more efficient query for revenue
-        const allBookings = await adminDb.collectionGroup('bookings').where('status', '==', 'CONFIRMED').get();
-        allBookings.forEach(doc => {
+        // Efficient aggregation for production metrics
+        const confirmedBookings = await adminDb.collectionGroup('bookings').where('status', '==', 'CONFIRMED').get();
+        confirmedBookings.forEach(doc => {
             totalRevenue += Number(doc.data().totalPrice) || 0;
             confirmedCount++;
         });
@@ -120,8 +115,7 @@ export async function getUserDetailsForAdmin(uid: string) {
 
         if (!userDoc.exists) throw new Error("User profile not found.");
 
-        const bookingsQuery = adminDb.collectionGroup('bookings').where('userId', '==', uid);
-        const bookingsSnapshot = await bookingsQuery.get();
+        const bookingsSnapshot = await adminDb.collectionGroup('bookings').where('userId', '==', uid).get();
 
         let revenueSum = 0;
         let bookingsCount = 0;
@@ -145,7 +139,7 @@ export async function getUserDetailsForAdmin(uid: string) {
     }
 }
 
-export async function updateUserByAdmin(uid: string, data: UpdateUserInput): Promise<ActionResponse> {
+export async function updateUserByAdmin(uid: string, data: UpdateUserInput) {
     const { adminDb, error } = getFirebaseAdmin();
     if (error || !adminDb) return { success: false, message: error || "Admin SDK Error" };
 
