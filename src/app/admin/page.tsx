@@ -13,7 +13,8 @@ import {
   ChevronRight,
   ShieldCheck,
   AlertTriangle,
-  Settings
+  Settings,
+  MapPin
 } from 'lucide-react';
 import { useUser } from '@/firebase';
 import { getAdminDashboardStats } from './actions';
@@ -146,7 +147,7 @@ export default function AdminDashboard() {
         </Alert>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <StatCard 
             title="Total Revenue" 
             value={(data?.stats?.totalRevenue || 0).toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })} 
@@ -162,6 +163,13 @@ export default function AdminDashboard() {
             description="Confirmed Tripzy stays" 
             isLoading={isLoading}
             trend="+6%"
+        />
+        <StatCard 
+            title="Tour Packages" 
+            value={data?.stats?.packageCount || 0} 
+            icon={MapPin} 
+            description="Curated itineraries" 
+            isLoading={isLoading}
         />
         <StatCard 
             title="Active Properties" 

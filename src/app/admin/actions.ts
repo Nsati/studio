@@ -50,9 +50,10 @@ export async function getAdminDashboardStats() {
     }
 
     try {
-        const [hotelsSnap, usersSnap] = await Promise.all([
+        const [hotelsSnap, usersSnap, packagesSnap] = await Promise.all([
             adminDb.collection('hotels').get(),
-            adminDb.collection('users').get()
+            adminDb.collection('users').get(),
+            adminDb.collection('tourPackages').get()
         ]);
 
         let totalRevenue = 0;
@@ -95,6 +96,7 @@ export async function getAdminDashboardStats() {
                 stats: {
                     hotelCount: hotelsSnap.size,
                     userCount: usersSnap.size,
+                    packageCount: packagesSnap.size,
                     totalRevenue,
                     confirmedCount
                 },

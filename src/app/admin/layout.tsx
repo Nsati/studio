@@ -2,7 +2,7 @@
 import { useUser } from '@/firebase';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Hotel, Users2, Tag, LogOut, ExternalLink, BookOpen, Menu, ShieldCheck, LayoutDashboard } from 'lucide-react';
+import { Hotel, Users2, Tag, LogOut, ExternalLink, BookOpen, Menu, ShieldCheck, LayoutDashboard, MapPin } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -13,6 +13,7 @@ const navItems = [
     { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/admin/bookings', label: 'Reservations', icon: BookOpen },
     { href: '/admin/hotels', label: 'Properties', icon: Hotel },
+    { href: '/admin/tour-packages', label: 'Tour Packages', icon: MapPin },
     { href: '/admin/users', label: 'Users', icon: Users2 },
     { href: '/admin/promotions', label: 'Coupons', icon: Tag },
 ];
@@ -24,7 +25,7 @@ function AdminLayoutSkeleton() {
                 <div className="p-6 space-y-6">
                     <Skeleton className="h-8 w-32" />
                     <div className="space-y-2">
-                        {Array.from({length: 5}).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
+                        {Array.from({length: 6}).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
                     </div>
                 </div>
             </aside>
