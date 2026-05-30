@@ -5,10 +5,12 @@ const nextConfig = {
     remotePatterns: [
       { protocol: 'https', hostname: 'placehold.co', pathname: '/**' },
       { protocol: 'https', hostname: 'images.unsplash.com', pathname: '/**' },
+      { protocol: 'https', hostname: 'plus.unsplash.com', pathname: '/**' },
       { protocol: 'https', hostname: 'picsum.photos', pathname: '/**' },
       { protocol: 'https', hostname: 'geof.storyboardthat.com', pathname: '/**' },
       { protocol: 'https', hostname: 'image2url.com', pathname: '/**' },
       { protocol: 'https', hostname: 'firebasestorage.googleapis.com', pathname: '/**' },
+      { protocol: 'https', hostname: 'example.com', pathname: '/**' },
     ],
   },
   async headers() {
@@ -22,7 +24,7 @@ const nextConfig = {
           { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*.unsplash.com https://picsum.photos https://firebasestorage.googleapis.com https://placehold.co; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://api.razorpay.com; frame-src https://api.razorpay.com; font-src 'self' https://fonts.gstatic.com;"
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*.unsplash.com https://picsum.photos https://firebasestorage.googleapis.com https://placehold.co https://example.com; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://api.razorpay.com; frame-src https://api.razorpay.com; font-src 'self' https://fonts.gstatic.com;"
           },
         ],
       },
