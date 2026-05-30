@@ -1,18 +1,9 @@
+
 'use server';
 
 import { getFirebaseAdmin } from '@/firebase/admin';
 import { revalidatePath } from 'next/cache';
-import { z } from 'zod';
-
-export const UpdateUserSchema = z.object({
-  displayName: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
-  email: z.string().email({ message: 'Please enter a valid email address.' }),
-  mobile: z.string().length(10, { message: 'Mobile number must be 10 digits.' }),
-  role: z.enum(['user', 'admin']),
-  status: z.enum(['pending', 'active', 'suspended']),
-});
-
-export type UpdateUserInput = z.infer<typeof UpdateUserSchema>;
+import { UpdateUserSchema, type UpdateUserInput } from './schemas';
 
 /**
  * Robust JSON serialization helper for complex Firestore types.
@@ -61,8 +52,6 @@ export async function getAdminDashboardStats() {
         let recentBookings: any[] = [];
 
         try {
-            // collectionGroup requires indexes for sorting. 
-            // Fetch without sorting first as a fallback for initial deployment.
             const bookingsSnap = await adminDb.collectionGroup('bookings').limit(20).get();
             
             bookingsSnap.forEach(doc => {
@@ -77,7 +66,6 @@ export async function getAdminDashboardStats() {
                 });
             });
 
-            // Sort manually in memory to avoid mandatory index crash in early development
             recentBookings.sort((a, b) => {
                 const dateA = new Date(a.createdAt || 0).getTime();
                 const dateB = new Date(b.createdAt || 0).getTime();

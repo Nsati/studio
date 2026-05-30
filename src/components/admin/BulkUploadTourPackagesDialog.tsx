@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useCallback } from 'react';
@@ -16,7 +17,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Upload, Loader2, FileCheck2, AlertTriangle, Info, RefreshCcw } from 'lucide-react';
-import { bulkUploadTourPackages, type TourPackageUploadData } from '@/app/admin/tour-packages/actions';
+import { bulkUploadTourPackages } from '@/app/admin/tour-packages/actions';
+import { type TourPackageUploadData } from '@/app/admin/schemas';
 import { useRouter } from 'next/navigation';
 import { ScrollArea } from '../ui/scroll-area';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
@@ -85,7 +87,6 @@ export function BulkUploadTourPackagesDialog() {
         }
     };
 
-    // To maintain performance, we only preview the first 50 items if the list is huge.
     const previewData = parsedData.slice(0, 50);
 
     return (

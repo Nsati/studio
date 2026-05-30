@@ -17,7 +17,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Upload, Loader2, FileCheck2, AlertTriangle, TableIcon } from 'lucide-react';
-import { bulkUploadHotels, type HotelUploadData } from '@/app/admin/hotels/actions';
+import { bulkUploadHotels } from '@/app/admin/hotels/actions';
+import { type HotelUploadData } from '@/app/admin/schemas';
 import { useRouter } from 'next/navigation';
 import { ScrollArea } from '../ui/scroll-area';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';

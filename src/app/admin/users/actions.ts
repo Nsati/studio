@@ -4,7 +4,7 @@
 import { getFirebaseAdmin } from '@/firebase/admin';
 import { revalidatePath } from 'next/cache';
 import type { UserProfile } from '@/lib/types';
-import { z } from 'zod';
+import { UpdateUserSchema, type UpdateUserInput } from '../schemas';
 
 /**
  * @fileOverview Hardened User Management Actions for Tripzy.
@@ -15,16 +15,6 @@ type ActionResponse = {
     success: boolean;
     message: string;
 }
-
-export const UpdateUserSchema = z.object({
-  displayName: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
-  email: z.string().email({ message: 'Please enter a valid email address.' }),
-  mobile: z.string().length(10, { message: 'Mobile number must be 10 digits.' }),
-  role: z.enum(['user', 'admin']),
-  status: z.enum(['pending', 'active', 'suspended']),
-});
-
-export type UpdateUserInput = z.infer<typeof UpdateUserSchema>;
 
 interface UserDetailsForAdmin extends UserProfile {
     totalRevenue: number;
@@ -39,8 +29,6 @@ export async function getUserDetailsForAdmin(uid: string): Promise<UserDetailsFo
 
     try {
         const userRef = adminDb.doc(`users/${uid}`);
-        
-        // FIXED: Using unique variable name 'bookingsSnapshot' to avoid clashing with inner logic
         const bookingsQuery = adminDb.collectionGroup('bookings').where('userId', '==', uid);
 
         const [userDoc, bookingsSnapshot] = await Promise.all([

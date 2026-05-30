@@ -1,39 +1,16 @@
+
 'use server';
 
 import { getFirebaseAdmin } from '@/firebase/admin';
 import type { TourPackage } from '@/lib/types';
 import slugify from 'slugify';
-import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
+import { TourPackageUploadSchema, type TourPackageUploadData } from '../schemas';
 
 /**
  * @fileOverview Production Tour Package Actions.
  * Hardened with batch chunking to handle large datasets without crashing.
  */
-
-export const TourPackageUploadSchema = z.object({
-  title: z.string().min(5),
-  duration: z.string().min(3),
-  destinations: z.string(), // comma separated
-  price: z.coerce.number().min(1),
-  gst: z.coerce.number().default(5),
-  image: z.string().min(1),
-  description: z.string().min(20),
-  persons: z.coerce.number().min(1),
-  rooms: z.coerce.number().min(1),
-  cabType: z.string(),
-  travelDate: z.string().optional(),
-  itinerary: z.string(), 
-  hotels: z.string().optional(),
-  inclusions: z.string(), // comma separated
-  exclusions: z.string(), // comma separated
-  policy_tcs: z.string(),
-  policy_cancellation: z.string(),
-  policy_payment: z.string(),
-  policy_terms: z.string(),
-});
-
-export type TourPackageUploadData = z.infer<typeof TourPackageUploadSchema>;
 
 export async function bulkUploadTourPackages(data: TourPackageUploadData[]) {
   const { adminDb, error } = getFirebaseAdmin();
@@ -42,8 +19,6 @@ export async function bulkUploadTourPackages(data: TourPackageUploadData[]) {
   }
 
   try {
-    // Firestore has a limit of 500 operations per batch.
-    // We chunk the data to stay safe (using 400 as a buffer).
     const chunkSize = 400;
     let processedCount = 0;
 

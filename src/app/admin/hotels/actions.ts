@@ -4,36 +4,7 @@
 import { getFirebaseAdmin } from '@/firebase/admin';
 import type { Hotel, Room } from '@/lib/types';
 import slugify from 'slugify';
-import { z } from 'zod';
-
-// Zod schema for a single row of the CSV
-export const HotelUploadSchema = z.object({
-    name: z.string().min(3),
-    city: z.string().min(1),
-    description: z.string().min(10),
-    address: z.string().optional(),
-    rating: z.coerce.number().min(1).max(5),
-    discount: z.coerce.number().min(0).max(100).optional(),
-    amenities: z.string(), // comma separated
-    images: z.string(), // comma separated
-    // Optional Room 1
-    room_1_type: z.enum(['Standard', 'Deluxe', 'Suite']).optional(),
-    room_1_price: z.coerce.number().positive().optional(),
-    room_1_capacity: z.coerce.number().positive().int().optional(),
-    room_1_total: z.coerce.number().positive().int().optional(),
-    // Optional Room 2
-    room_2_type: z.enum(['Standard', 'Deluxe', 'Suite']).optional(),
-    room_2_price: z.coerce.number().positive().optional(),
-    room_2_capacity: z.coerce.number().positive().int().optional(),
-    room_2_total: z.coerce.number().positive().int().optional(),
-    // Optional Room 3
-    room_3_type: z.enum(['Standard', 'Deluxe', 'Suite']).optional(),
-    room_3_price: z.coerce.number().positive().optional(),
-    room_3_capacity: z.coerce.number().positive().int().optional(),
-    room_3_total: z.coerce.number().positive().int().optional(),
-});
-
-export type HotelUploadData = z.infer<typeof HotelUploadSchema>;
+import { HotelUploadSchema, type HotelUploadData } from '../schemas';
 
 export async function bulkUploadHotels(hotelsData: HotelUploadData[]): Promise<{ success: boolean; message: string }> {
     const { adminDb, error } = getFirebaseAdmin();
@@ -60,8 +31,8 @@ export async function bulkUploadHotels(hotelsData: HotelUploadData[]): Promise<{
             for (let i = 1; i <= 3; i++) {
                 const type = hotel[`room_${i}_type` as 'room_1_type' | 'room_2_type' | 'room_3_type'];
                 const price = hotel[`room_${i}_price` as 'room_1_price' | 'room_2_price' | 'room_3_price'];
-                const capacity = hotel[`room_${i}_capacity' | 'room_2_capacity' | 'room_3_capacity` as 'room_1_capacity' | 'room_2_capacity' | 'room_3_capacity'];
-                const totalRooms = hotel[`room_${i}_total' | 'room_2_total' | 'room_3_total` as 'room_1_total' | 'room_2_total' | 'room_3_total'];
+                const capacity = hotel[`room_${i}_capacity` as 'room_1_capacity' | 'room_2_capacity' | 'room_3_capacity'];
+                const totalRooms = hotel[`room_${i}_total` as 'room_1_total' | 'room_2_total' | 'room_3_total'];
 
                 if (type && price && capacity && totalRooms) {
                     const tempRoomId = slugify(`${hotel.name} ${type} ${Math.random().toString(36).substring(2, 7)}`, { lower: true, strict: true });
