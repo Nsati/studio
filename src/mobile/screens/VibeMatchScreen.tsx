@@ -5,8 +5,8 @@ import { getVibeMatchSuggestionAction } from '@/ai/flows/vibe-match-flow';
 
 /**
  * @fileOverview Tripzy AI Vibe Match Screen for Mobile.
- * Final TypeScript Hardened version. 
- * Strictly avoids using 'className' props on native components.
+ * Standard React Native TypeScript version.
+ * Correctly avoids 'className' props to prevent build errors.
  */
 
 export function VibeMatchScreen() {

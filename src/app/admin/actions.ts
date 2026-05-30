@@ -21,15 +21,15 @@ export type UpdateUserInput = z.infer<typeof UpdateUserSchema>;
 
 /**
  * Robust JSON serialization helper for complex Firestore types.
- * Converts Timestamps and FieldValues to plain strings/numbers.
+ * Converts Timestamps and FieldValues to plain strings/numbers for Next.js stability.
  */
 function toPlainObject(obj: any): any {
     if (obj === null || typeof obj !== 'object') return obj;
     
-    // Handle Firestore Timestamps
+    // Handle Firestore Timestamps from Admin SDK
     if (typeof obj.toDate === 'function') return obj.toDate().toISOString();
     
-    // Handle Node.js Firestore/Admin Timestamps
+    // Handle raw seconds/nanoseconds (Admin SDK internal state)
     if (obj._seconds !== undefined) return new Date(obj._seconds * 1000).toISOString();
     
     if (Array.isArray(obj)) return obj.map(toPlainObject);

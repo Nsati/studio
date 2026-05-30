@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -178,7 +177,7 @@ export function SignupForm() {
 
   return (
     <div className="container flex min-h-[80vh] items-center justify-center py-12">
-      <Card className="w-full max-w-md shadow-2xl border-border/50 bg-card/50 backdrop-blur-sm rounded-[2rem] overflow-hidden">
+      <Card className="w-full max-w-md shadow-2xl border-border/50 bg-white rounded-[2rem] overflow-hidden">
         <CardHeader className="text-center space-y-2">
           <div className="mx-auto bg-primary/10 p-4 rounded-full w-fit mb-2">
             <UserPlus className="h-8 w-8 text-primary" />
@@ -193,7 +192,7 @@ export function SignupForm() {
         <CardContent className="space-y-6 px-8 pb-8">
           <Button
             variant="outline"
-            className="w-full h-12 text-sm font-bold transition-all active:scale-[0.98] hover:bg-muted/50 rounded-full border-black/10"
+            className="w-full h-12 text-sm font-bold transition-all active:scale-[0.98] hover:bg-muted/50 rounded-full border-black/10 flex items-center justify-center gap-3"
             onClick={handleGoogleSignup}
             disabled={isGoogleLoading || isLoading}
           >
@@ -202,16 +201,14 @@ export function SignupForm() {
             ) : (
               <Chrome className="mr-2 h-5 w-5 text-blue-500" />
             )}
-            Continue with Google
+            <span>Continue with Google</span>
           </Button>
 
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <Separator />
-            </div>
-            <div className="relative flex justify-center text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
-              <span className="bg-white px-4">Or sign up with email</span>
-            </div>
+          <div className="relative flex items-center justify-center">
+            <Separator className="absolute w-full" />
+            <span className="relative bg-white px-4 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
+              Or sign up with email
+            </span>
           </div>
 
           <Form {...form}>
