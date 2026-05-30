@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useForm, useFieldArray } from 'react-hook-form';
@@ -9,7 +8,7 @@ import { doc, setDoc, updateDoc } from 'firebase/firestore';
 import { useFirestore, type WithId } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import slugify from 'slugify';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import type { TourPackage } from '@/lib/types';
 
 import {
