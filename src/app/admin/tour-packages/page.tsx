@@ -38,8 +38,8 @@ function TourPackageAdminCard({ tourPackage }: { tourPackage: WithId<TourPackage
     };
 
     return (
-        <Card className="rounded-none border-black/5 shadow-sm group hover:shadow-md transition-all">
-            <div className="relative h-40 w-full overflow-hidden">
+        <Card className="rounded-none border border-black/5 shadow-sm group hover:shadow-md transition-all bg-white overflow-hidden">
+            <div className="relative h-48 w-full overflow-hidden">
                 <Image
                     src={getImageUrl(tourPackage.image)}
                     alt={tourPackage.title}
@@ -47,19 +47,24 @@ function TourPackageAdminCard({ tourPackage }: { tourPackage: WithId<TourPackage
                     sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
                     className="object-cover transition-transform duration-700 group-hover:scale-110"
                 />
-                <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md px-2 py-1 text-white text-[8px] font-black uppercase tracking-widest">
+                <div className="absolute top-3 left-3 bg-black/80 px-2 py-1 text-white text-[9px] font-black uppercase tracking-widest">
                     {tourPackage.duration}
                 </div>
             </div>
-            <CardHeader className="p-4">
-                <CardTitle className="truncate leading-snug text-base font-black tracking-tight">{tourPackage.title}</CardTitle>
-                <CardDescription className="flex items-center gap-1 text-[10px] font-bold uppercase truncate">
-                    <Calendar className="h-3 w-3 text-primary" /> {tourPackage.destinations.join(' • ')}
-                </CardDescription>
+            <CardHeader className="p-5 space-y-2">
+                <CardTitle className="line-clamp-1 leading-snug text-lg font-black tracking-tight text-[#1a1a1a]">
+                    {tourPackage.title}
+                </CardTitle>
+                <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase text-muted-foreground truncate">
+                    <Calendar className="h-3 w-3 text-[#003580]" /> {tourPackage.destinations.join(' • ')}
+                </div>
             </CardHeader>
-            <CardFooter className="p-4 pt-0 flex justify-between items-center">
-                <span className="text-xs font-black text-primary">₹{tourPackage.totalCost?.toLocaleString('en-IN')}</span>
-                <Button variant="outline" size="sm" asChild className="rounded-none h-8 text-[10px] font-black uppercase border-black/5 hover:bg-muted">
+            <CardFooter className="p-5 pt-0 flex justify-between items-center border-t border-black/[0.03] mt-2">
+                <div className="flex flex-col">
+                    <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Starts from</span>
+                    <span className="text-sm font-black text-[#1a1a1a]">₹{tourPackage.totalCost?.toLocaleString('en-IN')}</span>
+                </div>
+                <Button variant="outline" size="sm" asChild className="rounded-none h-8 px-5 text-[10px] font-black uppercase border-black/10 hover:bg-muted transition-colors">
                     <Link href={`/admin/tour-packages/${tourPackage.id}/edit`}>Edit</Link>
                 </Button>
             </CardFooter>
@@ -82,7 +87,7 @@ export default function TourPackagesAdminPage() {
         <div className="space-y-8">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
                 <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-primary">
+                    <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-[#003580]">
                         <Package className="h-3 w-3" /> Production Inventory
                     </div>
                     <h1 className="text-4xl font-black tracking-tighter text-[#1a1a1a]">Tour Itineraries</h1>
@@ -92,7 +97,7 @@ export default function TourPackagesAdminPage() {
                 </div>
                 <div className="flex items-center gap-3">
                     <BulkUploadTourPackagesDialog />
-                    <Button asChild className="rounded-none h-10 font-black px-6 bg-[#003580]">
+                    <Button asChild className="rounded-none h-10 font-black px-6 bg-[#003580] hover:bg-[#002b60] shadow-sm">
                         <Link href="/admin/tour-packages/new">
                             <PlusCircle className="mr-2 h-4 w-4" />
                             Add Itinerary

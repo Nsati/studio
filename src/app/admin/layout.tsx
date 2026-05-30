@@ -13,7 +13,7 @@ const navItems = [
     { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/admin/bookings', label: 'Reservations', icon: BookOpen },
     { href: '/admin/hotels', label: 'Properties', icon: Hotel },
-    { href: '/admin/tour-packages', label: 'Tour Packages', icon: MapPin },
+    { href: '/admin/tour-packages', label: 'Tour Itineraries', icon: MapPin },
     { href: '/admin/users', label: 'Users', icon: Users2 },
     { href: '/admin/promotions', label: 'Coupons', icon: Tag },
 ];
@@ -60,27 +60,30 @@ export default function AdminLayout({
 
   const NavLinks = ({ onClick }: { onClick?: () => void }) => (
     <nav className="space-y-1">
-      {navItems.map(item => (
-        <Link
-          key={item.href}
-          href={item.href}
-          onClick={onClick}
-          className={cn(
-            "flex items-center gap-3 px-4 py-3 text-sm font-semibold transition-colors",
-            pathname === item.href 
-                ? "bg-[#003580] text-white" 
-                : "text-[#1a1a1a] hover:bg-muted"
-          )}
-        >
-          <item.icon className="h-4 w-4" />
-          <span>{item.label}</span>
-        </Link>
-      ))}
+      {navItems.map(item => {
+        const isActive = pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href));
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            onClick={onClick}
+            className={cn(
+              "flex items-center gap-3 px-4 py-3 text-sm font-bold transition-colors",
+              isActive 
+                  ? "bg-[#003580] text-white" 
+                  : "text-[#1a1a1a] hover:bg-muted"
+            )}
+          >
+            <item.icon className={cn("h-4 w-4", isActive ? "text-white" : "text-[#1a1a1a]")} />
+            <span>{item.label}</span>
+          </Link>
+        );
+      })}
     </nav>
   );
 
   return (
-    <div className="flex min-h-screen bg-[#f5f5f5]">
+    <div className="flex min-h-screen bg-[#f8fafc]">
       {/* Mobile Header */}
       <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-[#003580] z-50 px-4 flex items-center justify-between text-white">
         <span className="font-bold tracking-tight">Tripzy Admin</span>
@@ -107,7 +110,7 @@ export default function AdminLayout({
             <Link href="/" className="text-white text-3xl font-black tracking-tighter block">
                 Trip<span className="text-[#febb02]">zy</span>
             </Link>
-            <p className="text-[10px] text-white/60 font-bold uppercase tracking-widest mt-1">Admin Extranet</p>
+            <p className="text-[10px] text-white/60 font-black uppercase tracking-widest mt-1">Admin Extranet</p>
         </div>
 
         <div className="flex-1 py-6 overflow-y-auto">
@@ -115,21 +118,21 @@ export default function AdminLayout({
         </div>
 
         <div className="mt-auto border-t p-4 space-y-4">
-             <div className="px-4 py-2 bg-muted rounded-sm">
-                <p className="text-[10px] font-bold text-muted-foreground uppercase">Active User</p>
-                <p className="text-xs font-bold truncate">{userProfile?.displayName}</p>
+             <div className="px-4 py-3 bg-muted/50 rounded-sm">
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Active User</p>
+                <p className="text-xs font-black truncate text-[#1a1a1a]">{userProfile?.displayName}</p>
              </div>
-             <Button variant="outline" asChild className="w-full justify-start rounded-none h-10 text-xs font-bold">
-                <Link href="/" target="_blank"><ExternalLink className="mr-2 h-4 w-4" /> Live Site</Link>
+             <Button variant="outline" asChild className="w-full justify-start rounded-none h-10 text-[10px] font-black uppercase tracking-widest border-black/5 hover:bg-muted">
+                <Link href="/" target="_blank"><ExternalLink className="mr-2 h-4 w-4 text-[#003580]" /> Live Site</Link>
              </Button>
-             <Button variant="ghost" asChild className="w-full justify-start rounded-none h-10 text-xs font-bold text-destructive hover:bg-destructive/5">
+             <Button variant="ghost" asChild className="w-full justify-start rounded-none h-10 text-[10px] font-black uppercase tracking-widest text-destructive hover:bg-destructive/5">
                 <Link href="/my-bookings"><LogOut className="mr-2 h-4 w-4" /> Exit Portal</Link>
              </Button>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-4 md:p-8 mt-16 md:mt-0 max-w-full overflow-x-hidden">
+      <main className="flex-1 p-4 md:p-10 mt-16 md:mt-0 max-w-full overflow-x-hidden">
         <div className="max-w-7xl mx-auto">
             {children}
         </div>
