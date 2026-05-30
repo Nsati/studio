@@ -88,14 +88,50 @@ export interface City {
   image: string;
 }
 
+export interface ItineraryDay {
+  day: number;
+  title: string;
+  description: string;
+  distance: string;
+  travelTime: string;
+}
+
+export interface HotelDetail {
+  city: string;
+  hotelName: string;
+  category: string;
+  roomType: string;
+  mealPlan: string;
+}
+
 export interface TourPackage {
   id: string;
   title: string;
-  duration: string;
+  duration: string; // e.g. 5N/6D
   destinations: string[];
-  price: number;
+  price: number; // Base Price
+  gst: number;
+  totalCost: number;
   image: string;
   description: string;
+  
+  // Advanced Fields
+  persons: number;
+  rooms: number;
+  cabType: string;
+  travelDate?: string;
+  
+  itinerary: ItineraryDay[];
+  hotels: HotelDetail[];
+  inclusions: string[];
+  exclusions: string[];
+  
+  policies: {
+    tcs: string;
+    cancellation: string;
+    payment: string;
+    terms: string;
+  };
 }
 
 export interface Promotion {
