@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -210,7 +209,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Trust & Service Excellence */}
+      {/* Trust & Service Excellence Section */}
       <section className="bg-primary py-32 text-white relative overflow-hidden">
         <div className="absolute top-0 right-0 w-1/2 h-full opacity-10 pointer-events-none">
             <Compass className="w-full h-full text-white" strokeWidth={0.1} />
@@ -254,18 +253,18 @@ export default function Home() {
       {/* Vibe Match Banner */}
       <section className="py-24 px-4">
         <div className="container max-w-7xl">
-            <div className="relative rounded-[4rem] overflow-hidden bg-white p-12 md:p-24 flex flex-col md:flex-row items-center gap-16 shadow-apple-deep border border-black/5">
+            <div className="relative rounded-[4rem] overflow-hidden bg-primary p-12 md:p-24 flex flex-col md:flex-row items-center gap-16 shadow-apple-deep border border-white/10">
                 <div className="flex-1 space-y-8">
-                    <Badge className="bg-accent/10 text-accent font-black uppercase tracking-[0.3em] px-6 py-2 rounded-full text-[10px]">Tripzy Intelligent Match</Badge>
-                    <h2 className="text-4xl md:text-7xl font-black tracking-tighter leading-none uppercase">Find Your Soul <br/><span className="italic font-medium text-primary">Himalayan</span> Vibe</h2>
-                    <p className="text-lg text-slate-500 max-w-md font-medium">Don't know where to go? Our smart AI expert matches your mood with the perfect mountain hidden gems.</p>
-                    <Button asChild size="lg" className="h-14 px-10 rounded-full bg-primary text-white hover:bg-primary/90 font-black text-lg">
+                    <Badge className="bg-accent/20 text-accent font-black uppercase tracking-[0.3em] px-6 py-2 rounded-full text-[10px]">Tripzy Intelligent Match</Badge>
+                    <h2 className="text-4xl md:text-7xl font-black tracking-tighter leading-none uppercase text-white">Find Your Soul <br/><span className="italic font-medium text-accent">Himalayan</span> Vibe</h2>
+                    <p className="text-lg text-white/70 max-w-md font-medium">Don't know where to go? Our smart AI expert matches your mood with the perfect mountain hidden gems.</p>
+                    <Button asChild size="lg" className="h-14 px-10 rounded-full bg-white text-primary hover:bg-white/90 font-black text-lg">
                         <Link href="/vibe-match" className="flex items-center gap-3">START VIBE MATCH™ <Sparkles className="h-5 w-5 text-accent" /></Link>
                     </Button>
                 </div>
                 <div className="flex-shrink-0 hidden lg:block">
-                    <div className="h-80 w-80 bg-muted/50 rounded-full flex items-center justify-center border-2 border-dashed border-primary/20">
-                        <Camera className="h-32 w-32 text-primary/10" />
+                    <div className="h-80 w-80 bg-white/5 rounded-full flex items-center justify-center border-2 border-dashed border-white/20">
+                        <Camera className="h-32 w-32 text-white/10" />
                     </div>
                 </div>
             </div>
