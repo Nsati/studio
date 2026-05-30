@@ -1,13 +1,9 @@
+
 'use server';
 
 import { getFirebaseAdmin } from '@/firebase/admin';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
-
-/**
- * @fileOverview Hardened User & Admin Management Actions.
- * Robust serialization logic to prevent production JSON errors.
- */
 
 export const UpdateUserSchema = z.object({
   displayName: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
@@ -46,7 +42,6 @@ function toPlainObject(obj: any): any {
 export async function getAdminDashboardStats() {
     const { adminDb, error } = getFirebaseAdmin();
     
-    // If Admin SDK fails (usually missing env vars), return a specific error
     if (error || !adminDb) {
         return { 
             success: false, 
@@ -56,7 +51,6 @@ export async function getAdminDashboardStats() {
     }
 
     try {
-        // We use simple collection queries first to avoid mandatory index requirements for prototypes
         const [hotelsSnap, usersSnap] = await Promise.all([
             adminDb.collection('hotels').get(),
             adminDb.collection('users').get()
@@ -68,7 +62,7 @@ export async function getAdminDashboardStats() {
 
         try {
             // collectionGroup requires indexes for sorting. 
-            // We'll fetch without sorting first as a fallback.
+            // Fetch without sorting first as a fallback for initial deployment.
             const bookingsSnap = await adminDb.collectionGroup('bookings').limit(20).get();
             
             bookingsSnap.forEach(doc => {
@@ -83,7 +77,7 @@ export async function getAdminDashboardStats() {
                 });
             });
 
-            // Sort manually in memory to avoid mandatory index crash
+            // Sort manually in memory to avoid mandatory index crash in early development
             recentBookings.sort((a, b) => {
                 const dateA = new Date(a.createdAt || 0).getTime();
                 const dateB = new Date(b.createdAt || 0).getTime();
@@ -94,7 +88,6 @@ export async function getAdminDashboardStats() {
             
         } catch (bookingErr: any) {
             console.warn("Booking Fetch Warning (Likely missing index):", bookingErr.message);
-            // Non-blocking: Dashboard will just show 0 bookings
         }
 
         return {
@@ -126,7 +119,6 @@ export async function getAllBookingsForAdmin() {
             ...toPlainObject(doc.data())
         }));
 
-        // Sort manually for prototype stability
         data.sort((a, b) => {
             const dateA = new Date(a.createdAt || 0).getTime();
             const dateB = new Date(b.createdAt || 0).getTime();

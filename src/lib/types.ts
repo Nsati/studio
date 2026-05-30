@@ -10,7 +10,7 @@ export interface Hotel {
   minPrice: number;
   discount: number;
 
-  // Smart Uttarakhand Features (Mandatory for core logic)
+  // Smart Uttarakhand Features
   mountainSafetyScore: number;
   landslideRisk: 'Low' | 'Medium' | 'High';
   roadCondition: string;
@@ -26,7 +26,6 @@ export interface Hotel {
   
   isVerifiedPahadiHost?: boolean;
   
-  // Extended Features for Forms & AI
   ecoPractices?: {
     waterSaving: boolean;
     plasticFree: boolean;
@@ -76,7 +75,6 @@ export interface Booking {
   status: 'CONFIRMED' | 'CANCELLED' | 'PENDING';
   createdAt: any;
   
-  // Smart Checkout Fields
   weatherRiskAccepted: boolean;
   splitPayment: boolean;
   earlyCheckInRequested: boolean;
@@ -107,7 +105,7 @@ export interface HotelDetail {
 export interface TourPackage {
   id: string;
   title: string;
-  duration: string; // e.g. 5N/6D
+  duration: string;
   destinations: string[];
   price: number; // Base Price
   gst: number;
@@ -115,7 +113,7 @@ export interface TourPackage {
   image: string;
   description: string;
   
-  // Advanced Fields
+  // Advanced Fields for user requirements
   persons: number;
   rooms: number;
   cabType: string;

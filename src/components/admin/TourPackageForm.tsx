@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm, useFieldArray } from 'react-hook-form';
@@ -8,7 +9,7 @@ import { doc, setDoc, updateDoc } from 'firebase/firestore';
 import { useFirestore, type WithId } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import slugify from 'slugify';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { TourPackage } from '@/lib/types';
 
 import {
@@ -32,7 +33,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, PlusCircle, Trash2, MapPin, Hotel, Calendar, Clock, ListChecks, ShieldCheck, IndianRupee } from 'lucide-react';
+import { Loader2, PlusCircle, Trash2, MapPin, IndianRupee, ShieldCheck } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Separator } from '../ui/separator';
 
@@ -65,6 +66,7 @@ const formSchema = z.object({
   persons: z.coerce.number().min(1),
   rooms: z.coerce.number().min(1),
   cabType: z.string().min(2),
+  travelDate: z.string().optional(),
   itinerary: z.array(itinerarySchema).min(1),
   hotels: z.array(hotelDetailSchema).optional(),
   inclusions: z.string().describe('Comma separated'),
@@ -131,7 +133,12 @@ export function TourPackageForm({ initialData }: TourPackageFormProps) {
 
   const basePrice = form.watch('price');
   const gstPercent = form.watch('gst');
-  const totalCost = basePrice + (basePrice * (gstPercent / 100));
+  const [totalCost, setTotalCost] = useState(0);
+
+  useEffect(() => {
+    const calculated = basePrice + (basePrice * (gstPercent / 100));
+    setTotalCost(calculated);
+  }, [basePrice, gstPercent]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!firestore) return;
@@ -174,44 +181,47 @@ export function TourPackageForm({ initialData }: TourPackageFormProps) {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 pb-20">
         <Tabs defaultValue="general" className="w-full">
           <TabsList className="grid grid-cols-2 md:grid-cols-5 h-auto gap-2 bg-muted/50 p-1 mb-8">
-            <TabsTrigger value="general" className="py-3">General Info</TabsTrigger>
-            <TabsTrigger value="itinerary" className="py-3">Itinerary</TabsTrigger>
-            <TabsTrigger value="hotels" className="py-3">Hotels</TabsTrigger>
-            <TabsTrigger value="pricing" className="py-3">Pricing & Inclusions</TabsTrigger>
-            <TabsTrigger value="policies" className="py-3">Policies</TabsTrigger>
+            <TabsTrigger value="general" className="py-3 font-bold">General Info</TabsTrigger>
+            <TabsTrigger value="itinerary" className="py-3 font-bold">Itinerary</TabsTrigger>
+            <TabsTrigger value="hotels" className="py-3 font-bold">Hotels</TabsTrigger>
+            <TabsTrigger value="pricing" className="py-3 font-bold">Pricing</TabsTrigger>
+            <TabsTrigger value="policies" className="py-3 font-bold">Policies</TabsTrigger>
           </TabsList>
 
           <TabsContent value="general" className="space-y-6">
-            <Card>
-              <CardHeader><CardTitle className="text-xl">Basic Details</CardTitle></CardHeader>
-              <CardContent className="space-y-4">
+            <Card className="rounded-none border-border">
+              <CardHeader className="bg-muted/10 border-b"><CardTitle className="text-xl font-black">Basic Package Details</CardTitle></CardHeader>
+              <CardContent className="p-6 space-y-6">
                 <FormField control={form.control} name="title" render={({ field }) => (
-                  <FormItem><FormLabel>Package Title</FormLabel><FormControl><Input placeholder="e.g. Best of Nainital & Mussoorie" {...field} /></FormControl><FormMessage /></FormItem>
+                  <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Package Name</FormLabel><FormControl><Input placeholder="e.g. Best of Nainital & Mussoorie" {...field} className="rounded-none h-12" /></FormControl><FormMessage /></FormItem>
                 )} />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <FormField control={form.control} name="duration" render={({ field }) => (
-                    <FormItem><FormLabel>Duration (N/D)</FormLabel><FormControl><Input placeholder="e.g. 5N/6D" {...field} /></FormControl><FormMessage /></FormItem>
+                    <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Duration (Nights/Days)</FormLabel><FormControl><Input placeholder="e.g. 5N/6D" {...field} className="rounded-none h-12" /></FormControl><FormMessage /></FormItem>
                   )} />
                    <FormField control={form.control} name="destinations" render={({ field }) => (
-                    <FormItem><FormLabel>Destinations</FormLabel><FormControl><Input placeholder="Nainital, Mussoorie, Corbett" {...field} /></FormControl><FormMessage /></FormItem>
+                    <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Destinations (Comma Separated)</FormLabel><FormControl><Input placeholder="Nainital, Mussoorie, Corbett" {...field} className="rounded-none h-12" /></FormControl><FormMessage /></FormItem>
                   )} />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                    <FormField control={form.control} name="persons" render={({ field }) => (
-                    <FormItem><FormLabel>Persons</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+                    <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Persons</FormLabel><FormControl><Input type="number" {...field} className="rounded-none h-12" /></FormControl><FormMessage /></FormItem>
                   )} />
                    <FormField control={form.control} name="rooms" render={({ field }) => (
-                    <FormItem><FormLabel>Rooms</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+                    <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Rooms</FormLabel><FormControl><Input type="number" {...field} className="rounded-none h-12" /></FormControl><FormMessage /></FormItem>
                   )} />
                    <FormField control={form.control} name="cabType" render={({ field }) => (
-                    <FormItem><FormLabel>Cab Type</FormLabel><FormControl><Input placeholder="e.g. Swift Dzire" {...field} /></FormControl><FormMessage /></FormItem>
+                    <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Cab Type</FormLabel><FormControl><Input placeholder="e.g. Swift Dzire" {...field} className="rounded-none h-12" /></FormControl><FormMessage /></FormItem>
+                  )} />
+                   <FormField control={form.control} name="travelDate" render={({ field }) => (
+                    <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Travel Date</FormLabel><FormControl><Input type="date" {...field} className="rounded-none h-12" /></FormControl><FormMessage /></FormItem>
                   )} />
                 </div>
                 <FormField control={form.control} name="image" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Banner Image</FormLabel>
+                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Representative Image</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl><SelectTrigger><SelectValue placeholder="Select image" /></SelectTrigger></FormControl>
+                      <FormControl><SelectTrigger className="rounded-none h-12"><SelectValue placeholder="Select high-res image" /></SelectTrigger></FormControl>
                       <SelectContent>
                         {tourImagePlaceholders.map(img => <SelectItem key={img.id} value={img.id}>{img.description}</SelectItem>)}
                       </SelectContent>
@@ -219,37 +229,37 @@ export function TourPackageForm({ initialData }: TourPackageFormProps) {
                   </FormItem>
                 )} />
                 <FormField control={form.control} name="description" render={({ field }) => (
-                  <FormItem><FormLabel>Overview</FormLabel><FormControl><Textarea className="min-h-[120px]" {...field} /></FormControl><FormMessage /></FormItem>
+                  <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Overview Description</FormLabel><FormControl><Textarea className="min-h-[150px] rounded-none" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
               </CardContent>
             </Card>
           </TabsContent>
 
           <TabsContent value="itinerary" className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h3 className="text-xl font-bold">Day-wise Plan</h3>
-              <Button type="button" variant="outline" onClick={() => appendDay({ day: itineraryFields.length + 1, title: '', description: '', distance: '', travelTime: '' })}>
-                <PlusCircle className="mr-2 h-4 w-4" /> Add Day
+            <div className="flex justify-between items-center bg-muted/20 p-4 border">
+              <h3 className="text-xl font-black">Day-wise Planning</h3>
+              <Button type="button" variant="outline" className="rounded-none border-primary text-primary font-bold" onClick={() => appendDay({ day: itineraryFields.length + 1, title: '', description: '', distance: '', travelTime: '' })}>
+                <PlusCircle className="mr-2 h-4 w-4" /> Add Next Day
               </Button>
             </div>
             {itineraryFields.map((field, index) => (
-              <Card key={field.id} className="relative">
-                <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 text-destructive" onClick={() => removeDay(index)}><Trash2 className="h-4 w-4" /></Button>
-                <CardHeader><CardTitle className="text-lg">Day {index + 1}</CardTitle></CardHeader>
-                <CardContent className="space-y-4">
+              <Card key={field.id} className="relative rounded-none border-border">
+                <Button type="button" variant="ghost" size="icon" className="absolute top-4 right-4 text-destructive" onClick={() => removeDay(index)}><Trash2 className="h-4 w-4" /></Button>
+                <CardHeader className="bg-muted/5"><CardTitle className="text-lg font-black uppercase tracking-widest">Day {index + 1}</CardTitle></CardHeader>
+                <CardContent className="p-6 space-y-6">
                    <FormField control={form.control} name={`itinerary.${index}.title`} render={({ field }) => (
-                    <FormItem><FormLabel>Title</FormLabel><FormControl><Input placeholder="Arrival and sightseeing" {...field} /></FormControl><FormMessage /></FormItem>
+                    <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Activity Title</FormLabel><FormControl><Input placeholder="e.g. Arrival in Nainital & Local Sightseeing" {...field} className="rounded-none h-12" /></FormControl><FormMessage /></FormItem>
                   )} />
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <FormField control={form.control} name={`itinerary.${index}.distance`} render={({ field }) => (
-                      <FormItem><FormLabel>Distance (km)</FormLabel><FormControl><Input placeholder="150 km" {...field} /></FormControl><FormMessage /></FormItem>
+                      <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Approx. Distance (km)</FormLabel><FormControl><Input placeholder="e.g. 150 km" {...field} className="rounded-none h-12" /></FormControl><FormMessage /></FormItem>
                     )} />
                     <FormField control={form.control} name={`itinerary.${index}.travelTime`} render={({ field }) => (
-                      <FormItem><FormLabel>Travel Time</FormLabel><FormControl><Input placeholder="4-5 hours" {...field} /></FormControl><FormMessage /></FormItem>
+                      <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Travel Time (hours)</FormLabel><FormControl><Input placeholder="e.g. 4-5 hours" {...field} className="rounded-none h-12" /></FormControl><FormMessage /></FormItem>
                     )} />
                   </div>
                    <FormField control={form.control} name={`itinerary.${index}.description`} render={({ field }) => (
-                    <FormItem><FormLabel>What happens today?</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
+                    <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Daily Activity Log</FormLabel><FormControl><Textarea className="rounded-none min-h-[100px]" {...field} /></FormControl><FormMessage /></FormItem>
                   )} />
                 </CardContent>
               </Card>
@@ -257,27 +267,40 @@ export function TourPackageForm({ initialData }: TourPackageFormProps) {
           </TabsContent>
 
           <TabsContent value="hotels" className="space-y-6">
-             <div className="flex justify-between items-center">
-              <h3 className="text-xl font-bold">Stay Details</h3>
-              <Button type="button" variant="outline" onClick={() => appendHotel({ city: '', hotelName: '', category: '3 Star', roomType: 'Standard', mealPlan: 'Breakfast Only' })}>
-                <PlusCircle className="mr-2 h-4 w-4" /> Add City Stay
+             <div className="flex justify-between items-center bg-muted/20 p-4 border">
+              <h3 className="text-xl font-black">Stay Inventory Mapping</h3>
+              <Button type="button" variant="outline" className="rounded-none border-primary text-primary font-bold" onClick={() => appendHotel({ city: '', hotelName: '', category: '3 Star', roomType: 'Standard', mealPlan: 'Breakfast Only' })}>
+                <PlusCircle className="mr-2 h-4 w-4" /> Add Destination Hotel
               </Button>
             </div>
             {hotelFields.map((field, index) => (
-               <Card key={field.id} className="relative">
-                 <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 text-destructive" onClick={() => removeHotel(index)}><Trash2 className="h-4 w-4" /></Button>
-                 <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+               <Card key={field.id} className="relative rounded-none border-border overflow-hidden">
+                 <Button type="button" variant="ghost" size="icon" className="absolute top-4 right-4 text-destructive z-10" onClick={() => removeHotel(index)}><Trash2 className="h-4 w-4" /></Button>
+                 <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <FormField control={form.control} name={`hotels.${index}.city`} render={({ field }) => (
-                      <FormItem><FormLabel>City</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>
+                      <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">City</FormLabel><FormControl><Input {...field} className="rounded-none h-12" /></FormControl></FormItem>
                     )} />
                     <FormField control={form.control} name={`hotels.${index}.hotelName`} render={({ field }) => (
-                      <FormItem><FormLabel>Hotel Name</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>
+                      <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Hotel Name</FormLabel><FormControl><Input {...field} className="rounded-none h-12" /></FormControl></FormItem>
                     )} />
                     <FormField control={form.control} name={`hotels.${index}.category`} render={({ field }) => (
-                      <FormItem><FormLabel>Category</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>
+                      <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Category</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl><SelectTrigger className="rounded-none h-12"><SelectValue /></SelectTrigger></FormControl>
+                            <SelectContent>
+                                <SelectItem value="3 Star">3 Star</SelectItem>
+                                <SelectItem value="4 Star">4 Star</SelectItem>
+                                <SelectItem value="5 Star">5 Star</SelectItem>
+                                <SelectItem value="Premium Homestay">Premium Homestay</SelectItem>
+                            </SelectContent>
+                        </Select>
+                      </FormItem>
                     )} />
                     <FormField control={form.control} name={`hotels.${index}.roomType`} render={({ field }) => (
-                      <FormItem><FormLabel>Room Type</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>
+                      <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Room Type</FormLabel><FormControl><Input {...field} className="rounded-none h-12" /></FormControl></FormItem>
+                    )} />
+                    <FormField control={form.control} name={`hotels.${index}.mealPlan`} render={({ field }) => (
+                      <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Meal Plan</FormLabel><FormControl><Input {...field} className="rounded-none h-12" /></FormControl></FormItem>
                     )} />
                  </CardContent>
                </Card>
@@ -285,60 +308,77 @@ export function TourPackageForm({ initialData }: TourPackageFormProps) {
           </TabsContent>
 
           <TabsContent value="pricing" className="space-y-6">
-            <Card>
-              <CardHeader><CardTitle>Pricing Strategy</CardTitle></CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="rounded-none border-border">
+              <CardHeader className="bg-muted/10 border-b"><CardTitle className="font-black uppercase tracking-widest text-lg">Financial Structure</CardTitle></CardHeader>
+              <CardContent className="p-6 space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                    <FormField control={form.control} name="price" render={({ field }) => (
-                    <FormItem><FormLabel>Base Price (₹)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+                    <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Base Net Price (₹)</FormLabel><FormControl><Input type="number" {...field} className="rounded-none h-12" /></FormControl><FormMessage /></FormItem>
                   )} />
                    <FormField control={form.control} name="gst" render={({ field }) => (
-                    <FormItem><FormLabel>GST (%)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+                    <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">GST Slab (%)</FormLabel>
+                        <Select onValueChange={(val) => field.onChange(parseInt(val))} defaultValue={field.value.toString()}>
+                            <FormControl><SelectTrigger className="rounded-none h-12"><SelectValue /></SelectTrigger></FormControl>
+                            <SelectContent>
+                                <SelectItem value="0">0% (GST Exempt)</SelectItem>
+                                <SelectItem value="5">5% (Economy Cab/Stay)</SelectItem>
+                                <SelectItem value="12">12% (Standard Package)</SelectItem>
+                                <SelectItem value="18">18% (Luxury Package)</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <FormMessage />
+                    </FormItem>
                   )} />
                 </div>
-                <div className="bg-primary/5 p-6 rounded-lg border border-primary/20 flex justify-between items-center">
-                  <div>
-                    <p className="text-sm font-bold text-muted-foreground uppercase">Estimated Final Cost</p>
-                    <h4 className="text-3xl font-black text-primary">₹{totalCost.toLocaleString()}</h4>
+                
+                <div className="bg-[#f0f6ff] p-8 border border-black/5 flex flex-col md:flex-row justify-between items-center gap-6">
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Live Quotation</p>
+                    <h4 className="text-4xl font-black text-[#003580] tracking-tighter">₹{totalCost.toLocaleString('en-IN')}</h4>
+                    <p className="text-[10px] font-bold text-green-700 italic">Inclusive of GST + All Platform Charges</p>
                   </div>
-                  <IndianRupee className="h-10 w-10 text-primary opacity-20" />
+                  <IndianRupee className="h-16 w-16 text-[#003580] opacity-10" />
                 </div>
+
                 <Separator />
-                <FormField control={form.control} name="inclusions" render={({ field }) => (
-                  <FormItem><FormLabel>Inclusions (Comma separated)</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
-                )} />
-                <FormField control={form.control} name="exclusions" render={({ field }) => (
-                  <FormItem><FormLabel>Exclusions (Comma separated)</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
-                )} />
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <FormField control={form.control} name="inclusions" render={({ field }) => (
+                        <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Inclusions (Comma Separated)</FormLabel><FormControl><Textarea className="rounded-none min-h-[120px]" {...field} /></FormControl><FormMessage /></FormItem>
+                    )} />
+                    <FormField control={form.control} name="exclusions" render={({ field }) => (
+                        <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Exclusions (Comma Separated)</FormLabel><FormControl><Textarea className="rounded-none min-h-[120px]" {...field} /></FormControl><FormMessage /></FormItem>
+                    )} />
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
 
           <TabsContent value="policies" className="space-y-6">
-            <Card>
-              <CardHeader><CardTitle>Legal & Policies</CardTitle></CardHeader>
-              <CardContent className="space-y-4">
+            <Card className="rounded-none border-border">
+              <CardHeader className="bg-muted/10 border-b"><CardTitle className="font-black uppercase tracking-widest text-lg">Terms & Compliance</CardTitle></CardHeader>
+              <CardContent className="p-6 space-y-6">
                 <FormField control={form.control} name="policies.tcs" render={({ field }) => (
-                  <FormItem><FormLabel>TCS Policy</FormLabel><FormControl><Textarea {...field} /></FormControl></FormItem>
+                  <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">TCS Policy</FormLabel><FormControl><Textarea className="rounded-none h-24" {...field} /></FormControl></FormItem>
                 )} />
                 <FormField control={form.control} name="policies.cancellation" render={({ field }) => (
-                  <FormItem><FormLabel>Cancellation Policy</FormLabel><FormControl><Textarea {...field} /></FormControl></FormItem>
+                  <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Cancellation Policy</FormLabel><FormControl><Textarea className="rounded-none h-24" {...field} /></FormControl></FormItem>
                 )} />
                 <FormField control={form.control} name="policies.payment" render={({ field }) => (
-                  <FormItem><FormLabel>Payment Policy</FormLabel><FormControl><Textarea {...field} /></FormControl></FormItem>
+                  <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Payment Schedule</FormLabel><FormControl><Textarea className="rounded-none h-24" {...field} /></FormControl></FormItem>
                 )} />
                 <FormField control={form.control} name="policies.terms" render={({ field }) => (
-                  <FormItem><FormLabel>Terms & Conditions</FormLabel><FormControl><Textarea {...field} /></FormControl></FormItem>
+                  <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Master Terms & Conditions</FormLabel><FormControl><Textarea className="rounded-none h-40" {...field} /></FormControl></FormItem>
                 )} />
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
 
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t z-50 flex justify-center">
-            <Button type="submit" disabled={isLoading} size="lg" className="w-full max-w-xl h-14 rounded-full font-black text-lg">
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur-md border-t z-50 flex justify-center">
+            <Button type="submit" disabled={isLoading} size="lg" className="w-full max-w-xl h-14 rounded-none font-black text-lg bg-[#003580] hover:bg-[#002b60] shadow-xl">
                 {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <ShieldCheck className="mr-2 h-5 w-5" />}
-                {isEditing ? 'Update Full Package' : 'Save Full Package'}
+                {isEditing ? 'SYNC UPDATED PACKAGE' : 'INITIALIZE PRODUCTION PACKAGE'}
             </Button>
         </div>
       </form>
