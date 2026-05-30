@@ -1,68 +1,64 @@
 'use client';
 
-import { Facebook, Twitter, Instagram } from 'lucide-react';
+import { Facebook, Twitter, Instagram, Youtube } from 'lucide-react';
 import Link from 'next/link';
 import { Logo } from './Logo';
 
 const footerLinks = {
-  'Explore': [
-    { label: 'Find a Hotel', href: '/search' },
+  'Himalayan Hub': [
+    { label: 'Find a Stay', href: '/search' },
     { label: 'Tour Packages', href: '/tour-packages' },
     { label: 'Destinations', href: '/#cities' },
     { label: 'Vibe Match™', href: '/vibe-match' },
   ],
-  'For You': [
+  'Explorer Central': [
     { label: 'My Bookings', href: '/my-bookings' },
     { label: 'Create Account', href: '/signup' },
-    { label: 'About Us', href: '/about' },
+    { label: 'About Tripzy', href: '/about' },
   ],
-  'Support': [
+  'Essential Legal': [
     { label: 'Terms of Service', href: '/terms' },
     { label: 'Privacy Policy', href: '/privacy' },
     { label: 'Refund Policy', href: '/refund-policy' },
     { label: 'Shipping Policy', href: '/shipping-policy' },
-    { label: 'Contact Us', href: '/contact' },
+    { label: 'Contact Support', href: '/contact' },
   ],
 };
 
 
 export default function Footer() {
   return (
-    <footer className="border-t bg-background">
-      <div className="container py-12 md:py-16">
-        <div className="grid grid-cols-2 gap-8 md:grid-cols-5">
+    <footer className="border-t bg-slate-950 text-white selection:bg-accent selection:text-white">
+      <div className="container py-20 md:py-32">
+        <div className="grid grid-cols-2 gap-16 md:grid-cols-5">
             {/* Branding Section */}
-            <div className="col-span-2 flex flex-col items-start gap-4">
+            <div className="col-span-2 flex flex-col items-start gap-8">
                 <Link href="/" className="flex items-center gap-3">
                     <Logo />
-                    <span className="font-heading text-2xl font-black text-foreground tracking-tighter">
-                        Tripzy
+                    <span className="font-heading text-4xl font-black text-white tracking-tighter">
+                        Trip<span className="text-accent">zy</span>
                     </span>
                 </Link>
-                <p className="max-w-xs text-sm text-muted-foreground">
-                  Your smart gateway to serene stays in the heart of the Himalayas.
+                <p className="max-w-xs text-base text-slate-400 font-medium leading-relaxed">
+                  Your smart gateway to verified Himalayan stays and secure mountain adventures. Experience authentic Pahadi hospitality with modern safety.
                 </p>
-                <div className="flex items-center gap-4 mt-4">
-                  <a href="#" aria-label="Facebook" className="text-muted-foreground transition-colors hover:text-primary">
-                    <Facebook className="h-5 w-5" />
-                  </a>
-                  <a href="#" aria-label="Twitter" className="text-muted-foreground transition-colors hover:text-primary">
-                    <Twitter className="h-5 w-5" />
-                  </a>
-                  <a href="#" aria-label="Instagram" className="text-muted-foreground transition-colors hover:text-primary">
-                    <Instagram className="h-5 w-5" />
-                  </a>
+                <div className="flex items-center gap-6">
+                  {[Facebook, Twitter, Instagram, Youtube].map((Icon, idx) => (
+                    <a key={idx} href="#" className="p-3 bg-white/5 rounded-full text-slate-400 transition-all hover:text-accent hover:bg-white/10">
+                        <Icon className="h-5 w-5" />
+                    </a>
+                  ))}
                 </div>
             </div>
 
             {/* Link Sections */}
             {Object.entries(footerLinks).map(([title, links]) => (
                 <div key={title} className="col-span-1">
-                    <h3 className="text-base font-semibold mb-4">{title}</h3>
-                    <ul className="space-y-3">
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-accent mb-8">{title}</h3>
+                    <ul className="space-y-4">
                         {links.map(link => (
                             <li key={link.label}>
-                                <Link href={link.href} className="text-sm text-muted-foreground transition-colors hover:text-primary">
+                                <Link href={link.href} className="text-sm text-slate-400 transition-colors hover:text-white font-medium">
                                     {link.label}
                                 </Link>
                             </li>
@@ -72,10 +68,15 @@ export default function Footer() {
             ))}
         </div>
         
-        <div className="mt-12 border-t pt-8">
-            <p className="text-center text-sm text-muted-foreground">
-                © {new Date().getFullYear()} Tripzy. All rights reserved.
+        <div className="mt-24 border-t border-white/5 pt-12 flex flex-col md:flex-row justify-between items-center gap-6">
+            <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">
+                © {new Date().getFullYear()} Tripzy Technologies. All Rights Reserved.
             </p>
+            <div className="flex gap-8 text-[10px] font-black uppercase tracking-widest text-slate-500">
+                <span className="hover:text-white cursor-pointer transition-colors">Safety Logic</span>
+                <span className="hover:text-white cursor-pointer transition-colors">API Status</span>
+                <span className="hover:text-white cursor-pointer transition-colors">Pahadi Network</span>
+            </div>
         </div>
       </div>
     </footer>

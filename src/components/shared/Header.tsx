@@ -50,36 +50,36 @@ function UserNav() {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="relative h-8 w-8 rounded-full ring-2 ring-primary/20">
-            <Avatar className="h-8 w-8">
+          <Button variant="ghost" className="relative h-10 w-10 rounded-full ring-2 ring-white/20">
+            <Avatar className="h-10 w-10">
                <AvatarImage src={user.photoURL || ''} alt={userProfile?.displayName || 'User'} />
-              <AvatarFallback className="bg-muted text-xs font-bold text-primary">
+              <AvatarFallback className="bg-accent text-xs font-black text-white">
                 {userProfile?.displayName?.charAt(0).toUpperCase() || <User className="h-4 w-4" />}
               </AvatarFallback>
             </Avatar>
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-56 mt-2 rounded-lg p-2" align="end">
-          <DropdownMenuLabel className="font-normal px-3 py-2">
+        <DropdownMenuContent className="w-64 mt-2 rounded-[2rem] p-4 shadow-2xl border-black/5" align="end">
+          <DropdownMenuLabel className="font-normal px-3 py-4">
             <div className="flex flex-col space-y-1">
-              <p className="text-sm font-semibold leading-none">{userProfile?.displayName}</p>
-              <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+              <p className="text-base font-black leading-none text-slate-900">{userProfile?.displayName}</p>
+              <p className="text-xs leading-none text-muted-foreground mt-1">{user.email}</p>
             </div>
           </DropdownMenuLabel>
-          <DropdownMenuSeparator />
+          <DropdownMenuSeparator className="my-2" />
           {userProfile?.role === 'admin' && (
-            <DropdownMenuItem className="cursor-pointer" onClick={() => router.push('/admin')}>
-              <LayoutDashboard className="mr-2 h-4 w-4" />
+            <DropdownMenuItem className="cursor-pointer rounded-xl h-12 font-bold" onClick={() => router.push('/admin')}>
+              <LayoutDashboard className="mr-3 h-4 w-4 text-primary" />
               <span>Admin Dashboard</span>
             </DropdownMenuItem>
           )}
-          <DropdownMenuItem className="cursor-pointer" onClick={() => router.push('/my-bookings')}>
-            <Book className="mr-2 h-4 w-4" />
+          <DropdownMenuItem className="cursor-pointer rounded-xl h-12 font-bold" onClick={() => router.push('/my-bookings')}>
+            <Book className="mr-3 h-4 w-4 text-primary" />
             <span>My Bookings</span>
           </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive font-bold" onClick={handleSignOut}>
-            <LogOut className="mr-2 h-4 w-4" />
+          <DropdownMenuSeparator className="my-2" />
+          <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive font-black h-12 rounded-xl" onClick={handleSignOut}>
+            <LogOut className="mr-3 h-4 w-4" />
             <span>Log out</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -88,15 +88,12 @@ function UserNav() {
   }
 
   return (
-    <div className="flex items-center gap-4">
-      <Button variant="ghost" asChild className="text-white hover:bg-white/10 font-bold text-sm hidden sm:flex">
-        <Link href="/login">List your property</Link>
+    <div className="flex items-center gap-3">
+      <Button asChild variant="ghost" className="text-white hover:bg-white/10 font-black text-[11px] uppercase tracking-widest hidden sm:flex">
+        <Link href="/login">Partner Access</Link>
       </Button>
-      <Button asChild className="bg-white text-[#1E90FF] hover:bg-white/90 font-bold text-sm rounded-none px-4 shadow-sm">
-        <Link href="/signup">Register</Link>
-      </Button>
-      <Button variant="ghost" asChild className="text-white hover:bg-white/10 font-bold text-sm rounded-none px-4 border border-white">
-        <Link href="/login">Sign in</Link>
+      <Button asChild className="bg-white text-primary hover:bg-white/90 font-black text-[11px] uppercase tracking-widest rounded-full px-6 shadow-xl">
+        <Link href="/signup">Join Tripzy</Link>
       </Button>
     </div>
   );
@@ -106,13 +103,13 @@ export default function Header() {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-[#1E90FF] py-4 border-b border-white/10 shadow-sm">
-      <div className="container flex h-14 items-center justify-between">
-        <div className="flex items-center gap-6">
+    <header className="sticky top-0 z-50 w-full bg-primary py-4 border-b border-white/10 shadow-lg">
+      <div className="container flex h-16 items-center justify-between">
+        <div className="flex items-center gap-10">
             <Link href="/" className="flex items-center gap-3 group">
                 <Logo />
-                <span className="text-3xl font-black text-white tracking-tighter transition-transform group-hover:scale-105">
-                    Trip<span className="text-[#FF6F3C]">zy</span>
+                <span className="font-heading text-4xl font-bold text-white tracking-tighter transition-transform group-hover:scale-105">
+                    Trip<span className="text-accent">zy</span>
                 </span>
             </Link>
             
@@ -122,7 +119,7 @@ export default function Header() {
                     key={link.href}
                     href={link.href}
                     className={cn(
-                        "text-xs font-black uppercase tracking-widest text-white px-4 py-2 rounded-full transition-all border border-transparent",
+                        "text-[10px] font-black uppercase tracking-[0.2em] text-white px-5 py-2.5 rounded-full transition-all border border-transparent",
                         pathname === link.href ? "bg-white/20 border-white/20 shadow-inner" : "hover:bg-white/10"
                     )}
                     >
@@ -133,11 +130,8 @@ export default function Header() {
         </div>
 
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 hidden md:flex">
+          <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 rounded-full hidden md:flex">
             <Globe className="h-5 w-5" />
-          </Button>
-          <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 hidden md:flex">
-            <HelpCircle className="h-5 w-5" />
           </Button>
           <UserNav />
            <div className="lg:hidden ml-2">
@@ -147,15 +141,15 @@ export default function Header() {
                         <Menu className="h-6 w-6" />
                     </Button>
                 </SheetTrigger>
-                <SheetContent side="right" className="bg-[#1E90FF] text-white border-0">
-                    <nav className="grid gap-4 mt-12">
+                <SheetContent side="right" className="bg-primary text-white border-0">
+                    <nav className="grid gap-6 mt-16">
                         {navLinks.map((link) => (
                           <SheetClose asChild key={link.href}>
                             <Link
                               href={link.href}
                               className={cn(
-                                "p-4 font-black text-lg border-b border-white/10 uppercase tracking-widest",
-                                pathname === link.href ? "bg-white/10" : ""
+                                "p-6 font-black text-2xl border-b border-white/10 uppercase tracking-widest italic",
+                                pathname === link.href ? "bg-white/10 text-accent" : ""
                               )}
                             >
                                 {link.label}

@@ -2,47 +2,34 @@ import React from 'react';
 
 export function Logo() {
   return (
-    <div className="relative flex items-center justify-center h-10 w-10">
+    <div className="relative flex items-center justify-center h-12 w-12 group">
       <svg
         viewBox="0 0 100 100"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className="h-full w-full"
+        className="h-full w-full transition-transform duration-700 group-hover:rotate-12"
       >
-        {/* Background Circle with slight tilt */}
-        <circle cx="50" cy="50" r="45" fill="hsl(var(--primary))" fillOpacity="0.1" />
+        {/* Background Circle with depth */}
+        <circle cx="50" cy="50" r="45" fill="white" fillOpacity="0.1" stroke="white" strokeWidth="0.5" />
         
-        {/* T Shape Minimalistic */}
+        {/* Abstract Mountain Shape (Forest Green) */}
         <path
-          d="M35 30H65M50 30V70"
-          stroke="hsl(var(--primary))"
-          strokeWidth="12"
+          d="M20 70L50 25L80 70H20Z"
+          fill="hsl(var(--accent))"
+          className="transition-all duration-700 group-hover:fill-white"
+        />
+        
+        {/* The 'T' in Tripzy incorporated as paths */}
+        <path
+          d="M35 35H65M50 35V75"
+          stroke="white"
+          strokeWidth="10"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
         
-        {/* Orange Paper Plane (representing the 'i' or movement) */}
-        <g transform="translate(55, 25) rotate(-15)">
-          <path
-            d="M0 0L25 10L10 12L12 25L0 0Z"
-            fill="hsl(var(--accent))"
-          />
-          <path
-            d="M10 12L25 10"
-            stroke="white"
-            strokeWidth="1"
-            strokeLinecap="round"
-          />
-        </g>
-        
-        {/* Journey Path Curve */}
-        <path
-          d="M20 80C35 70 65 70 80 80"
-          stroke="hsl(var(--accent))"
-          strokeWidth="4"
-          strokeLinecap="round"
-          strokeDasharray="2 6"
-        />
+        {/* Energy Sparkle */}
+        <circle cx="75" cy="25" r="5" fill="white" className="animate-pulse" />
       </svg>
     </div>
   );

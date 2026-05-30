@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 48 33% 98%; /* Ultra light alpine cream */
     --foreground: 214 100% 10%;
 
     --card: 0 0% 100%;
@@ -13,17 +13,17 @@
     --popover: 0 0% 100%;
     --popover-foreground: 214 100% 10%;
 
-    /* Tripzy Vibrant Blue #1E90FF */
-    --primary: 210 100% 56%; 
+    /* Tripzy Nature-Lux Forest Green #154734 */
+    --primary: 158 54% 18%; 
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 214 15% 95%;
-    --secondary-foreground: 214 100% 15%;
+    --secondary: 158 20% 95%;
+    --secondary-foreground: 158 100% 10%;
 
     --muted: 214 15% 95%;
     --muted-foreground: 214 10% 40%;
 
-    /* Tripzy Sunset Orange #FF6F3C */
+    /* Tripzy Sunrise Orange #FF6F3C */
     --accent: 15 100% 62%;
     --accent-foreground: 0 0% 100%;
 
@@ -32,15 +32,15 @@
 
     --border: 214 15% 90%;
     --input: 214 15% 90%;
-    --ring: 210 100% 56%;
+    --ring: 158 54% 18%;
 
-    --radius: 0.5rem;
+    --radius: 1.5rem;
   }
 
   .dark {
     --background: 214 100% 5%;
     --foreground: 0 0% 95%;
-    --primary: 210 100% 56%;
+    --primary: 158 54% 28%;
   }
 }
 
@@ -56,14 +56,17 @@
 }
 
 .booking-shadow {
-  box-shadow: 0 2px 8px 0 rgba(0,0,0,0.12);
+  box-shadow: 0 10px 40px -10px rgba(0,0,0,0.1);
 }
 
-.booking-card {
-  @apply border border-border rounded-sm hover:bg-muted/5 transition-colors;
+.shadow-apple-deep {
+  box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.08);
 }
 
-.font-rounded {
-  font-family: var(--font-sans);
-  letter-spacing: -0.02em;
+.font-heading {
+  font-family: var(--font-heading);
+}
+
+.glass-morphism {
+  @apply bg-white/70 backdrop-blur-xl border border-white/20;
 }
