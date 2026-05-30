@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator, ScrollView, StyleSheet } from 'react-native';
 import { Sparkles, Compass, CheckCircle2 } from 'lucide-react-native';
@@ -6,8 +5,8 @@ import { getVibeMatchSuggestionAction } from '@/ai/flows/vibe-match-flow';
 
 /**
  * @fileOverview Tripzy AI Vibe Match Screen for Mobile.
- * Standard StyleSheet used to resolve TypeScript 'className' overload errors.
- * Strictly avoids using 'className' props which are not natively supported without extra plugins.
+ * Final TypeScript Hardened version. 
+ * Strictly avoids using 'className' props on native components.
  */
 
 export function VibeMatchScreen() {

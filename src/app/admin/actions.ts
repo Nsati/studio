@@ -1,4 +1,3 @@
-
 'use server';
 
 import { getFirebaseAdmin } from '@/firebase/admin';
@@ -30,7 +29,7 @@ function toPlainObject(obj: any): any {
     // Handle Firestore Timestamps
     if (typeof obj.toDate === 'function') return obj.toDate().toISOString();
     
-    // Handle ServerTimestamps/FieldValues (internal structure)
+    // Handle Node.js Firestore/Admin Timestamps
     if (obj._seconds !== undefined) return new Date(obj._seconds * 1000).toISOString();
     
     if (Array.isArray(obj)) return obj.map(toPlainObject);

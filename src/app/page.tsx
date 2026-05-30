@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -17,7 +16,7 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 /**
  * @fileOverview Tripzy Home - Smart Uttarakhand Getaways.
- * Robust image handling and hydration crash prevention.
+ * Final Hardened version with fixed imports and hydration logic.
  */
 
 function SeasonTruthMeter() {
@@ -231,7 +230,7 @@ export default function Home() {
                     <h2 className="text-4xl md:text-6xl font-black tracking-tighter leading-none uppercase">Find your Soul <br/> Himalayan Vibe</h2>
                     <p className="text-lg text-white/70 max-w-md font-medium">Don't know where to go? Our smart AI expert matches your mood with the perfect mountain hidden gems.</p>
                     <Button asChild size="lg" className="h-14 px-10 rounded-full bg-white text-[#003580] hover:bg-white/90 font-black text-lg">
-                        <Link href="/vibe-match">START VIBE MATCH™ <Sparkles className="ml-2 h-5 w-5" /></Link>
+                        <Link href="/vibe-match" className="flex items-center gap-2">START VIBE MATCH™ <Sparkles className="h-5 w-5" /></Link>
                     </Button>
                 </div>
                 <div className="flex-shrink-0 relative z-10">

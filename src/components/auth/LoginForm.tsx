@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -62,9 +61,6 @@ export function LoginForm() {
       if (err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/popup-blocked') {
         toast({ variant: 'destructive', title: "Auth Error", description: err.message });
       }
-      if (err.code === 'auth/popup-blocked') {
-        toast({ variant: 'destructive', title: "Popup Blocked", description: "Please allow popups for this website to sign in with Google." });
-      }
     } finally {
       setIsGoogleLoading(false);
     }
@@ -88,30 +84,30 @@ export function LoginForm() {
 
   return (
     <div className="container min-h-screen flex items-center justify-center py-24 bg-muted/30">
-      <Card className="w-full max-w-md rounded-[3rem] shadow-2xl border-black/5 overflow-hidden">
+      <Card className="w-full max-w-md rounded-[3rem] shadow-2xl border-black/5 overflow-hidden bg-white">
         <CardHeader className="text-center p-10 pb-6 space-y-4">
           <div className="mx-auto bg-primary/10 p-5 rounded-full w-fit">
             <Mail className="h-8 w-8 text-primary" />
           </div>
-          <CardTitle className="text-4xl font-black tracking-tight">Welcome Back</CardTitle>
+          <CardTitle className="text-4xl font-black tracking-tight text-[#1a1a1a]">Welcome Back</CardTitle>
           <CardDescription className="text-base font-medium">Continue your Himalayan journey</CardDescription>
         </CardHeader>
         <CardContent className="px-10 pb-10 space-y-8">
           <Button
             variant="outline"
-            className="w-full h-14 rounded-full text-base font-bold transition-all hover:bg-muted active:scale-95 border-black/10"
+            className="w-full h-14 rounded-full text-base font-bold transition-all hover:bg-muted active:scale-95 border-black/10 flex items-center justify-center gap-3"
             onClick={handleGoogleLogin}
             disabled={isGoogleLoading || isLoading}
           >
-            {isGoogleLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Chrome className="mr-2 h-5 w-5 text-blue-500" />}
-            Continue with Google
+            {isGoogleLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Chrome className="h-5 w-5 text-blue-500" />}
+            <span>Continue with Google</span>
           </Button>
 
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center"><Separator /></div>
-            <div className="relative flex justify-center text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
-              <span className="bg-white px-4">Or secure login</span>
-            </div>
+          <div className="relative flex items-center justify-center">
+            <Separator className="absolute w-full" />
+            <span className="relative bg-white px-4 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
+              Or secure login
+            </span>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -123,7 +119,7 @@ export function LoginForm() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="h-14 rounded-2xl bg-muted/50 border-0 focus-visible:ring-primary font-bold"
+                className="h-14 rounded-2xl bg-muted/50 border-0 focus-visible:ring-primary font-bold px-5"
               />
             </div>
             <div className="space-y-2">
