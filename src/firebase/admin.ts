@@ -25,7 +25,10 @@ export function getFirebaseAdmin(): { adminDb: Firestore | null; adminAuth: Auth
     try {
         if (getApps().length > 0) {
             const app = getApps()[0];
-            adminInstance = { adminDb: getFirestore(app), adminAuth: getAuth(app) };
+            const db = getFirestore(app);
+            // Optimization: Ignore undefined values globally to prevent crashes on optional fields
+            db.settings({ ignoreUndefinedProperties: true });
+            adminInstance = { adminDb: db, adminAuth: getAuth(app) };
             return { ...adminInstance, error: null };
         }
 
@@ -53,8 +56,12 @@ export function getFirebaseAdmin(): { adminDb: Firestore | null; adminAuth: Auth
             }),
         });
 
-        adminInstance = { adminDb: getFirestore(app), adminAuth: getAuth(app) };
-        console.log("✅ [ADMIN SDK] Production Cloud Bridge Synchronized.");
+        const db = getFirestore(app);
+        // Optimization: Ignore undefined values globally
+        db.settings({ ignoreUndefinedProperties: true });
+        
+        adminInstance = { adminDb: db, adminAuth: getAuth(app) };
+        console.log("✅ [ADMIN SDK] Production Cloud Bridge Synchronized with Safe Settings.");
         return { ...adminInstance, error: null };
 
     } catch (err: any) {

@@ -9,7 +9,7 @@ import { TourPackageUploadSchema, type TourPackageUploadData } from '../schemas'
 
 /**
  * @fileOverview Production Tour Package Actions.
- * Hardened with batch chunking to handle large datasets without crashing.
+ * Hardened with batch chunking and data sanitization for Firestore compatibility.
  */
 
 export async function bulkUploadTourPackages(data: TourPackageUploadData[]) {
@@ -47,6 +47,7 @@ export async function bulkUploadTourPackages(data: TourPackageUploadData[]) {
 
         const totalCost = pkg.price + (pkg.price * (pkg.gst / 100));
 
+        // Data Sanitization: Ensure no 'undefined' values are passed to Firestore
         const finalDoc: TourPackage = {
           id: packageId,
           title: pkg.title,
@@ -60,7 +61,7 @@ export async function bulkUploadTourPackages(data: TourPackageUploadData[]) {
           persons: pkg.persons,
           rooms: pkg.rooms,
           cabType: pkg.cabType,
-          travelDate: pkg.travelDate,
+          travelDate: pkg.travelDate || '', // Fix: Fallback for undefined travelDate
           itinerary,
           hotels,
           inclusions: pkg.inclusions.split(',').map(i => i.trim()).filter(Boolean),
@@ -97,7 +98,10 @@ export async function saveTourPackageAction(packageId: string, data: any) {
 
     try {
         const packageRef = adminDb.collection('tourPackages').doc(packageId);
-        await packageRef.set(data, { merge: true });
+        // Sanitizing payload before set
+        const sanitizedData = JSON.parse(JSON.stringify(data));
+        
+        await packageRef.set(sanitizedData, { merge: true });
         
         revalidatePath('/tour-packages');
         revalidatePath(`/tour-packages/${packageId}`);
