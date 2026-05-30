@@ -12,7 +12,8 @@ import {
   ShieldAlert,
   ChevronRight,
   ShieldCheck,
-  AlertTriangle
+  AlertTriangle,
+  Settings
 } from 'lucide-react';
 import { useUser } from '@/firebase';
 import { getAdminDashboardStats } from './actions';
@@ -61,19 +62,22 @@ export default function AdminDashboard() {
   const [data, setData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isConfigError, setIsConfigError] = useState(false);
 
   const loadData = async () => {
     setIsLoading(true);
     setError(null);
+    setIsConfigError(false);
     try {
       const response = await getAdminDashboardStats();
       if (response.success) {
         setData(response.data);
       } else {
         setError(response.error || "Failed to fetch metrics.");
+        if (response.isConfigError) setIsConfigError(true);
       }
     } catch (err: any) {
-      setError("Network error: Could not connect to Tripzy Cloud.");
+      setError("Network error: Could not connect to Tripzy Cloud. Check console for details.");
     } finally {
       setIsLoading(false);
     }
@@ -116,16 +120,28 @@ export default function AdminDashboard() {
       </div>
 
       {error && (
-        <Alert variant="destructive" className="rounded-none border-red-200 bg-red-50 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-                <AlertTriangle className="h-5 w-5 text-red-600" />
-                <div>
-                    <AlertTitle className="font-bold text-red-900">Synchronization Error</AlertTitle>
-                    <AlertDescription className="text-sm text-red-700 font-medium">{error}</AlertDescription>
+        <Alert variant="destructive" className="rounded-none border-red-200 bg-red-50 p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="flex items-start gap-4">
+                <AlertTriangle className="h-6 w-6 text-red-600 shrink-0 mt-1" />
+                <div className="space-y-1">
+                    <AlertTitle className="font-black uppercase tracking-widest text-xs text-red-900">Synchronization Alert</AlertTitle>
+                    <AlertDescription className="text-sm text-red-700 font-medium leading-relaxed">
+                        {error}
+                        {isConfigError && (
+                            <div className="mt-4 p-4 bg-white/50 border border-red-100 rounded-sm">
+                                <p className="text-[10px] font-black uppercase text-red-900 mb-2 flex items-center gap-1.5">
+                                    <Settings className="h-3 w-3" /> Technical Assistance Needed
+                                </p>
+                                <p className="text-xs text-red-800 italic">
+                                    Please ensure <code>FIREBASE_PRIVATE_KEY</code> is correctly set in your project secrets/env variables.
+                                </p>
+                            </div>
+                        )}
+                    </AlertDescription>
                 </div>
             </div>
-            <Button onClick={loadData} size="sm" variant="outline" className="h-8 border-red-300 text-red-900 hover:bg-red-100 font-bold">
-                Retry
+            <Button onClick={loadData} size="sm" variant="outline" className="h-10 border-red-300 text-red-900 hover:bg-red-100 font-bold px-8 rounded-none shrink-0">
+                Retry Connection
             </Button>
         </Alert>
       )}
@@ -243,7 +259,9 @@ export default function AdminDashboard() {
                 <CardContent className="px-6 pb-6 space-y-4">
                     <div className="flex justify-between items-center py-3 border-b border-white/10 text-sm">
                         <span className="opacity-70 font-medium">Cloud Gateway</span>
-                        <span className="font-bold text-green-400">Stable</span>
+                        <span className={cn("font-bold", error ? "text-red-300" : "text-green-400")}>
+                            {error ? "Offline" : "Stable"}
+                        </span>
                     </div>
                     <div className="flex justify-between items-center py-3 border-b border-white/10 text-sm">
                         <span className="opacity-70 font-medium">Payment Node</span>

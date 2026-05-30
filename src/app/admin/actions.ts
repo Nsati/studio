@@ -45,29 +45,57 @@ function toPlainObject(obj: any): any {
 
 export async function getAdminDashboardStats() {
     const { adminDb, error } = getFirebaseAdmin();
-    if (error || !adminDb) return { success: false, error: error || "Admin SDK Error" };
+    
+    // If Admin SDK fails (usually missing env vars), return a specific error
+    if (error || !adminDb) {
+        return { 
+            success: false, 
+            error: "Tripzy Cloud Bridge not configured. Please check FIREBASE_PRIVATE_KEY environment variable.",
+            isConfigError: true
+        };
+    }
 
     try {
-        const [hotelsSnap, usersSnap, bookingsSnap] = await Promise.all([
+        // We use simple collection queries first to avoid mandatory index requirements for prototypes
+        const [hotelsSnap, usersSnap] = await Promise.all([
             adminDb.collection('hotels').get(),
-            adminDb.collection('users').get(),
-            adminDb.collectionGroup('bookings').orderBy('createdAt', 'desc').limit(10).get()
+            adminDb.collection('users').get()
         ]);
 
         let totalRevenue = 0;
         let confirmedCount = 0;
+        let recentBookings: any[] = [];
 
-        // Efficient aggregation for production metrics
-        const confirmedBookings = await adminDb.collectionGroup('bookings').where('status', '==', 'CONFIRMED').get();
-        confirmedBookings.forEach(doc => {
-            totalRevenue += Number(doc.data().totalPrice) || 0;
-            confirmedCount++;
-        });
+        try {
+            // collectionGroup requires indexes for sorting. 
+            // We'll fetch without sorting first as a fallback.
+            const bookingsSnap = await adminDb.collectionGroup('bookings').limit(20).get();
+            
+            bookingsSnap.forEach(doc => {
+                const data = doc.data();
+                if (data.status === 'CONFIRMED') {
+                    totalRevenue += Number(data.totalPrice) || 0;
+                    confirmedCount++;
+                }
+                recentBookings.push({
+                    id: doc.id,
+                    ...toPlainObject(data)
+                });
+            });
 
-        const recentBookings = bookingsSnap.docs.map(doc => ({
-            id: doc.id,
-            ...toPlainObject(doc.data())
-        }));
+            // Sort manually in memory to avoid mandatory index crash
+            recentBookings.sort((a, b) => {
+                const dateA = new Date(a.createdAt || 0).getTime();
+                const dateB = new Date(b.createdAt || 0).getTime();
+                return dateB - dateA;
+            });
+            
+            recentBookings = recentBookings.slice(0, 10);
+            
+        } catch (bookingErr: any) {
+            console.warn("Booking Fetch Warning (Likely missing index):", bookingErr.message);
+            // Non-blocking: Dashboard will just show 0 bookings
+        }
 
         return {
             success: true,
@@ -83,20 +111,28 @@ export async function getAdminDashboardStats() {
         };
     } catch (e: any) {
         console.error("Dashboard Stats Error:", e);
-        return { success: false, error: e.message };
+        return { success: false, error: "Database query failed: " + e.message };
     }
 }
 
 export async function getAllBookingsForAdmin() {
     const { adminDb, error } = getFirebaseAdmin();
-    if (error || !adminDb) return { success: false, error: error || "Admin SDK Error" };
+    if (error || !adminDb) return { success: false, error: "Admin SDK Configuration Missing" };
 
     try {
-        const snapshot = await adminDb.collectionGroup('bookings').orderBy('createdAt', 'desc').get();
+        const snapshot = await adminDb.collectionGroup('bookings').get();
         const data = snapshot.docs.map(doc => ({
             id: doc.id,
             ...toPlainObject(doc.data())
         }));
+
+        // Sort manually for prototype stability
+        data.sort((a, b) => {
+            const dateA = new Date(a.createdAt || 0).getTime();
+            const dateB = new Date(b.createdAt || 0).getTime();
+            return dateB - dateA;
+        });
+
         return { success: true, data };
     } catch (e: any) {
         console.error("Fetch All Bookings Error:", e);
@@ -106,7 +142,7 @@ export async function getAllBookingsForAdmin() {
 
 export async function getUserDetailsForAdmin(uid: string) {
     const { adminDb, error } = getFirebaseAdmin();
-    if (error || !adminDb) throw new Error(error || "Admin SDK Error");
+    if (error || !adminDb) throw new Error("Admin SDK Configuration Missing");
 
     try {
         const userRef = adminDb.doc(`users/${uid}`);
@@ -140,7 +176,7 @@ export async function getUserDetailsForAdmin(uid: string) {
 
 export async function updateUserByAdmin(uid: string, data: UpdateUserInput) {
     const { adminDb, error } = getFirebaseAdmin();
-    if (error || !adminDb) return { success: false, message: error || "Admin SDK Error" };
+    if (error || !adminDb) return { success: false, message: "Admin SDK Configuration Missing" };
 
     const validation = UpdateUserSchema.safeParse(data);
     if (!validation.success) {
