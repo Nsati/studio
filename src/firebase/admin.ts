@@ -13,7 +13,13 @@ type AdminServices = {
     adminAuth: Auth;
 };
 
-let adminInstance: AdminServices | null = null;
+/**
+ * Use globalThis to persist the instance across hot-reloads in development.
+ * This prevents "Firestore has already been initialized" errors.
+ */
+const globalForFirebase = globalThis as unknown as {
+    firebaseAdmin: AdminServices | undefined;
+};
 
 export function getFirebaseAdmin(): { adminDb: Firestore | null; adminAuth: Auth | null; error: string | null; } {
     // 1. Ensure this only runs on the server
@@ -21,8 +27,10 @@ export function getFirebaseAdmin(): { adminDb: Firestore | null; adminAuth: Auth
         return { adminDb: null, adminAuth: null, error: "Admin SDK restricted to server-side only." };
     }
 
-    // 2. Return cached instance if available
-    if (adminInstance) return { ...adminInstance, error: null };
+    // 2. Return cached instance from global if available (Prevents hot-reload crashes)
+    if (globalForFirebase.firebaseAdmin) {
+        return { ...globalForFirebase.firebaseAdmin, error: null };
+    }
 
     try {
         let app: App;
@@ -62,17 +70,22 @@ export function getFirebaseAdmin(): { adminDb: Firestore | null; adminAuth: Auth
         /**
          * 4. Optimization: Ignore undefined values globally.
          * IMPORTANT: settings() can only be called once per Firestore instance.
-         * In Next.js dev mode, this file might re-run, so we catch the error if already initialized.
          */
         try {
             db.settings({ ignoreUndefinedProperties: true });
         } catch (e) {
-            // Settings already applied in a previous hot-reload, we can safely proceed.
+            // Settings already applied in a previous hot-reload, ignore safely.
         }
         
-        adminInstance = { adminDb: db, adminAuth: getAuth(app) };
+        const services = { adminDb: db, adminAuth: getAuth(app) };
+        
+        // Cache the instance in global scope during development
+        if (process.env.NODE_ENV !== 'production') {
+            globalForFirebase.firebaseAdmin = services;
+        }
+
         console.log("✅ [ADMIN SDK] Production Cloud Bridge Synchronized.");
-        return { ...adminInstance, error: null };
+        return { ...services, error: null };
 
     } catch (err: any) {
         console.error("[ADMIN SDK CRITICAL]:", err.message);
