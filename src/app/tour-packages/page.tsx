@@ -1,28 +1,66 @@
 'use client';
 
+import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection } from 'firebase/firestore';
+import type { TourPackage } from '@/lib/types';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { dummyTourPackages } from '@/lib/dummy-data';
-import { Calendar, IndianRupee, MapPin, Compass, Sparkles, ArrowRight, Clock } from 'lucide-react';
+import { Card, CardTitle } from '@/components/ui/card';
+import { MapPin, IndianRupee, Compass, Sparkles, Clock, Star } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+
+/**
+ * @fileOverview Live Tour Packages Listing.
+ * Fetches real-time data from Firestore to reflect Admin Panel updates instantly.
+ */
+
+function PackageSkeleton() {
+    return (
+        <Card className="flex flex-col md:flex-row overflow-hidden border border-border rounded-sm">
+            <Skeleton className="h-[250px] w-full md:w-[350px]" />
+            <div className="flex-1 p-6 space-y-4">
+                <Skeleton className="h-8 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+                <Skeleton className="h-20 w-full" />
+            </div>
+        </Card>
+    );
+}
 
 export default function TourPackagesPage() {
-  const heroImage = PlaceHolderImages.find((img) => img.id === 'tour-packages-hero');
+  const firestore = useFirestore();
+
+  const packagesQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'tourPackages');
+  }, [firestore]);
+
+  const { data: packages, isLoading } = useCollection<TourPackage>(packagesQuery);
+
+  const getImageUrl = (img: string) => {
+    if (!img) return '';
+    if (img.startsWith('http')) return img;
+    return PlaceHolderImages.find((p) => p.id === img)?.imageUrl || '';
+  };
 
   return (
     <div className="bg-white min-h-screen">
-       {/* Booking style Banner */}
-      <section className="bg-[#003580] py-12 px-4">
+      {/* Dynamic Banner */}
+      <section className="bg-[#003580] py-16 px-4">
         <div className="container mx-auto">
           <div className="max-w-4xl space-y-4">
-            <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight">
-              Uttarakhand Tour Packages
+            <div className="flex items-center gap-2 text-[#febb02] font-black uppercase tracking-[0.3em] text-[10px]">
+                <Sparkles className="h-4 w-4" /> Himalayan Experiences
+            </div>
+            <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter">
+              Curated Itineraries
             </h1>
-            <p className="text-xl text-white/90">
-              Discover local experiences and handpicked itineraries across the Himalayas.
+            <p className="text-xl text-white/80 font-medium">
+              Verified local stays and handpicked routes across the Devbhumi.
             </p>
           </div>
         </div>
@@ -31,98 +69,106 @@ export default function TourPackagesPage() {
       {/* Main Content */}
       <section className="py-12 px-4">
         <div className="container mx-auto">
-            <div className="grid grid-cols-1 gap-6">
-                {dummyTourPackages.map((pkg) => {
-                    const pkgImage = PlaceHolderImages.find(img => img.id === pkg.image);
-                    return (
-                        <Card key={pkg.id} className="flex flex-col md:flex-row overflow-hidden border border-border rounded-sm hover:shadow-md transition-shadow">
-                           <div className="relative w-full md:w-[350px] aspect-[4/3] md:aspect-square flex-shrink-0">
-                            {pkgImage && (
+            <div className="grid grid-cols-1 gap-8">
+                {isLoading ? (
+                    Array.from({ length: 3 }).map((_, i) => <PackageSkeleton key={i} />)
+                ) : packages && packages.length > 0 ? (
+                    packages.map((pkg) => (
+                        <Card key={pkg.id} className="flex flex-col md:flex-row overflow-hidden border border-black/5 rounded-none hover:shadow-xl transition-all duration-500 group">
+                           <div className="relative w-full md:w-[400px] aspect-[4/3] md:aspect-auto flex-shrink-0 overflow-hidden">
                                 <Image
-                                    src={pkgImage.imageUrl}
+                                    src={getImageUrl(pkg.image)}
                                     alt={pkg.title}
                                     fill
-                                    className="object-cover"
+                                    className="object-cover transition-transform duration-1000 group-hover:scale-110"
                                 />
-                            )}
-                            <div className="absolute top-2 left-2">
-                                <Badge className="bg-[#008009] text-white rounded-none border-0 font-bold">Recommended</Badge>
-                            </div>
+                                <div className="absolute top-4 left-4">
+                                    <Badge className="bg-[#008009] text-white rounded-none border-0 font-black uppercase text-[9px] tracking-widest px-3 py-1">Himalayan Verified</Badge>
+                                </div>
                            </div>
 
-                           <div className="flex flex-col flex-grow p-4 md:p-6">
-                                <div className="flex flex-col md:flex-row justify-between gap-4">
-                                    <div className="space-y-2 flex-1">
-                                        <div className="flex items-center gap-2 text-[#006ce4] font-bold text-lg hover:underline cursor-pointer">
-                                            <CardTitle className="text-2xl font-bold">{pkg.title}</CardTitle>
+                           <div className="flex flex-col flex-grow p-6 md:p-10">
+                                <div className="flex flex-col md:flex-row justify-between gap-8">
+                                    <div className="space-y-4 flex-1">
+                                        <div className="space-y-1">
+                                            <CardTitle className="text-3xl font-black tracking-tighter leading-none hover:text-[#006ce4] transition-colors">
+                                                <Link href={`/tour-packages/${pkg.id}`}>{pkg.title}</Link>
+                                            </CardTitle>
+                                            <div className="flex items-center gap-2 text-sm text-[#006ce4] font-black uppercase tracking-widest underline decoration-2 underline-offset-4">
+                                                <MapPin className="h-4 w-4" />
+                                                {pkg.destinations.join(' • ')}
+                                            </div>
                                         </div>
-                                        <div className="flex items-center gap-2 text-sm text-[#006ce4] underline underline-offset-2">
-                                            <MapPin className="h-4 w-4" />
-                                            {pkg.destinations.join(', ')}
+                                        
+                                        <div className="flex items-center gap-6">
+                                            <div className="flex items-center gap-2 text-xs font-black text-slate-900 uppercase tracking-widest">
+                                                <Clock className="h-4 w-4 text-[#003580]" />
+                                                {pkg.duration}
+                                            </div>
+                                            <div className="flex items-center gap-2 text-xs font-black text-slate-900 uppercase tracking-widest">
+                                                <Star className="h-4 w-4 text-[#febb02] fill-[#febb02]" />
+                                                Top Rated
+                                            </div>
                                         </div>
-                                        <div className="flex items-center gap-2 text-sm text-green-700 font-bold">
-                                            <Clock className="h-4 w-4" />
-                                            {pkg.duration}
-                                        </div>
-                                        <p className="text-sm text-muted-foreground line-clamp-2 md:line-clamp-none mt-4 max-w-2xl">
+
+                                        <p className="text-sm text-muted-foreground line-clamp-3 font-medium leading-relaxed max-w-2xl">
                                             {pkg.description}
                                         </p>
                                     </div>
 
-                                    <div className="flex flex-col items-end md:border-l md:pl-6 space-y-2 min-w-[180px]">
-                                        <div className="flex items-center gap-2 mb-4">
-                                            <div className="flex flex-col items-end leading-none">
-                                                <span className="text-sm font-bold">Very Good</span>
-                                                <span className="text-[10px] text-muted-foreground">1,240 reviews</span>
-                                            </div>
-                                            <div className="bg-[#003580] text-white h-8 w-8 flex items-center justify-center font-bold rounded-t-lg rounded-br-lg text-sm">
-                                                8.9
+                                    <div className="flex flex-col items-end md:border-l border-black/5 md:pl-10 space-y-4 min-w-[220px]">
+                                        <div className="text-right">
+                                            <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1">Starting from</p>
+                                            <div className="flex flex-col items-end">
+                                                <span className="text-3xl font-black text-[#1a1a1a] tracking-tighter leading-none">
+                                                    {pkg.totalCost?.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}
+                                                </span>
+                                                <span className="text-[9px] font-bold text-green-700 uppercase tracking-widest mt-1">Includes GST + Transport</span>
                                             </div>
                                         </div>
                                         
-                                        <span className="text-[12px] text-muted-foreground">Price from</span>
-                                        <div className="flex flex-col items-end">
-                                            <span className="text-2xl font-bold">
-                                                {pkg.price.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}
-                                            </span>
-                                            <span className="text-[10px] text-muted-foreground">includes taxes and charges</span>
-                                        </div>
-                                        <Button asChild className="bg-[#006ce4] hover:bg-[#005bb8] rounded-none font-bold px-8 w-full mt-4">
-                                            <Link href="/search">See availability</Link>
+                                        <Button asChild className="bg-[#006ce4] hover:bg-[#005bb8] rounded-none font-black uppercase tracking-widest text-[11px] h-12 w-full shadow-lg shadow-blue-200">
+                                            <Link href={`/tour-packages/${pkg.id}`}>View Itinerary</Link>
                                         </Button>
                                     </div>
                                 </div>
                            </div>
                         </Card>
-                    )
-                })}
+                    ))
+                ) : (
+                    <div className="py-24 text-center border-2 border-dashed rounded-sm bg-muted/20">
+                        <Compass className="h-12 w-12 mx-auto text-muted-foreground/30 mb-4" />
+                        <h3 className="text-xl font-black tracking-tight">No live itineraries found</h3>
+                        <p className="text-sm text-muted-foreground font-medium mt-2">Check back soon for new Himalayan journeys.</p>
+                    </div>
+                )}
             </div>
         </div>
       </section>
 
-      {/* Trust Banner */}
-      <section className="bg-muted/30 py-16 px-4 border-t border-b">
-        <div className="container mx-auto grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
-            <div className="space-y-3">
-                <div className="h-12 w-12 bg-[#003580]/10 rounded-full flex items-center justify-center mx-auto">
-                    <Compass className="h-6 w-6 text-[#003580]" />
+      {/* Standard Trust Footer */}
+      <section className="bg-muted/30 py-20 px-4 border-t">
+        <div className="container mx-auto grid grid-cols-1 md:grid-cols-3 gap-16 text-center">
+            <div className="space-y-4">
+                <div className="h-14 w-14 bg-[#003580]/10 rounded-full flex items-center justify-center mx-auto">
+                    <Compass className="h-7 w-7 text-[#003580]" />
                 </div>
-                <h4 className="font-bold">Expert Local Guidance</h4>
-                <p className="text-sm text-muted-foreground">Our packages are designed by travel experts who know every corner of Uttarakhand.</p>
+                <h4 className="font-black uppercase tracking-widest text-sm">Expert Guidance</h4>
+                <p className="text-xs text-muted-foreground font-medium leading-relaxed">Itineraries crafted by locals who know every hidden valley and peak of Uttarakhand.</p>
             </div>
-            <div className="space-y-3">
-                <div className="h-12 w-12 bg-[#003580]/10 rounded-full flex items-center justify-center mx-auto">
-                    <IndianRupee className="h-6 w-6 text-[#003580]" />
+            <div className="space-y-4">
+                <div className="h-14 w-14 bg-[#003580]/10 rounded-full flex items-center justify-center mx-auto">
+                    <IndianRupee className="h-7 w-7 text-[#003580]" />
                 </div>
-                <h4 className="font-bold">Best Price Guarantee</h4>
-                <p className="text-sm text-muted-foreground">We offer the most competitive rates for high-quality Himalayan experiences.</p>
+                <h4 className="font-black uppercase tracking-widest text-sm">Best Price Promise</h4>
+                <p className="text-xs text-muted-foreground font-medium leading-relaxed">Direct property rates with zero hidden commissions or convenience fees.</p>
             </div>
-            <div className="space-y-3">
-                <div className="h-12 w-12 bg-[#003580]/10 rounded-full flex items-center justify-center mx-auto">
-                    <Sparkles className="h-6 w-6 text-[#003580]" />
+            <div className="space-y-4">
+                <div className="h-14 w-14 bg-[#003580]/10 rounded-full flex items-center justify-center mx-auto">
+                    <Sparkles className="h-7 w-7 text-[#003580]" />
                 </div>
-                <h4 className="font-bold">Hassle-free Booking</h4>
-                <p className="text-sm text-muted-foreground">Instant confirmation and secure payment options for your peace of mind.</p>
+                <h4 className="font-black uppercase tracking-widest text-sm">Hassle-free Booking</h4>
+                <p className="text-xs text-muted-foreground font-medium leading-relaxed">Secure payment gateway with instant confirmation vouchers for your peace of mind.</p>
             </div>
         </div>
       </section>

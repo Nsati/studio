@@ -4,12 +4,12 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useRouter } from 'next/navigation';
-import { doc, setDoc, updateDoc } from 'firebase/firestore';
 import { useFirestore, type WithId } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import slugify from 'slugify';
 import { useState, useEffect } from 'react';
 import type { TourPackage } from '@/lib/types';
+import { saveTourPackageAction } from '@/app/admin/tour-packages/actions';
 
 import {
   Form,
@@ -84,7 +84,6 @@ type TourPackageFormProps = {
 
 export function TourPackageForm({ initialData }: TourPackageFormProps) {
   const router = useRouter();
-  const firestore = useFirestore();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const isEditing = !!initialData;
@@ -140,7 +139,6 @@ export function TourPackageForm({ initialData }: TourPackageFormProps) {
   }, [basePrice, gstPercent]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!firestore) return;
     setIsLoading(true);
 
     const destinationsArray = values.destinations.split(',').map(d => d.trim()).filter(Boolean);
@@ -157,19 +155,22 @@ export function TourPackageForm({ initialData }: TourPackageFormProps) {
 
     try {
       const packageId = isEditing ? initialData.id : slugify(values.title, { lower: true, strict: true });
-      const packageRef = doc(firestore, 'tourPackages', packageId);
       
-      if (isEditing) {
-        await updateDoc(packageRef, finalData);
-      } else {
-        await setDoc(packageRef, finalData);
-      }
+      // Using Server Action for update to trigger revalidation
+      const result = await saveTourPackageAction(packageId, finalData);
 
-      toast({ title: isEditing ? 'Package Updated' : 'Package Created', description: `"${values.title}" has been saved.` });
-      router.push('/admin/tour-packages');
-      router.refresh();
+      if (result.success) {
+          toast({ 
+            title: isEditing ? 'Package Synchronized' : 'Package Created', 
+            description: `"${values.title}" has been successfully pushed to the live site.` 
+          });
+          router.push('/admin/tour-packages');
+          router.refresh();
+      } else {
+          throw new Error(result.message);
+      }
     } catch (error: any) {
-      toast({ variant: 'destructive', title: 'Error', description: error.message });
+      toast({ variant: 'destructive', title: 'Action Failed', description: error.message });
     } finally {
       setIsLoading(false);
     }

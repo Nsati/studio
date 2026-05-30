@@ -4,6 +4,12 @@ import { getFirebaseAdmin } from '@/firebase/admin';
 import type { TourPackage } from '@/lib/types';
 import slugify from 'slugify';
 import { z } from 'zod';
+import { revalidatePath } from 'next/cache';
+
+/**
+ * @fileOverview Production Tour Package Actions.
+ * Now includes cache revalidation to ensure frontend updates instantly.
+ */
 
 export const TourPackageUploadSchema = z.object({
   title: z.string().min(5),
@@ -17,7 +23,6 @@ export const TourPackageUploadSchema = z.object({
   rooms: z.coerce.number().min(1),
   cabType: z.string(),
   travelDate: z.string().optional(),
-  // Complex fields passed as JSON strings in CSV cells
   itinerary: z.string(), 
   hotels: z.string().optional(),
   inclusions: z.string(), // comma separated
@@ -49,7 +54,6 @@ export async function bulkUploadTourPackages(data: TourPackageUploadData[]) {
       const packageId = slugify(pkg.title, { lower: true, strict: true });
       const packageRef = adminDb.collection('tourPackages').doc(packageId);
 
-      // Parse nested objects from strings
       let itinerary = [];
       try { itinerary = JSON.parse(pkg.itinerary); } catch (e) { throw new Error(`Itinerary JSON error in "${pkg.title}"`); }
       
@@ -90,10 +94,37 @@ export async function bulkUploadTourPackages(data: TourPackageUploadData[]) {
     }
 
     await batch.commit();
+    
+    // Force revalidate frontend routes
+    revalidatePath('/tour-packages');
+    revalidatePath('/');
+    
     return { success: true, message: `Successfully synchronized ${data.length} travel itineraries to the cloud.` };
 
   } catch (e: any) {
     console.error("Bulk upload failure:", e);
     return { success: false, message: e.message || 'Cloud synchronization failed.' };
   }
+}
+
+/**
+ * Server action to save or update a single package with cache invalidation.
+ */
+export async function saveTourPackageAction(packageId: string, data: any) {
+    const { adminDb, error } = getFirebaseAdmin();
+    if (error || !adminDb) return { success: false, message: "Admin SDK not initialized" };
+
+    try {
+        const packageRef = adminDb.collection('tourPackages').doc(packageId);
+        await packageRef.set(data, { merge: true });
+        
+        // REVALIDATION: This ensures the frontend shows new data instantly
+        revalidatePath('/tour-packages');
+        revalidatePath(`/tour-packages/${packageId}`);
+        revalidatePath('/');
+        
+        return { success: true };
+    } catch (e: any) {
+        return { success: false, message: e.message };
+    }
 }
