@@ -15,7 +15,7 @@ const navItems = [
     { href: '/admin/bookings', label: 'Reservations', icon: BookOpen },
     { href: '/admin/hotels', label: 'Properties', icon: Hotel },
     { href: '/admin/tour-packages', label: 'Expeditions', icon: MapPin },
-    { href: '/admin/blogs', label: 'Blogs', icon: Video },
+    // Static Blog content is now curated, no longer managed via Admin for cultural consistency.
     { href: '/admin/users', label: 'Liaisons', icon: Users2 },
     { href: '/admin/promotions', label: 'Access Codes', icon: Tag },
 ];
