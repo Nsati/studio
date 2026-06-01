@@ -1,0 +1,47 @@
+
+{
+  "placeholderImages": [
+    {
+      "id": "hero",
+      "description": "Panoramic view of snow-capped Himalayan mountains in Uttarakhand.",
+      "imageUrl": "https://images.unsplash.com/photo-1612539473441-dfc1cefd5e1e?auto=format&fit=crop&q=80&w=1920",
+      "imageHint": "mountain landscape"
+    },
+    {
+      "id": "about-hero",
+      "description": "A group of friends enjoying a scenic viewpoint in the mountains of Uttarakhand.",
+      "imageUrl": "https://images.unsplash.com/photo-1548957175-84f0f9af659e?auto=format&fit=crop&q=80&w=1080",
+      "imageHint": "travel group"
+    },
+    {
+      "id": "blog-aipan",
+      "description": "Traditional Aipan art of Uttarakhand - Red and White geometric patterns.",
+      "imageUrl": "https://images.unsplash.com/photo-1621360841013-c7683c659ec6?auto=format&fit=crop&q=80&w=1080",
+      "imageHint": "Indian folk art"
+    },
+    {
+      "id": "blog-food",
+      "description": "Authentic Pahadi Thali with local grains and pulses.",
+      "imageUrl": "https://images.unsplash.com/photo-1626777553732-489957d1f971?auto=format&fit=crop&q=80&w=1080",
+      "imageHint": "Indian food thali"
+    },
+    {
+      "id": "blog-dance",
+      "description": "Traditional Choliya warrior dance performance in Uttarakhand.",
+      "imageUrl": "https://images.unsplash.com/photo-1541011400305-64f1e9488a03?auto=format&fit=crop&q=80&w=1080",
+      "imageHint": "traditional dance"
+    },
+    {
+      "id": "city-nainital",
+      "description": "A view of Naini Lake in Nainital with colorful boats.",
+      "imageUrl": "https://images.unsplash.com/photo-1693153318626-682ef3712136?auto=format&fit=crop&q=80&w=1080",
+      "imageHint": "lake town"
+    },
+    {
+      "id": "city-mussoorie",
+      "description": "Lush green hills of Mussoorie during sunset.",
+      "imageUrl": "https://images.unsplash.com/photo-1606220975728-f94e0d9ed642?auto=format&fit=crop&q=80&w=1080",
+      "imageHint": "hill station"
+    }
+  ]
+}

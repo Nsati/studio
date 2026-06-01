@@ -1,15 +1,14 @@
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
   images: {
     remotePatterns: [
-      { protocol: 'https', hostname: 'placehold.co', pathname: '/**' },
       { protocol: 'https', hostname: 'images.unsplash.com', pathname: '/**' },
       { protocol: 'https', hostname: 'plus.unsplash.com', pathname: '/**' },
       { protocol: 'https', hostname: 'picsum.photos', pathname: '/**' },
-      { protocol: 'https', hostname: 'geof.storyboardthat.com', pathname: '/**' },
-      { protocol: 'https', hostname: 'image2url.com', pathname: '/**' },
       { protocol: 'https', hostname: 'firebasestorage.googleapis.com', pathname: '/**' },
+      { protocol: 'https', hostname: 'placehold.co', pathname: '/**' },
       { protocol: 'https', hostname: 'example.com', pathname: '/**' },
     ],
   },
@@ -19,7 +18,7 @@ const nextConfig = {
         source: '/(.*)',
         headers: [
           { key: 'X-Frame-Options', value: 'DENY' },
-          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'X-Content-Type-Options', value: nosniff },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
           {
