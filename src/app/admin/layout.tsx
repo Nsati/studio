@@ -15,7 +15,7 @@ const navItems = [
     { href: '/admin/bookings', label: 'Reservations', icon: BookOpen },
     { href: '/admin/hotels', label: 'Properties', icon: Hotel },
     { href: '/admin/tour-packages', label: 'Expeditions', icon: MapPin },
-    { href: '/admin/blogs', label: 'Field Reports', icon: Video },
+    { href: '/admin/blogs', label: 'Blogs', icon: Video },
     { href: '/admin/users', label: 'Liaisons', icon: Users2 },
     { href: '/admin/promotions', label: 'Access Codes', icon: Tag },
 ];

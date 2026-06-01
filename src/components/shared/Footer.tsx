@@ -8,7 +8,7 @@ const footerLinks = {
   'Himalayan Hub': [
     { label: 'Find a Stay', href: '/search' },
     { label: 'Tour Packages', href: '/tour-packages' },
-    { label: 'Destinations', href: '/#cities' },
+    { label: 'Expedition Blogs', href: '/blogs' },
     { label: 'Vibe Match™', href: '/vibe-match' },
   ],
   'Explorer Central': [

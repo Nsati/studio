@@ -28,7 +28,7 @@ import { Logo } from './Logo';
 const navLinks = [
   { href: '/search', label: 'Stays' },
   { href: '/tour-packages', label: 'Tours' },
-  { href: '/blogs', label: 'Logs' },
+  { href: '/blogs', label: 'Blogs' },
   { href: '/vibe-match', label: 'Vibe Match™' },
 ];
 
