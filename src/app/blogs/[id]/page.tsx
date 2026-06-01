@@ -20,7 +20,7 @@ const STATIC_BLOG_DATA: Record<string, any> = {
     date: "May 20, 2024",
     description: "Aipan is the spiritual folk art of Uttarakhand, specifically the Kumaon region. It is characterized by geometric patterns and symbolic motifs that hold deep religious significance.",
     image: "https://images.unsplash.com/photo-1621360841013-c7683c659ec6?auto=format&fit=crop&q=80&w=1080",
-    imageHint: "Aipan ritual art",
+    imageHint: "Aipan ritual art detail",
     gallery: [
         "https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?auto=format&fit=crop&q=80&w=1080",
         "https://images.unsplash.com/photo-1605721911519-3dfeb3be25e7?auto=format&fit=crop&q=80&w=1080",
@@ -43,7 +43,7 @@ In modern times, Aipan is moving from the thresholds of homes to canvases, cloth
     date: "May 15, 2024",
     description: "The food of Uttarakhand is simple, dense in nutrition, and deeply rooted in the harsh but beautiful landscape of the northern mountains.",
     image: "https://images.unsplash.com/photo-1626777553732-489957d1f971?auto=format&fit=crop&q=80&w=1080",
-    imageHint: "Pahadi Thali",
+    imageHint: "Authentic Pahadi Thali",
     gallery: [
         "https://images.unsplash.com/photo-1601050633647-8f8f5f4ad474?auto=format&fit=crop&q=80&w=1080",
         "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&q=80&w=1080",
@@ -63,7 +63,7 @@ Don't forget the 'Singori' (a sweet wrapped in Maalu leaves) and the iconic 'Bal
     date: "May 10, 2024",
     description: "Choliya is the traditional sword dance of Kumaon, showcasing the military prowess and artistic rhythm of the Himalayan hills.",
     image: "https://images.unsplash.com/photo-1541011400305-64f1e9488a03?auto=format&fit=crop&q=80&w=1080",
-    imageHint: "Choliya dancers",
+    imageHint: "Choliya warriors in costume",
     gallery: [
         "https://images.unsplash.com/photo-1613941455255-081696a07677?auto=format&fit=crop&q=80&w=1080",
         "https://images.unsplash.com/photo-1581791534721-e599df4417f7?auto=format&fit=crop&q=80&w=1080",
@@ -153,7 +153,7 @@ export default function BlogDetailPage() {
                             </div>
 
                             <div className="prose prose-slate max-w-none prose-p:text-2xl prose-p:leading-[1.85] prose-p:text-slate-600 prose-p:font-light font-sans">
-                                {blog.content.split('\n\n').map((para, i) => (
+                                {blog.content.split('\n\n').map((para: string, i: number) => (
                                     <p key={i} className="mb-10">{para}</p>
                                 ))}
                             </div>
@@ -167,13 +167,13 @@ export default function BlogDetailPage() {
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                     {blog.gallery.map((img: string, i: number) => (
-                                        <div key={i} className={`relative rounded-[3rem] overflow-hidden shadow-2xl transition-all duration-1000 hover:scale-[1.02] ${i === 0 ? 'md:col-span-2 aspect-[21/9]' : 'aspect-square'}`}>
+                                        <div key={i} className={`relative rounded-[3rem] overflow-hidden shadow-2xl transition-all duration-1000 hover:scale-[1.02] bg-slate-100 ${i === 0 ? 'md:col-span-2 aspect-[21/9]' : 'aspect-square'}`}>
                                             <Image 
                                                 src={img} 
-                                                alt={`Gallery ${i}`} 
+                                                alt={`Gallery Segment ${i}`} 
                                                 fill 
                                                 className="object-cover"
-                                                data-ai-hint="India culture"
+                                                data-ai-hint="Himalayan heritage culture"
                                             />
                                             <div className="absolute inset-0 ring-1 ring-inset ring-white/10" />
                                         </div>

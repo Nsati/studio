@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Calendar, Sparkles, ArrowRight, Bookmark } from 'lucide-react';
+import { Calendar, Sparkles, ArrowRight, Bookmark, Camera } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import Link from 'next/link';
@@ -24,12 +24,12 @@ const CULTURAL_BLOGS = [
   },
   {
     id: 'pahadi-cuisine-himalayan-feast',
-    title: "Soul of the Soil: Bhatt ki Churkani & Mandua",
+    title: "Soul of the Soil: A Himalayan Feast",
     category: "Local Flavors",
     date: "15 May 2024",
     description: "A culinary voyage into the high-altitude kitchens where black soybeans and finger millets create a feast for the soul.",
     image: "https://images.unsplash.com/photo-1626777553732-489957d1f971?auto=format&fit=crop&q=80&w=1080",
-    hint: "Indian thali"
+    hint: "Indian food thali"
   },
   {
     id: 'choliya-dance-warrior-past',
@@ -38,7 +38,7 @@ const CULTURAL_BLOGS = [
     date: "10 May 2024",
     description: "The rhythmic thunder of Nagaras and the flash of swords—witnessing the thousand-year-old martial legacy of the hills.",
     image: "https://images.unsplash.com/photo-1541011400305-64f1e9488a03?auto=format&fit=crop&q=80&w=1080",
-    hint: "Tribal dance"
+    hint: "Traditional warrior dance"
   }
 ];
 
@@ -73,14 +73,14 @@ export default function BlogsPublicPage() {
             {/* Symmetric Grid Section */}
             <section className="py-24 px-4 -mt-32">
                 <div className="container mx-auto">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-16">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
                         {CULTURAL_BLOGS.map((blog, idx) => (
                             <Link 
                                 key={blog.id} 
                                 href={`/blogs/${blog.id}`}
                                 className={idx === 0 ? "md:col-span-2" : "col-span-1"}
                             >
-                                <Card className="group rounded-[3rem] overflow-hidden border-0 shadow-apple-deep bg-white hover:shadow-2xl transition-all duration-1000 h-full flex flex-col relative">
+                                <Card className="group rounded-[3.5rem] overflow-hidden border-0 shadow-apple-deep bg-white hover:shadow-2xl transition-all duration-1000 h-full flex flex-col relative">
                                     <CardContent className="p-0 flex flex-col h-full">
                                         <div className={`relative ${idx === 0 ? "aspect-[21/9]" : "aspect-[16/10]"} overflow-hidden bg-slate-100`}>
                                             <Image 
@@ -89,8 +89,9 @@ export default function BlogsPublicPage() {
                                                 fill
                                                 className="object-cover transition-transform duration-3000 group-hover:scale-105"
                                                 data-ai-hint={blog.hint}
+                                                priority={idx === 0}
                                             />
-                                            <div className="absolute inset-0 bg-black/10 group-hover:bg-black/30 transition-all duration-700" />
+                                            <div className="absolute inset-0 bg-black/5 group-hover:bg-black/20 transition-all duration-700" />
                                             
                                             <div className="absolute top-10 left-10">
                                                 <Badge className="bg-white/95 backdrop-blur-md text-primary border-0 font-black uppercase tracking-[0.2em] text-[10px] px-6 py-3 rounded-full shadow-2xl">
@@ -113,7 +114,7 @@ export default function BlogsPublicPage() {
                                                 <Bookmark className="h-5 w-5 text-slate-200 group-hover:text-accent transition-colors" />
                                             </div>
                                             
-                                            <h2 className={`${idx === 0 ? "text-5xl md:text-7xl" : "text-4xl md:text-5xl"} font-black tracking-tighter text-slate-900 group-hover:text-primary transition-colors leading-[0.9] uppercase`}>
+                                            <h2 className={`${idx === 0 ? "text-5xl md:text-8xl" : "text-4xl md:text-5xl"} font-black tracking-tighter text-slate-900 group-hover:text-primary transition-colors leading-[0.9] uppercase`}>
                                                 {blog.title}
                                             </h2>
                                             
@@ -153,15 +154,15 @@ export default function BlogsPublicPage() {
                     
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-32">
                         {[
-                            {url: "https://images.unsplash.com/photo-1581791534721-e599df4417f7?auto=format&fit=crop&q=80&w=800", hint: "India mountain"},
-                            {url: "https://images.unsplash.com/photo-1613580459569-0268579930f3?auto=format&fit=crop&q=80&w=800", hint: "Temple morning"},
-                            {url: "https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?auto=format&fit=crop&q=80&w=800", hint: "River ganga"},
-                            {url: "https://images.unsplash.com/photo-1613941455255-081696a07677?auto=format&fit=crop&q=80&w=800", hint: "Dholak player"}
+                            {url: "https://images.unsplash.com/photo-1581791534721-e599df4417f7?auto=format&fit=crop&q=80&w=800", hint: "India mountain peaks"},
+                            {url: "https://images.unsplash.com/photo-1613580459569-0268579930f3?auto=format&fit=crop&q=80&w=800", hint: "Temple mountain morning"},
+                            {url: "https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?auto=format&fit=crop&q=80&w=800", hint: "River ganga rishikesh"},
+                            {url: "https://images.unsplash.com/photo-1613941455255-081696a07677?auto=format&fit=crop&q=80&w=800", hint: "Traditional dholak player"}
                         ].map((src, i) => (
-                            <div key={i} className="relative aspect-[3/4] rounded-[2.5rem] overflow-hidden shadow-2xl group border border-white/5">
+                            <div key={i} className="relative aspect-[3/4] rounded-[3rem] overflow-hidden shadow-2xl group border border-white/5 bg-slate-900">
                                 <Image 
                                     src={src.url} 
-                                    alt="Archive" 
+                                    alt="Archive Visual" 
                                     fill 
                                     className="object-cover transition-transform duration-2000 group-hover:scale-125 grayscale group-hover:grayscale-0"
                                     data-ai-hint={src.hint}
