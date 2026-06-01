@@ -15,9 +15,9 @@ const CULTURAL_BLOGS = [
     category: "Traditional Art",
     date: "20 May 2024",
     description: "Discover the intricate red-and-white patterns that adorn the doorsteps of Kumaoni homes, symbolizing prosperity and divine protection.",
-    image: "https://images.unsplash.com/photo-1621360841013-c7683c659ec6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    videoUrl: "https://www.youtube.com/embed/YpXq4_066G8", // Sample Aipan Art Video
-    details: "Aipan is not just a drawing; it is a prayer. Practiced primarily by the women of Kumaon, this folk art uses a red clay base (Geru) and white rice paste (Biswar) to create complex geometric motifs that vary for every festival and ritual."
+    image: "https://images.unsplash.com/photo-1621360841013-c7683c659ec6?auto=format&fit=crop&q=80&w=1080",
+    videoUrl: "https://www.youtube.com/embed/YpXq4_066G8",
+    details: "Aipan is not just a drawing; it is a prayer. Practiced primarily by the women of Kumaon, this folk art uses a red clay base (Geru) and white rice paste (Biswar) to create complex geometric motifs."
   },
   {
     id: 'pahadi-cuisine-himalayan-feast',
@@ -25,9 +25,9 @@ const CULTURAL_BLOGS = [
     category: "Local Flavors",
     date: "15 May 2024",
     description: "Step into a Pahadi kitchen to taste the robust flavors of black soybeans, ragi rotis, and the legendary Bal Mithai.",
-    image: "https://plus.unsplash.com/premium_photo-1661331777264-55557760e40f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    videoUrl: "https://www.youtube.com/embed/Z52p8z2W_Hw", // Traditional Pahadi Food Video
-    details: "Uttarakhand's cuisine is defined by its organic roots and high nutritional value. From the protein-rich Gahat Dal to the tangy Bhang ki Chutney, every dish is a testament to the resilient spirit of the hills."
+    image: "https://images.unsplash.com/photo-1626777553732-489957d1f971?auto=format&fit=crop&q=80&w=1080",
+    videoUrl: "https://www.youtube.com/embed/Z52p8z2W_Hw",
+    details: "Uttarakhand's cuisine is defined by its organic roots and high nutritional value. From the protein-rich Gahat Dal to the tangy Bhang ki Chutney, every dish is a testament to the resilient spirit."
   },
   {
     id: 'choliya-dance-warrior-past',
@@ -35,9 +35,9 @@ const CULTURAL_BLOGS = [
     category: "Folk Lore",
     date: "10 May 2024",
     description: "Witness the breathtaking sword-dance performed with rhythmic drums, reflecting the thousand-year-old history of Himalayan warriors.",
-    image: "https://images.unsplash.com/photo-1541011400305-64f1e9488a03?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-    videoUrl: "https://www.youtube.com/embed/YyM8r8K0kCc", // Choliya Dance Video
-    details: "Originating in the Kumaon region, Choliya is more than a dance—it's a vibrant display of martial skill, music, and colorful attire, traditionally performed during wedding processions to ward off evil spirits."
+    image: "https://images.unsplash.com/photo-1541011400305-64f1e9488a03?auto=format&fit=crop&q=80&w=1080",
+    videoUrl: "https://www.youtube.com/embed/YyM8r8K0kCc",
+    details: "Originating in the Kumaon region, Choliya is more than a dance—it's a vibrant display of martial skill, music, and colorful attire, traditionally performed during wedding processions."
   }
 ];
 
@@ -77,7 +77,7 @@ export default function BlogsPublicPage() {
                             >
                                 <Card className="group rounded-[4rem] overflow-hidden border-0 shadow-apple-deep bg-white hover:shadow-2xl transition-all duration-1000 h-full flex flex-col">
                                     <CardContent className="p-0 flex flex-col h-full">
-                                        <div className={`relative ${idx === 0 ? "aspect-[21/9]" : "aspect-[16/10]"} overflow-hidden`}>
+                                        <div className={`relative ${idx === 0 ? "aspect-[21/9]" : "aspect-[16/10]"} overflow-hidden bg-muted`}>
                                             <Image 
                                                 src={blog.image} 
                                                 alt={blog.title}
@@ -161,17 +161,6 @@ export default function BlogsPublicPage() {
                             />
                         </div>
                     </div>
-                </div>
-            </section>
-
-            {/* Authentic Quote Section */}
-            <section className="py-40 bg-white">
-                <div className="container mx-auto px-4 text-center space-y-10">
-                    <div className="h-20 w-px bg-accent mx-auto" />
-                    <h2 className="text-3xl md:text-7xl font-heading italic text-slate-900 max-w-5xl mx-auto leading-tight">
-                        "In Uttarakhand, every stone tells a story of gods, and every breeze carries the scent of ancient wisdom."
-                    </h2>
-                    <p className="text-[10px] font-black uppercase tracking-[0.5em] text-accent">The Northern Harrier Manifesto</p>
                 </div>
             </section>
         </div>

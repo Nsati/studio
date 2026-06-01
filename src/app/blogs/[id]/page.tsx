@@ -14,7 +14,7 @@ const STATIC_BLOG_DATA: Record<string, any> = {
     category: "Traditional Art",
     date: "May 20, 2024",
     description: "Aipan is the traditional folk art of Uttarakhand, specifically the Kumaon region. It is characterized by geometric patterns and symbolic motifs that hold deep religious and cultural significance.",
-    image: "https://images.unsplash.com/photo-1621360841013-c7683c659ec6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+    image: "https://images.unsplash.com/photo-1621360841013-c7683c659ec6?auto=format&fit=crop&q=80&w=1080",
     videoUrl: "https://www.youtube.com/embed/YpXq4_066G8",
     content: `Aipan (Kumaoni: ऐपण) is a traditional folk art specifically from the Kumaon region of Uttarakhand. It is a form of ritualistic painting that has been passed down through generations of women. 
 
@@ -32,7 +32,7 @@ In modern times, Aipan is moving from the thresholds of homes to canvases, cloth
     category: "Local Flavors",
     date: "May 15, 2024",
     description: "The food of Uttarakhand is simple, nutritious, and deeply rooted in the harsh but beautiful landscape of the mountains.",
-    image: "https://plus.unsplash.com/premium_photo-1661331777264-55557760e40f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+    image: "https://images.unsplash.com/photo-1626777553732-489957d1f971?auto=format&fit=crop&q=80&w=1080",
     videoUrl: "https://www.youtube.com/embed/Z52p8z2W_Hw",
     content: `Uttarakhandi cuisine is a celebration of local ingredients. The high-altitude terrain produces grains and legumes that are incredibly dense in nutrition, essential for the physical demands of mountain life.
 
@@ -47,7 +47,7 @@ Don't forget the 'Singori' (a sweet wrapped in Maalu leaves) and the iconic 'Bal
     category: "Folk Lore",
     date: "May 10, 2024",
     description: "Choliya is the traditional sword dance of Kumaon, showcasing the military prowess and artistic rhythm of the hills.",
-    image: "https://images.unsplash.com/photo-1541011400305-64f1e9488a03?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+    image: "https://images.unsplash.com/photo-1541011400305-64f1e9488a03?auto=format&fit=crop&q=80&w=1080",
     videoUrl: "https://www.youtube.com/embed/YyM8r8K0kCc",
     content: `The Choliya Dance (छोलिया नृत्य) is a thousand-year-old dance form that originated in the Kumaon region. It is traditionally performed by men holding swords and shields, mimicking the movements of a battlefield.
 
@@ -112,7 +112,7 @@ export default function BlogDetailPage() {
                 </header>
 
                 <div className="container mx-auto max-w-7xl px-4 mb-24">
-                    <div className="relative aspect-[21/9] w-full rounded-[5rem] overflow-hidden shadow-apple-deep ring-12 ring-white">
+                    <div className="relative aspect-[21/9] w-full rounded-[5rem] overflow-hidden shadow-apple-deep ring-12 ring-white bg-muted">
                         <Image src={blog.image} alt={blog.title} fill className="object-cover" priority />
                     </div>
                 </div>

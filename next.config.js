@@ -24,7 +24,7 @@ const nextConfig = {
           { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*.unsplash.com https://picsum.photos https://firebasestorage.googleapis.com https://placehold.co https://example.com; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://api.razorpay.com; frame-src https://api.razorpay.com; font-src 'self' https://fonts.gstatic.com;"
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*.unsplash.com https://picsum.photos https://firebasestorage.googleapis.com https://placehold.co https://example.com; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://api.razorpay.com; frame-src 'self' https://api.razorpay.com https://www.youtube.com https://youtube.com; font-src 'self' https://fonts.gstatic.com;"
           },
         ],
       },
