@@ -10,65 +10,66 @@ import Image from 'next/image';
 
 /**
  * @fileOverview Cinematic Detail View for Himalayan Discovery Essays.
+ * Features symmetrical layouts and cultural visual intelligence.
  */
 
 const STATIC_BLOG_DATA: Record<string, any> = {
   'aipan-art-ritual-geometry': {
-    title: "The Sacred Art of Aipan: Uttarakhand's Ritualistic Geometry",
+    title: "Sacred Geometry: The Living Art of Aipan",
     category: "Traditional Art",
     date: "May 20, 2024",
-    description: "Aipan is the traditional folk art of Uttarakhand, specifically the Kumaon region. It is characterized by geometric patterns and symbolic motifs that hold deep religious and cultural significance.",
+    description: "Aipan is the spiritual folk art of Uttarakhand, specifically the Kumaon region. It is characterized by geometric patterns and symbolic motifs that hold deep religious significance.",
     image: "https://images.unsplash.com/photo-1621360841013-c7683c659ec6?auto=format&fit=crop&q=80&w=1080",
-    imageHint: "Indian folk art",
+    imageHint: "Aipan ritual art",
     gallery: [
         "https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?auto=format&fit=crop&q=80&w=1080",
         "https://images.unsplash.com/photo-1605721911519-3dfeb3be25e7?auto=format&fit=crop&q=80&w=1080",
         "https://images.unsplash.com/photo-1599420186946-7b6fb4e297f0?auto=format&fit=crop&q=80&w=1080"
     ],
-    content: `Aipan (Kumaoni: ऐपण) is a traditional folk art specifically from the Kumaon region of Uttarakhand. It is a form of ritualistic painting that has been passed down through generations of women. 
+    content: `Aipan (Kumaoni: ऐपण) is a traditional folk art specifically from the Kumaon region of Uttarakhand. It is a form of ritualistic painting that has been passed down through generations of women, traditionally drawn on the thresholds of homes to welcome divine energies.
 
-The art is traditionally made using a base of red clay, known as 'Geru', over which designs are drawn with a white paste made from ground rice, called 'Biswar'. The designs are not merely decorative but serve as a spiritual conduit during ceremonies such as weddings, births, and local festivals like Harela and Diwali.
+The art is traditionally made using a base of deep red clay, known as 'Geru', over which design motifs are drawn with a white paste made from ground rice, called 'Biswar'. The designs are not merely decorative but serve as a spiritual conduit during ceremonies such as weddings, births, and local festivals like Harela and Diwali.
 
 Key Motifs include:
-• Saraswati Chowki: Drawn during learning ceremonies.
-• Chamunda Peeth: Used for tantric rituals.
-• Vasudhara: Continuous lines of rice paste representing the flow of nature's bounty.
+• Ganesh Chowki: Drawn during auspicious beginnings, featuring the beloved deity.
+• Lakshmi Peeth: Used for prosperity and wealth during Diwali.
+• Vasudhara: Continuous lines of rice paste representing the eternal flow of nature's bounty.
 
-In modern times, Aipan is moving from the thresholds of homes to canvases, clothes, and decorative items, becoming a symbol of Himalayan identity worldwide.`
+In modern times, Aipan is moving from the thresholds of homes to canvases, clothes, and decorative items, becoming a global symbol of Himalayan identity and rhythmic geometry.`
   },
   'pahadi-cuisine-himalayan-feast': {
-    title: "Bhatt ki Churkani & Mandua: A Soul-Warming Himalayan Feast",
+    title: "Soul of the Soil: A Soul-Warming Himalayan Feast",
     category: "Local Flavors",
     date: "May 15, 2024",
-    description: "The food of Uttarakhand is simple, nutritious, and deeply rooted in the harsh but beautiful landscape of the mountains.",
+    description: "The food of Uttarakhand is simple, dense in nutrition, and deeply rooted in the harsh but beautiful landscape of the northern mountains.",
     image: "https://images.unsplash.com/photo-1626777553732-489957d1f971?auto=format&fit=crop&q=80&w=1080",
-    imageHint: "Indian thali",
+    imageHint: "Pahadi Thali",
     gallery: [
         "https://images.unsplash.com/photo-1601050633647-8f8f5f4ad474?auto=format&fit=crop&q=80&w=1080",
         "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&q=80&w=1080",
         "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=1080"
     ],
-    content: `Uttarakhandi cuisine is a celebration of local ingredients. The high-altitude terrain produces grains and legumes that are incredibly dense in nutrition, essential for the physical demands of mountain life.
+    content: `Uttarakhandi cuisine is a celebration of local ingredients and resilience. The high-altitude terrain produces grains and legumes that are incredibly dense in nutrition, essential for the physical demands of mountain life.
 
-Bhatt ki Churkani is the crown jewel of Kumaoni food. Made from black soybeans slow-cooked in an iron wok, it develops a deep, earthy flavor that pairs perfectly with steamed rice. 
+Bhatt ki Churkani is the crown jewel of Kumaoni food. Made from black soybeans slow-cooked in an iron wok, it develops a deep, earthy flavor that pairs perfectly with steamed rice and a dollop of fresh ghee.
 
-Mandua ki Roti (Ragi/Finger Millet Bread) is another staple. It is gluten-free, rich in calcium, and provides sustained energy. During winters, a dollop of Ghee and a bit of Jaggery on a hot Mandua roti is the ultimate comfort food.
+Mandua ki Roti (Finger Millet Bread) is another staple. It is gluten-free, rich in calcium, and provides sustained energy. During winters, a piece of Jaggery on a hot Mandua roti is the ultimate comfort food for any traveler.
 
 Don't forget the 'Singori' (a sweet wrapped in Maalu leaves) and the iconic 'Bal Mithai' from Almora, covered in tiny white sugar balls that look like Himalayan snow.`
   },
   'choliya-dance-warrior-past': {
-    title: "The Choliya Dance: Echoes of Kumaon's Warrior Past",
+    title: "Echoes of Valor: The Choliya Warrior Dance",
     category: "Folk Lore",
     date: "May 10, 2024",
-    description: "Choliya is the traditional sword dance of Kumaon, showcasing the military prowess and artistic rhythm of the hills.",
+    description: "Choliya is the traditional sword dance of Kumaon, showcasing the military prowess and artistic rhythm of the Himalayan hills.",
     image: "https://images.unsplash.com/photo-1541011400305-64f1e9488a03?auto=format&fit=crop&q=80&w=1080",
-    imageHint: "Tribal dance",
+    imageHint: "Choliya dancers",
     gallery: [
         "https://images.unsplash.com/photo-1613941455255-081696a07677?auto=format&fit=crop&q=80&w=1080",
         "https://images.unsplash.com/photo-1581791534721-e599df4417f7?auto=format&fit=crop&q=80&w=1080",
         "https://images.unsplash.com/photo-1613580459569-0268579930f3?auto=format&fit=crop&q=80&w=1080"
     ],
-    content: `The Choliya Dance (छोलिया नृत्य) is a thousand-year-old dance form that originated in the Kumaon region. It is traditionally performed by men holding swords and shields, mimicking the movements of a battlefield.
+    content: `The Choliya Dance (छोलिया नृत्य) is a thousand-year-old martial art form that originated in the Kumaon region. It is traditionally performed by men holding swords and shields, mimicking the coordinated movements of an ancient battlefield.
 
 Accompanied by the thunderous beats of the Nagara, Dhol, and the soulful wail of the Ransingha (a traditional trumpet), the dancers move in perfect sync, demonstrating agility, strength, and dramatic flair.
 
@@ -206,4 +207,3 @@ export default function BlogDetailPage() {
         </div>
     );
 }
-

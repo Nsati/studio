@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Compass, Calendar, Sparkles, Utensils, Music, Mountain, ArrowRight, Camera, Heart, Bookmark } from 'lucide-react';
+import { Calendar, Sparkles, ArrowRight, Bookmark } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import Link from 'next/link';
@@ -9,7 +9,7 @@ import Image from 'next/image';
 
 /**
  * @fileOverview Northern Harrier Public Photo Journal.
- * A symmetric, luxury editorial layout focusing on Uttarakhand Culture.
+ * A highly symmetric, luxurious editorial layout showcasing Uttarakhand's heritage.
  */
 
 const CULTURAL_BLOGS = [
@@ -18,7 +18,7 @@ const CULTURAL_BLOGS = [
     title: "Sacred Geometry: The Living Art of Aipan",
     category: "Traditional Art",
     date: "20 May 2024",
-    description: "The red-and-white ritualistic patterns that define the thresholds of Kumaoni homes, symbolizing a divine gateway to prosperity.",
+    description: "The intricate red-and-white ritualistic patterns that define the thresholds of Kumaoni homes, symbolizing a divine gateway to prosperity.",
     image: "https://images.unsplash.com/photo-1621360841013-c7683c659ec6?auto=format&fit=crop&q=80&w=1080",
     hint: "Indian folk art"
   },
@@ -175,4 +175,3 @@ export default function BlogsPublicPage() {
         </div>
     );
 }
-
