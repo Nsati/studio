@@ -13,15 +13,16 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Loader2, Video, Globe, ShieldCheck } from 'lucide-react';
+import { Loader2, Video, Globe, ShieldCheck, Image as ImageIcon } from 'lucide-react';
 import slugify from 'slugify';
+import { ImageUpload } from './ImageUpload';
 
 const blogSchema = z.object({
   title: z.string().min(5, 'Title must be at least 5 characters.'),
-  description: z.string().min(20, 'Description must be at least 20 characters.'),
-  videoUrl: z.string().url('Please enter a valid YouTube/Vimeo URL.'),
+  description: z.string().min(20, 'Content must be at least 20 characters.'),
+  videoUrl: z.string().url('Please enter a valid YouTube/Vimeo URL.').or(z.literal('')),
   category: z.string().min(2, 'Category required'),
-  thumbnail: z.string().optional(),
+  images: z.array(z.string()).min(1, 'At least one header image is required'),
 });
 
 type BlogFormProps = {
@@ -42,7 +43,7 @@ export function BlogForm({ initialData }: BlogFormProps) {
       description: '',
       videoUrl: '',
       category: 'Expedition Log',
-      thumbnail: '',
+      images: [],
     },
   });
 
@@ -88,14 +89,6 @@ export function BlogForm({ initialData }: BlogFormProps) {
             )} />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <FormField control={form.control} name="videoUrl" render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Video Stream URL (YouTube/Vimeo)</FormLabel>
-                  <FormControl><Input placeholder="https://youtube.com/watch?v=..." {...field} className="h-12 rounded-none" /></FormControl>
-                  <FormDescription className="text-[9px] font-bold">Standard web URL from hosting provider.</FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )} />
               <FormField control={form.control} name="category" render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Log Category</FormLabel>
@@ -103,12 +96,34 @@ export function BlogForm({ initialData }: BlogFormProps) {
                   <FormMessage />
                 </FormItem>
               )} />
+               <FormField control={form.control} name="videoUrl" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Video Stream URL (YouTube/Vimeo)</FormLabel>
+                  <FormControl><Input placeholder="https://youtube.com/watch?v=..." {...field} className="h-12 rounded-none" /></FormControl>
+                  <FormDescription className="text-[9px] font-bold">Optional: Embed a field video.</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )} />
+            </div>
+
+            <div className="space-y-2">
+                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                    <ImageIcon className="h-3 w-3" /> Image Gallery
+                </FormLabel>
+                <FormField control={form.control} name="images" render={({ field }) => (
+                    <FormItem>
+                        <FormControl>
+                            <ImageUpload value={field.value} onChange={field.onChange} maxImages={10} />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )} />
             </div>
 
             <FormField control={form.control} name="description" render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Detailed Field Summary</FormLabel>
-                <FormControl><Textarea className="min-h-[200px] rounded-none" {...field} /></FormControl>
+                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Detailed Field Summary (Text Content)</FormLabel>
+                <FormControl><Textarea className="min-h-[300px] rounded-none font-sans leading-relaxed" placeholder="Write the full expedition report here..." {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />

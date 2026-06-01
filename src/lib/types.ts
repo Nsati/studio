@@ -156,6 +156,7 @@ export interface Blog {
   title: string;
   description: string;
   videoUrl: string;
+  images: string[];
   thumbnail?: string;
   category: string;
   createdAt: any;

@@ -4,33 +4,14 @@ import React from 'react';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
 import type { Blog } from '@/lib/types';
-import { Video, Play, Compass, MapPin } from 'lucide-react';
+import { Video, Compass, MapPin, ArrowRight, Calendar } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-
-function YouTubeEmbed({ url }: { url: string }) {
-    // Basic YouTube ID extractor
-    const getEmbedUrl = (url: string) => {
-        let videoId = '';
-        if (url.includes('v=')) videoId = url.split('v=')[1].split('&')[0];
-        else if (url.includes('youtu.be/')) videoId = url.split('youtu.be/')[1];
-        
-        if (videoId) return `https://www.youtube.com/embed/${videoId}`;
-        return url;
-    };
-
-    return (
-        <div className="relative aspect-video rounded-none overflow-hidden bg-slate-900">
-            <iframe
-                src={getEmbedUrl(url)}
-                className="absolute inset-0 w-full h-full border-0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-            />
-        </div>
-    );
-}
+import Link from 'next/link';
+import Image from 'next/image';
+import { normalizeTimestamp } from '@/lib/firestore-utils';
+import { format } from 'date-fns';
 
 export default function BlogsPublicPage() {
     const firestore = useFirestore();
@@ -57,7 +38,7 @@ export default function BlogsPublicPage() {
                             Expedition <span className="text-accent italic font-medium">Logs</span>
                         </h1>
                         <p className="text-xl text-white/70 font-medium max-w-2xl">
-                            Visual reports from the Himalayan frontier. Authentic stories captured beyond the horizon.
+                            Visual reports and detailed narratives from the Himalayan frontier. Authentic stories captured beyond the horizon.
                         </p>
                     </div>
                 </div>
@@ -67,42 +48,60 @@ export default function BlogsPublicPage() {
                 <div className="container mx-auto">
                     {isLoading ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                             {[1,2,4].map(i => <Skeleton key={i} className="h-96 w-full rounded-[2rem]" />)}
+                             {[1,2,3,4].map(i => <Skeleton key={i} className="h-96 w-full rounded-[2rem]" />)}
                         </div>
                     ) : blogs && blogs.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                            {blogs.map((blog) => (
-                                <Card key={blog.id} className="rounded-[3rem] overflow-hidden border-0 shadow-apple-deep bg-white group">
-                                    <CardContent className="p-0">
-                                        <YouTubeEmbed url={blog.videoUrl} />
-                                        <div className="p-10 space-y-6">
-                                            <div className="space-y-4">
-                                                <div className="flex items-center gap-3">
-                                                    <Badge className="bg-primary/10 text-primary border-0 font-black uppercase tracking-widest text-[9px] px-4 py-1.5 rounded-full">
-                                                        {blog.category}
-                                                    </Badge>
-                                                    <div className="h-px flex-1 bg-slate-50" />
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                            {blogs.map((blog) => {
+                                const postDate = normalizeTimestamp(blog.createdAt);
+                                return (
+                                    <Link key={blog.id} href={`/blogs/${blog.id}`}>
+                                        <Card className="rounded-[2.5rem] overflow-hidden border-0 shadow-apple-deep bg-white group hover:shadow-2xl transition-all duration-700 h-full flex flex-col">
+                                            <CardContent className="p-0 flex flex-col h-full">
+                                                <div className="relative aspect-[16/10] overflow-hidden">
+                                                    <Image 
+                                                        src={blog.images?.[0] || 'https://picsum.photos/seed/blog/800/600'} 
+                                                        alt={blog.title}
+                                                        fill
+                                                        className="object-cover transition-transform duration-1000 group-hover:scale-110"
+                                                    />
+                                                    <div className="absolute top-6 left-6">
+                                                        <Badge className="bg-primary/90 backdrop-blur-sm text-white border-0 font-black uppercase tracking-widest text-[8px] px-3 py-1 rounded-full shadow-lg">
+                                                            {blog.category}
+                                                        </Badge>
+                                                    </div>
+                                                    {blog.videoUrl && (
+                                                        <div className="absolute bottom-6 right-6 h-10 w-10 bg-accent rounded-full flex items-center justify-center text-white shadow-lg">
+                                                            <Video className="h-4 w-4" />
+                                                        </div>
+                                                    )}
                                                 </div>
-                                                <h2 className="text-3xl font-black tracking-tight text-slate-900 group-hover:text-primary transition-colors">
-                                                    {blog.title}
-                                                </h2>
-                                                <p className="text-slate-500 font-medium leading-relaxed line-clamp-3">
-                                                    {blog.description}
-                                                </p>
-                                            </div>
-                                            
-                                            <div className="pt-6 border-t border-slate-50 flex items-center justify-between">
-                                                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                                                    <MapPin className="h-3 w-3 text-accent" /> Harrier Field Node 01
+                                                
+                                                <div className="p-8 flex flex-col flex-grow space-y-4">
+                                                    <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                                        <Calendar className="h-3 w-3" /> {format(postDate, 'dd MMM yyyy')}
+                                                    </div>
+                                                    <h2 className="text-2xl font-black tracking-tight text-slate-900 group-hover:text-primary transition-colors leading-tight">
+                                                        {blog.title}
+                                                    </h2>
+                                                    <p className="text-slate-500 font-medium leading-relaxed line-clamp-3 text-sm">
+                                                        {blog.description}
+                                                    </p>
+                                                    
+                                                    <div className="pt-6 mt-auto border-t border-slate-50 flex items-center justify-between">
+                                                        <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-primary">
+                                                            Read Full Report
+                                                        </div>
+                                                        <div className="h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-primary transition-all">
+                                                            <ArrowRight className="h-4 w-4 text-slate-300 group-hover:text-white" />
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div className="h-10 w-10 rounded-full bg-slate-50 flex items-center justify-center">
-                                                    <Play className="h-4 w-4 text-slate-300" fill="currentColor" />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            ))}
+                                            </CardContent>
+                                        </Card>
+                                    </Link>
+                                );
+                            })}
                         </div>
                     ) : (
                         <div className="py-32 text-center border-2 border-dashed rounded-[3rem] border-black/5 bg-muted/20">
