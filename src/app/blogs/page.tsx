@@ -1,4 +1,3 @@
-
 'use client';
 
 import React from 'react';
@@ -101,11 +100,11 @@ export default function BlogsPublicPage() {
                                                 <Bookmark className="h-4 w-4 text-slate-200 group-hover:text-accent transition-colors" />
                                             </div>
                                             
-                                            <h2 className="text-2xl font-black tracking-tight text-slate-900 group-hover:text-primary transition-colors leading-tight uppercase">
+                                            <h2 className="text-2xl font-black tracking-tight text-slate-900 group-hover:text-primary transition-colors leading-tight uppercase h-14 line-clamp-2">
                                                 {blog.title}
                                             </h2>
                                             
-                                            <p className="text-slate-500 font-medium leading-relaxed line-clamp-3 text-sm italic">
+                                            <p className="text-slate-500 font-medium leading-relaxed line-clamp-3 text-sm italic flex-grow">
                                                 "{blog.description}"
                                             </p>
                                             
