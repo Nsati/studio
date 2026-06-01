@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useUser, useAuth } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { useRouter, usePathname } from 'next/navigation';
-import { User, LogOut, LayoutDashboard, Book, Menu, HelpCircle, Globe } from 'lucide-react';
+import { User, LogOut, LayoutDashboard, Book, Menu, HelpCircle, Globe, Video } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -28,6 +28,7 @@ import { Logo } from './Logo';
 const navLinks = [
   { href: '/search', label: 'Stays' },
   { href: '/tour-packages', label: 'Tours' },
+  { href: '/blogs', label: 'Logs' },
   { href: '/vibe-match', label: 'Vibe Match™' },
 ];
 

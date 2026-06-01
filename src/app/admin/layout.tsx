@@ -2,7 +2,7 @@
 import { useUser } from '@/firebase';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Hotel, Users2, Tag, LogOut, ExternalLink, BookOpen, Menu, LayoutDashboard, MapPin } from 'lucide-react';
+import { Hotel, Users2, Tag, LogOut, ExternalLink, BookOpen, Menu, LayoutDashboard, MapPin, Video } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -15,6 +15,7 @@ const navItems = [
     { href: '/admin/bookings', label: 'Reservations', icon: BookOpen },
     { href: '/admin/hotels', label: 'Properties', icon: Hotel },
     { href: '/admin/tour-packages', label: 'Expeditions', icon: MapPin },
+    { href: '/admin/blogs', label: 'Field Reports', icon: Video },
     { href: '/admin/users', label: 'Liaisons', icon: Users2 },
     { href: '/admin/promotions', label: 'Access Codes', icon: Tag },
 ];
@@ -87,7 +88,7 @@ export default function AdminLayout({
     <div className="flex min-h-screen bg-[#f8fafc]">
       {/* Mobile Header */}
       <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-[#003580] z-50 px-4 flex items-center justify-between text-white">
-        <span className="font-bold tracking-tight">Harrier Admin</span>
+        <span className="font-bold tracking-tight text-white uppercase text-[11px] font-black">Harrier Command</span>
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="text-white">
@@ -96,7 +97,7 @@ export default function AdminLayout({
             </SheetTrigger>
             <SheetContent side="left" className="w-[280px] p-0 border-0">
                 <SheetHeader className="p-6 bg-[#003580] text-white">
-                    <SheetTitle className="text-white">Harrier Command</SheetTitle>
+                    <SheetTitle className="text-white">Harrier Console</SheetTitle>
                 </SheetHeader>
                 <div className="p-4">
                     <NavLinks onClick={() => setIsOpen(false)} />

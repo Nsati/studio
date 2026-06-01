@@ -1,4 +1,3 @@
-
 export interface Hotel {
   name: string;
   city: string;
@@ -149,5 +148,15 @@ export interface Review {
   rating: number;
   text: string;
   title: string;
+  createdAt: any;
+}
+
+export interface Blog {
+  id: string;
+  title: string;
+  description: string;
+  videoUrl: string;
+  thumbnail?: string;
+  category: string;
   createdAt: any;
 }
