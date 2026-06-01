@@ -13,8 +13,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 214 100% 10%;
 
-    /* Tripzy Nature-Lux Forest Green #154734 */
-    --primary: 158 54% 18%; 
+    /* Northern Harrier Deep Green */
+    --primary: 158 54% 15%; 
     --primary-foreground: 0 0% 100%;
 
     --secondary: 158 20% 95%;
@@ -23,8 +23,8 @@
     --muted: 214 15% 95%;
     --muted-foreground: 214 10% 40%;
 
-    /* Tripzy Sunrise Orange #FF6F3C */
-    --accent: 15 100% 62%;
+    /* Northern Harrier Gold #C08B2D */
+    --accent: 38 58% 46%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
@@ -32,7 +32,7 @@
 
     --border: 214 15% 90%;
     --input: 214 15% 90%;
-    --ring: 158 54% 18%;
+    --ring: 158 54% 15%;
 
     --radius: 1.5rem;
   }

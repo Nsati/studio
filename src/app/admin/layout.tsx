@@ -1,4 +1,3 @@
-
 'use client';
 import { useUser } from '@/firebase';
 import Link from 'next/link';
@@ -9,14 +8,15 @@ import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Logo } from '@/components/shared/Logo';
 
 const navItems = [
     { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/admin/bookings', label: 'Reservations', icon: BookOpen },
     { href: '/admin/hotels', label: 'Properties', icon: Hotel },
-    { href: '/admin/tour-packages', label: 'Tour Itineraries', icon: MapPin },
-    { href: '/admin/users', label: 'Users', icon: Users2 },
-    { href: '/admin/promotions', label: 'Coupons', icon: Tag },
+    { href: '/admin/tour-packages', label: 'Expeditions', icon: MapPin },
+    { href: '/admin/users', label: 'Liaisons', icon: Users2 },
+    { href: '/admin/promotions', label: 'Access Codes', icon: Tag },
 ];
 
 function AdminLayoutSkeleton() {
@@ -87,7 +87,7 @@ export default function AdminLayout({
     <div className="flex min-h-screen bg-[#f8fafc]">
       {/* Mobile Header */}
       <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-[#003580] z-50 px-4 flex items-center justify-between text-white">
-        <span className="font-bold tracking-tight">Tripzy Admin</span>
+        <span className="font-bold tracking-tight">Harrier Admin</span>
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="text-white">
@@ -96,7 +96,7 @@ export default function AdminLayout({
             </SheetTrigger>
             <SheetContent side="left" className="w-[280px] p-0 border-0">
                 <SheetHeader className="p-6 bg-[#003580] text-white">
-                    <SheetTitle className="text-white">Management</SheetTitle>
+                    <SheetTitle className="text-white">Harrier Command</SheetTitle>
                 </SheetHeader>
                 <div className="p-4">
                     <NavLinks onClick={() => setIsOpen(false)} />
@@ -107,11 +107,14 @@ export default function AdminLayout({
 
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex w-64 flex-col border-r bg-white sticky top-0 h-screen">
-        <div className="p-6 border-b bg-[#003580]">
-            <Link href="/" className="text-white text-3xl font-black tracking-tighter block">
-                Trip<span className="text-[#febb02]">zy</span>
+        <div className="p-6 border-b bg-primary">
+            <Link href="/" className="flex items-center gap-2">
+                <Logo />
+                <span className="text-white text-lg font-black tracking-tighter uppercase">
+                  Northern <span className="text-accent">Harrier</span>
+                </span>
             </Link>
-            <p className="text-[10px] text-white/60 font-black uppercase tracking-widest mt-1">Admin Extranet</p>
+            <p className="text-[9px] text-white/50 font-black uppercase tracking-[0.2em] mt-3">Expedition Command Console</p>
         </div>
 
         <div className="flex-1 py-6 overflow-y-auto">
@@ -120,14 +123,14 @@ export default function AdminLayout({
 
         <div className="mt-auto border-t p-4 space-y-4">
              <div className="px-4 py-3 bg-muted/50 rounded-sm">
-                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Active User</p>
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Active Commander</p>
                 <p className="text-xs font-black truncate text-[#1a1a1a]">{userProfile?.displayName}</p>
              </div>
              <Button variant="outline" asChild className="w-full justify-start rounded-none h-10 text-[10px] font-black uppercase tracking-widest border-black/5 hover:bg-muted">
-                <Link href="/" target="_blank"><ExternalLink className="mr-2 h-4 w-4 text-[#003580]" /> Live Site</Link>
+                <Link href="/" target="_blank"><ExternalLink className="mr-2 h-4 w-4 text-primary" /> Live Portal</Link>
              </Button>
              <Button variant="ghost" asChild className="w-full justify-start rounded-none h-10 text-[10px] font-black uppercase tracking-widest text-destructive hover:bg-destructive/5">
-                <Link href="/my-bookings"><LogOut className="mr-2 h-4 w-4" /> Exit Portal</Link>
+                <Link href="/my-bookings"><LogOut className="mr-2 h-4 w-4" /> End Session</Link>
              </Button>
         </div>
       </aside>

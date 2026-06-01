@@ -70,12 +70,12 @@ function UserNav() {
           {userProfile?.role === 'admin' && (
             <DropdownMenuItem className="cursor-pointer rounded-xl h-12 font-bold" onClick={() => router.push('/admin')}>
               <LayoutDashboard className="mr-3 h-4 w-4 text-primary" />
-              <span>Admin Dashboard</span>
+              <span>Admin Extranet</span>
             </DropdownMenuItem>
           )}
           <DropdownMenuItem className="cursor-pointer rounded-xl h-12 font-bold" onClick={() => router.push('/my-bookings')}>
             <Book className="mr-3 h-4 w-4 text-primary" />
-            <span>My Bookings</span>
+            <span>My Collection</span>
           </DropdownMenuItem>
           <DropdownMenuSeparator className="my-2" />
           <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive font-black h-12 rounded-xl" onClick={handleSignOut}>
@@ -93,7 +93,7 @@ function UserNav() {
         <Link href="/login">Partner Access</Link>
       </Button>
       <Button asChild className="bg-white text-primary hover:bg-white/90 font-black text-[11px] uppercase tracking-widest rounded-full px-6 shadow-xl">
-        <Link href="/signup">Join Tripzy</Link>
+        <Link href="/signup">Join Harrier</Link>
       </Button>
     </div>
   );
@@ -108,8 +108,8 @@ export default function Header() {
         <div className="flex items-center gap-10">
             <Link href="/" className="flex items-center gap-3 group">
                 <Logo />
-                <span className="font-heading text-4xl font-bold text-white tracking-tighter transition-transform group-hover:scale-105">
-                    Trip<span className="text-accent">zy</span>
+                <span className="font-heading text-2xl md:text-3xl font-bold text-white tracking-tighter transition-transform group-hover:scale-105 uppercase">
+                    Northern <span className="text-accent">Harrier</span>
                 </span>
             </Link>
             

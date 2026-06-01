@@ -28,7 +28,7 @@ function SeasonTruthMeter() {
   return (
     <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-5 py-2.5 rounded-full border border-white/20 text-white text-[10px] font-black uppercase tracking-widest animate-in fade-in duration-700">
       <div className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" />
-      Verified {currentDate}: Mountain Access Stable
+      Harrier Verified {currentDate}: All Routes Open
     </div>
   );
 }
@@ -76,29 +76,29 @@ export default function Home() {
         <div className="container relative z-10 px-4 text-center space-y-8">
           <SeasonTruthMeter />
           <h1 className="text-6xl md:text-9xl text-white tracking-tighter font-black leading-[0.85] animate-in slide-in-from-bottom-10 duration-1000">
-            Unveil The <br /> <span className="text-accent italic font-medium">Himalayan</span> Soul
+            Beyond The <br /> <span className="text-accent italic font-medium">Horizon</span>
           </h1>
           <p className="text-lg md:text-2xl text-white/80 max-w-2xl mx-auto font-medium leading-relaxed tracking-tight">
-            Premium Himalayan stays with real-time landslide risk scores and verified Pahadi hospitality for a secure mountain adventure.
+            Northern Harrier curates elite Himalayan stays with precision safety logic and authentic hospitality for the modern explorer.
           </p>
 
           <div className="max-w-4xl mx-auto glass-morphism p-2 rounded-3xl md:rounded-full shadow-2xl flex flex-col md:flex-row gap-2 mt-12 scale-105">
             <div className="flex-1 flex items-center px-8 gap-3 border-b md:border-b-0 md:border-r border-black/5 py-4">
               <Search className="h-5 w-5 text-primary" />
               <Input
-                placeholder="Where to, explorer?"
+                placeholder="Where to, Harrier?"
                 className="border-0 focus-visible:ring-0 text-lg font-bold placeholder:text-black/40 bg-transparent"
               />
             </div>
             <div className="flex-1 flex items-center px-8 gap-3 py-4">
               <Compass className="h-5 w-5 text-primary" />
               <Input
-                placeholder="Your travel vibe?"
+                placeholder="Your expedition vibe?"
                 className="border-0 focus-visible:ring-0 text-lg font-bold placeholder:text-black/40 bg-transparent"
               />
             </div>
             <Button asChild className="rounded-full px-12 h-16 text-lg font-black bg-primary hover:bg-primary/90 transition-all shadow-xl hover:scale-105">
-              <Link href="/search">EXPLORE STAYS</Link>
+              <Link href="/search">EXPLORE BEYOND</Link>
             </Button>
           </div>
         </div>
@@ -108,9 +108,9 @@ export default function Home() {
       <section className="py-24 bg-white/50">
         <div className="container px-4">
             <div className="text-center mb-16 space-y-4">
-                <Badge className="bg-primary/10 text-primary border-0 font-black px-6 py-2 rounded-full uppercase tracking-widest text-[10px]">Uttarakhand's Best</Badge>
-                <h2 className="text-4xl md:text-6xl font-black tracking-tight">Popular Destinations</h2>
-                <p className="text-muted-foreground text-lg max-w-xl mx-auto">Explore the diverse landscapes of the Devbhumi, from serene lakes to snow-capped peaks.</p>
+                <Badge className="bg-primary/10 text-primary border-0 font-black px-6 py-2 rounded-full uppercase tracking-widest text-[10px]">Harrier's Selection</Badge>
+                <h2 className="text-4xl md:text-6xl font-black tracking-tight">Prime Destinations</h2>
+                <p className="text-muted-foreground text-lg max-w-xl mx-auto">Elite locations handpicked by Northern Harrier across the Himalayan belt.</p>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
                 {destinations.map((dest, idx) => (
@@ -133,13 +133,13 @@ export default function Home() {
           <div className="flex flex-col md:flex-row justify-between items-end mb-20 gap-8">
             <div className="space-y-4">
                 <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.4em] text-primary">
-                    <div className="h-px w-8 bg-primary" /> Verified Inventory
+                    <div className="h-px w-8 bg-primary" /> Harrier Verified
                 </div>
-                <h2 className="text-5xl md:text-7xl font-black text-slate-900 leading-none tracking-tight">Smart Suggestions</h2>
-                <p className="text-slate-500 font-bold text-xl max-w-xl">Properties with premium mountain safety scores and certified local hospitality.</p>
+                <h2 className="text-5xl md:text-7xl font-black text-slate-900 leading-none tracking-tight">Elite Collection</h2>
+                <p className="text-slate-500 font-bold text-xl max-w-xl">Properties strictly audited for mountain safety, connectivity, and superior service.</p>
             </div>
             <Button variant="outline" className="rounded-full font-black border-2 h-14 px-10 hover:bg-primary hover:text-white transition-all shadow-apple" asChild>
-                <Link href="/search">VIEW ALL PROPERTIES <ArrowRight className="ml-3 h-5 w-5" /></Link>
+                <Link href="/search">VIEW ENTIRE CATALOGUE <ArrowRight className="ml-3 h-5 w-5" /></Link>
             </Button>
           </div>
 
@@ -162,7 +162,7 @@ export default function Home() {
                                     />
                                     <div className="absolute top-8 left-8 flex flex-col gap-3">
                                         <Badge className="bg-primary/90 backdrop-blur-md text-white border-0 font-black px-5 py-2 text-[10px] rounded-full shadow-lg tracking-widest">
-                                            SAFETY: {hotel.mountainSafetyScore}/100
+                                            HARRIER SAFETY: {hotel.mountainSafetyScore}/100
                                         </Badge>
                                     </div>
                                 </div>
@@ -185,7 +185,7 @@ export default function Home() {
                                     
                                     <div className="flex items-center gap-3 pt-8 border-t border-slate-50">
                                         <div className="flex flex-col">
-                                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em]">Starting from</span>
+                                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em]">Expedition starts / night</span>
                                             <div className="flex items-baseline gap-1">
                                                 <span className="text-4xl font-black text-slate-900 tracking-tighter">
                                                     ₹{hotel.minPrice?.toLocaleString()}
@@ -217,15 +217,15 @@ export default function Home() {
         <div className="container px-4">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
                 <div className="space-y-10">
-                    <Badge className="bg-accent text-white font-black uppercase tracking-[0.3em] px-6 py-2 rounded-full text-[10px]">Why Choose Tripzy</Badge>
-                    <h2 className="text-5xl md:text-8xl font-black tracking-tighter leading-[0.85] uppercase">Your Smart <br/><span className="italic font-medium text-accent">Mountain</span> Companion</h2>
-                    <p className="text-xl text-white/70 max-w-lg font-medium leading-relaxed">We don't just book hotels; we map your journey with real-time safety logic and authentic Pahadi hospitality roots.</p>
+                    <Badge className="bg-accent text-white font-black uppercase tracking-[0.3em] px-6 py-2 rounded-full text-[10px]">The Northern Harrier Protocol</Badge>
+                    <h2 className="text-5xl md:text-8xl font-black tracking-tighter leading-[0.85] uppercase">Your Elite <br/><span className="italic font-medium text-accent">Himalayan</span> Liaison</h2>
+                    <p className="text-xl text-white/70 max-w-lg font-medium leading-relaxed">We don't just book hotels; we map your entire journey with precision logic and a deep respect for the horizon.</p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                         {[
-                            { icon: ShieldCheck, title: "Safety Logic", desc: "Real-time landslide risk scores for every route." },
-                            { icon: Wind, title: "Live Intel", desc: "Direct road condition reports from local nodes." },
-                            { icon: Heart, title: "Verified Stays", desc: "Properties certified for Pahadi hospitality." },
-                            { icon: Tent, title: "Remote Support", desc: "24/7 mountain assistance for all explorers." }
+                            { icon: ShieldCheck, title: "Precision Safety", desc: "Military-grade landscape risk assessments for every route." },
+                            { icon: Wind, title: "Satellite Intel", desc: "Live road and weather monitoring from regional nodes." },
+                            { icon: Heart, title: "Curated Hospitality", desc: "Only properties meeting Harrier gold-standards are listed." },
+                            { icon: Tent, title: "Harrier Support", desc: "24/7 dedicated liaison for all expedition members." }
                         ].map((item, i) => (
                             <div key={i} className="space-y-3">
                                 <div className="p-3 bg-white/10 rounded-2xl w-fit">
@@ -255,11 +255,11 @@ export default function Home() {
         <div className="container max-w-7xl">
             <div className="relative rounded-[4rem] overflow-hidden bg-primary p-12 md:p-24 flex flex-col md:flex-row items-center gap-16 shadow-apple-deep border border-white/10">
                 <div className="flex-1 space-y-8">
-                    <Badge className="bg-accent/20 text-accent font-black uppercase tracking-[0.3em] px-6 py-2 rounded-full text-[10px]">Tripzy Intelligent Match</Badge>
-                    <h2 className="text-4xl md:text-7xl font-black tracking-tighter leading-none uppercase text-white">Find Your Soul <br/><span className="italic font-medium text-accent">Himalayan</span> Vibe</h2>
-                    <p className="text-lg text-white/70 max-w-md font-medium">Don't know where to go? Our smart AI expert matches your mood with the perfect mountain hidden gems.</p>
+                    <Badge className="bg-accent/20 text-accent font-black uppercase tracking-[0.3em] px-6 py-2 rounded-full text-[10px]">Harrier Intelligence Match</Badge>
+                    <h2 className="text-4xl md:text-7xl font-black tracking-tighter leading-none uppercase text-white">Find Your <br/><span className="italic font-medium text-accent">Northern</span> Vibe</h2>
+                    <p className="text-lg text-white/70 max-w-md font-medium">Undefined itinerary? Our AI expert liaison matches your mood with the perfect Himalayan hidden gems.</p>
                     <Button asChild size="lg" className="h-14 px-10 rounded-full bg-white text-primary hover:bg-white/90 font-black text-lg">
-                        <Link href="/vibe-match" className="flex items-center gap-3">START VIBE MATCH™ <Sparkles className="h-5 w-5 text-accent" /></Link>
+                        <Link href="/vibe-match" className="flex items-center gap-3">START PROTOCOL <Sparkles className="h-5 w-5 text-accent" /></Link>
                     </Button>
                 </div>
                 <div className="flex-shrink-0 hidden lg:block">

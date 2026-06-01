@@ -12,9 +12,9 @@ const footerLinks = {
     { label: 'Vibe Match™', href: '/vibe-match' },
   ],
   'Explorer Central': [
-    { label: 'My Bookings', href: '/my-bookings' },
+    { label: 'My Collection', href: '/my-bookings' },
     { label: 'Create Account', href: '/signup' },
-    { label: 'About Tripzy', href: '/about' },
+    { label: 'About Harrier', href: '/about' },
   ],
   'Essential Legal': [
     { label: 'Terms of Service', href: '/terms' },
@@ -35,12 +35,12 @@ export default function Footer() {
             <div className="col-span-2 flex flex-col items-start gap-8">
                 <Link href="/" className="flex items-center gap-3">
                     <Logo />
-                    <span className="font-heading text-4xl font-black text-white tracking-tighter">
-                        Trip<span className="text-accent">zy</span>
+                    <span className="font-heading text-3xl font-black text-white tracking-tighter uppercase">
+                        Northern <span className="text-accent">Harrier</span>
                     </span>
                 </Link>
                 <p className="max-w-xs text-base text-slate-400 font-medium leading-relaxed">
-                  Your smart gateway to verified Himalayan stays and secure mountain adventures. Experience authentic Pahadi hospitality with modern safety.
+                  Your premium gateway to beyond the horizon. Northern Harrier curates elite Himalayan stays and secure mountain expeditions for the modern explorer.
                 </p>
                 <div className="flex items-center gap-6">
                   {[Facebook, Twitter, Instagram, Youtube].map((Icon, idx) => (
@@ -70,12 +70,12 @@ export default function Footer() {
         
         <div className="mt-24 border-t border-white/5 pt-12 flex flex-col md:flex-row justify-between items-center gap-6">
             <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">
-                © {new Date().getFullYear()} Tripzy Technologies. All Rights Reserved.
+                © {new Date().getFullYear()} Northern Harrier Expeditions. All Rights Reserved.
             </p>
             <div className="flex gap-8 text-[10px] font-black uppercase tracking-widest text-slate-500">
-                <span className="hover:text-white cursor-pointer transition-colors">Safety Logic</span>
-                <span className="hover:text-white cursor-pointer transition-colors">API Status</span>
-                <span className="hover:text-white cursor-pointer transition-colors">Pahadi Network</span>
+                <span className="hover:text-white cursor-pointer transition-colors">Beyond Logic</span>
+                <span className="hover:text-white cursor-pointer transition-colors">Harrier Status</span>
+                <span className="hover:text-white cursor-pointer transition-colors">Mountain Network</span>
             </div>
         </div>
       </div>

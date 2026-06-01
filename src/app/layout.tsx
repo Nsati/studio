@@ -20,8 +20,8 @@ const fontHeading = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: 'Tripzy - Smart Uttarakhand Stays',
-  description: 'Book your dream getaway in the mountains of Uttarakhand with real-time safety scores.',
+  title: 'Northern Harrier - Explore Beyond The Horizon',
+  description: 'Book your elite Himalayan getaway with Northern Harrier. Curated stays, verified safety, and premium mountain adventures.',
 };
 
 export default function RootLayout({
