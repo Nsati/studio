@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useParams, notFound } from 'next/navigation';
-import { Calendar, Video, ArrowLeft, MapPin, Share2, Facebook, Twitter, Instagram, Bookmark, Sparkles, UserCheck } from 'lucide-react';
+import { Calendar, Camera, ArrowLeft, MapPin, Share2, Facebook, Twitter, Instagram, Bookmark, Sparkles, UserCheck } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -15,7 +15,11 @@ const STATIC_BLOG_DATA: Record<string, any> = {
     date: "May 20, 2024",
     description: "Aipan is the traditional folk art of Uttarakhand, specifically the Kumaon region. It is characterized by geometric patterns and symbolic motifs that hold deep religious and cultural significance.",
     image: "https://images.unsplash.com/photo-1621360841013-c7683c659ec6?auto=format&fit=crop&q=80&w=1080",
-    videoUrl: "https://www.youtube.com/embed/YpXq4_066G8",
+    gallery: [
+        "https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?auto=format&fit=crop&q=80&w=1080",
+        "https://images.unsplash.com/photo-1605721911519-3dfeb3be25e7?auto=format&fit=crop&q=80&w=1080",
+        "https://images.unsplash.com/photo-1599420186946-7b6fb4e297f0?auto=format&fit=crop&q=80&w=1080"
+    ],
     content: `Aipan (Kumaoni: ऐपण) is a traditional folk art specifically from the Kumaon region of Uttarakhand. It is a form of ritualistic painting that has been passed down through generations of women. 
 
 The art is traditionally made using a base of red clay, known as 'Geru', over which designs are drawn with a white paste made from ground rice, called 'Biswar'. The designs are not merely decorative but serve as a spiritual conduit during ceremonies such as weddings, births, and local festivals like Harela and Diwali.
@@ -33,7 +37,11 @@ In modern times, Aipan is moving from the thresholds of homes to canvases, cloth
     date: "May 15, 2024",
     description: "The food of Uttarakhand is simple, nutritious, and deeply rooted in the harsh but beautiful landscape of the mountains.",
     image: "https://images.unsplash.com/photo-1626777553732-489957d1f971?auto=format&fit=crop&q=80&w=1080",
-    videoUrl: "https://www.youtube.com/embed/Z52p8z2W_Hw",
+    gallery: [
+        "https://images.unsplash.com/photo-1601050633647-8f8f5f4ad474?auto=format&fit=crop&q=80&w=1080",
+        "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&q=80&w=1080",
+        "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=1080"
+    ],
     content: `Uttarakhandi cuisine is a celebration of local ingredients. The high-altitude terrain produces grains and legumes that are incredibly dense in nutrition, essential for the physical demands of mountain life.
 
 Bhatt ki Churkani is the crown jewel of Kumaoni food. Made from black soybeans slow-cooked in an iron wok, it develops a deep, earthy flavor that pairs perfectly with steamed rice. 
@@ -48,7 +56,11 @@ Don't forget the 'Singori' (a sweet wrapped in Maalu leaves) and the iconic 'Bal
     date: "May 10, 2024",
     description: "Choliya is the traditional sword dance of Kumaon, showcasing the military prowess and artistic rhythm of the hills.",
     image: "https://images.unsplash.com/photo-1541011400305-64f1e9488a03?auto=format&fit=crop&q=80&w=1080",
-    videoUrl: "https://www.youtube.com/embed/YyM8r8K0kCc",
+    gallery: [
+        "https://images.unsplash.com/photo-1613941455255-081696a07677?auto=format&fit=crop&q=80&w=1080",
+        "https://images.unsplash.com/photo-1581791534721-e599df4417f7?auto=format&fit=crop&q=80&w=1080",
+        "https://images.unsplash.com/photo-1613580459569-0268579930f3?auto=format&fit=crop&q=80&w=1080"
+    ],
     content: `The Choliya Dance (छोलिया नृत्य) is a thousand-year-old dance form that originated in the Kumaon region. It is traditionally performed by men holding swords and shields, mimicking the movements of a battlefield.
 
 Accompanied by the thunderous beats of the Nagara, Dhol, and the soulful wail of the Ransingha (a traditional trumpet), the dancers move in perfect sync, demonstrating agility, strength, and dramatic flair.
@@ -56,22 +68,6 @@ Accompanied by the thunderous beats of the Nagara, Dhol, and the soulful wail of
 Historically, this dance was performed to celebrate victories in battle or to ward off evil spirits during long wedding processions through the dense mountain forests. Today, it is the heartbeat of every major cultural gathering in Uttarakhand, representing the undying bravery of the 'Pahadi' people.`
   }
 };
-
-function YouTubeEmbed({ url }: { url: string }) {
-    return (
-        <div className="relative aspect-video rounded-[3rem] overflow-hidden bg-slate-950 shadow-2xl my-24 group">
-            <iframe
-                src={url}
-                className="absolute inset-0 w-full h-full border-0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-            />
-            <div className="absolute top-8 left-8 bg-black/40 backdrop-blur-md px-5 py-2 rounded-full text-[9px] font-black text-white uppercase tracking-widest flex items-center gap-2">
-                <Video className="h-3 w-3 text-accent" /> Cultural Heritage Stream
-            </div>
-        </div>
-    );
-}
 
 export default function BlogDetailPage() {
     const params = useParams();
@@ -85,7 +81,7 @@ export default function BlogDetailPage() {
             <div className="sticky top-[72px] z-40 bg-white/90 backdrop-blur-2xl border-b border-black/5 py-5">
                 <div className="container mx-auto px-4 flex justify-between items-center">
                     <Link href="/blogs" className="flex items-center gap-4 text-[10px] font-black uppercase tracking-[0.4em] text-primary hover:text-accent transition-all group">
-                        <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-2" /> Back to Archive
+                        <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-2" /> Back to Photo Archive
                     </Link>
                     <div className="flex gap-4">
                         <Button variant="ghost" size="icon" className="rounded-full h-11 w-11 hover:bg-slate-100"><Share2 className="h-5 w-5" /></Button>
@@ -107,7 +103,7 @@ export default function BlogDetailPage() {
                     <div className="flex flex-wrap items-center justify-center gap-10 text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
                         <span className="flex items-center gap-3"><Calendar className="h-5 w-5 text-accent" /> {blog.date}</span>
                         <div className="h-1 w-1 rounded-full bg-slate-200" />
-                        <span className="flex items-center gap-3"><MapPin className="h-5 w-5 text-accent" /> Northern Harrier Intel</span>
+                        <span className="flex items-center gap-3"><MapPin className="h-5 w-5 text-accent" /> Northern Harrier Photo Intel</span>
                     </div>
                 </header>
 
@@ -137,7 +133,20 @@ export default function BlogDetailPage() {
                                     {blog.content}
                                 </div>
 
-                                {blog.videoUrl && <YouTubeEmbed url={blog.videoUrl} />}
+                                {/* Cinematic Image Gallery instead of Video */}
+                                <div className="mt-24 space-y-8">
+                                    <div className="flex items-center gap-4">
+                                        <Camera className="h-6 w-6 text-accent" />
+                                        <h3 className="text-sm font-black uppercase tracking-[0.3em] text-slate-900">Visual Collection</h3>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {blog.gallery.map((img: string, i: number) => (
+                                            <div key={i} className={`relative rounded-[3rem] overflow-hidden shadow-2xl ${i === 0 ? 'md:col-span-2 aspect-[21/9]' : 'aspect-square'}`}>
+                                                <Image src={img} alt={`Gallery ${i}`} fill className="object-cover" />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
                             </div>
 
                             <footer className="mt-40 p-16 bg-[#fcfcf9] rounded-[5rem] border border-black/5 flex flex-col md:flex-row items-center justify-between gap-12 shadow-inner">

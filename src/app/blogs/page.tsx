@@ -1,13 +1,13 @@
 'use client';
 
 import React from 'react';
-import { Compass, Calendar, Sparkles, Utensils, Music, Mountain, ArrowRight, PlayCircle, Heart } from 'lucide-react';
+import { Compass, Calendar, Sparkles, Utensils, Music, Mountain, ArrowRight, Camera, Heart } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import Link from 'next/link';
 import Image from 'next/image';
 
-// Curated Static Content: The Soul of Uttarakhand
+// Curated Static Content: The Soul of Uttarakhand (Photo Journal Edition)
 const CULTURAL_BLOGS = [
   {
     id: 'aipan-art-ritual-geometry',
@@ -16,7 +16,6 @@ const CULTURAL_BLOGS = [
     date: "20 May 2024",
     description: "Discover the intricate red-and-white patterns that adorn the doorsteps of Kumaoni homes, symbolizing prosperity and divine protection.",
     image: "https://images.unsplash.com/photo-1621360841013-c7683c659ec6?auto=format&fit=crop&q=80&w=1080",
-    videoUrl: "https://www.youtube.com/embed/YpXq4_066G8",
     details: "Aipan is not just a drawing; it is a prayer. Practiced primarily by the women of Kumaon, this folk art uses a red clay base (Geru) and white rice paste (Biswar) to create complex geometric motifs."
   },
   {
@@ -26,7 +25,6 @@ const CULTURAL_BLOGS = [
     date: "15 May 2024",
     description: "Step into a Pahadi kitchen to taste the robust flavors of black soybeans, ragi rotis, and the legendary Bal Mithai.",
     image: "https://images.unsplash.com/photo-1626777553732-489957d1f971?auto=format&fit=crop&q=80&w=1080",
-    videoUrl: "https://www.youtube.com/embed/Z52p8z2W_Hw",
     details: "Uttarakhand's cuisine is defined by its organic roots and high nutritional value. From the protein-rich Gahat Dal to the tangy Bhang ki Chutney, every dish is a testament to the resilient spirit."
   },
   {
@@ -36,7 +34,6 @@ const CULTURAL_BLOGS = [
     date: "10 May 2024",
     description: "Witness the breathtaking sword-dance performed with rhythmic drums, reflecting the thousand-year-old history of Himalayan warriors.",
     image: "https://images.unsplash.com/photo-1541011400305-64f1e9488a03?auto=format&fit=crop&q=80&w=1080",
-    videoUrl: "https://www.youtube.com/embed/YyM8r8K0kCc",
     details: "Originating in the Kumaon region, Choliya is more than a dance—it's a vibrant display of martial skill, music, and colorful attire, traditionally performed during wedding processions."
   }
 ];
@@ -52,13 +49,13 @@ export default function BlogsPublicPage() {
                 <div className="container mx-auto relative z-10 text-center md:text-left">
                     <div className="max-w-4xl space-y-8">
                         <div className="inline-flex items-center gap-3 bg-accent/20 backdrop-blur-md px-6 py-2 rounded-full border border-accent/30 text-accent text-[10px] font-black uppercase tracking-[0.4em] animate-in fade-in slide-in-from-left-4 duration-700 mx-auto md:mx-0">
-                            <Sparkles className="h-4 w-4" /> The Northern Harrier Cultural Archive
+                            <Sparkles className="h-4 w-4" /> The Northern Harrier Photo Archive
                         </div>
                         <h1 className="text-6xl md:text-9xl font-black text-white tracking-tighter leading-[0.85]">
                             Vibrant <br /> <span className="text-accent italic font-heading font-medium">Devbhumi</span>
                         </h1>
                         <p className="text-xl md:text-3xl text-white/70 font-medium max-w-3xl leading-relaxed tracking-tight">
-                            Journey through the timeless traditions, ancient arts, and the resilient spirit of the Himalayas. This is Uttarakhand beyond the maps.
+                            A visual journey through the timeless traditions and ancient arts of the Himalayas. Capturing the essence of Uttarakhand, one frame at a time.
                         </p>
                     </div>
                 </div>
@@ -93,7 +90,7 @@ export default function BlogsPublicPage() {
                                             </div>
                                             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <div className="bg-white/20 backdrop-blur-md p-6 rounded-full border border-white/40">
-                                                    <PlayCircle className="h-12 w-12 text-white fill-white/20" />
+                                                    <Camera className="h-10 w-10 text-white" />
                                                 </div>
                                             </div>
                                         </div>
@@ -115,7 +112,7 @@ export default function BlogsPublicPage() {
                                             
                                             <div className="pt-8 mt-auto border-t border-slate-50 flex items-center justify-between">
                                                 <span className="text-[10px] font-black uppercase tracking-[0.4em] text-primary flex items-center gap-4 group-hover:translate-x-2 transition-transform">
-                                                    Read Narrative <ArrowRight className="h-5 w-5" />
+                                                    View Photo Essay <ArrowRight className="h-5 w-5" />
                                                 </span>
                                             </div>
                                         </div>
@@ -127,39 +124,26 @@ export default function BlogsPublicPage() {
                 </div>
             </section>
 
-            {/* Video Spotlight Section */}
+            {/* Immersive Photo Strip */}
             <section className="py-24 bg-primary text-white overflow-hidden relative">
-                <div className="container mx-auto px-4">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
-                        <div className="space-y-10">
-                            <Badge className="bg-accent text-white font-black uppercase tracking-[0.3em] px-6 py-2 rounded-full text-[10px]">Visual Intelligence</Badge>
-                            <h2 className="text-5xl md:text-8xl font-black tracking-tighter leading-[0.85]">Witness The <br/><span className="italic font-medium text-accent">Himalayan</span> Magic</h2>
-                            <p className="text-xl text-white/70 max-w-lg font-medium leading-relaxed">Through the lens of Northern Harrier, experience the rituals and landscapes that define Uttarakhand.</p>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                                <div className="space-y-3">
-                                    <div className="p-3 bg-white/10 rounded-2xl w-fit">
-                                        <Heart className="h-6 w-6 text-accent" />
-                                    </div>
-                                    <h4 className="font-black uppercase tracking-widest text-sm">Soulful Rituals</h4>
-                                    <p className="text-xs text-white/60">High-fidelity recordings of evening aartis and folk dances.</p>
-                                </div>
-                                <div className="space-y-3">
-                                    <div className="p-3 bg-white/10 rounded-2xl w-fit">
-                                        <Music className="h-6 w-6 text-accent" />
-                                    </div>
-                                    <h4 className="font-black uppercase tracking-widest text-sm">Himalayan Beats</h4>
-                                    <p className="text-xs text-white/60">The rhythmic echoes of Hudka and Dhol Damau.</p>
-                                </div>
+                <div className="container mx-auto px-4 text-center">
+                    <div className="max-w-3xl mx-auto space-y-10">
+                        <Badge className="bg-accent text-white font-black uppercase tracking-[0.3em] px-6 py-2 rounded-full text-[10px]">Visual Intelligence</Badge>
+                        <h2 className="text-5xl md:text-8xl font-black tracking-tighter leading-[0.85]">Witness The <br/><span className="italic font-medium text-accent">Himalayan</span> Magic</h2>
+                        <p className="text-xl text-white/70 font-medium leading-relaxed">Captured through the professional lens of Northern Harrier expeditions.</p>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-20">
+                        {[
+                            "https://images.unsplash.com/photo-1581791534721-e599df4417f7?auto=format&fit=crop&q=80&w=800",
+                            "https://images.unsplash.com/photo-1613580459569-0268579930f3?auto=format&fit=crop&q=80&w=800",
+                            "https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?auto=format&fit=crop&q=80&w=800",
+                            "https://images.unsplash.com/photo-1613941455255-081696a07677?auto=format&fit=crop&q=80&w=800"
+                        ].map((src, i) => (
+                            <div key={i} className="relative aspect-[4/5] rounded-[2rem] overflow-hidden shadow-2xl group">
+                                <Image src={src} alt="Culture" fill className="object-cover transition-transform duration-1000 group-hover:scale-125" />
                             </div>
-                        </div>
-                        <div className="relative aspect-video rounded-[3rem] overflow-hidden shadow-2xl ring-12 ring-white/10">
-                            <iframe
-                                src="https://www.youtube.com/embed/Z52p8z2W_Hw"
-                                className="absolute inset-0 w-full h-full"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowFullScreen
-                            />
-                        </div>
+                        ))}
                     </div>
                 </div>
             </section>
