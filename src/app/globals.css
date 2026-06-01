@@ -4,43 +4,38 @@
 
 @layer base {
   :root {
-    --background: 48 33% 98%; /* Ultra light alpine cream */
-    --foreground: 214 100% 10%;
+    --background: 0 0% 100%;
+    --foreground: 0 0% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 214 100% 10%;
+    --card-foreground: 0 0% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 214 100% 10%;
+    --popover-foreground: 0 0% 10%;
 
-    /* Northern Harrier Deep Green */
-    --primary: 158 54% 15%; 
+    /* Northern Harrier Charcoal #1A1A1A */
+    --primary: 0 0% 10%; 
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 158 20% 95%;
-    --secondary-foreground: 158 100% 10%;
+    /* Northern Harrier Mountain Blue #2C5F8A */
+    --secondary: 207 52% 36%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 214 15% 95%;
-    --muted-foreground: 214 10% 40%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 40%;
 
-    /* Northern Harrier Gold #C08B2D */
-    --accent: 38 58% 46%;
+    /* Northern Harrier Gold #C6A43F */
+    --accent: 46 54% 51%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 214 15% 90%;
-    --input: 214 15% 90%;
-    --ring: 158 54% 15%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 46 54% 51%;
 
-    --radius: 1.5rem;
-  }
-
-  .dark {
-    --background: 214 100% 5%;
-    --foreground: 0 0% 95%;
-    --primary: 158 54% 28%;
+    --radius: 0.5rem;
   }
 }
 
@@ -55,18 +50,22 @@
   }
 }
 
-.booking-shadow {
+.luxury-shadow {
   box-shadow: 0 10px 40px -10px rgba(0,0,0,0.1);
 }
 
-.shadow-apple-deep {
-  box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.08);
-}
-
-.glass-morphism {
-  @apply bg-white/70 backdrop-blur-xl border border-white/20;
+.gold-edge {
+  border-top: 4px solid #C6A43F;
 }
 
 h1, h2, h3, h4 {
   font-family: var(--font-heading);
+}
+
+.glass-header {
+  @apply bg-white/10 backdrop-blur-md border-b border-white/10;
+}
+
+.solid-header {
+  @apply bg-[#1A1A1A] shadow-xl;
 }
