@@ -38,7 +38,7 @@ export async function bulkUploadTourPackages(data: TourPackageUploadData[]) {
         const packageRef = adminDb.collection('tourPackages').doc(packageId);
 
         let itinerary = [];
-        try { itinerary = JSON.parse(pkg.itinerary); } catch (e) { itinerary = []; }
+        try { itinerary = pkg.itinerary ? JSON.parse(pkg.itinerary) : []; } catch (e) { itinerary = []; }
         
         let hotels = [];
         if (pkg.hotels) {
@@ -48,29 +48,29 @@ export async function bulkUploadTourPackages(data: TourPackageUploadData[]) {
         const totalCost = pkg.price + (pkg.price * (pkg.gst / 100));
 
         // Data Sanitization: Ensure no 'undefined' values are passed to Firestore
-        const finalDoc: TourPackage = {
+        const finalDoc: any = {
           id: packageId,
-          title: pkg.title,
-          duration: pkg.duration,
-          destinations: pkg.destinations.split(',').map(d => d.trim()).filter(Boolean),
-          price: pkg.price,
-          gst: pkg.gst,
-          totalCost,
-          image: pkg.image,
-          description: pkg.description,
-          persons: pkg.persons,
-          rooms: pkg.rooms,
-          cabType: pkg.cabType,
-          travelDate: pkg.travelDate || '', // Fix: Fallback for undefined travelDate
-          itinerary,
-          hotels,
-          inclusions: pkg.inclusions.split(',').map(i => i.trim()).filter(Boolean),
-          exclusions: pkg.exclusions.split(',').map(e => e.trim()).filter(Boolean),
+          title: pkg.title || '',
+          duration: pkg.duration || '',
+          destinations: pkg.destinations ? pkg.destinations.split(',').map(d => d.trim()).filter(Boolean) : [],
+          price: pkg.price || 0,
+          gst: pkg.gst || 0,
+          totalCost: totalCost || 0,
+          image: pkg.image || 'hero',
+          description: pkg.description || '',
+          persons: pkg.persons || 2,
+          rooms: pkg.rooms || 1,
+          cabType: pkg.cabType || 'Sedan',
+          travelDate: pkg.travelDate || '',
+          itinerary: itinerary,
+          hotels: hotels,
+          inclusions: pkg.inclusions ? pkg.inclusions.split(',').map(i => i.trim()).filter(Boolean) : [],
+          exclusions: pkg.exclusions ? pkg.exclusions.split(',').map(e => e.trim()).filter(Boolean) : [],
           policies: {
-            tcs: pkg.policy_tcs,
-            cancellation: pkg.policy_cancellation,
-            payment: pkg.policy_payment,
-            terms: pkg.policy_terms
+            tcs: pkg.policy_tcs || '',
+            cancellation: pkg.policy_cancellation || '',
+            payment: pkg.policy_payment || '',
+            terms: pkg.policy_terms || ''
           }
         };
 
@@ -98,7 +98,7 @@ export async function saveTourPackageAction(packageId: string, data: any) {
 
     try {
         const packageRef = adminDb.collection('tourPackages').doc(packageId);
-        // Sanitizing payload before set
+        // Sanitizing payload before set (JSON stringify/parse is a robust hack for deep cleaning undefineds)
         const sanitizedData = JSON.parse(JSON.stringify(data));
         
         await packageRef.set(sanitizedData, { merge: true });

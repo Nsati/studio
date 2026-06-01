@@ -53,14 +53,14 @@ export const TourPackageUploadSchema = z.object({
   rooms: z.coerce.number().min(1),
   cabType: z.string(),
   travelDate: z.string().optional(),
-  itinerary: z.string(), 
+  itinerary: z.string().optional(), 
   hotels: z.string().optional(),
-  inclusions: z.string(),
-  exclusions: z.string(),
-  policy_tcs: z.string(),
-  policy_cancellation: z.string(),
-  policy_payment: z.string(),
-  policy_terms: z.string(),
+  inclusions: z.string().optional(),
+  exclusions: z.string().optional(),
+  policy_tcs: z.string().optional(),
+  policy_cancellation: z.string().optional(),
+  policy_payment: z.string().optional(),
+  policy_terms: z.string().optional(),
 });
 
 export type TourPackageUploadData = z.infer<typeof TourPackageUploadSchema>;

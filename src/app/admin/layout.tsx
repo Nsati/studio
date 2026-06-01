@@ -1,8 +1,9 @@
+
 'use client';
 import { useUser } from '@/firebase';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Hotel, Users2, Tag, LogOut, ExternalLink, BookOpen, Menu, ShieldCheck, LayoutDashboard, MapPin } from 'lucide-react';
+import { Hotel, Users2, Tag, LogOut, ExternalLink, BookOpen, Menu, LayoutDashboard, MapPin } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
