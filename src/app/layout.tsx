@@ -1,3 +1,4 @@
+
 import type { Metadata } from 'next';
 import { PT_Sans, Playfair_Display } from 'next/font/google';
 import './globals.css';
@@ -20,8 +21,24 @@ const fontHeading = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: 'Northern Harrier - Explore Beyond The Horizon',
-  description: 'Book your elite Himalayan getaway with Northern Harrier. Curated stays, verified safety, and premium mountain adventures.',
+  title: 'Northern Harrier | Luxury Himalayan Stays & Secure Expeditions',
+  description: 'Book handpicked luxury hotels and curated tour packages in Uttarakhand. Experience verified mountain safety, high-speed connectivity, and elite Pahadi hospitality.',
+  keywords: 'Uttarakhand Travel, Luxury Hotels Nainital, Rishikesh Retreats, Himalayan Tours, Safe Mountain Stays',
+  openGraph: {
+    title: 'Northern Harrier | Beyond The Horizon',
+    description: 'Elite Himalayan getaways with verified safety standards.',
+    url: 'https://northernharrier.com',
+    siteName: 'Northern Harrier',
+    images: [
+      {
+        url: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&q=80&w=1200',
+        width: 1200,
+        height: 630,
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
 };
 
 export default function RootLayout({
@@ -35,7 +52,7 @@ export default function RootLayout({
         <FirebaseClientProvider>
           <FirebaseErrorListener />
           <Header />
-          <main className="relative z-10 min-h-screen bg-background shadow-2xl">
+          <main className="relative z-10 min-h-screen bg-background">
             {children}
           </main>
           <Footer />

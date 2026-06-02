@@ -4,10 +4,10 @@ service cloud.firestore {
 
     /**
      * @fileOverview Hardened Production Security Rules.
-     * Implements strict RBAC (Role-Based Access Control).
+     * Implements strict Role-Based Access Control (RBAC).
      */
 
-    // Master helper: Check if user is an admin via their profile document
+    // Helper: Check if user is an admin via their profile document
     function isAdmin() {
       return request.auth != null && 
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
@@ -18,15 +18,16 @@ service cloud.firestore {
       return request.auth != null && request.auth.uid == userId;
     }
 
-    // User Profiles & Private Data
+    // Standard User Profiles
     match /users/{userId} {
       allow read, write: if isOwner(userId) || isAdmin();
       
-      // Nested Bookings: Accessible to the owner and Admins
+      // Nested Bookings: Accessible to owner and admin only
       match /bookings/{bookingId} {
         allow read: if isOwner(userId) || isAdmin();
         allow create: if isOwner(userId);
         allow update: if isAdmin();
+        allow delete: if isAdmin();
       }
     }
 
@@ -53,12 +54,12 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // Global Read-Only Collections
+    // Global Collections
     match /cities/{cityId} { allow read: if true; }
     match /tourPackages/{packageId} { allow read: if true; }
     match /promotions/{promoId} { allow read: if true; }
     
-    // Explicit deny for any other path not covered
+    // Default Deny
     match /{path=**} {
       allow read, write: if false;
     }

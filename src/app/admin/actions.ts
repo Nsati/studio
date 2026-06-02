@@ -7,7 +7,7 @@ import { UpdateUserSchema, type UpdateUserInput } from './schemas';
 
 /**
  * Robust JSON serialization helper for complex Firestore types.
- * Converts Timestamps and FieldValues to plain strings/numbers for Next.js stability.
+ * Converts Timestamps and FieldValues to plain strings/numbers for Next.js stability in production.
  */
 function toPlainObject(obj: any): any {
     if (obj === null || typeof obj !== 'object') return obj;
