@@ -9,6 +9,7 @@ import { useFirestore, type WithId } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import slugify from 'slugify';
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import type { TourPackage } from '@/lib/types';
 import { saveTourPackageAction, deleteTourPackageAction } from '@/app/admin/tour-packages/actions';
 
@@ -33,7 +34,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, PlusCircle, Trash2, MapPin, IndianRupee, ShieldCheck } from 'lucide-react';
+import { Loader2, PlusCircle, Trash2, MapPin, IndianRupee, ShieldCheck, ImageIcon } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Separator } from '../ui/separator';
 import {
@@ -71,7 +72,7 @@ const formSchema = z.object({
   duration: z.string().min(3, 'e.g. 5N/6D'),
   price: z.coerce.number().min(1),
   gst: z.coerce.number().default(5),
-  image: z.string().min(1),
+  image: z.string().min(1, 'Image URL or ID required'),
   description: z.string().min(20),
   destinations: z.string().min(3),
   persons: z.coerce.number().min(1),
@@ -113,7 +114,7 @@ export function TourPackageForm({ initialData }: TourPackageFormProps) {
       duration: '',
       price: 0,
       gst: 5,
-      image: '',
+      image: 'hero',
       description: '',
       destinations: '',
       persons: 2,
@@ -144,6 +145,7 @@ export function TourPackageForm({ initialData }: TourPackageFormProps) {
 
   const basePrice = form.watch('price');
   const gstPercent = form.watch('gst');
+  const imageUrl = form.watch('image');
   const [totalCost, setTotalCost] = useState(0);
 
   useEffect(() => {
@@ -206,6 +208,12 @@ export function TourPackageForm({ initialData }: TourPackageFormProps) {
     }
   }
 
+  const getResolvedImageUrl = (img: string) => {
+    if (!img) return '';
+    if (img.startsWith('http')) return img;
+    return PlaceHolderImages.find((p) => p.id === img)?.imageUrl || '';
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 pb-20">
@@ -247,17 +255,63 @@ export function TourPackageForm({ initialData }: TourPackageFormProps) {
                     <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Travel Date</FormLabel><FormControl><Input type="date" {...field} className="rounded-none h-12" /></FormControl><FormMessage /></FormItem>
                   )} />
                 </div>
-                <FormField control={form.control} name="image" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Representative Image</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl><SelectTrigger className="rounded-none h-12"><SelectValue placeholder="Select high-res image" /></SelectTrigger></FormControl>
-                      <SelectContent>
-                        {tourImagePlaceholders.map(img => <SelectItem key={img.id} value={img.id}>{img.description}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </FormItem>
-                )} />
+
+                <Separator />
+                
+                <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                        <ImageIcon className="h-4 w-4 text-primary" />
+                        <h4 className="text-sm font-black uppercase tracking-widest">Expedition Visual</h4>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+                        <div className="space-y-4">
+                            <FormField control={form.control} name="image" render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Image URL or Placeholder ID</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="Paste image URL here or use ID" {...field} className="rounded-none h-12" />
+                                    </FormControl>
+                                    <FormDescription className="text-[9px] font-bold">
+                                        Tip: Paste a Pexels/Unsplash link or choose a placeholder ID below.
+                                    </FormDescription>
+                                    <FormMessage />
+                                </FormItem>
+                            )} />
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Quick Select Placeholder</label>
+                                <Select onValueChange={(val) => form.setValue('image', val)} defaultValue={imageUrl}>
+                                    <SelectTrigger className="rounded-none h-12">
+                                        <SelectValue placeholder="Select high-res placeholder" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {tourImagePlaceholders.map(img => (
+                                            <SelectItem key={img.id} value={img.id}>{img.description}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Live Visual Preview</label>
+                            <div className="relative aspect-video w-full border-2 border-dashed border-black/10 rounded-sm overflow-hidden bg-muted flex items-center justify-center">
+                                {imageUrl ? (
+                                    <Image 
+                                        src={getResolvedImageUrl(imageUrl)} 
+                                        alt="Preview" 
+                                        fill 
+                                        className="object-cover"
+                                        onError={() => toast({ variant: 'destructive', title: 'Image Load Error', description: 'The provided URL is not a direct image link.' })}
+                                    />
+                                ) : (
+                                    <span className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em]">No Visual Set</span>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <FormField control={form.control} name="description" render={({ field }) => (
                   <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Overview Description</FormLabel><FormControl><Textarea className="min-h-[150px] rounded-none" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
@@ -429,7 +483,7 @@ export function TourPackageForm({ initialData }: TourPackageFormProps) {
               </AlertDialog>
             )}
             <Button type="submit" disabled={isLoading} size="lg" className="flex-1 max-w-xl h-14 rounded-none font-black text-lg bg-[#003580] hover:bg-[#002b60] shadow-xl">
-                {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <ShieldCheck className="mr-2 h-5 w-5" />}
+                {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShieldCheck className="mr-2 h-4 w-4" />}
                 {isEditing ? 'SYNC UPDATED PACKAGE' : 'INITIALIZE PRODUCTION PACKAGE'}
             </Button>
         </div>
