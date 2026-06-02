@@ -134,12 +134,10 @@ export default function BlogsPublicPage() {
                                     <Link href={`/blogs/${item.id}`}>
                                         <CardContent className="p-0">
                                             <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
-                                                <Image 
+                                                <img 
                                                     src={item.imageUrl} 
                                                     alt={item.title} 
-                                                    fill 
-                                                    unoptimized={true}
-                                                    className="object-cover transition-transform duration-1000 group-hover:scale-110" 
+                                                    className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" 
                                                 />
                                                 <div className="absolute top-6 left-6">
                                                     <Badge className="bg-white/95 backdrop-blur-md text-primary border-0 font-black px-4 py-1.5 rounded-full text-[9px] uppercase tracking-widest shadow-sm">

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm, useFieldArray } from 'react-hook-form';
@@ -259,10 +260,10 @@ export function TourPackageForm({ initialData }: TourPackageFormProps) {
                                 <FormItem>
                                     <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Direct Image URL</FormLabel>
                                     <FormControl>
-                                        <Input placeholder="Paste image URL (Pexels, Unsplash, etc.)" {...field} className="rounded-none h-12" />
+                                        <Input placeholder="Paste direct link (ending in .jpg, .png, etc.)" {...field} className="rounded-none h-12" />
                                     </FormControl>
-                                    <FormDescription className="text-[9px] font-bold">
-                                        Paste a direct link to a high-resolution image.
+                                    <FormDescription className="text-[9px] font-bold text-blue-600">
+                                        Note: Always use direct links to ensure high-speed loading.
                                     </FormDescription>
                                     <FormMessage />
                                 </FormItem>
@@ -273,13 +274,10 @@ export function TourPackageForm({ initialData }: TourPackageFormProps) {
                             <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Live Visual Preview</label>
                             <div className="relative aspect-video w-full border-2 border-dashed border-black/10 rounded-sm overflow-hidden bg-muted flex items-center justify-center">
                                 {imageUrl && imageUrl.startsWith('http') ? (
-                                    <Image 
+                                    <img 
                                         src={imageUrl} 
                                         alt="Preview" 
-                                        fill 
-                                        unoptimized={true}
-                                        className="object-cover"
-                                        onError={() => toast({ variant: 'destructive', title: 'Image Load Error', description: 'The provided URL is not a direct image link.' })}
+                                        className="w-full h-full object-cover"
                                     />
                                 ) : (
                                     <span className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em]">No Valid URL Set</span>
