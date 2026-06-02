@@ -13,6 +13,7 @@ const nextConfig = {
       { protocol: 'https', hostname: 'image2url.com', pathname: '/**' },
       { protocol: 'https', hostname: 'geof.storyboardthat.com', pathname: '/**' },
       { protocol: 'https', hostname: 'images.pexels.com', pathname: '/**' },
+      { protocol: 'https', hostname: 'www.pexels.com', pathname: '/**' },
       { protocol: 'https', hostname: 'encrypted-tbn0.gstatic.com', pathname: '/**' },
     ],
   },
