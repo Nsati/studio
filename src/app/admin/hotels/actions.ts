@@ -1,4 +1,3 @@
-
 'use server';
 
 import { getFirebaseAdmin } from '@/firebase/admin';
@@ -92,7 +91,6 @@ export async function bulkUploadHotels(hotelsData: HotelUploadData[]): Promise<{
 
         await batch.commit();
         revalidatePath('/admin/hotels');
-        revalidatePath('/search');
         return { success: true, message: `Successfully uploaded ${hotelsData.length} hotels to Tripzy.` };
 
     } catch (e: any) {
@@ -108,21 +106,14 @@ export async function deleteHotelAction(hotelId: string) {
     try {
         const hotelRef = adminDb.collection('hotels').doc(hotelId);
         
-        // 1. Delete rooms subcollection
-        const roomsSnapshot = await hotelRef.collection('rooms').get();
+        // Fetch subcollections to delete (Rooms and Reviews)
+        const roomsSnap = await hotelRef.collection('rooms').get();
+        const reviewsSnap = await hotelRef.collection('reviews').get();
+
         const batch = adminDb.batch();
         
-        roomsSnapshot.forEach(doc => {
-            batch.delete(doc.ref);
-        });
-
-        // 2. Delete reviews subcollection (if any)
-        const reviewsSnapshot = await hotelRef.collection('reviews').get();
-        reviewsSnapshot.forEach(doc => {
-            batch.delete(doc.ref);
-        });
-
-        // 3. Delete the hotel itself
+        roomsSnap.forEach(doc => batch.delete(doc.ref));
+        reviewsSnap.forEach(doc => batch.delete(doc.ref));
         batch.delete(hotelRef);
 
         await batch.commit();
@@ -130,10 +121,10 @@ export async function deleteHotelAction(hotelId: string) {
         revalidatePath('/admin/hotels');
         revalidatePath('/search');
         revalidatePath('/');
-        
-        return { success: true, message: 'Property and its inventory have been completely purged.' };
+
+        return { success: true, message: 'Property and its inventory purged successfully.' };
     } catch (e: any) {
-        console.error("Delete Property Error:", e);
-        return { success: false, message: e.message || 'Failed to remove property.' };
+        console.error("Delete Hotel Error:", e);
+        return { success: false, message: e.message || 'Cloud deletion failed.' };
     }
 }
