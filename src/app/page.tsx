@@ -1,4 +1,3 @@
-
 'use client';
 
 import React from 'react';
@@ -8,33 +7,24 @@ import { motion } from 'framer-motion';
 import { 
   ShieldCheck, 
   ArrowRight, 
-  Mountain, 
-  Compass, 
   Search,
   ChevronRight,
   Wifi,
   Calendar,
   Users,
   MapPin,
-  Star,
   Quote,
-  CheckCircle2,
   MessageCircle,
   Clock,
   Award,
   Rocket,
-  Phone
+  Phone,
+  Compass,
+  Star
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-
-/**
- * @fileOverview Northern Harrier Elite Landing Page.
- * Redesigned with premium agency aesthetics: Animated backgrounds, 
- * glassmorphism, and smooth scroll-triggered interactions.
- */
 
 export default function LandingPage() {
   const featuredExpeditions = [
@@ -113,21 +103,21 @@ export default function LandingPage() {
             transition={{ duration: 0.8 }}
             className="space-y-6"
           >
-            <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 px-6 py-2 rounded-full text-primary text-[10px] font-black uppercase tracking-[0.4em]">
+            <div className="inline-flex items-center gap-2 bg-primary/20 border border-primary/30 px-6 py-2 rounded-full text-primary text-[10px] font-black uppercase tracking-[0.4em]">
               🚀 Elite Himalayan Standards
             </div>
             <h1 className="text-5xl md:text-[7rem] font-black leading-[0.9] uppercase tracking-tighter text-white">
               Explore the <br /> <span className="text-primary italic font-heading font-light lowercase">Sacred</span> Himalayas
             </h1>
-            <p className="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto font-medium leading-relaxed tracking-tight">
-              Transform your journey into a spiritual expedition. We build luxury digital booking experiences for the northern frontier.
+            <p className="text-lg md:text-xl text-slate-100 max-w-2xl mx-auto font-medium leading-relaxed tracking-tight">
+              Curated Pilgrimages, Luxury Expeditions and Unforgettable Mountain Journeys.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
               <Button asChild size="lg" className="h-16 px-10 rounded-full bg-primary text-background font-black text-lg shadow-xl shadow-primary/20 hover:scale-105 transition-all">
-                <Link href="/tour-packages"><Rocket className="mr-2 h-5 w-5" /> View Our Work</Link>
+                <Link href="/tour-packages"><Rocket className="mr-2 h-5 w-5" /> View Expeditions</Link>
               </Button>
               <Button asChild variant="outline" size="lg" className="h-16 px-10 rounded-full border-white/20 text-white hover:bg-white/5 font-black text-lg hover:scale-105 transition-all">
-                <Link href="/contact"><Phone className="mr-2 h-5 w-5" /> Let's Talk</Link>
+                <Link href="/contact"><Phone className="mr-2 h-5 w-5" /> Custom Itinerary</Link>
               </Button>
             </div>
           </motion.div>
@@ -142,27 +132,26 @@ export default function LandingPage() {
             <div className="bg-white/5 backdrop-blur-2xl p-2 rounded-[2.5rem] border border-white/10 shadow-2xl flex flex-col lg:flex-row gap-2">
                 <div className="flex-1 bg-white/5 h-20 flex items-center px-8 gap-4 rounded-2xl group border border-transparent hover:border-primary/30 transition-all cursor-text">
                     <MapPin className="h-5 w-5 text-primary" />
-                    <div className="flex flex-col items-start flex-1">
-                        <span className="text-[9px] font-black uppercase tracking-widest text-primary/60">Target Zone</span>
-                        <input className="bg-transparent w-full font-bold text-white focus:outline-none placeholder:text-white/20 text-sm" placeholder="Search Uttarakhand..." />
+                    <div className="flex flex-col items-start flex-1 text-left">
+                        <span className="text-[9px] font-black uppercase tracking-widest text-primary">Destination</span>
+                        <input className="bg-transparent w-full font-bold text-white focus:outline-none placeholder:text-white/40 text-sm" placeholder="Where are you going?" />
                     </div>
                 </div>
                 <div className="flex-1 bg-white/5 h-20 flex items-center px-8 gap-4 rounded-2xl group border border-transparent hover:border-primary/30 transition-all cursor-pointer">
                     <Calendar className="h-5 w-5 text-primary" />
-                    <div className="flex flex-col items-start flex-1">
-                        <span className="text-[9px] font-black uppercase tracking-widest text-primary/60">Launch Date</span>
-                        <span className="font-bold text-white/40 text-sm">Select Window</span>
+                    <div className="flex flex-col items-start flex-1 text-left">
+                        <span className="text-[9px] font-black uppercase tracking-widest text-primary">Travel Date</span>
+                        <span className="font-bold text-white/60 text-sm">Select Window</span>
                     </div>
                 </div>
                 <Button asChild className="h-20 bg-primary hover:bg-primary/90 text-background rounded-2xl px-12 text-lg font-black shadow-lg transition-all active:scale-95">
-                    <Link href="/search">Execute Search</Link>
+                    <Link href="/search">Find Tour</Link>
                 </Button>
             </div>
           </motion.div>
         </div>
 
-        {/* Scroll indicator */}
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-30 animate-bounce">
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-50 animate-bounce text-white">
             <span className="text-[9px] font-black uppercase tracking-[0.3em]">Discovery</span>
             <ChevronRight className="h-4 w-4 rotate-90" />
         </div>
@@ -182,28 +171,28 @@ export default function LandingPage() {
                       className="text-center space-y-2"
                     >
                         <p className="text-5xl md:text-7xl font-black text-primary tracking-tighter drop-shadow-sm">{stat.value}</p>
-                        <p className="text-[10px] font-black text-white/70 uppercase tracking-[0.3em]">{stat.label}</p>
+                        <p className="text-[10px] font-black text-white/90 uppercase tracking-[0.3em]">{stat.label}</p>
                     </motion.div>
                 ))}
             </div>
         </div>
       </section>
 
-      {/* Services: What We Do */}
-      <section className="py-32 container px-6 relative z-10" id="services">
+      {/* Why Choose Section */}
+      <section className="py-32 container px-6 relative z-10">
         <div className="text-center mb-24 space-y-4">
-            <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter">What We Do</h2>
-            <p className="text-slate-400 font-bold max-w-xl mx-auto">End-to-end Himalayan solutions tailored to elite traveler standards</p>
+            <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-white">Why Northern Harrier</h2>
+            <p className="text-slate-300 font-bold max-w-xl mx-auto">Providing end-to-end Himalayan solutions tailored to elite traveler standards</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
-                { icon: ShieldCheck, title: "Verified Safety", desc: "Every route and stay is audited against our strict Himalayan protocol." },
+                { icon: ShieldCheck, title: "Verified Tours", desc: "Every route and stay is audited against our strict Himalayan protocol." },
                 { icon: Award, title: "Handpicked Stays", desc: "We only list properties that define local hospitality and comfort." },
                 { icon: Compass, title: "Elite Guides", desc: "Professional mountaineers and scholars lead every expedition." },
                 { icon: Wifi, title: "Remote Comms", desc: "Satellite verified connectivity even in high-altitude zones." },
-                { icon: Users, title: "Custom Flows", desc: "Personalized itineraries built for families, solo trekkers, or spiritual seekers." },
-                { icon: Clock, title: "24/7 Watch", desc: "Active monitoring of weather and road status for your peace of mind." }
+                { icon: Users, title: "Custom Flows", desc: "Personalized itineraries built for families or spiritual seekers." },
+                { icon: Clock, title: "24/7 Support", desc: "Active monitoring of weather and road status for your peace of mind." }
             ].map((item, i) => (
                 <motion.div 
                   key={i}
@@ -214,104 +203,52 @@ export default function LandingPage() {
                     <div className="h-14 w-14 bg-gradient-to-br from-primary to-[#8A712A] rounded-2xl flex items-center justify-center mb-8 shadow-lg shadow-primary/20">
                         <item.icon className="h-7 w-7 text-white" />
                     </div>
-                    <h4 className="text-xl font-black uppercase tracking-widest mb-4 leading-tight">{item.title}</h4>
-                    <p className="text-sm text-slate-400 leading-relaxed font-medium group-hover:text-slate-300">{item.desc}</p>
+                    <h4 className="text-xl font-black uppercase tracking-widest mb-4 leading-tight text-white">{item.title}</h4>
+                    <p className="text-sm text-slate-200 leading-relaxed font-medium group-hover:text-white">{item.desc}</p>
                 </motion.div>
             ))}
         </div>
       </section>
 
-      {/* Portfolio: Featured Work */}
-      <section className="py-32 bg-slate-900/50 relative z-10" id="portfolio">
+      {/* Featured Destinations (Masonry) */}
+      <section className="py-32 bg-slate-900/50 relative z-10">
         <div className="container px-6">
-            <div className="flex flex-col md:flex-row justify-between items-end mb-24 gap-8">
-                <div className="space-y-4">
-                    <h2 className="text-5xl md:text-7xl font-black uppercase leading-[0.9]">Our <br/><span className="text-primary italic font-heading font-light lowercase">Work</span></h2>
-                    <p className="text-slate-400 font-bold">Selected expeditions we're proud to have engineered</p>
-                </div>
-                <Button asChild variant="outline" className="h-14 rounded-full px-8 border-white/10 hover:bg-primary hover:text-background font-black uppercase tracking-widest text-xs">
-                    <Link href="/tour-packages">Explore All <ArrowRight className="ml-2 h-4 w-4" /></Link>
-                </Button>
+            <div className="text-center mb-24 space-y-4">
+                <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-white">Top Destinations</h2>
+                <p className="text-slate-300 font-bold max-w-xl mx-auto">Explore the most iconic Himalayan spiritual and adventure hubs</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {featuredExpeditions.map((tour, i) => (
-                <motion.div
-                    key={tour.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: i * 0.1 }}
-                    className="group relative h-[450px] rounded-[2rem] overflow-hidden cursor-pointer"
-                >
-                    <Image 
-                        src={tour.image} 
-                        alt={tour.name} 
-                        fill 
-                        className="object-cover transition-transform duration-1000 group-hover:scale-110" 
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                    
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary/90 to-[#8A712A]/90 flex flex-col items-center justify-center p-8 text-center opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                        <h3 className="text-3xl font-black uppercase tracking-tighter text-white translate-y-4 group-hover:translate-y-0 transition-transform duration-500">{tour.name}</h3>
-                        <p className="text-white/80 font-bold mt-4 translate-y-4 group-hover:translate-y-0 transition-transform duration-500 delay-75">{tour.duration} • {tour.difficulty}</p>
-                        <Button asChild className="mt-8 rounded-full h-12 px-8 bg-white text-primary font-black hover:bg-white/90">
-                           <Link href={`/tour-packages/${tour.id}`}>View Itinerary</Link>
-                        </Button>
-                    </div>
-
-                    <div className="absolute bottom-8 left-8 group-hover:opacity-0 transition-opacity">
-                        <Badge className="bg-primary text-background font-black px-4 py-1.5 rounded-full text-[9px] uppercase tracking-widest mb-3">Featured</Badge>
-                        <h3 className="text-2xl font-black uppercase tracking-tight text-white drop-shadow-lg">{tour.name}</h3>
-                    </div>
-                </motion.div>
-              ))}
-            </div>
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section className="py-32 container px-6 relative z-10" id="testimonials">
-        <div className="text-center mb-24 space-y-4">
-            <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter">Client Stories</h2>
-            <p className="text-slate-400 font-bold">What our explorers say about Northern Harrier</p>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {[
-                { name: "Rahul Jain", role: "CEO, TechStart", initial: "RJ", text: "Working with Northern Harrier was a game-changer. Their attention to mountain safety and luxury detail in Kedarnath was beyond world-class." },
-                { name: "Anita Sharma", role: "Founder, StyleHub", initial: "AS", text: "The most seamless Himalayan booking experience I've ever had. Their real-time road and weather alerts saved our family vacation." },
-                { name: "Vikram Kapoor", role: "Director, Innovate Inc", initial: "VK", text: "Expert guides, elite stays, and a constant human connection. They understood our vision for a sacred retreat and executed it perfectly." }
-            ].map((test, i) => (
-                <div key={i} className="bg-white/5 border border-white/5 p-12 rounded-[2.5rem] relative">
-                    <Quote className="h-12 w-12 text-primary opacity-20 absolute top-10 left-10" />
-                    <p className="text-slate-300 font-medium leading-relaxed italic mb-8 relative z-10">"{test.text}"</p>
-                    <div className="flex items-center gap-4">
-                        <div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center font-black text-white">{test.initial}</div>
-                        <div>
-                            <p className="font-black text-sm uppercase text-white">{test.name}</p>
-                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{test.role}</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {[
+                    { name: 'Kedarnath', size: 'md:col-span-2 md:row-span-2', img: 'https://images.unsplash.com/photo-1693153318626-682ef3712136?auto=format&fit=crop&q=80&w=1200' },
+                    { name: 'Badrinath', size: 'md:col-span-1', img: 'https://images.unsplash.com/photo-1626014303757-63661163486c?auto=format&fit=crop&q=80&w=800' },
+                    { name: 'Valley of Flowers', size: 'md:col-span-1', img: 'https://images.unsplash.com/photo-1515442597003-a25e0a78dae9?auto=format&fit=crop&q=80&w=800' },
+                    { name: 'Munsiyari', size: 'md:col-span-3', img: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=1920' }
+                ].map((dest, i) => (
+                    <div key={i} className={cn("relative overflow-hidden rounded-[2.5rem] group min-h-[300px] border border-white/5", dest.size)}>
+                        <Image src={dest.img} alt={dest.name} fill className="object-cover transition-transform duration-1000 group-hover:scale-110" unoptimized={true} />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                        <div className="absolute bottom-10 left-10 text-white">
+                            <h3 className="text-3xl font-black uppercase tracking-tighter">{dest.name}</h3>
+                            <Link href="/search" className="text-primary text-[10px] font-black uppercase tracking-[0.4em] mt-2 flex items-center hover:underline">
+                                Explore Stays <ArrowRight className="ml-2 h-3 w-3" />
+                            </Link>
                         </div>
                     </div>
-                </div>
-            ))}
+                ))}
+            </div>
         </div>
       </section>
 
-      {/* Final CTA */}
-      <section className="py-32 container px-6 text-center relative z-10" id="contact">
+      {/* CTA */}
+      <section className="py-32 container px-6 text-center relative z-10">
         <div className="max-w-4xl mx-auto space-y-12">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              className="space-y-6"
-            >
-                <h2 className="text-4xl md:text-7xl font-black uppercase tracking-tighter leading-none">Ready to Start <br/> Your <span className="text-primary">Project?</span></h2>
-                <p className="text-xl text-slate-300 font-medium max-w-lg mx-auto">Let's create something amazing together. Connect with our Himalayan experts today.</p>
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} className="space-y-6">
+                <h2 className="text-4xl md:text-7xl font-black uppercase tracking-tighter leading-none text-white">Ready for Your Next <span className="text-primary">Expedition?</span></h2>
+                <p className="text-xl text-slate-100 font-medium max-w-lg mx-auto">Get a personalized consultation with our Himalayan travel experts today.</p>
             </motion.div>
             <Button asChild size="lg" className="h-20 px-16 rounded-full bg-primary text-background font-black text-xl shadow-2xl shadow-primary/30 hover:scale-105 transition-all">
-                <Link href="/contact"><Rocket className="mr-3 h-6 w-6" /> Start an Expedition</Link>
+                <Link href="/contact"><Rocket className="mr-3 h-6 w-6" /> Start Consultation</Link>
             </Button>
         </div>
       </section>

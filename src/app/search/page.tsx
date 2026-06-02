@@ -9,7 +9,7 @@ import Loading from './loading';
 import { SearchFilters } from './SearchFilters';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { SlidersHorizontal, Check, Compass, Info } from 'lucide-react';
+import { SlidersHorizontal, Check, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import React from 'react';
 import { Slider } from '@/components/ui/slider';
@@ -34,21 +34,15 @@ function SearchResults({ filters }: { filters: any }) {
     if (!hotelsData) return [];
     
     return hotelsData.filter(hotel => {
-      // Price Filter
       const price = hotel.minPrice || 0;
       if (price < filters.priceRange[0] || price > filters.priceRange[1]) return false;
-
-      // Rating Filter
       if (filters.ratings.length > 0 && !filters.ratings.includes(Math.floor(hotel.rating))) return false;
-
-      // Amenities Filter
       if (filters.amenities.length > 0) {
         const hasAllAmenities = filters.amenities.every((a: string) => 
           hotel.amenities.map(h => h.toLowerCase()).includes(a.toLowerCase())
         );
         if (!hasAllAmenities) return false;
       }
-
       return true;
     });
   }, [hotelsData, filters]);
@@ -70,20 +64,17 @@ function SearchResults({ filters }: { filters: any }) {
   return (
     <div className="flex-1">
         <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <div className="space-y-2">
-                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-primary">
-                    <Compass className="h-4 w-4" /> Operational Archive: {city && city !== 'All' ? city : 'Northern Grid'}
-                </div>
+            <div className="space-y-2 text-left">
                 <h1 className="text-3xl md:text-5xl font-black tracking-tighter leading-none text-white uppercase">
                     {city && city !== 'All' ? city : 'Uttarakhand'}
                 </h1>
-                <p className="text-slate-400 font-bold text-sm">
-                    {filteredHotels.length} elite properties found in your target zone.
+                <p className="text-slate-100 font-bold text-sm">
+                    {filteredHotels.length} elite properties found.
                 </p>
             </div>
             
             <div className="flex items-center gap-3 bg-white/5 px-4 py-2 rounded-sm border border-white/10">
-                <div className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 mr-2">Sort Protocol</div>
+                <div className="text-[9px] font-black uppercase tracking-[0.2em] text-white mr-2">Sort Protocol</div>
                 <select className="bg-transparent font-black text-[9px] text-white uppercase tracking-widest focus:outline-none cursor-pointer">
                     <option className="bg-[#0f172a]">Recommended</option>
                     <option className="bg-[#0f172a]">Price: Low to High</option>
@@ -100,9 +91,9 @@ function SearchResults({ filters }: { filters: any }) {
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center h-96 rounded-[2.5rem] border-2 border-dashed border-white/10 bg-white/5 text-center px-10">
-          <SlidersHorizontal className="h-16 w-16 text-white/10 mb-6" />
-          <h3 className="text-xl font-black tracking-tight text-white uppercase">Zero Nodes Detected</h3>
-          <p className="text-slate-400 text-sm mt-2 font-medium">No properties matched your current filter protocol. Try resetting your search parameters.</p>
+          <SlidersHorizontal className="h-16 w-16 text-white/20 mb-6" />
+          <h3 className="text-xl font-black tracking-tight text-white uppercase">No Nodes Detected</h3>
+          <p className="text-slate-100 text-sm mt-2 font-medium">Try resetting your search parameters.</p>
         </div>
       )}
     </div>
@@ -136,7 +127,6 @@ export default function SearchPage() {
 
   return (
     <div className="min-h-screen bg-background">
-        {/* Animated Background Elements */}
         <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
             <div className="absolute top-[20%] -left-[10%] w-[500px] h-[500px] bg-primary/5 rounded-full blur-[100px]" />
             <div className="absolute bottom-[10%] -right-[5%] w-[400px] h-[400px] bg-primary/5 rounded-full blur-[80px]" />
@@ -152,80 +142,50 @@ export default function SearchPage() {
             <div className="flex flex-col lg:flex-row gap-12">
                 {/* Filters Sidebar */}
                 <aside className="hidden lg:block w-72 space-y-6 shrink-0">
-                    <Card className="rounded-[2rem] border-white/5 bg-card shadow-2xl overflow-hidden">
+                    <Card className="rounded-[2rem] border-white/10 bg-card shadow-2xl overflow-hidden">
                         <div className="p-8 space-y-10">
                             <div className="flex items-center justify-between border-b border-white/5 pb-5">
                                 <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-white">Filter By</h3>
-                                <button 
-                                    onClick={clearFilters}
-                                    className="text-[10px] font-black text-primary hover:text-white transition-colors uppercase tracking-widest"
-                                >
+                                <button onClick={clearFilters} className="text-[10px] font-black text-primary hover:text-white transition-colors uppercase tracking-widest">
                                     Reset
                                 </button>
                             </div>
                             
                             <div className="space-y-12">
-                                {/* Price Range */}
                                 <div className="space-y-6">
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-white/60 block">Your budget (per night)</span>
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-white block">Budget / Night</span>
                                     <div className="space-y-4 px-2">
-                                        <Slider 
-                                            defaultValue={[0, 100000]} 
-                                            max={100000} 
-                                            step={5000} 
-                                            value={priceRange}
-                                            onValueChange={setPriceRange}
-                                            className="py-4"
-                                        />
-                                        <div className="flex justify-between text-[10px] font-bold text-slate-400">
+                                        <Slider defaultValue={[0, 100000]} max={100000} step={5000} value={priceRange} onValueChange={setPriceRange} className="py-4" />
+                                        <div className="flex justify-between text-[10px] font-bold text-white">
                                             <span>{formatPrice(priceRange[0])}</span>
                                             <span>{formatPrice(priceRange[1])}+</span>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Star Rating */}
                                 <div className="space-y-6">
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-white/60 block">Guest Rating</span>
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-white block">Guest Rating</span>
                                     <div className="space-y-4">
                                         {[5, 4, 3].map(star => (
-                                            <div 
-                                                key={star} 
-                                                className="flex items-center gap-4 cursor-pointer group"
-                                                onClick={() => toggleRating(star)}
-                                            >
-                                                <div className={cn(
-                                                    "h-5 w-5 rounded-md border transition-all flex items-center justify-center",
-                                                    selectedRatings.includes(star) ? "border-primary bg-primary" : "border-white/10 group-hover:border-primary/50"
-                                                )}>
+                                            <div key={star} className="flex items-center gap-4 cursor-pointer group" onClick={() => toggleRating(star)}>
+                                                <div className={cn("h-5 w-5 rounded-md border transition-all flex items-center justify-center", selectedRatings.includes(star) ? "border-primary bg-primary" : "border-white/20 group-hover:border-primary/50")}>
                                                     {selectedRatings.includes(star) && <Check className="h-3 w-3 text-background stroke-[4]" />}
                                                 </div>
-                                                <span className="text-xs font-bold text-slate-300 group-hover:text-white transition-colors">{star} Tier & Above</span>
+                                                <span className="text-xs font-bold text-white group-hover:text-primary transition-colors">{star} Tier & Above</span>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
 
-                                {/* Amenities */}
                                 <div className="space-y-6">
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-white/60 block">Facilities</span>
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-white block">Facilities</span>
                                     <div className="space-y-4">
-                                        {['WiFi', 'Spa', 'Pool', 'Mountain-View', 'Parking', 'Restaurant'].map(item => (
-                                            <div 
-                                                key={item} 
-                                                className="flex items-center gap-4 cursor-pointer group"
-                                                onClick={() => toggleAmenity(item)}
-                                            >
-                                                <div className={cn(
-                                                    "h-5 w-5 rounded-md border transition-all flex items-center justify-center",
-                                                    selectedAmenities.includes(item) ? "border-primary bg-primary" : "border-white/10 group-hover:border-primary/50"
-                                                )}>
+                                        {['WiFi', 'Spa', 'Pool', 'Mountain View', 'Parking', 'Restaurant'].map(item => (
+                                            <div key={item} className="flex items-center gap-4 cursor-pointer group" onClick={() => toggleAmenity(item)}>
+                                                <div className={cn("h-5 w-5 rounded-md border transition-all flex items-center justify-center", selectedAmenities.includes(item) ? "border-primary bg-primary" : "border-white/20 group-hover:border-primary/50")}>
                                                     {selectedAmenities.includes(item) && <Check className="h-3 w-3 text-background stroke-[4]" />}
                                                 </div>
-                                                <span className={cn(
-                                                    "text-xs font-bold transition-colors capitalize",
-                                                    selectedAmenities.includes(item) ? "text-white" : "text-slate-400 group-hover:text-white"
-                                                )}>{item.replace('-', ' ')}</span>
+                                                <span className={cn("text-xs font-bold transition-colors capitalize", selectedAmenities.includes(item) ? "text-primary" : "text-white group-hover:text-primary")}>{item}</span>
                                             </div>
                                         ))}
                                     </div>
@@ -235,9 +195,7 @@ export default function SearchPage() {
                             <div className="pt-6 border-t border-white/5">
                                 <div className="p-4 bg-primary/5 rounded-2xl flex items-center gap-3">
                                     <Info className="h-4 w-4 text-primary shrink-0" />
-                                    <p className="text-[9px] font-bold text-slate-400 leading-relaxed uppercase tracking-wider">
-                                        Elite standard protocols applied to all results.
-                                    </p>
+                                    <p className="text-[9px] font-bold text-white/80 leading-relaxed uppercase tracking-wider">Elite standard protocols applied.</p>
                                 </div>
                             </div>
                         </div>
