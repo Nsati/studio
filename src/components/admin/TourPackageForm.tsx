@@ -9,7 +9,6 @@ import { useFirestore, type WithId } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import slugify from 'slugify';
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
 import type { TourPackage } from '@/lib/types';
 import { saveTourPackageAction, deleteTourPackageAction } from '@/app/admin/tour-packages/actions';
 
@@ -146,7 +145,7 @@ export function TourPackageForm({ initialData }: TourPackageFormProps) {
   const [totalCost, setTotalCost] = useState(0);
 
   useEffect(() => {
-    const calculated = basePrice + (basePrice * (gstPercent / 100));
+    const calculated = (Number(basePrice) || 0) + (Number(basePrice) * (Number(gstPercent) / 100));
     setTotalCost(calculated);
   }, [basePrice, gstPercent]);
 
@@ -263,7 +262,7 @@ export function TourPackageForm({ initialData }: TourPackageFormProps) {
                                         <Input placeholder="Paste direct link (ending in .jpg, .png, etc.)" {...field} className="rounded-none h-12" />
                                     </FormControl>
                                     <FormDescription className="text-[9px] font-bold text-blue-600">
-                                        Note: Always use direct links to ensure high-speed loading.
+                                        Note: Always use direct links for best performance.
                                     </FormDescription>
                                     <FormMessage />
                                 </FormItem>
@@ -278,6 +277,9 @@ export function TourPackageForm({ initialData }: TourPackageFormProps) {
                                         src={imageUrl} 
                                         alt="Preview" 
                                         className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                            (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=800';
+                                        }}
                                     />
                                 ) : (
                                     <span className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em]">No Valid URL Set</span>

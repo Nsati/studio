@@ -2,14 +2,12 @@
 'use client';
 import { useFirestore, useCollection, useMemoFirebase, type WithId } from '@/firebase';
 import Link from 'next/link';
-import Image from 'next/image';
 import { collection } from 'firebase/firestore';
 import type { TourPackage } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { PlusCircle, Calendar, Package, Trash2, Edit2, Loader2 } from 'lucide-react';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { PlusCircle, Calendar, Package, Trash2, Edit2, Loader2, Image as ImageIcon } from 'lucide-react';
 import { BulkUploadTourPackagesDialog } from '@/components/admin/BulkUploadTourPackagesDialog';
 import { 
   AlertDialog, 
@@ -50,9 +48,12 @@ function TourPackageAdminCard({ tourPackage }: { tourPackage: WithId<TourPackage
     const [isDeleting, setIsDeleting] = useState(false);
 
     const getImageUrl = (img: string) => {
-        if (!img) return '';
-        if (img.startsWith('http')) return img;
-        return PlaceHolderImages.find((p) => p.id === img)?.imageUrl || '';
+        if (!img) return 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=800';
+        // Cleanup Pexels links if they are page links instead of direct images
+        if (img.includes('pexels.com/photo/')) {
+            return img.replace('www.pexels.com/photo/', 'images.pexels.com/photos/').split('-').slice(0, -1).join('-') + '.jpeg';
+        }
+        return img;
     };
 
     const handleDelete = async () => {
@@ -72,14 +73,16 @@ function TourPackageAdminCard({ tourPackage }: { tourPackage: WithId<TourPackage
     };
 
     return (
-        <Card className="rounded-none border border-black/5 shadow-sm group hover:shadow-md transition-all bg-white overflow-hidden">
-            <div className="relative h-48 w-full overflow-hidden">
-                <Image
+        <Card className="rounded-none border border-black/5 shadow-sm group hover:shadow-md transition-all bg-white overflow-hidden flex flex-col h-full">
+            <div className="relative h-48 w-full overflow-hidden bg-muted flex items-center justify-center">
+                {/* Use standard img for Admin for maximum resilience with external URLs */}
+                <img
                     src={getImageUrl(tourPackage.image)}
                     alt={tourPackage.title}
-                    fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
-                    className="object-cover transition-transform duration-700 group-hover:scale-110"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    onError={(e) => {
+                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=800';
+                    }}
                 />
                 <div className="absolute top-3 left-3 bg-black/80 px-2 py-1 text-white text-[9px] font-black uppercase tracking-widest">
                     {tourPackage.duration}
@@ -106,20 +109,20 @@ function TourPackageAdminCard({ tourPackage }: { tourPackage: WithId<TourPackage
                     </AlertDialog>
                 </div>
             </div>
-            <CardHeader className="p-5 space-y-2">
-                <CardTitle className="line-clamp-1 leading-snug text-lg font-black tracking-tight text-[#1a1a1a]">
+            <CardHeader className="p-5 space-y-2 flex-grow">
+                <CardTitle className="line-clamp-2 leading-snug text-lg font-black tracking-tight text-[#1a1a1a]">
                     {tourPackage.title}
                 </CardTitle>
                 <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase text-muted-foreground truncate">
-                    <Calendar className="h-3 w-3 text-[#003580]" /> {tourPackage.destinations.join(' • ')}
+                    <Calendar className="h-3 w-3 text-[#003580]" /> {tourPackage.destinations?.join(' • ')}
                 </div>
             </CardHeader>
-            <CardFooter className="p-5 pt-0 flex justify-between items-center border-t border-black/[0.03] mt-2">
+            <CardFooter className="p-5 pt-0 flex justify-between items-center border-t border-black/[0.03] mt-auto bg-slate-50/50">
                 <div className="flex flex-col">
                     <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Starts from</span>
                     <span className="text-sm font-black text-[#1a1a1a]">₹{tourPackage.totalCost?.toLocaleString('en-IN')}</span>
                 </div>
-                <Button variant="outline" size="sm" asChild className="rounded-none h-8 px-5 text-[10px] font-black uppercase border-black/10 hover:bg-muted transition-colors">
+                <Button variant="outline" size="sm" asChild className="rounded-none h-8 px-5 text-[10px] font-black uppercase border-black/10 hover:bg-muted transition-colors bg-white">
                     <Link href={`/admin/tour-packages/${tourPackage.id}/edit`}><Edit2 className="mr-2 h-3 w-3" /> Edit</Link>
                 </Button>
             </CardFooter>
@@ -152,7 +155,7 @@ export default function TourPackagesAdminPage() {
                 </div>
                 <div className="flex items-center gap-3">
                     <BulkUploadTourPackagesDialog />
-                    <Button asChild className="rounded-none h-10 font-black px-6 bg-[#003580] hover:bg-[#002b60] shadow-sm">
+                    <Button asChild className="rounded-none h-12 font-black px-8 bg-[#003580] hover:bg-[#002b60] shadow-sm">
                         <Link href="/admin/tour-packages/new">
                             <PlusCircle className="mr-2 h-4 w-4" />
                             Add Itinerary
