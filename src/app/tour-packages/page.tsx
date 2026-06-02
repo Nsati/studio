@@ -13,11 +13,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 
-/**
- * @fileOverview Live Tour Packages Listing.
- * Uses Direct URLs with unoptimized flag for maximum reliability.
- */
-
 function PackageSkeleton() {
     return (
         <Card className="flex flex-col md:flex-row overflow-hidden border border-border rounded-sm">
@@ -42,15 +37,25 @@ export default function TourPackagesPage() {
   const { data: packages, isLoading } = useCollection<TourPackage>(packagesQuery);
 
   const getImageUrl = (img: string) => {
-    if (!img) return 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=800';
-    if (img.startsWith('http')) return img;
-    // Fallback if it's just a name or malformed
-    return `https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=800`;
+    if (!img) return 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=1200';
+    
+    let url = img.trim();
+    
+    // Fix Pexels page links to direct image links
+    if (url.includes('pexels.com/photo/')) {
+        const parts = url.split('/');
+        const idPart = parts.find(p => p.match(/^\d+$/)) || parts[parts.length - 2];
+        if (idPart && idPart.match(/^\d+$/)) {
+            return `https://images.pexels.com/photos/${idPart}/pexels-photo-${idPart}.jpeg?auto=compress&cs=tinysrgb&w=1200`;
+        }
+    }
+
+    if (url.startsWith('http')) return url;
+    return 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=1200';
   };
 
   return (
     <div className="bg-white min-h-screen">
-      {/* Dynamic Banner */}
       <section className="bg-[#003580] py-16 px-4">
         <div className="container mx-auto">
           <div className="max-w-4xl space-y-4">
@@ -67,7 +72,6 @@ export default function TourPackagesPage() {
         </div>
       </section>
 
-      {/* Main Content */}
       <section className="py-12 px-4">
         <div className="container mx-auto">
             <div className="grid grid-cols-1 gap-8">

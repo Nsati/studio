@@ -7,7 +7,7 @@ import type { TourPackage } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { PlusCircle, Calendar, Package, Trash2, Edit2, Loader2, Image as ImageIcon } from 'lucide-react';
+import { PlusCircle, Calendar, Package, Trash2, Edit2, Loader2 } from 'lucide-react';
 import { BulkUploadTourPackagesDialog } from '@/components/admin/BulkUploadTourPackagesDialog';
 import { 
   AlertDialog, 
@@ -49,11 +49,19 @@ function TourPackageAdminCard({ tourPackage }: { tourPackage: WithId<TourPackage
 
     const getImageUrl = (img: string) => {
         if (!img) return 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=800';
-        // Cleanup Pexels links if they are page links instead of direct images
-        if (img.includes('pexels.com/photo/')) {
-            return img.replace('www.pexels.com/photo/', 'images.pexels.com/photos/').split('-').slice(0, -1).join('-') + '.jpeg';
+        
+        let url = img.trim();
+        
+        // Fix Pexels page links to direct image links
+        if (url.includes('pexels.com/photo/')) {
+            const parts = url.split('/');
+            const idPart = parts.find(p => p.match(/^\d+$/)) || parts[parts.length - 2];
+            if (idPart && idPart.match(/^\d+$/)) {
+                return `https://images.pexels.com/photos/${idPart}/pexels-photo-${idPart}.jpeg?auto=compress&cs=tinysrgb&w=800`;
+            }
         }
-        return img;
+        
+        return url.startsWith('http') ? url : 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=800';
     };
 
     const handleDelete = async () => {
@@ -74,8 +82,7 @@ function TourPackageAdminCard({ tourPackage }: { tourPackage: WithId<TourPackage
 
     return (
         <Card className="rounded-none border border-black/5 shadow-sm group hover:shadow-md transition-all bg-white overflow-hidden flex flex-col h-full">
-            <div className="relative h-48 w-full overflow-hidden bg-muted flex items-center justify-center">
-                {/* Use standard img for Admin for maximum resilience with external URLs */}
+            <div className="relative h-48 w-full overflow-hidden bg-muted">
                 <img
                     src={getImageUrl(tourPackage.image)}
                     alt={tourPackage.title}
@@ -130,7 +137,6 @@ function TourPackageAdminCard({ tourPackage }: { tourPackage: WithId<TourPackage
     )
 }
 
-
 export default function TourPackagesAdminPage() {
     const firestore = useFirestore();
 
@@ -176,7 +182,6 @@ export default function TourPackagesAdminPage() {
                  <div className="flex flex-col items-center justify-center py-32 border-2 border-dashed border-black/5 bg-white text-center rounded-sm">
                     <Package className="h-12 w-12 text-muted-foreground/20 mb-4" />
                     <p className="text-muted-foreground text-sm font-bold uppercase tracking-widest">No itineraries found in the cloud.</p>
-                    <p className="text-xs text-muted-foreground mt-1">Start by adding individual packages or using bulk upload.</p>
                 </div>
             )}
         </div>

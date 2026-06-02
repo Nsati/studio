@@ -10,13 +10,13 @@
     {
       "id": "blog-aipan",
       "description": "Sacred Geometry: Aipan Art of Uttarakhand",
-      "imageUrl": "https://images.pexels.com/photos/15815340/pexels-photo-15815340.jpeg",
+      "imageUrl": "https://images.pexels.com/photos/15815340/pexels-photo-15815340.jpeg?auto=compress&cs=tinysrgb&w=1200",
       "imageHint": "aipan art"
     },
     {
       "id": "blog-food",
       "description": "Soul of Soil: Traditional Himalayan Cuisine",
-      "imageUrl": "https://images.pexels.com/photos/30205313/pexels-photo-30205313.jpeg",
+      "imageUrl": "https://images.pexels.com/photos/30205313/pexels-photo-30205313.jpeg?auto=compress&cs=tinysrgb&w=1200",
       "imageHint": "himalayan food"
     },
     {
@@ -28,38 +28,20 @@
     {
       "id": "blog-festival",
       "description": "Green Bond: Harela Festival Celebration",
-      "imageUrl": "https://images.pexels.com/photos/946186/pexels-photo-946186.jpeg",
+      "imageUrl": "https://images.pexels.com/photos/946186/pexels-photo-946186.jpeg?auto=compress&cs=tinysrgb&w=1200",
       "imageHint": "green festival"
     },
     {
       "id": "blog-heritage",
       "description": "Legacy in Wood: Traditional Likhai Carving",
-      "imageUrl": "https://images.pexels.com/photos/4611607/pexels-photo-4611607.jpeg",
+      "imageUrl": "https://images.pexels.com/photos/4611607/pexels-photo-4611607.jpeg?auto=compress&cs=tinysrgb&w=1200",
       "imageHint": "wood carving"
     },
     {
       "id": "blog-music",
       "description": "Heartbeat: Folk Music and Traditional Instruments",
-      "imageUrl": "https://images.pexels.com/photos/10405322/pexels-photo-10405322.jpeg",
+      "imageUrl": "https://images.pexels.com/photos/10405322/pexels-photo-10405322.jpeg?auto=compress&cs=tinysrgb&w=1200",
       "imageHint": "mountain music"
-    },
-    {
-      "id": "tour-lake",
-      "description": "Nainital Lake View",
-      "imageUrl": "https://images.unsplash.com/photo-1693153318626-682ef3712136?auto=format&fit=crop&q=80&w=1200",
-      "imageHint": "lake"
-    },
-    {
-      "id": "tour-peaks",
-      "description": "Auli Snowy Peaks",
-      "imageUrl": "https://images.unsplash.com/photo-1515442597003-a25e0a78dae9?auto=format&fit=crop&q=80&w=1200",
-      "imageHint": "snow peaks"
-    },
-    {
-      "id": "tour-river",
-      "description": "Rishikesh Ganga River",
-      "imageUrl": "https://images.unsplash.com/photo-1724118136076-5b0921aa529c?auto=format&fit=crop&q=80&w=1200",
-      "imageHint": "river"
     }
   ]
 }
