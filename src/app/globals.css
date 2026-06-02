@@ -62,10 +62,10 @@ h1, h2, h3, h4 {
   font-family: var(--font-heading);
 }
 
-.glass-header {
-  @apply bg-white/10 backdrop-blur-md border-b border-white/10;
+.shadow-apple-deep {
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.1);
 }
 
-.solid-header {
-  @apply bg-[#1A1A1A] shadow-xl;
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }

@@ -11,7 +11,6 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 /**
  * @fileOverview Northern Harrier Public Cultural Journal.
  * Vibrant Devbhumi Cultural Archive with symmetric editorial grid.
- * Fixed with 100% relevant Himalayan images.
  */
 
 const CULTURAL_BLOGS = [
