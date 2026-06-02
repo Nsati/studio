@@ -26,8 +26,7 @@ import { cn } from '@/lib/utils';
 
 /**
  * @fileOverview Northern Harrier Main Portal Landing.
- * Redesigned to match the vibrant, high-end travel discovery portals.
- * Features: High-res Hero, Symmetric Grids, and Protocol Branding.
+ * Clean, symmetric layout with high-res mountain assets.
  */
 
 export default function LandingPage() {
@@ -50,18 +49,18 @@ export default function LandingPage() {
           alt="Himalayan Majesty" 
           fill 
           priority
-          className="object-cover brightness-[0.5]" 
+          className="object-cover brightness-[0.6]" 
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-white" />
         
         <div className="container relative z-10 px-6 text-center space-y-10">
-          <div className="inline-flex items-center gap-2 bg-accent/20 backdrop-blur-md px-6 py-2.5 rounded-full border border-accent/30 text-accent text-[10px] font-black uppercase tracking-widest animate-in fade-in duration-1000">
+          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-6 py-2.5 rounded-full border border-white/20 text-accent text-[10px] font-black uppercase tracking-widest animate-in fade-in duration-1000">
             <ShieldCheck className="h-4 w-4" /> Himalayan Operational Grid: STABLE
           </div>
           <h1 className="text-5xl md:text-[8rem] text-white tracking-tighter font-black leading-[0.85] uppercase">
             Beyond the <br /> <span className="text-accent italic font-heading font-light capitalize">Horizon</span>
           </h1>
-          <p className="text-lg md:text-2xl text-white/80 max-w-3xl mx-auto font-medium leading-relaxed tracking-tight border-l-4 border-accent/60 pl-8 text-left md:text-center md:border-l-0 md:pl-0">
+          <p className="text-lg md:text-2xl text-white/80 max-w-3xl mx-auto font-medium leading-relaxed tracking-tight">
             Elite Himalayan Stays. Precision Safety Logic. Authentic Hospitality. <br className="hidden md:block"/>
             The new standard for mountain expeditions.
           </p>
@@ -92,7 +91,7 @@ export default function LandingPage() {
       </section>
 
       {/* Symmetric Prime Destinations */}
-      <section className="py-32 container px-6">
+      <section className="py-32 container px-6 bg-white">
         <div className="flex flex-col md:flex-row justify-between items-end mb-24 gap-8">
             <div className="space-y-4">
                 <Badge className="bg-primary/10 text-primary border-0 font-black px-6 py-2 rounded-full uppercase tracking-[0.3em] text-[10px]">Prime Coordinates</Badge>
@@ -106,7 +105,7 @@ export default function LandingPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {featuredDestinations.map((dest) => (
             <Link key={dest.id} href={`/search?city=${dest.name}`} className="group">
-              <div className="relative aspect-[3/4] overflow-hidden rounded-[3rem] shadow-apple-deep hover:shadow-2xl transition-all duration-700">
+              <div className="relative aspect-[3/4] overflow-hidden rounded-[2rem] shadow-apple-deep hover:shadow-2xl transition-all duration-700">
                 <Image 
                   src={getImg(dest.imageId)} 
                   alt={dest.name} 
@@ -114,17 +113,14 @@ export default function LandingPage() {
                   className="object-cover transition-transform duration-2000 group-hover:scale-110" 
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-                <div className="absolute top-8 right-8">
-                  <Badge className="bg-white/95 backdrop-blur-md text-primary border-0 font-black px-4 py-2 rounded-full text-[10px] shadow-lg">
+                <div className="absolute top-6 right-6">
+                  <Badge className="bg-white/95 backdrop-blur-md text-primary border-0 font-black px-3 py-1 rounded-full text-[10px]">
                     SCORE: {dest.score}
                   </Badge>
                 </div>
-                <div className="absolute bottom-10 left-10 right-10 space-y-3">
-                  <Badge className="bg-accent text-white border-0 font-black uppercase text-[8px] tracking-[0.3em] px-4 py-1.5 rounded-full">HARRIER AUDITED</Badge>
-                  <h3 className="text-4xl text-white font-black tracking-tighter uppercase">{dest.name}</h3>
-                  <div className="flex items-center gap-2 text-white/60 font-black uppercase text-[10px] tracking-widest">
-                    DISCOVER PROTOCOL <ChevronRight className="h-4 w-4 text-accent" />
-                  </div>
+                <div className="absolute bottom-10 left-10 right-10 space-y-2">
+                  <Badge className="bg-accent text-white border-0 font-black uppercase text-[8px] tracking-[0.2em] px-3 py-1 rounded-sm shadow-lg">HARRIER AUDITED</Badge>
+                  <h3 className="text-4xl text-white font-black tracking-tighter uppercase leading-none">{dest.name}</h3>
                 </div>
               </div>
             </Link>
@@ -135,54 +131,53 @@ export default function LandingPage() {
       {/* Elite Stay Inventory Preview */}
       <section className="py-32 bg-slate-50">
         <div className="container px-6">
-            <div className="text-center mb-24 space-y-6">
+            <div className="text-center mb-24 space-y-4">
                 <div className="flex items-center justify-center gap-3 text-accent font-black uppercase tracking-[0.4em] text-[10px]">
                     <Sparkles className="h-4 w-4" /> THE CURATED SERIES
                 </div>
-                <h2 className="text-5xl md:text-8xl font-black text-slate-900 tracking-tighter uppercase">Elite Collection</h2>
+                <h2 className="text-5xl md:text-8xl font-black text-slate-900 tracking-tighter uppercase leading-none">Elite Collection</h2>
                 <p className="text-slate-400 font-bold text-xl max-w-2xl mx-auto italic">Properties strictly audited for safety, connectivity, and authentic Himalayan warmth.</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
                 {[
-                    { name: "Zenith Mountain Loft", city: "Auli", price: "18,000", score: "9.8" },
-                    { name: "Riverside Sanctuary", city: "Rishikesh", price: "12,500", score: "9.4" },
-                    { name: "The Pine Heritage", city: "Nainital", price: "15,000", score: "9.2" }
+                    { name: "Zenith Mountain Loft", city: "Auli", price: "18,000", score: "9.8", image: "https://picsum.photos/seed/auli1/800/600" },
+                    { name: "Riverside Sanctuary", city: "Rishikesh", price: "12,500", score: "9.4", image: "https://picsum.photos/seed/rishi1/800/600" },
+                    { name: "The Pine Heritage", city: "Nainital", price: "15,000", score: "9.2", image: "https://picsum.photos/seed/naini1/800/600" }
                 ].map((hotel, i) => (
-                    <Card key={i} className="group overflow-hidden rounded-[3rem] border-0 shadow-apple-deep hover:shadow-2xl transition-all duration-1000 gold-edge bg-white">
+                    <Card key={i} className="group overflow-hidden rounded-2xl border border-black/5 bg-white shadow-sm hover:shadow-xl transition-all duration-500 hover:-translate-y-1">
                         <CardContent className="p-0">
-                            <div className="relative aspect-[16/10] overflow-hidden">
-                                <Image src={`https://picsum.photos/seed/hotel${i}/800/600`} alt={hotel.name} fill className="object-cover group-hover:scale-110 transition-transform duration-1000" />
-                                <div className="absolute top-6 right-6">
-                                    <div className="h-14 w-14 bg-white/95 backdrop-blur-md rounded-full flex flex-col items-center justify-center shadow-xl">
-                                        <span className="text-[12px] font-black leading-none">{hotel.score}</span>
-                                        <span className="text-[6px] font-bold text-slate-400 uppercase tracking-widest">SAFETY</span>
-                                    </div>
+                            <div className="relative aspect-[16/10] overflow-hidden bg-slate-100">
+                                <Image src={hotel.image} alt={hotel.name} fill className="object-cover group-hover:scale-105 transition-transform duration-700" />
+                                <div className="absolute top-4 right-4">
+                                    <Badge className="bg-white/95 backdrop-blur-md text-slate-900 border-0 font-black px-2 py-1 rounded-sm text-[10px]">
+                                      SAFETY: {hotel.score}
+                                    </Badge>
                                 </div>
                             </div>
-                            <div className="p-10 space-y-8">
-                                <div className="space-y-2">
-                                    <div className="flex items-center gap-2 text-accent text-[10px] font-black uppercase tracking-widest">
+                            <div className="p-8 space-y-6">
+                                <div className="space-y-1">
+                                    <div className="flex items-center gap-1.5 text-[#006ce4] text-[10px] font-black uppercase tracking-widest">
                                         <MapPin className="h-3.5 w-3.5" /> {hotel.city}, Northern Grid
                                     </div>
-                                    <h3 className="text-3xl font-black text-slate-900 leading-tight group-hover:text-primary transition-colors uppercase">
+                                    <h3 className="text-2xl font-black text-slate-900 leading-tight group-hover:text-[#006ce4] transition-colors uppercase">
                                         {hotel.name}
                                     </h3>
                                 </div>
                                 
-                                <div className="flex items-center gap-8 py-2 border-y border-slate-50">
-                                    <Wifi className="h-5 w-5 text-slate-300" />
-                                    <Coffee className="h-5 w-5 text-slate-300" />
-                                    <CloudSun className="h-5 w-5 text-slate-300" />
+                                <div className="flex items-center gap-6 py-2 border-y border-slate-50">
+                                    <Wifi className="h-4 w-4 text-slate-300" />
+                                    <Coffee className="h-4 w-4 text-slate-300" />
+                                    <CloudSun className="h-4 w-4 text-slate-300" />
                                 </div>
 
-                                <div className="flex items-center justify-between">
+                                <div className="flex items-center justify-between pt-2">
                                     <div className="flex flex-col">
-                                        <span className="text-[9px] text-slate-400 font-bold uppercase tracking-[0.3em]">nightly rate</span>
-                                        <span className="text-3xl font-black text-slate-900 tracking-tighter">₹{hotel.price}</span>
+                                        <span className="text-[9px] text-slate-400 font-bold uppercase tracking-[0.2em]">nightly rate</span>
+                                        <span className="text-2xl font-black text-slate-900 tracking-tighter">₹{hotel.price}</span>
                                     </div>
-                                    <Button className="h-16 px-10 rounded-full bg-slate-900 hover:bg-primary font-black uppercase tracking-widest text-[11px] shadow-xl">
-                                        Explore Node
+                                    <Button className="h-12 px-8 rounded-none bg-[#006ce4] hover:bg-[#005bb8] font-black uppercase tracking-widest text-[10px] shadow-lg shadow-blue-100 transition-all active:scale-95">
+                                        Check Availability
                                     </Button>
                                 </div>
                             </div>
@@ -199,8 +194,8 @@ export default function LandingPage() {
           <Mountain className="w-full h-full text-white" strokeWidth={0.1} />
         </div>
         <div className="container px-6 relative z-10">
-          <div className="max-w-4xl mx-auto text-center mb-24 space-y-6">
-            <Badge className="bg-accent text-white font-black uppercase tracking-[0.4em] px-10 py-3 rounded-full text-[10px] shadow-2xl">The Northern Harrier Protocol</Badge>
+          <div className="max-w-4xl mx-auto text-center mb-24 space-y-4">
+            <Badge className="bg-accent text-white font-black uppercase tracking-[0.4em] px-8 py-2 rounded-full text-[10px] shadow-2xl">The Northern Harrier Protocol</Badge>
             <h2 className="text-6xl md:text-8xl font-black tracking-tighter leading-[0.85] uppercase">Engineered <br/><span className="italic font-light text-accent">Safety</span> Logic</h2>
             <p className="text-xl text-white/50 font-medium leading-relaxed max-w-2xl mx-auto">We don't just book hotels; we map your entire journey with precision telemetry and a deep respect for the horizon.</p>
           </div>
@@ -212,11 +207,11 @@ export default function LandingPage() {
               { icon: Sparkles, title: "Curated Stays", desc: "Only properties meeting Harrier gold-standards are listed." },
               { icon: Zap, title: "AI Vibe Sync", desc: "Interactive selection engine matches mood to geography." }
             ].map((item, i) => (
-              <div key={i} className="group p-10 bg-white/5 rounded-[3.5rem] border border-white/10 hover:bg-accent transition-all duration-500 hover:border-accent hover:-translate-y-2">
-                <div className="p-6 bg-white/10 rounded-3xl w-fit mb-10 group-hover:bg-white/20 transition-colors shadow-2xl">
-                  <item.icon className="h-10 w-10 text-accent group-hover:text-white" />
+              <div key={i} className="group p-10 bg-white/5 rounded-[2rem] border border-white/10 hover:bg-accent transition-all duration-500 hover:border-accent hover:-translate-y-2">
+                <div className="p-5 bg-white/10 rounded-2xl w-fit mb-8 group-hover:bg-white/20 transition-colors shadow-2xl">
+                  <item.icon className="h-8 w-8 text-accent group-hover:text-white" />
                 </div>
-                <h4 className="text-2xl font-black uppercase tracking-widest mb-4 group-hover:text-white leading-none">{item.title}</h4>
+                <h4 className="text-xl font-black uppercase tracking-widest mb-4 group-hover:text-white leading-tight">{item.title}</h4>
                 <p className="text-sm text-white/40 group-hover:text-white/80 leading-relaxed font-medium">{item.desc}</p>
               </div>
             ))}
@@ -226,7 +221,7 @@ export default function LandingPage() {
 
       {/* Newsletter Protocol */}
       <section className="py-32 bg-white container px-6">
-        <div className="bg-[#f0f6ff] rounded-[4rem] p-16 md:p-32 flex flex-col md:flex-row items-center justify-between gap-16 overflow-hidden relative">
+        <div className="bg-[#f0f6ff] rounded-[3rem] p-16 md:p-24 flex flex-col md:flex-row items-center justify-between gap-16 overflow-hidden relative">
             <div className="absolute top-0 right-0 h-full w-1/3 opacity-10 pointer-events-none">
                 <Compass className="h-full w-full text-primary" strokeWidth={0.5} />
             </div>
@@ -236,9 +231,9 @@ export default function LandingPage() {
             </div>
             <div className="w-full max-w-md space-y-4 relative z-10">
                 <div className="relative">
-                    <input className="w-full h-20 rounded-full border-2 border-slate-200 px-8 text-lg font-black focus:border-primary focus:outline-none transition-all pr-24" placeholder="Intel Node Email" />
-                    <Button className="absolute right-2 top-2 h-16 w-16 rounded-full bg-primary p-0 shadow-2xl">
-                        <ChevronRight className="h-8 w-8 text-white" />
+                    <input className="w-full h-16 rounded-full border-2 border-slate-200 px-8 text-lg font-black focus:border-primary focus:outline-none transition-all pr-24" placeholder="Intel Node Email" />
+                    <Button className="absolute right-2 top-2 h-12 w-12 rounded-full bg-primary p-0 shadow-2xl">
+                        <ChevronRight className="h-6 w-6 text-white" />
                     </Button>
                 </div>
                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 text-center md:text-left ml-4">Encrypted NH Transmission Protocol</p>
