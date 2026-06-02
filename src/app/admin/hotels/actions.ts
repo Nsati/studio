@@ -4,6 +4,7 @@
 import { getFirebaseAdmin } from '@/firebase/admin';
 import type { Hotel, Room } from '@/lib/types';
 import slugify from 'slugify';
+import { revalidatePath } from 'next/cache';
 import { HotelUploadSchema, type HotelUploadData } from '../schemas';
 
 export async function bulkUploadHotels(hotelsData: HotelUploadData[]): Promise<{ success: boolean; message: string }> {
@@ -90,10 +91,49 @@ export async function bulkUploadHotels(hotelsData: HotelUploadData[]): Promise<{
         }
 
         await batch.commit();
+        revalidatePath('/admin/hotels');
+        revalidatePath('/search');
         return { success: true, message: `Successfully uploaded ${hotelsData.length} hotels to Tripzy.` };
 
     } catch (e: any) {
         console.error("Failed to bulk upload hotels:", e);
         return { success: false, message: e.message || 'An unexpected error occurred during upload.' };
+    }
+}
+
+export async function deleteHotelAction(hotelId: string) {
+    const { adminDb, error } = getFirebaseAdmin();
+    if (error || !adminDb) return { success: false, message: "Admin SDK not initialized" };
+
+    try {
+        const hotelRef = adminDb.collection('hotels').doc(hotelId);
+        
+        // 1. Delete rooms subcollection
+        const roomsSnapshot = await hotelRef.collection('rooms').get();
+        const batch = adminDb.batch();
+        
+        roomsSnapshot.forEach(doc => {
+            batch.delete(doc.ref);
+        });
+
+        // 2. Delete reviews subcollection (if any)
+        const reviewsSnapshot = await hotelRef.collection('reviews').get();
+        reviewsSnapshot.forEach(doc => {
+            batch.delete(doc.ref);
+        });
+
+        // 3. Delete the hotel itself
+        batch.delete(hotelRef);
+
+        await batch.commit();
+        
+        revalidatePath('/admin/hotels');
+        revalidatePath('/search');
+        revalidatePath('/');
+        
+        return { success: true, message: 'Property and its inventory have been completely purged.' };
+    } catch (e: any) {
+        console.error("Delete Property Error:", e);
+        return { success: false, message: e.message || 'Failed to remove property.' };
     }
 }

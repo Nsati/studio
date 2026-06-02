@@ -6,18 +6,32 @@ import Image from 'next/image';
 import { collection } from 'firebase/firestore';
 import type { Hotel } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { PlusCircle, Star, MapPin, Eye } from 'lucide-react';
+import { PlusCircle, Star, MapPin, Eye, Trash2, Loader2 } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { BulkUploadHotelsDialog } from '@/components/admin/BulkUploadHotelsDialog';
+import { deleteHotelAction } from './actions';
+import { useToast } from '@/hooks/use-toast';
+import { useState } from 'react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 function HotelGridSkeleton() {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {Array.from({ length: 8 }).map((_, i) => (
-                <Card key={i}>
-                    <Skeleton className="h-40 w-full" />
+                <Card key={i} className="rounded-none border-black/5">
+                    <Skeleton className="h-40 w-full rounded-none" />
                     <CardHeader>
                         <Skeleton className="h-6 w-3/4" />
                         <Skeleton className="h-4 w-1/2" />
@@ -32,45 +46,85 @@ function HotelGridSkeleton() {
 }
 
 function HotelAdminCard({ hotel }: { hotel: WithId<Hotel> }) {
+    const { toast } = useToast();
+    const [isDeleting, setIsDeleting] = useState(false);
+
     const imageUrl = hotel.images[0]?.startsWith('http')
         ? hotel.images[0]
         : PlaceHolderImages.find((img) => img.id === hotel.images[0])?.imageUrl;
 
+    const handleDelete = async () => {
+        setIsDeleting(true);
+        try {
+            const res = await deleteHotelAction(hotel.id);
+            if (res.success) {
+                toast({ title: 'Property Removed', description: res.message });
+            } else {
+                toast({ variant: 'destructive', title: 'Action Failed', description: res.message });
+            }
+        } catch (e: any) {
+            toast({ variant: 'destructive', title: 'Critical Failure', description: e.message });
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
     return (
-        <Card>
-            <div className="relative h-40 w-full">
+        <Card className="rounded-none border border-black/5 shadow-sm bg-white overflow-hidden group">
+            <div className="relative h-40 w-full overflow-hidden">
                 {imageUrl ? (
                     <Image
                         src={imageUrl}
                         alt={hotel.name}
                         fill
                         sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
-                        className="object-cover rounded-t-lg"
+                        className="object-cover transition-transform duration-700 group-hover:scale-110"
                     />
                 ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-muted rounded-t-lg">
-                        <span className="text-sm text-muted-foreground">No Image</span>
+                    <div className="flex h-full w-full items-center justify-center bg-muted">
+                        <span className="text-xs text-muted-foreground uppercase font-black">No Satellite Data</span>
                     </div>
                 )}
+                <div className="absolute top-2 right-2">
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button size="icon" variant="destructive" className="h-8 w-8 rounded-none bg-red-600/90 hover:bg-red-600 shadow-lg" disabled={isDeleting}>
+                                {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent className="rounded-none">
+                            <AlertDialogHeader>
+                                <AlertDialogTitle className="font-black uppercase tracking-tight">Purge Property Node?</AlertDialogTitle>
+                                <AlertDialogDescription className="font-medium text-muted-foreground">
+                                    This will permanently wipe "{hotel.name}" and all associated room inventory from the cloud grid.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel className="rounded-none font-bold">Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700 text-white rounded-none font-black uppercase text-[10px] tracking-widest px-8">Confirm Purge</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                </div>
             </div>
-            <CardHeader>
-                <CardTitle className="truncate">{hotel.name}</CardTitle>
-                <CardDescription className="flex items-center gap-1">
-                    <MapPin className="h-4 w-4" /> {hotel.city}
+            <CardHeader className="p-4 space-y-1">
+                <CardTitle className="truncate text-base font-black tracking-tight text-[#1a1a1a]">{hotel.name}</CardTitle>
+                <CardDescription className="flex items-center gap-1 text-[10px] font-bold uppercase text-muted-foreground">
+                    <MapPin className="h-3 w-3 text-[#003580]" /> {hotel.city}
                 </CardDescription>
             </CardHeader>
-            <CardFooter className="flex justify-between items-center">
-                 <div className="flex items-center gap-1 font-semibold text-amber-500">
-                    <Star className="h-5 w-5 fill-current" />
+            <CardFooter className="p-4 pt-0 flex justify-between items-center border-t border-black/[0.03] mt-2">
+                 <div className="flex items-center gap-1 font-black text-[#febb02] text-xs">
+                    <Star className="h-3 w-3 fill-current" />
                     <span>{hotel.rating}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="sm" asChild>
+                    <Button variant="ghost" size="sm" asChild className="h-8 w-8 p-0 rounded-none hover:bg-[#003580]/10 text-[#003580]">
                         <Link href={`/hotels/${hotel.id}`} target="_blank" title="View live page">
                             <Eye className="h-4 w-4" />
                         </Link>
                     </Button>
-                    <Button variant="outline" size="sm" asChild>
+                    <Button variant="outline" size="sm" asChild className="h-8 rounded-none text-[10px] font-black uppercase border-black/10 hover:bg-muted">
                         <Link href={`/admin/hotels/${hotel.id}/edit`}>Edit</Link>
                     </Button>
                 </div>
@@ -91,20 +145,23 @@ export default function HotelsPage() {
     const { data: allHotels, isLoading } = useCollection<Hotel>(hotelsQuery);
     
     return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-start">
-                <div>
-                    <h1 className="font-headline text-3xl font-bold">Hotel Management</h1>
-                    <p className="text-muted-foreground">
-                        Here you can view, add, and edit hotel properties.
+        <div className="space-y-8">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+                <div className="space-y-1">
+                    <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-[#003580]">
+                        <PlusCircle className="h-3 w-3" /> Grid Inventory
+                    </div>
+                    <h1 className="text-4xl font-black tracking-tighter text-[#1a1a1a]">Property Nodes</h1>
+                    <p className="text-muted-foreground text-sm font-medium">
+                        Manage premium Himalayan stay assets and inventory.
                     </p>
                 </div>
-                 <div className="flex gap-2">
+                 <div className="flex items-center gap-3">
                     <BulkUploadHotelsDialog />
-                    <Button asChild>
+                    <Button asChild className="rounded-none h-10 font-black px-6 bg-[#003580] hover:bg-[#002b60] shadow-sm">
                         <Link href="/admin/hotels/new">
                             <PlusCircle className="mr-2 h-4 w-4" />
-                            Add New Hotel
+                            Add Property
                         </Link>
                     </Button>
                  </div>
@@ -117,9 +174,11 @@ export default function HotelsPage() {
                     ))}
                 </div>
             )}
+            
             {!isLoading && (!allHotels || allHotels.length === 0) && (
-                 <div className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-lg">
-                    <p>No hotels found in the database. Get started by adding one.</p>
+                 <div className="flex flex-col items-center justify-center py-32 border-2 border-dashed border-black/5 bg-white text-center rounded-sm">
+                    <PlusCircle className="h-12 w-12 text-muted-foreground/20 mb-4" />
+                    <p className="text-muted-foreground text-sm font-bold uppercase tracking-widest">No properties mapped in the grid.</p>
                 </div>
             )}
         </div>
