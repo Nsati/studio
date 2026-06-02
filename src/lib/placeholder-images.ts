@@ -1,4 +1,5 @@
-import data from './placeholder-images.json';
+
+import data from '@/app/lib/placeholder-images.json';
 
 export type ImagePlaceholder = {
   id: string;
@@ -10,14 +11,14 @@ export type ImagePlaceholder = {
 let images: ImagePlaceholder[] = [];
 
 try {
-    // Check if the imported data and the placeholderImages property exist
+    // Import centrally managed placeholder images from the app directory
     if (data && Array.isArray(data.placeholderImages)) {
         images = data.placeholderImages;
     } else {
-        console.warn("Warning: `placeholder-images.json` is missing the 'placeholderImages' array or is malformed. No placeholder images will be loaded.");
+        console.warn("Warning: `placeholder-images.json` is missing the 'placeholderImages' array or is malformed.");
     }
 } catch (error) {
-    console.error("Critical Error: Failed to load or parse `placeholder-images.json`. Check if the file exists and is valid JSON.", error);
+    console.error("Critical Error: Failed to load placeholder image data.", error);
 }
 
 export const PlaceHolderImages: ImagePlaceholder[] = images;
