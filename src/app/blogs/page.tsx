@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -10,7 +11,6 @@ import {
   Wind, 
   Music, 
   Utensils, 
-  ArrowDown,
   Building2,
   Calendar
 } from 'lucide-react';
@@ -23,7 +23,7 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 /**
  * @fileOverview Professional Cultural Journal for Northern Harrier.
- * Symmetric, compact, and high-end editorial layout.
+ * Symmetric, compact, and high-end editorial layout with updated authentic images.
  */
 
 const CULTURAL_PILLARS = [
@@ -87,13 +87,13 @@ export default function BlogsPublicPage() {
         <div className="min-h-screen bg-white selection:bg-accent selection:text-white font-sans">
             
             {/* Professional Compact Hero */}
-            <section className="relative h-[60vh] min-h-[400px] w-full flex items-center justify-center overflow-hidden">
+            <section className="relative h-[50vh] min-h-[400px] w-full flex items-center justify-center overflow-hidden">
                 <Image 
                     src={getImageUrl('hero')} 
                     alt="Himalayas" 
                     fill 
                     priority
-                    className="object-cover brightness-[0.35]"
+                    className="object-cover brightness-[0.4]"
                 />
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-white" />
                 
@@ -106,26 +106,26 @@ export default function BlogsPublicPage() {
                         <Badge className="bg-white/10 backdrop-blur-md text-accent border border-white/20 px-6 py-1.5 rounded-full font-black uppercase tracking-[0.4em] text-[9px] mb-6">
                             The Devbhoomi Chronicles
                         </Badge>
-                        <h1 className="text-5xl md:text-[7rem] font-black text-white tracking-tighter leading-none uppercase">
+                        <h1 className="text-5xl md:text-[5rem] font-black text-white tracking-tighter leading-none uppercase">
                             Soul of <span className="text-accent italic font-heading font-light capitalize">Uttarakhand</span>
                         </h1>
-                        <p className="mt-6 text-lg md:text-xl text-white/60 max-w-2xl mx-auto font-medium leading-relaxed tracking-tight">
-                            An elite discovery journal of ancient traditions and spiritual heights.
+                        <p className="mt-4 text-base md:text-lg text-white/70 max-w-xl mx-auto font-medium leading-relaxed tracking-tight">
+                            Curated intelligence on ancient traditions and high-altitude heritage.
                         </p>
                     </motion.div>
                 </div>
             </section>
 
             {/* Symmetric Content Grid */}
-            <section className="py-24 bg-white">
+            <section className="py-20 bg-white">
                 <div className="container px-6">
-                    <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
-                        <div className="space-y-3">
+                    <div className="flex flex-col md:flex-row justify-between items-center mb-16 gap-8 border-b border-black/5 pb-12">
+                        <div className="space-y-2 text-center md:text-left">
                             <Badge className="bg-primary/10 text-primary border-0 font-black px-4 py-1 rounded-full uppercase tracking-[0.3em] text-[9px]">Cultural Inventory</Badge>
-                            <h2 className="text-4xl md:text-6xl font-black tracking-tighter text-slate-900 leading-[0.9] uppercase">Heritage <br/> Archive</h2>
+                            <h2 className="text-3xl md:text-5xl font-black tracking-tighter text-slate-900 leading-tight uppercase">Heritage Archive</h2>
                         </div>
-                        <p className="text-slate-400 font-bold text-sm max-w-[280px] border-l-2 border-slate-100 pl-6 italic">
-                            Symmetrically curated nodes of Himalayan legacy.
+                        <p className="text-slate-400 font-bold text-xs max-w-[240px] text-center md:text-right italic">
+                            Strictly symmetric logs of Himalayan legacy and Pahadi wisdom.
                         </p>
                     </div>
 
@@ -139,15 +139,15 @@ export default function BlogsPublicPage() {
                                 viewport={{ once: true }}
                                 transition={{ delay: i * 0.1 }}
                             >
-                                <Card className="group overflow-hidden rounded-[2rem] border-black/5 bg-white shadow-apple-deep hover:shadow-2xl transition-all duration-700 hover:-translate-y-2">
+                                <Card className="group overflow-hidden rounded-[1.5rem] border-black/5 bg-white shadow-apple-deep hover:shadow-2xl transition-all duration-500">
                                     <Link href={`/blogs/${item.id}`}>
                                         <CardContent className="p-0">
-                                            <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
+                                            <div className="relative aspect-[16/10] overflow-hidden bg-slate-100">
                                                 <Image 
                                                     src={getImageUrl(item.imgId)} 
                                                     alt={item.title} 
                                                     fill 
-                                                    className="object-cover transition-transform duration-1000 group-hover:scale-110" 
+                                                    className="object-cover transition-transform duration-1000 group-hover:scale-105" 
                                                 />
                                                 <div className="absolute top-4 left-4">
                                                     <Badge className="bg-white/95 backdrop-blur-md text-primary border-0 font-black px-3 py-1 rounded-full text-[8px] uppercase tracking-widest shadow-sm">
@@ -155,18 +155,20 @@ export default function BlogsPublicPage() {
                                                     </Badge>
                                                 </div>
                                             </div>
-                                            <div className="p-8 space-y-4">
+                                            <div className="p-6 space-y-3">
                                                 <div className="flex items-center gap-3 text-accent font-black uppercase tracking-[0.2em] text-[8px]">
                                                     <item.icon className="h-3 w-3" /> VERIFIED LOG
                                                 </div>
-                                                <h3 className="text-2xl font-black text-slate-900 leading-tight uppercase group-hover:text-primary transition-colors">
+                                                <h3 className="text-xl font-black text-slate-900 leading-tight uppercase group-hover:text-primary transition-colors">
                                                     {item.title}
                                                 </h3>
-                                                <p className="text-slate-400 font-medium text-xs leading-relaxed line-clamp-2">
+                                                <p className="text-slate-400 font-medium text-[11px] leading-relaxed line-clamp-2">
                                                     {item.desc}
                                                 </p>
-                                                <div className="pt-2 flex items-center text-[9px] font-black uppercase tracking-widest text-primary">
-                                                    Read Full Report <ArrowRight className="ml-2 h-3 w-3 transition-transform group-hover:translate-x-1" />
+                                                <div className="pt-2">
+                                                    <Button variant="link" className="p-0 h-auto font-black text-[10px] uppercase tracking-widest text-primary hover:text-accent">
+                                                        View Report <ArrowRight className="ml-2 h-3 w-3" />
+                                                    </Button>
                                                 </div>
                                             </div>
                                         </CardContent>
@@ -178,20 +180,20 @@ export default function BlogsPublicPage() {
                 </div>
             </section>
 
-            {/* Symmetric Quick Highlights (Compact) */}
-            <section className="py-20 bg-slate-50 border-y border-black/5">
+            {/* Compact Highlight Bar */}
+            <section className="py-12 bg-slate-50 border-y border-black/5">
                 <div className="container px-6">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
                         {[
-                            { label: 'Major Festivals', val: '45+', icon: Compass },
-                            { label: 'Ancient Temples', val: '1000+', icon: Building2 },
-                            { label: 'Folk Art Forms', val: '12+', icon: Wind },
-                            { label: 'Native Recipes', val: '30+', icon: Utensils }
+                            { label: 'Festivals', val: '45+', icon: Calendar },
+                            { label: 'Heritage Nodes', val: '1000+', icon: Building2 },
+                            { label: 'Art Forms', val: '12+', icon: Wind },
+                            { label: 'Food Logs', val: '30+', icon: Utensils }
                         ].map((stat, i) => (
-                            <div key={i} className="flex flex-col items-center text-center space-y-2">
-                                <stat.icon className="h-6 w-6 text-accent opacity-40" />
-                                <p className="text-3xl font-black text-slate-900 tracking-tighter">{stat.val}</p>
-                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</p>
+                            <div key={i} className="flex flex-col items-center text-center space-y-1">
+                                <stat.icon className="h-4 w-4 text-accent opacity-40 mb-1" />
+                                <p className="text-2xl font-black text-slate-900 tracking-tighter">{stat.val}</p>
+                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</p>
                             </div>
                         ))}
                     </div>
@@ -199,17 +201,17 @@ export default function BlogsPublicPage() {
             </section>
 
             {/* Compact CTA */}
-            <section className="py-24 bg-white text-center">
-                <div className="container px-6 space-y-8">
-                    <h2 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tighter uppercase leading-none">
+            <section className="py-20 bg-white text-center">
+                <div className="container px-6 space-y-6">
+                    <h2 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tighter uppercase leading-none">
                         Experience The <span className="text-accent italic font-heading font-light capitalize">Devbhumi</span>
                     </h2>
-                    <p className="text-slate-400 font-bold text-lg max-w-xl mx-auto italic">
-                        "Where every mountain peak is a throne of a deity."
+                    <p className="text-slate-400 font-bold text-sm max-w-md mx-auto italic">
+                        "Where every mountain peak holds a throne of the divine."
                     </p>
-                    <div className="pt-6">
-                        <Button asChild size="lg" className="h-16 px-12 rounded-full font-black text-sm bg-primary hover:bg-slate-900 shadow-xl shadow-primary/10 transition-all active:scale-95 group">
-                            <Link href="/search">Explore Nearby Stays <ArrowRight className="ml-3 h-4 w-4 transition-transform group-hover:translate-x-1" /></Link>
+                    <div className="pt-4">
+                        <Button asChild size="lg" className="h-14 px-10 rounded-full font-black text-xs uppercase tracking-widest bg-primary hover:bg-slate-900 shadow-xl transition-all">
+                            <Link href="/search">Find Stays Nearby <ArrowRight className="ml-3 h-4 w-4" /></Link>
                         </Button>
                     </div>
                 </div>
