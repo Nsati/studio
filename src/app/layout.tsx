@@ -23,12 +23,12 @@ const fontHeading = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: 'Northern Harrier | Luxury Himalayan Stays & Secure Expeditions',
-  description: 'Book handpicked luxury hotels and curated tour packages in Uttarakhand. Experience verified mountain safety, high-speed connectivity, and elite Pahadi hospitality.',
-  keywords: 'Uttarakhand Travel, Luxury Hotels Nainital, Rishikesh Retreats, Himalayan Tours, Safe Mountain Stays',
+  title: 'Northern Harrier | Luxury Himalayan Travel & Tours',
+  description: 'Experience the sacred Himalayas with Northern Harrier. Curated luxury tours, spiritual pilgrimages, and adventure expeditions in Uttarakhand with verified safety.',
+  keywords: 'Uttarakhand Travel, Luxury Himalayan Tours, Kedarnath Pilgrimage, Badrinath Tour, Safe Mountain Travel',
   openGraph: {
-    title: 'Northern Harrier | Beyond The Horizon',
-    description: 'Elite Himalayan getaways with verified safety standards.',
+    title: 'Northern Harrier | Elite Himalayan Journeys',
+    description: 'Bespoke Himalayan experiences with a focus on safety and local heritage.',
     url: 'https://northernharrier.com',
     siteName: 'Northern Harrier',
     images: [
