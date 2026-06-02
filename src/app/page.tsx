@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -5,38 +6,32 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { 
   ShieldCheck, 
-  MapPin, 
-  Star, 
   ArrowRight, 
   Mountain, 
   Compass, 
   Sparkles, 
-  Zap,
   Search,
   ChevronRight,
   Wifi,
   Coffee,
-  CloudSun
+  CloudSun,
+  MapPin
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { cn } from '@/lib/utils';
 
 /**
  * @fileOverview Northern Harrier Main Portal Landing.
- * Clean, symmetric layout with high-res mountain assets.
+ * Clean, symmetric layout using Direct Image URLs for stability.
  */
 
 export default function LandingPage() {
-  const getImg = (id: string) => PlaceHolderImages.find(img => img.id === id)?.imageUrl || '';
-
   const featuredDestinations = [
-    { id: 'nainital', name: 'Nainital', imageId: 'city-nainital', score: '9.2' },
-    { id: 'auli', name: 'Auli', imageId: 'city-auli', score: '9.6' },
-    { id: 'rishikesh', name: 'Rishikesh', imageId: 'city-rishikesh', score: '9.4' },
-    { id: 'mussoorie', name: 'Mussoorie', imageId: 'city-mussoorie', score: '8.9' }
+    { id: 'nainital', name: 'Nainital', imageUrl: 'https://images.unsplash.com/photo-1693153318626-682ef3712136?auto=format&fit=crop&q=80&w=800', score: '9.2' },
+    { id: 'auli', name: 'Auli', imageUrl: 'https://images.unsplash.com/photo-1515442597003-a25e0a78dae9?auto=format&fit=crop&q=80&w=800', score: '9.6' },
+    { id: 'rishikesh', name: 'Rishikesh', imageUrl: 'https://images.unsplash.com/photo-1724118136076-5b0921aa529c?auto=format&fit=crop&q=80&w=800', score: '9.4' },
+    { id: 'mussoorie', name: 'Mussoorie', imageUrl: 'https://images.unsplash.com/photo-1615568551460-705b7662c0b4?auto=format&fit=crop&q=80&w=800', score: '8.9' }
   ];
 
   return (
@@ -45,16 +40,17 @@ export default function LandingPage() {
       {/* Immersive Hero Section */}
       <section className="relative h-[85vh] min-h-[600px] w-full flex items-center justify-center overflow-hidden">
         <Image 
-          src={getImg('hero')} 
+          src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&q=80&w=1920" 
           alt="Himalayan Majesty" 
           fill 
           priority
+          unoptimized={true}
           className="object-cover brightness-[0.6]" 
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-white" />
         
         <div className="container relative z-10 px-6 text-center space-y-10">
-          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-6 py-2.5 rounded-full border border-white/20 text-accent text-[10px] font-black uppercase tracking-widest animate-in fade-in duration-1000">
+          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-6 py-2.5 rounded-full border border-white/20 text-accent text-[10px] font-black uppercase tracking-widest">
             <ShieldCheck className="h-4 w-4" /> Himalayan Operational Grid: STABLE
           </div>
           <h1 className="text-5xl md:text-[8rem] text-white tracking-tighter font-black leading-[0.85] uppercase">
@@ -65,7 +61,6 @@ export default function LandingPage() {
             The new standard for mountain expeditions.
           </p>
 
-          {/* Luxury Search Engine Mockup */}
           <div className="max-w-5xl mx-auto w-full pt-10">
             <div className="bg-[#febb02] p-1 rounded-sm shadow-2xl flex flex-col md:flex-row gap-1">
                 <div className="flex-1 bg-white h-16 md:h-20 flex items-center px-6 gap-4 border-2 border-transparent focus-within:border-accent">
@@ -82,8 +77,8 @@ export default function LandingPage() {
                         <span className="font-black text-slate-900">Standard Stay</span>
                     </div>
                 </div>
-                <Button className="h-16 md:h-20 bg-[#006ce4] hover:bg-[#005bb8] rounded-none px-12 text-xl font-black shadow-lg">
-                    Check Protocol
+                <Button asChild className="h-16 md:h-20 bg-[#006ce4] hover:bg-[#005bb8] rounded-none px-12 text-xl font-black shadow-lg">
+                    <Link href="/search">Check Protocol</Link>
                 </Button>
             </div>
           </div>
@@ -107,9 +102,10 @@ export default function LandingPage() {
             <Link key={dest.id} href={`/search?city=${dest.name}`} className="group">
               <div className="relative aspect-[3/4] overflow-hidden rounded-[2rem] shadow-apple-deep hover:shadow-2xl transition-all duration-700">
                 <Image 
-                  src={getImg(dest.imageId)} 
+                  src={dest.imageUrl} 
                   alt={dest.name} 
                   fill 
+                  unoptimized={true}
                   className="object-cover transition-transform duration-2000 group-hover:scale-110" 
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
@@ -141,14 +137,14 @@ export default function LandingPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
                 {[
-                    { name: "Zenith Mountain Loft", city: "Auli", price: "18,000", score: "9.8", image: "https://picsum.photos/seed/auli1/800/600" },
-                    { name: "Riverside Sanctuary", city: "Rishikesh", price: "12,500", score: "9.4", image: "https://picsum.photos/seed/rishi1/800/600" },
-                    { name: "The Pine Heritage", city: "Nainital", price: "15,000", score: "9.2", image: "https://picsum.photos/seed/naini1/800/600" }
+                    { name: "Zenith Mountain Loft", city: "Auli", price: "18,000", score: "9.8", image: "https://images.unsplash.com/photo-1548777123-e216912df7d8?auto=format&fit=crop&q=80&w=800" },
+                    { name: "Riverside Sanctuary", city: "Rishikesh", price: "12,500", score: "9.4", image: "https://images.unsplash.com/photo-1544122102-33e23d51824b?auto=format&fit=crop&q=80&w=800" },
+                    { name: "The Pine Heritage", city: "Nainital", price: "15,000", score: "9.2", image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80&w=800" }
                 ].map((hotel, i) => (
                     <Card key={i} className="group overflow-hidden rounded-2xl border border-black/5 bg-white shadow-sm hover:shadow-xl transition-all duration-500 hover:-translate-y-1">
                         <CardContent className="p-0">
                             <div className="relative aspect-[16/10] overflow-hidden bg-slate-100">
-                                <Image src={hotel.image} alt={hotel.name} fill className="object-cover group-hover:scale-105 transition-transform duration-700" />
+                                <Image src={hotel.image} alt={hotel.name} fill unoptimized={true} className="object-cover group-hover:scale-105 transition-transform duration-700" />
                                 <div className="absolute top-4 right-4">
                                     <Badge className="bg-white/95 backdrop-blur-md text-slate-900 border-0 font-black px-2 py-1 rounded-sm text-[10px]">
                                       SAFETY: {hotel.score}
@@ -176,8 +172,8 @@ export default function LandingPage() {
                                         <span className="text-[9px] text-slate-400 font-bold uppercase tracking-[0.2em]">nightly rate</span>
                                         <span className="text-2xl font-black text-slate-900 tracking-tighter">₹{hotel.price}</span>
                                     </div>
-                                    <Button className="h-12 px-8 rounded-none bg-[#006ce4] hover:bg-[#005bb8] font-black uppercase tracking-widest text-[10px] shadow-lg shadow-blue-100 transition-all active:scale-95">
-                                        Check Availability
+                                    <Button asChild className="h-12 px-8 rounded-none bg-[#006ce4] hover:bg-[#005bb8] font-black uppercase tracking-widest text-[10px] shadow-lg shadow-blue-100 transition-all active:scale-95">
+                                        <Link href="/search">Check Availability</Link>
                                     </Button>
                                 </div>
                             </div>
@@ -205,7 +201,7 @@ export default function LandingPage() {
               { icon: ShieldCheck, title: "Precision Safety", desc: "Military-grade landscape risk assessments for every route." },
               { icon: Compass, title: "Satellite Intel", desc: "Live road and weather monitoring from regional nodes." },
               { icon: Sparkles, title: "Curated Stays", desc: "Only properties meeting Harrier gold-standards are listed." },
-              { icon: Zap, title: "AI Vibe Sync", desc: "Interactive selection engine matches mood to geography." }
+              { icon: Compass, title: "AI Vibe Sync", desc: "Interactive selection engine matches mood to geography." }
             ].map((item, i) => (
               <div key={i} className="group p-10 bg-white/5 rounded-[2rem] border border-white/10 hover:bg-accent transition-all duration-500 hover:border-accent hover:-translate-y-2">
                 <div className="p-5 bg-white/10 rounded-2xl w-fit mb-8 group-hover:bg-white/20 transition-colors shadow-2xl">

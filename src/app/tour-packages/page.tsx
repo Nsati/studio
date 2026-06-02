@@ -7,7 +7,6 @@ import Link from 'next/link';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import type { TourPackage } from '@/lib/types';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Card, CardTitle } from '@/components/ui/card';
 import { MapPin, Compass, Sparkles, Clock, Star } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -16,7 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 /**
  * @fileOverview Live Tour Packages Listing.
- * Resilient image rendering for both placeholder IDs and external URLs.
+ * Uses Direct URLs with unoptimized flag for maximum reliability.
  */
 
 function PackageSkeleton() {
@@ -45,8 +44,8 @@ export default function TourPackagesPage() {
   const getImageUrl = (img: string) => {
     if (!img) return 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=800';
     if (img.startsWith('http')) return img;
-    const found = PlaceHolderImages.find((p) => p.id === img);
-    return found ? found.imageUrl : 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=800';
+    // Fallback if it's just a name or malformed
+    return `https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=800`;
   };
 
   return (
