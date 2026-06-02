@@ -52,7 +52,7 @@ export default function RootLayout({
         <FirebaseClientProvider>
           <FirebaseErrorListener />
           <Header />
-          <main className="relative z-10 min-h-screen bg-background">
+          <main className="relative z-10 min-h-screen bg-background pt-24 md:pt-28">
             {children}
           </main>
           <Footer />

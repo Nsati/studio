@@ -23,7 +23,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '../ui/skeleton';
 import { cn } from '@/lib/utils';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Logo } from './Logo';
 
 const navLinks = [
@@ -103,9 +103,34 @@ function UserNav() {
 
 export default function Header() {
   const pathname = usePathname();
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      
+      // Show header if scrolling up, hide if scrolling down (after 100px threshold)
+      if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        setIsVisible(false);
+      } else {
+        setIsVisible(true);
+      }
+      
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY]);
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-primary py-4 border-b border-white/10 shadow-lg">
+    <header 
+      className={cn(
+        "fixed top-0 z-50 w-full bg-primary py-4 border-b border-white/10 shadow-lg transition-transform duration-500 ease-in-out",
+        isVisible ? "translate-y-0" : "-translate-y-full"
+      )}
+    >
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-10">
             <Link href="/" className="flex items-center gap-3 group">
