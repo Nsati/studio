@@ -10,8 +10,7 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 /**
  * @fileOverview Northern Harrier Public Cultural Journal.
- * Redesigned to match the vibrant, content-rich style of 'ukculture'.
- * Symmetric 3-column editorial grid for a premium magazine aesthetic.
+ * Vibrant Devbhumi Cultural Archive with symmetric editorial grid.
  */
 
 const CULTURAL_BLOGS = [
