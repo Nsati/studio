@@ -38,39 +38,11 @@ export const dummyHotels: WithId<Hotel>[] = [
     ecoPractices: { waterSaving: true, plasticFree: true, localSourcing: true },
     safetyInfo: { nearestHospital: 'Nainital District Hospital', policeStation: 'Mallital PS', networkCoverage: 'good' },
     spiritualAmenities: ['silent-zone', 'sunrise-view']
-  },
-  {
-    id: 'jw-marriott-mussoorie',
-    name: 'JW Marriott Mussoorie Walnut Grove',
-    city: 'Mussoorie',
-    description: 'Nestled amidst the serene Himalayas, this 5-star hotel offers a luxurious retreat.',
-    images: ['hotel-5-1'],
-    amenities: ['wifi', 'restaurant', 'pool', 'spa'],
-    rating: 4.9,
-    minPrice: 25000,
-    discount: 0,
-    mountainSafetyScore: 95,
-    landslideRisk: 'Low',
-    roadCondition: 'Main highway access',
-    networkJio: true,
-    networkAirtel: true,
-    networkBsnl: true,
-    isSnowFriendly: true,
-    isElderlySafe: true,
-    hasPowerBackup: true,
-    nearestAtmKm: 1,
-    cabFareToCenter: 400,
-    balconyWorthIt: true,
-    ecoPractices: { waterSaving: true, plasticFree: true, localSourcing: true },
-    safetyInfo: { nearestHospital: 'Landour Community Hospital', policeStation: 'Mussoorie PS', networkCoverage: 'good' },
-    spiritualAmenities: ['yoga-sessions']
   }
 ];
 
 export const dummyRooms: WithId<Room>[] = [
   { id: 'nr-std', hotelId: 'the-naini-retreat', type: 'Standard', price: 8000, capacity: 2, totalRooms: 10 },
-  { id: 'nr-deluxe', hotelId: 'the-naini-retreat', type: 'Deluxe', price: 12000, capacity: 2, totalRooms: 5 },
-  { id: 'jw-std', hotelId: 'jw-marriott-mussoorie', type: 'Standard', price: 25000, capacity: 2, totalRooms: 20 },
 ];
 
 export const dummyTourPackages: WithId<TourPackage>[] = [
@@ -82,7 +54,7 @@ export const dummyTourPackages: WithId<TourPackage>[] = [
     price: 18000,
     gst: 5,
     totalCost: 18900,
-    image: 'city-mussoorie',
+    image: 'hero',
     description: 'Explore the queen of hills Mussoorie and spiritual city Rishikesh.',
     persons: 2,
     rooms: 1,
@@ -92,8 +64,7 @@ export const dummyTourPackages: WithId<TourPackage>[] = [
       { day: 2, title: 'Transfer to Mussoorie', description: 'Scenic drive to the Queen of Hills.', distance: '85km', travelTime: '3 hrs' }
     ],
     hotels: [
-      { city: 'Haridwar', hotelName: 'Ganga View', category: '3 Star', roomType: 'Standard', mealPlan: 'Breakfast Only' },
-      { city: 'Mussoorie', hotelName: 'Cloud 9', category: '4 Star', roomType: 'Deluxe', mealPlan: 'Breakfast & Dinner' }
+      { city: 'Haridwar', hotelName: 'Ganga View', category: '3 Star', roomType: 'Standard', mealPlan: 'Breakfast Only' }
     ],
     inclusions: ['Stay', 'Breakfast', 'Cab', 'Driver', 'Tolls'],
     exclusions: ['Lunch', 'Entry Tickets'],
@@ -106,15 +77,4 @@ export const dummyTourPackages: WithId<TourPackage>[] = [
   }
 ];
 
-export const dummyReviews: WithId<Review>[] = [
-  {
-    id: 'review-1',
-    hotelId: 'the-naini-retreat',
-    userId: 'user-123',
-    authorName: 'Ravi Verma',
-    rating: 5,
-    title: 'An unforgettable stay!',
-    text: 'The view of Naini Lake from our room was breathtaking.',
-    createdAt: new Date('2024-05-15'),
-  }
-];
+export const dummyReviews: WithId<Review>[] = [];

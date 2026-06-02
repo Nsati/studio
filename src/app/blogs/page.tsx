@@ -1,4 +1,3 @@
-
 'use client';
 
 import React from 'react';
@@ -86,7 +85,7 @@ export default function BlogsPublicPage() {
                 </div>
                 <div className="container mx-auto relative z-10 text-center">
                     <div className="max-w-4xl mx-auto space-y-8">
-                        <div className="inline-flex items-center gap-3 bg-accent/20 backdrop-blur-md px-8 py-3 rounded-full border border-accent/30 text-accent text-[10px] font-black uppercase tracking-[0.5em] animate-in fade-in zoom-in duration-1000">
+                        <div className="inline-flex items-center gap-3 bg-accent/20 backdrop-blur-md px-8 py-3 rounded-full border border-accent/30 text-accent text-[10px] font-black uppercase tracking-[0.5em]">
                             <Sparkles className="h-4 w-4" /> The Cultural Archive
                         </div>
                         <h1 className="text-6xl md:text-[7.5rem] font-black text-white tracking-tighter leading-[0.8] uppercase">
@@ -158,24 +157,6 @@ export default function BlogsPublicPage() {
                                 </Card>
                             </Link>
                         ))}
-                    </div>
-                </div>
-            </section>
-            
-            {/* Interactive Call to Action */}
-            <section className="container mx-auto max-w-7xl px-4 mt-24">
-                <div className="relative rounded-[4rem] bg-slate-900 overflow-hidden p-12 md:p-24 text-center">
-                    <Image src={getImageUrl('hero')} alt="Mountains" fill className="object-cover opacity-20" />
-                    <div className="relative z-10 space-y-8">
-                        <h2 className="text-4xl md:text-6xl font-black text-white tracking-tighter uppercase">
-                            Experience it <br/><span className="text-accent italic font-heading">Firsthand</span>
-                        </h2>
-                        <p className="text-white/60 font-medium max-w-xl mx-auto">
-                            Don't just read the narrative. Book an elite stay and immerse yourself in the living heartbeat of Uttarakhand.
-                        </p>
-                        <Button asChild size="lg" className="h-16 px-12 rounded-full bg-accent hover:bg-accent/90 text-white font-black text-lg shadow-2xl">
-                            <Link href="/search">Find Nearby Stays</Link>
-                        </Button>
                     </div>
                 </div>
             </section>
