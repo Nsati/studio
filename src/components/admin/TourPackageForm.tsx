@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useForm, useFieldArray } from 'react-hook-form';
@@ -35,7 +34,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, PlusCircle, Trash2, MapPin, IndianRupee, ShieldCheck, ImageIcon } from 'lucide-react';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Separator } from '../ui/separator';
 import {
   AlertDialog,
@@ -48,8 +46,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-
-const tourImagePlaceholders = PlaceHolderImages.filter(p => p.id.startsWith('tour-') || p.id === 'hero');
 
 const itinerarySchema = z.object({
   day: z.number(),
@@ -72,7 +68,7 @@ const formSchema = z.object({
   duration: z.string().min(3, 'e.g. 5N/6D'),
   price: z.coerce.number().min(1),
   gst: z.coerce.number().default(5),
-  image: z.string().min(1, 'Image URL or ID required'),
+  image: z.string().min(1, 'Image URL required'),
   description: z.string().min(20),
   destinations: z.string().min(3),
   persons: z.coerce.number().min(1),
@@ -114,7 +110,7 @@ export function TourPackageForm({ initialData }: TourPackageFormProps) {
       duration: '',
       price: 0,
       gst: 5,
-      image: 'hero',
+      image: '',
       description: '',
       destinations: '',
       persons: 2,
@@ -208,12 +204,6 @@ export function TourPackageForm({ initialData }: TourPackageFormProps) {
     }
   }
 
-  const getResolvedImageUrl = (img: string) => {
-    if (!img) return '';
-    if (img.startsWith('http')) return img;
-    return PlaceHolderImages.find((p) => p.id === img)?.imageUrl || '';
-  };
-
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 pb-20">
@@ -267,45 +257,32 @@ export function TourPackageForm({ initialData }: TourPackageFormProps) {
                         <div className="space-y-4">
                             <FormField control={form.control} name="image" render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Image URL or Placeholder ID</FormLabel>
+                                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Direct Image URL</FormLabel>
                                     <FormControl>
-                                        <Input placeholder="Paste image URL here or use ID" {...field} className="rounded-none h-12" />
+                                        <Input placeholder="Paste image URL (Pexels, Unsplash, etc.)" {...field} className="rounded-none h-12" />
                                     </FormControl>
                                     <FormDescription className="text-[9px] font-bold">
-                                        Tip: Paste a Pexels/Unsplash link or choose a placeholder ID below.
+                                        Paste a direct link to a high-resolution image.
                                     </FormDescription>
                                     <FormMessage />
                                 </FormItem>
                             )} />
-
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Quick Select Placeholder</label>
-                                <Select onValueChange={(val) => form.setValue('image', val)} defaultValue={imageUrl}>
-                                    <SelectTrigger className="rounded-none h-12">
-                                        <SelectValue placeholder="Select high-res placeholder" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {tourImagePlaceholders.map(img => (
-                                            <SelectItem key={img.id} value={img.id}>{img.description}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
                         </div>
 
                         <div className="space-y-2">
                             <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Live Visual Preview</label>
                             <div className="relative aspect-video w-full border-2 border-dashed border-black/10 rounded-sm overflow-hidden bg-muted flex items-center justify-center">
-                                {imageUrl ? (
+                                {imageUrl && imageUrl.startsWith('http') ? (
                                     <Image 
-                                        src={getResolvedImageUrl(imageUrl)} 
+                                        src={imageUrl} 
                                         alt="Preview" 
                                         fill 
+                                        unoptimized={true}
                                         className="object-cover"
                                         onError={() => toast({ variant: 'destructive', title: 'Image Load Error', description: 'The provided URL is not a direct image link.' })}
                                     />
                                 ) : (
-                                    <span className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em]">No Visual Set</span>
+                                    <span className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em]">No Valid URL Set</span>
                                 )}
                             </div>
                         </div>
