@@ -16,9 +16,8 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Upload, Loader2, FileCheck2, AlertTriangle, Info, RefreshCcw } from 'lucide-react';
+import { Upload, Loader2, FileCheck2, AlertTriangle, Info, FileSpreadsheet } from 'lucide-react';
 import { bulkUploadTourPackages } from '@/app/admin/tour-packages/actions';
-import { type TourPackageUploadData } from '@/app/admin/schemas';
 import { useRouter } from 'next/navigation';
 import { ScrollArea } from '../ui/scroll-area';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
@@ -29,7 +28,7 @@ export function BulkUploadTourPackagesDialog() {
     const router = useRouter();
     const [isUploading, setIsUploading] = useState(false);
     const [file, setFile] = useState<File | null>(null);
-    const [parsedData, setParsedData] = useState<TourPackageUploadData[]>([]);
+    const [parsedData, setParsedData] = useState<any[]>([]);
     const [error, setError] = useState('');
 
     const handleFileChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
@@ -46,7 +45,7 @@ export function BulkUploadTourPackagesDialog() {
                     if (result.errors.length > 0) {
                         setError(`CSV Formatting Error: ${result.errors[0].message}`);
                     } else {
-                        setParsedData(result.data as TourPackageUploadData[]);
+                        setParsedData(result.data);
                     }
                 },
                 error: (err: any) => {
@@ -87,65 +86,53 @@ export function BulkUploadTourPackagesDialog() {
         }
     };
 
-    const previewData = parsedData.slice(0, 50);
-
     return (
         <Dialog onOpenChange={(open) => { if (!open && !isUploading) resetSelection(); }}>
             <DialogTrigger asChild>
                 <Button variant="outline" className="rounded-none font-bold">
-                    <Upload className="mr-2 h-4 w-4" /> Bulk Itineraries
+                    <Upload className="mr-2 h-4 w-4" /> Bulk Upload
                 </Button>
             </DialogTrigger>
             <DialogContent className="max-w-5xl rounded-none border-0 shadow-2xl">
                 <DialogHeader>
                     <DialogTitle className="text-2xl font-black tracking-tight">Bulk Tour Upload</DialogTitle>
                     <DialogDescription className="font-medium text-muted-foreground">
-                        Synchronize multiple Himalayan itineraries to the production database via CSV.
+                        Synchronize multiple itineraries to the production database via CSV.
                     </DialogDescription>
                 </DialogHeader>
                 
                 <div className="space-y-6 py-4">
                     {!file ? (
                         <div className="flex flex-col items-center justify-center p-16 border-2 border-dashed rounded-3xl bg-muted/20 border-black/5">
-                            <Upload className="h-12 w-12 text-primary/20 mb-4" />
+                            <FileSpreadsheet className="h-12 w-12 text-primary/20 mb-4" />
                             <Input id="csv-file-tour" type="file" accept=".csv" onChange={handleFileChange} className="max-w-xs cursor-pointer h-12 bg-white" />
-                            <p className="mt-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Select system-standard .csv file</p>
+                            <p className="mt-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Select .csv file with standard headers</p>
                         </div>
                     ) : (
-                        <div className="space-y-4 animate-in fade-in duration-500">
-                            <div className="flex items-center justify-between">
-                                <Alert className="bg-green-50 border-green-200 flex-1 py-3">
-                                    <FileCheck2 className="h-4 w-4 text-green-700" />
-                                    <AlertDescription className="font-bold text-green-800">
-                                        Parsed {parsedData.length} itineraries from {file.name}.
-                                    </AlertDescription>
-                                </Alert>
-                                <Button variant="ghost" size="sm" onClick={resetSelection} className="ml-4 h-12 font-bold text-muted-foreground hover:text-primary">
-                                    <RefreshCcw className="mr-2 h-4 w-4" /> Change File
-                                </Button>
-                            </div>
+                        <div className="space-y-4">
+                            <Alert className="bg-green-50 border-green-200 py-3">
+                                <FileCheck2 className="h-4 w-4 text-green-700" />
+                                <AlertDescription className="font-bold text-green-800">
+                                    Parsed {parsedData.length} itineraries from {file.name}.
+                                </AlertDescription>
+                            </Alert>
                             
-                            <div className="border border-black/5 rounded-2xl overflow-hidden bg-white shadow-sm">
-                                <div className="p-3 bg-muted/30 border-b">
-                                    <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">
-                                        Data Preview (Showing {previewData.length} of {parsedData.length})
-                                    </p>
-                                </div>
-                                <ScrollArea className="h-72 w-full">
+                            <div className="border border-black/5 rounded-2xl overflow-hidden bg-white">
+                                <ScrollArea className="h-64 w-full">
                                     <Table>
                                         <TableHeader className="bg-muted/50 sticky top-0 z-10">
                                             <TableRow>
-                                                <TableHead className="text-[10px] font-black uppercase">Package Title</TableHead>
-                                                <TableHead className="text-[10px] font-black uppercase">Duration</TableHead>
-                                                <TableHead className="text-[10px] font-black uppercase text-right">Price</TableHead>
+                                                <TableHead className="text-[10px] font-black uppercase">Title</TableHead>
+                                                <TableHead className="text-[10px] font-black uppercase">Price</TableHead>
+                                                <TableHead className="text-[10px] font-black uppercase">Image URL</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
-                                            {previewData.map((pkg, idx) => (
+                                            {parsedData.slice(0, 10).map((pkg, idx) => (
                                                 <TableRow key={idx}>
-                                                    <TableCell className="text-xs font-bold truncate max-w-[250px]">{pkg.title}</TableCell>
-                                                    <TableCell className="text-xs font-medium">{pkg.duration}</TableCell>
-                                                    <TableCell className="text-xs font-black text-right">₹{pkg.price}</TableCell>
+                                                    <TableCell className="text-xs font-bold truncate max-w-[200px]">{pkg.title || pkg.Title}</TableCell>
+                                                    <TableCell className="text-xs font-black">₹{pkg.price || pkg.Price}</TableCell>
+                                                    <TableCell className="text-[10px] font-medium truncate max-w-[150px]">{pkg.image || pkg.Image}</TableCell>
                                                 </TableRow>
                                             ))}
                                         </TableBody>
@@ -156,7 +143,7 @@ export function BulkUploadTourPackagesDialog() {
                     )}
 
                     {error && (
-                        <Alert variant="destructive" className="rounded-2xl border-0 shadow-lg">
+                        <Alert variant="destructive" className="rounded-2xl">
                             <AlertTriangle className="h-4 w-4" />
                             <AlertDescription className="font-bold">{error}</AlertDescription>
                         </Alert>
@@ -165,16 +152,16 @@ export function BulkUploadTourPackagesDialog() {
                     <div className="p-5 bg-[#f0f6ff] border border-black/5 rounded-2xl flex gap-4">
                         <Info className="h-5 w-5 text-[#003580] shrink-0 mt-0.5" />
                         <div className="space-y-1">
-                            <p className="text-[10px] font-black uppercase text-[#003580] tracking-widest">CSV Data Mapping Notice</p>
+                            <p className="text-[10px] font-black uppercase text-[#003580] tracking-widest">Required CSV Headers:</p>
                             <p className="text-[11px] font-medium text-slate-600 leading-relaxed">
-                                Columns required: <b>title, duration, destinations, price, gst, image, description, persons, rooms, cabType, itinerary, inclusions, exclusions, policy_tcs, policy_cancellation, policy_payment, policy_terms</b>. 
-                                <br/>Complex fields (<b>itinerary</b>, <b>hotels</b>) must be valid JSON arrays in string format.
+                                <b>title, duration, destinations, price, image, description, persons, rooms, cabType</b>
+                                <br/>Optional: <b>travelDate, itinerary, inclusions, exclusions, policy_tcs, policy_cancellation</b>
                             </p>
                         </div>
                     </div>
                 </div>
 
-                <DialogFooter className="bg-muted/30 p-6 -mx-6 -mb-6 border-t mt-4">
+                <DialogFooter className="bg-muted/30 p-6 -mx-6 -mb-6 border-t">
                     <DialogClose asChild>
                         <Button type="button" variant="ghost" className="rounded-full font-bold h-12 px-8" disabled={isUploading}>
                             Cancel
@@ -183,10 +170,10 @@ export function BulkUploadTourPackagesDialog() {
                     <Button 
                         onClick={handleUpload} 
                         disabled={isUploading || parsedData.length === 0} 
-                        className="rounded-full font-black px-12 h-12 bg-primary shadow-xl shadow-primary/20"
+                        className="rounded-full font-black px-12 h-12 bg-primary shadow-xl"
                     >
                         {isUploading ? (
-                            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Synchronizing Cloud...</>
+                            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Synchronizing...</>
                         ) : (
                             `Commit ${parsedData.length} Itineraries`
                         )}

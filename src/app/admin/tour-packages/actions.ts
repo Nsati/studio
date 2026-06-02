@@ -5,11 +5,11 @@ import { getFirebaseAdmin } from '@/firebase/admin';
 import type { TourPackage } from '@/lib/types';
 import slugify from 'slugify';
 import { revalidatePath } from 'next/cache';
-import { TourPackageUploadSchema, type TourPackageUploadData } from '../schemas';
+import { TourPackageUploadSchema } from '../schemas';
 
 /**
  * @fileOverview Production Tour Package Actions.
- * Normalizes headers and ensures robust CSV image processing.
+ * Improved header normalization to handle various CSV naming conventions.
  */
 
 export async function bulkUploadTourPackages(data: any[]) {
@@ -27,15 +27,25 @@ export async function bulkUploadTourPackages(data: any[]) {
       const batch = adminDb.batch();
 
       for (const rawRow of chunk) {
-        // Normalize keys to lowercase to handle CSV headers like "Image", "IMAGE", etc.
+        // 1. Normalize headers (strip spaces, lowercase)
         const normalizedRow: any = {};
         Object.keys(rawRow).forEach(key => {
-          normalizedRow[key.toLowerCase()] = rawRow[key];
+          const k = key.toLowerCase().trim().replace(/\s+/g, '');
+          
+          // Map variations to schema keys
+          if (k === 'cabtype' || k === 'vehicle') normalizedRow['cabType'] = rawRow[key];
+          else if (k === 'traveldate' || k === 'date') normalizedRow['travelDate'] = rawRow[key];
+          else if (k === 'policytcs' || k === 'tcs') normalizedRow['policy_tcs'] = rawRow[key];
+          else if (k === 'policycancellation' || k === 'cancellation') normalizedRow['policy_cancellation'] = rawRow[key];
+          else if (k === 'policypayment' || k === 'payment') normalizedRow['policy_payment'] = rawRow[key];
+          else if (k === 'policyterms' || k === 'terms') normalizedRow['policy_terms'] = rawRow[key];
+          else normalizedRow[k] = rawRow[key];
         });
 
+        // 2. Validate Row
         const validation = TourPackageUploadSchema.safeParse(normalizedRow);
         if (!validation.success) {
-          console.warn(`Skipping invalid row: ${normalizedRow.title || 'Untitled'}`, validation.error.message);
+          console.warn(`[CSV ERROR] Row "${normalizedRow.title || 'Untitled'}" skipped:`, validation.error.format());
           continue; 
         }
 
@@ -43,39 +53,39 @@ export async function bulkUploadTourPackages(data: any[]) {
         const packageId = slugify(pkg.title, { lower: true, strict: true }) + '-' + Math.random().toString(36).substring(2, 5);
         const packageRef = adminDb.collection('tourPackages').doc(packageId);
 
+        // 3. Parse JSON strings
         let itinerary = [];
-        try { itinerary = pkg.itinerary ? (typeof pkg.itinerary === 'string' ? JSON.parse(pkg.itinerary) : pkg.itinerary) : []; } catch (e) { itinerary = []; }
+        try { itinerary = pkg.itinerary ? JSON.parse(pkg.itinerary) : []; } catch (e) { itinerary = []; }
         
         let hotels = [];
-        if (pkg.hotels) {
-          try { hotels = typeof pkg.hotels === 'string' ? JSON.parse(pkg.hotels) : pkg.hotels; } catch (e) { hotels = []; }
-        }
+        try { hotels = pkg.hotels ? JSON.parse(pkg.hotels) : []; } catch (e) { hotels = []; }
 
-        const totalCost = pkg.price + (pkg.price * (pkg.gst / 100));
+        const price = Number(pkg.price) || 0;
+        const totalCost = price + (price * (pkg.gst / 100));
 
         const finalDoc: any = {
           id: packageId,
-          title: pkg.title || '',
-          duration: pkg.duration || '',
-          destinations: pkg.destinations ? (Array.isArray(pkg.destinations) ? pkg.destinations : pkg.destinations.split(',').map(d => d.trim()).filter(Boolean)) : [],
-          price: pkg.price || 0,
-          gst: pkg.gst || 0,
-          totalCost: totalCost || 0,
-          image: pkg.image || 'hero',
-          description: pkg.description || '',
-          persons: pkg.persons || 2,
-          rooms: pkg.rooms || 1,
-          cabType: pkg.cabType || 'Sedan',
+          title: pkg.title,
+          duration: pkg.duration,
+          destinations: pkg.destinations.split(',').map(d => d.trim()).filter(Boolean),
+          price: price,
+          gst: pkg.gst,
+          totalCost: totalCost,
+          image: pkg.image,
+          description: pkg.description,
+          persons: pkg.persons,
+          rooms: pkg.rooms,
+          cabType: pkg.cabType,
           travelDate: pkg.travelDate || '',
           itinerary: itinerary,
           hotels: hotels,
-          inclusions: pkg.inclusions ? (Array.isArray(pkg.inclusions) ? pkg.inclusions : pkg.inclusions.split(',').map(i => i.trim()).filter(Boolean)) : [],
-          exclusions: pkg.exclusions ? (Array.isArray(pkg.exclusions) ? pkg.exclusions : pkg.exclusions.split(',').map(e => e.trim()).filter(Boolean)) : [],
+          inclusions: pkg.inclusions ? pkg.inclusions.split(',').map(i => i.trim()).filter(Boolean) : [],
+          exclusions: pkg.exclusions ? pkg.exclusions.split(',').map(e => e.trim()).filter(Boolean) : [],
           policies: {
             tcs: pkg.policy_tcs || 'As per govt norms',
-            cancellation: pkg.policy_cancellation || 'Standard T&C apply',
-            payment: pkg.policy_payment || 'Advance required',
-            terms: pkg.policy_terms || 'Standard terms apply'
+            cancellation: pkg.policy_cancellation || 'Standard terms apply',
+            payment: pkg.policy_payment || 'Advance payment required',
+            terms: pkg.policy_terms || 'Subject to availability'
           }
         };
 
@@ -83,16 +93,22 @@ export async function bulkUploadTourPackages(data: any[]) {
         processedCount++;
       }
 
-      await batch.commit();
+      if (processedCount > 0) {
+        await batch.commit();
+      }
     }
 
     revalidatePath('/tour-packages');
+    revalidatePath('/admin/tour-packages');
     revalidatePath('/');
     
-    return { success: true, message: `Successfully synchronized ${processedCount} travel itineraries.` };
+    return { 
+      success: true, 
+      message: `Synchronized ${processedCount} itineraries. Check console if any were skipped.` 
+    };
 
   } catch (e: any) {
-    console.error("Bulk upload failure:", e);
+    console.error("Bulk upload critical failure:", e);
     return { success: false, message: e.message || 'Cloud synchronization failed.' };
   }
 }
@@ -121,6 +137,7 @@ export async function deleteTourPackageAction(packageId: string) {
     try {
         await adminDb.collection('tourPackages').doc(packageId).delete();
         revalidatePath('/tour-packages');
+        revalidatePath('/admin/tour-packages');
         revalidatePath('/');
         return { success: true, message: 'Expedition has been permanently removed.' };
     } catch (e: any) {
