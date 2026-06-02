@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -118,7 +119,7 @@ export default function LandingPage() {
             <h1 className="text-5xl md:text-[7rem] font-black leading-[0.9] uppercase tracking-tighter text-white">
               Explore the <br /> <span className="text-primary italic font-heading font-light lowercase">Sacred</span> Himalayas
             </h1>
-            <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto font-medium leading-relaxed tracking-tight">
+            <p className="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto font-medium leading-relaxed tracking-tight">
               Transform your journey into a spiritual expedition. We build luxury digital booking experiences for the northern frontier.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
@@ -168,7 +169,7 @@ export default function LandingPage() {
       </section>
 
       {/* Statistics Strip */}
-      <section className="py-20 border-y border-white/5 relative z-10">
+      <section className="py-20 border-y border-white/5 relative z-10 bg-[#0f172a]/50">
         <div className="container px-6">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-12">
                 {stats.map((stat, i) => (
@@ -180,8 +181,8 @@ export default function LandingPage() {
                       transition={{ delay: i * 0.1 }}
                       className="text-center space-y-2"
                     >
-                        <p className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-br from-primary to-white tracking-tighter">{stat.value}</p>
-                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.3em]">{stat.label}</p>
+                        <p className="text-5xl md:text-7xl font-black text-primary tracking-tighter drop-shadow-sm">{stat.value}</p>
+                        <p className="text-[10px] font-black text-white/70 uppercase tracking-[0.3em]">{stat.label}</p>
                     </motion.div>
                 ))}
             </div>
@@ -192,7 +193,7 @@ export default function LandingPage() {
       <section className="py-32 container px-6 relative z-10" id="services">
         <div className="text-center mb-24 space-y-4">
             <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter">What We Do</h2>
-            <p className="text-slate-500 font-bold max-w-xl mx-auto">End-to-end Himalayan solutions tailored to elite traveler standards</p>
+            <p className="text-slate-400 font-bold max-w-xl mx-auto">End-to-end Himalayan solutions tailored to elite traveler standards</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -210,11 +211,11 @@ export default function LandingPage() {
                   className="group p-10 bg-white/5 border border-white/5 rounded-[2rem] relative overflow-hidden transition-all duration-500 hover:bg-white/[0.08] hover:border-primary/20"
                 >
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-accent scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-500" />
-                    <div className="h-14 w-14 bg-gradient-to-br from-primary to-primary-dark rounded-2xl flex items-center justify-center mb-8 shadow-lg shadow-primary/20">
+                    <div className="h-14 w-14 bg-gradient-to-br from-primary to-[#8A712A] rounded-2xl flex items-center justify-center mb-8 shadow-lg shadow-primary/20">
                         <item.icon className="h-7 w-7 text-white" />
                     </div>
                     <h4 className="text-xl font-black uppercase tracking-widest mb-4 leading-tight">{item.title}</h4>
-                    <p className="text-sm text-slate-500 leading-relaxed font-medium group-hover:text-slate-400">{item.desc}</p>
+                    <p className="text-sm text-slate-400 leading-relaxed font-medium group-hover:text-slate-300">{item.desc}</p>
                 </motion.div>
             ))}
         </div>
@@ -226,7 +227,7 @@ export default function LandingPage() {
             <div className="flex flex-col md:flex-row justify-between items-end mb-24 gap-8">
                 <div className="space-y-4">
                     <h2 className="text-5xl md:text-7xl font-black uppercase leading-[0.9]">Our <br/><span className="text-primary italic font-heading font-light lowercase">Work</span></h2>
-                    <p className="text-slate-500 font-bold">Selected expeditions we're proud to have engineered</p>
+                    <p className="text-slate-400 font-bold">Selected expeditions we're proud to have engineered</p>
                 </div>
                 <Button asChild variant="outline" className="h-14 rounded-full px-8 border-white/10 hover:bg-primary hover:text-background font-black uppercase tracking-widest text-xs">
                     <Link href="/tour-packages">Explore All <ArrowRight className="ml-2 h-4 w-4" /></Link>
@@ -251,7 +252,7 @@ export default function LandingPage() {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                     
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary/90 to-primary-dark/90 flex flex-col items-center justify-center p-8 text-center opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/90 to-[#8A712A]/90 flex flex-col items-center justify-center p-8 text-center opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                         <h3 className="text-3xl font-black uppercase tracking-tighter text-white translate-y-4 group-hover:translate-y-0 transition-transform duration-500">{tour.name}</h3>
                         <p className="text-white/80 font-bold mt-4 translate-y-4 group-hover:translate-y-0 transition-transform duration-500 delay-75">{tour.duration} • {tour.difficulty}</p>
                         <Button asChild className="mt-8 rounded-full h-12 px-8 bg-white text-primary font-black hover:bg-white/90">
@@ -273,7 +274,7 @@ export default function LandingPage() {
       <section className="py-32 container px-6 relative z-10" id="testimonials">
         <div className="text-center mb-24 space-y-4">
             <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter">Client Stories</h2>
-            <p className="text-slate-500 font-bold">What our explorers say about Northern Harrier</p>
+            <p className="text-slate-400 font-bold">What our explorers say about Northern Harrier</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -284,11 +285,11 @@ export default function LandingPage() {
             ].map((test, i) => (
                 <div key={i} className="bg-white/5 border border-white/5 p-12 rounded-[2.5rem] relative">
                     <Quote className="h-12 w-12 text-primary opacity-20 absolute top-10 left-10" />
-                    <p className="text-slate-400 font-medium leading-relaxed italic mb-8 relative z-10">"{test.text}"</p>
+                    <p className="text-slate-300 font-medium leading-relaxed italic mb-8 relative z-10">"{test.text}"</p>
                     <div className="flex items-center gap-4">
                         <div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center font-black text-white">{test.initial}</div>
                         <div>
-                            <p className="font-black text-sm uppercase">{test.name}</p>
+                            <p className="font-black text-sm uppercase text-white">{test.name}</p>
                             <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{test.role}</p>
                         </div>
                     </div>
@@ -307,7 +308,7 @@ export default function LandingPage() {
               className="space-y-6"
             >
                 <h2 className="text-4xl md:text-7xl font-black uppercase tracking-tighter leading-none">Ready to Start <br/> Your <span className="text-primary">Project?</span></h2>
-                <p className="text-xl text-slate-400 font-medium max-w-lg mx-auto">Let's create something amazing together. Connect with our Himalayan experts today.</p>
+                <p className="text-xl text-slate-300 font-medium max-w-lg mx-auto">Let's create something amazing together. Connect with our Himalayan experts today.</p>
             </motion.div>
             <Button asChild size="lg" className="h-20 px-16 rounded-full bg-primary text-background font-black text-xl shadow-2xl shadow-primary/30 hover:scale-105 transition-all">
                 <Link href="/contact"><Rocket className="mr-3 h-6 w-6" /> Start an Expedition</Link>
