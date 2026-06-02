@@ -39,6 +39,7 @@ export async function bulkUploadTourPackages(data: any[]) {
           else if (k === 'policycancellation' || k === 'cancellation') normalizedRow['policy_cancellation'] = rawRow[key];
           else if (k === 'policypayment' || k === 'payment') normalizedRow['policy_payment'] = rawRow[key];
           else if (k === 'policyterms' || k === 'terms') normalizedRow['policy_terms'] = rawRow[key];
+          else if (k === 'image' || k === 'img' || k === 'imageurl') normalizedRow['image'] = String(rawRow[key] || '').trim();
           else normalizedRow[k] = rawRow[key];
         });
 

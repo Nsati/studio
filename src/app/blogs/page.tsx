@@ -94,6 +94,7 @@ export default function BlogsPublicPage() {
                     alt="Devbhoomi Heritage" 
                     fill 
                     priority
+                    unoptimized={true}
                     className="object-cover brightness-[0.5]"
                 />
                 <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-white" />
@@ -115,26 +116,6 @@ export default function BlogsPublicPage() {
                             Explore the traditions, spirituality, and vibrant folk life of the Northern Frontier.
                         </p>
                     </motion.div>
-                </div>
-            </section>
-
-            {/* Compact Stats Bar - Professional Minimalist */}
-            <section className="py-12 bg-slate-50 border-y border-black/5">
-                <div className="container px-6">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-                        {[
-                            { label: 'Festivals', val: '45+', icon: Calendar },
-                            { label: 'Temples', val: '1000+', icon: Building2 },
-                            { label: 'Folk Arts', val: '12+', icon: Wind },
-                            { label: 'Villages', val: '15,000+', icon: Mountain }
-                        ].map((stat, i) => (
-                            <div key={i} className="flex flex-col items-center text-center space-y-2">
-                                <stat.icon className="h-5 w-5 text-accent opacity-50 mb-1" />
-                                <p className="text-3xl font-black text-slate-900 tracking-tighter">{stat.val}</p>
-                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</p>
-                            </div>
-                        ))}
-                    </div>
                 </div>
             </section>
 
@@ -165,6 +146,7 @@ export default function BlogsPublicPage() {
                                                     src={getImageUrl(item.imgId)} 
                                                     alt={item.title} 
                                                     fill 
+                                                    unoptimized={true}
                                                     className="object-cover transition-transform duration-1000 group-hover:scale-110" 
                                                 />
                                                 <div className="absolute top-6 left-6">
@@ -194,32 +176,6 @@ export default function BlogsPublicPage() {
                                 </Card>
                             </motion.div>
                         ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* Compact Call to Action */}
-            <section className="py-24 container px-6">
-                <div className="relative h-[450px] rounded-[3.5rem] overflow-hidden flex items-center justify-center text-center shadow-2xl">
-                    <Image 
-                        src={getImageUrl('village-1')} 
-                        alt="Join the Journey" 
-                        fill 
-                        className="object-cover brightness-50"
-                    />
-                    <div className="relative z-10 space-y-8 max-w-2xl px-6">
-                        <Badge className="bg-accent text-white px-6 py-2 rounded-full text-[9px] font-black uppercase tracking-[0.3em]">Himalayan Liaison Protocol</Badge>
-                        <h2 className="text-4xl md:text-6xl font-black text-white tracking-tighter uppercase leading-none">
-                            Synchronize With <br/> <span className="text-accent italic font-heading font-light capitalize">Devbhumi</span>
-                        </h2>
-                        <p className="text-white/70 font-medium text-lg max-w-lg mx-auto">
-                            "Where every mountain peak holds a throne of the divine."
-                        </p>
-                        <div className="pt-4">
-                            <Button asChild size="lg" className="h-16 px-12 rounded-full font-black text-sm uppercase tracking-widest bg-primary hover:bg-slate-900 shadow-2xl transition-all hover:scale-105 active:scale-95">
-                                <Link href="/search">Find Stays Nearby <ArrowRight className="ml-3 h-5 w-5" /></Link>
-                            </Button>
-                        </div>
                     </div>
                 </div>
             </section>

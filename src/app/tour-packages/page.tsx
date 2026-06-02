@@ -9,7 +9,7 @@ import { collection } from 'firebase/firestore';
 import type { TourPackage } from '@/lib/types';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Card, CardTitle } from '@/components/ui/card';
-import { MapPin, IndianRupee, Compass, Sparkles, Clock, Star } from 'lucide-react';
+import { MapPin, Compass, Sparkles, Clock, Star } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -22,7 +22,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 function PackageSkeleton() {
     return (
         <Card className="flex flex-col md:flex-row overflow-hidden border border-border rounded-sm">
-            <Skeleton className="h-[250px] w-full md:w-[350px]" />
+            <Skeleton className="h-[250px] w-full md:w-[400px]" />
             <div className="flex-1 p-6 space-y-4">
                 <Skeleton className="h-8 w-3/4" />
                 <Skeleton className="h-4 w-1/2" />
@@ -45,7 +45,8 @@ export default function TourPackagesPage() {
   const getImageUrl = (img: string) => {
     if (!img) return 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=800';
     if (img.startsWith('http')) return img;
-    return PlaceHolderImages.find((p) => p.id === img)?.imageUrl || 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=800';
+    const found = PlaceHolderImages.find((p) => p.id === img);
+    return found ? found.imageUrl : 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=800';
   };
 
   return (
@@ -76,11 +77,12 @@ export default function TourPackagesPage() {
                 ) : packages && packages.length > 0 ? (
                     packages.map((pkg) => (
                         <Card key={pkg.id} className="flex flex-col md:flex-row overflow-hidden border border-black/5 rounded-none hover:shadow-xl transition-all duration-500 group">
-                           <div className="relative w-full md:w-[400px] aspect-[4/3] md:aspect-auto flex-shrink-0 overflow-hidden">
+                           <div className="relative w-full md:w-[400px] aspect-[16/9] md:aspect-auto flex-shrink-0 overflow-hidden bg-slate-100">
                                 <Image
                                     src={getImageUrl(pkg.image)}
                                     alt={pkg.title}
                                     fill
+                                    unoptimized={true}
                                     className="object-cover transition-transform duration-1000 group-hover:scale-110"
                                 />
                                 <div className="absolute top-4 left-4">
@@ -96,7 +98,7 @@ export default function TourPackagesPage() {
                                                 <Link href={`/tour-packages/${pkg.id}`}>{pkg.title}</Link>
                                             </CardTitle>
                                             <div className="flex items-center gap-2 text-sm text-[#006ce4] font-black uppercase tracking-widest underline decoration-2 underline-offset-4">
-                                                <MapPin className="h-4 w-4" />
+                                                <MapPin className="h-4 w-4 text-[#003580]" />
                                                 {pkg.destinations?.join(' • ')}
                                             </div>
                                         </div>
@@ -122,7 +124,7 @@ export default function TourPackagesPage() {
                                             <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-1">Starting from</p>
                                             <div className="flex flex-col items-end">
                                                 <span className="text-3xl font-black text-[#1a1a1a] tracking-tighter leading-none">
-                                                    {pkg.totalCost?.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 })}
+                                                    ₹{pkg.totalCost?.toLocaleString('en-IN', { minimumFractionDigits: 0 })}
                                                 </span>
                                                 <span className="text-[9px] font-bold text-green-700 uppercase tracking-widest mt-1">Includes GST + Transport</span>
                                             </div>
@@ -143,33 +145,6 @@ export default function TourPackagesPage() {
                         <p className="text-sm text-muted-foreground font-medium mt-2">Check back soon for new Himalayan journeys.</p>
                     </div>
                 )}
-            </div>
-        </div>
-      </section>
-
-      {/* Standard Trust Footer */}
-      <section className="bg-muted/30 py-20 px-4 border-t">
-        <div className="container mx-auto grid grid-cols-1 md:grid-cols-3 gap-16 text-center">
-            <div className="space-y-4">
-                <div className="h-14 w-14 bg-[#003580]/10 rounded-full flex items-center justify-center mx-auto">
-                    <Compass className="h-7 w-7 text-[#003580]" />
-                </div>
-                <h4 className="font-black uppercase tracking-widest text-sm">Expert Guidance</h4>
-                <p className="text-xs text-muted-foreground font-medium leading-relaxed">Itineraries crafted by locals who know every hidden valley and peak of Uttarakhand.</p>
-            </div>
-            <div className="space-y-4">
-                <div className="h-14 w-14 bg-[#003580]/10 rounded-full flex items-center justify-center mx-auto">
-                    <IndianRupee className="h-7 w-7 text-[#003580]" />
-                </div>
-                <h4 className="font-black uppercase tracking-widest text-sm">Best Price Promise</h4>
-                <p className="text-xs text-muted-foreground font-medium leading-relaxed">Direct property rates with zero hidden commissions or convenience fees.</p>
-            </div>
-            <div className="space-y-4">
-                <div className="h-14 w-14 bg-[#003580]/10 rounded-full flex items-center justify-center mx-auto">
-                    <Sparkles className="h-7 w-7 text-[#003580]" />
-                </div>
-                <h4 className="font-black uppercase tracking-widest text-sm">Hassle-free Booking</h4>
-                <p className="text-xs text-muted-foreground font-medium leading-relaxed">Secure payment gateway with instant confirmation vouchers for your peace of mind.</p>
             </div>
         </div>
       </section>
