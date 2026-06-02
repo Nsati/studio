@@ -15,11 +15,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { MapPin, Calendar as CalendarIcon, Users, Compass, Tent } from 'lucide-react';
+import { MapPin, Calendar as CalendarIcon, Users, Compass, Tent, Search } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+
+/**
+ * @fileOverview Elite Search Filters for Northern Harrier.
+ * Hardened visibility for Dark Luxury theme.
+ */
 
 export function SearchFilters() {
     const firestore = useFirestore();
@@ -71,20 +76,21 @@ export function SearchFilters() {
     }
 
     return (
-        <div className="space-y-4">
-            <form onSubmit={handleFormSubmit} className="flex flex-col lg:flex-row items-stretch gap-1 bg-[#febb02] p-1 rounded-sm booking-shadow">
+        <div className="space-y-6">
+            <form onSubmit={handleFormSubmit} className="flex flex-col lg:flex-row items-stretch gap-2 bg-white/5 backdrop-blur-2xl p-2 rounded-[2.5rem] border border-white/10 shadow-2xl">
                 {/* Location */}
-                <div className="flex-1 flex items-center gap-3 bg-white px-4 py-3 rounded-sm border-2 border-transparent focus-within:border-accent">
-                    <MapPin className="h-5 w-5 text-muted-foreground" />
-                    <div className="flex-1">
+                <div className="flex-1 flex items-center gap-4 bg-slate-900/50 hover:bg-slate-900/80 px-6 py-4 rounded-2xl border border-transparent focus-within:border-primary/50 transition-all cursor-pointer group">
+                    <MapPin className="h-5 w-5 text-primary group-hover:scale-110 transition-transform" />
+                    <div className="flex flex-col items-start flex-1 text-left">
+                        <span className="text-[9px] font-black uppercase tracking-widest text-primary">Destination</span>
                         <Select value={city} onValueChange={setCity}>
-                            <SelectTrigger className="border-0 bg-transparent p-0 h-auto focus:ring-0 shadow-none font-bold text-sm">
-                                <SelectValue placeholder="Where are you going?" />
+                            <SelectTrigger className="border-0 bg-transparent p-0 h-auto focus:ring-0 shadow-none font-bold text-white text-sm w-full">
+                                <SelectValue placeholder="Where to?" />
                             </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="All">All Uttarakhand</SelectItem>
+                            <SelectContent className="bg-slate-900 border-white/10 text-white rounded-xl">
+                                <SelectItem value="All" className="focus:bg-primary/20 focus:text-white">All Uttarakhand</SelectItem>
                                 {cities?.map((c) => (
-                                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                                    <SelectItem key={c} value={c} className="focus:bg-primary/20 focus:text-white">{c}</SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
@@ -92,56 +98,64 @@ export function SearchFilters() {
                 </div>
 
                 {/* Dates */}
-                <div className="flex-1 flex items-center gap-3 bg-white px-4 py-3 rounded-sm border-2 border-transparent focus-within:border-accent">
-                    <CalendarIcon className="h-5 w-5 text-muted-foreground" />
-                    <Popover>
-                        <PopoverTrigger asChild>
-                            <button type="button" className="text-sm font-bold truncate">
-                                {dates?.from ? (
-                                    dates.to ? `${format(dates.from, 'EEE, MMM dd')} — ${format(dates.to, 'EEE, MMM dd')}` : format(dates.from, 'EEE, MMM dd')
-                                ) : "Check-in — Check-out"}
-                            </button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="center">
-                            <CalendarComponent
-                                mode="range"
-                                selected={dates}
-                                onSelect={setDates}
-                                disabled={{ before: new Date() }}
-                                numberOfMonths={2}
-                            />
-                        </PopoverContent>
-                    </Popover>
+                <div className="flex-1 flex items-center gap-4 bg-slate-900/50 hover:bg-slate-900/80 px-6 py-4 rounded-2xl border border-transparent focus-within:border-primary/50 transition-all cursor-pointer group">
+                    <CalendarIcon className="h-5 w-5 text-primary group-hover:scale-110 transition-transform" />
+                    <div className="flex flex-col items-start flex-1 text-left">
+                        <span className="text-[9px] font-black uppercase tracking-widest text-primary">Travel Window</span>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <button type="button" className="text-sm font-bold text-white truncate hover:text-primary transition-colors text-left w-full">
+                                    {dates?.from ? (
+                                        dates.to ? `${format(dates.from, 'MMM dd')} — ${format(dates.to, 'MMM dd')}` : format(dates.from, 'MMM dd')
+                                    ) : "Select dates"}
+                                </button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0 border-white/10 bg-slate-900" align="center">
+                                <CalendarComponent
+                                    mode="range"
+                                    selected={dates}
+                                    onSelect={setDates}
+                                    disabled={{ before: new Date() }}
+                                    numberOfMonths={2}
+                                    className="bg-slate-900 text-white"
+                                />
+                            </PopoverContent>
+                        </Popover>
+                    </div>
                 </div>
 
                 {/* Guests */}
-                <div className="flex-[0.7] flex items-center gap-3 bg-white px-4 py-3 rounded-sm border-2 border-transparent focus-within:border-accent">
-                    <Users className="h-5 w-5 text-muted-foreground" />
-                    <div className="flex items-center gap-2">
-                        <Input 
-                            type="number" 
-                            min="1"
-                            value={guests}
-                            onChange={(e) => setGuests(e.target.value)}
-                            className="border-0 bg-transparent p-0 h-auto focus-visible:ring-0 shadow-none font-bold w-12 text-sm"
-                        />
-                        <span className="text-sm font-bold text-muted-foreground">guests</span>
+                <div className="flex-[0.7] flex items-center gap-4 bg-slate-900/50 hover:bg-slate-900/80 px-6 py-4 rounded-2xl border border-transparent focus-within:border-primary/50 transition-all group">
+                    <Users className="h-5 w-5 text-primary group-hover:scale-110 transition-transform" />
+                    <div className="flex flex-col items-start flex-1 text-left">
+                        <span className="text-[9px] font-black uppercase tracking-widest text-primary">Travelers</span>
+                        <div className="flex items-center gap-2">
+                            <Input 
+                                type="number" 
+                                min="1"
+                                value={guests}
+                                onChange={(e) => setGuests(e.target.value)}
+                                className="border-0 bg-transparent p-0 h-auto focus-visible:ring-0 shadow-none font-bold w-8 text-sm text-white"
+                            />
+                            <span className="text-[10px] font-bold text-white/50 uppercase tracking-widest">Guests</span>
+                        </div>
                     </div>
                 </div>
                 
                 {/* Search Button */}
-                <Button type="submit" size="lg" className="bg-[#006ce4] hover:bg-[#005bb8] text-white text-xl font-bold py-6 px-10 rounded-none h-auto">
-                    Search
+                <Button type="submit" size="lg" className="h-auto bg-primary hover:bg-primary/90 text-background rounded-2xl px-12 text-lg font-black shadow-lg transition-all active:scale-95 py-6 lg:py-0">
+                    Execute Search
                 </Button>
             </form>
 
-            <div className="flex gap-2 justify-center lg:justify-start">
+            {/* Mode Selectors */}
+            <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
                 <Button 
                     variant="ghost" 
                     onClick={() => setMode('standard')}
                     className={cn(
-                        "h-8 rounded-full text-[10px] font-black uppercase tracking-widest px-4 border-2 transition-all",
-                        mode === 'standard' ? "bg-white text-[#003580] border-white shadow-md" : "text-white/80 border-white/20 hover:bg-white/10"
+                        "h-10 rounded-full text-[10px] font-black uppercase tracking-[0.2em] px-6 border transition-all",
+                        mode === 'standard' ? "bg-primary text-background border-primary shadow-lg" : "text-white/60 border-white/10 hover:bg-white/5 hover:text-white"
                     )}
                 >
                     Standard Stay
@@ -150,8 +164,8 @@ export function SearchFilters() {
                     variant="ghost" 
                     onClick={() => setMode('chardham')}
                     className={cn(
-                        "h-8 rounded-full text-[10px] font-black uppercase tracking-widest px-4 border-2 transition-all flex items-center gap-2",
-                        mode === 'chardham' ? "bg-white text-[#003580] border-white shadow-md" : "text-white/80 border-white/20 hover:bg-white/10"
+                        "h-10 rounded-full text-[10px] font-black uppercase tracking-[0.2em] px-6 border transition-all flex items-center gap-2",
+                        mode === 'chardham' ? "bg-primary text-background border-primary shadow-lg" : "text-white/60 border-white/10 hover:bg-white/5 hover:text-white"
                     )}
                 >
                     <Compass className="h-3 w-3" /> Char Dham Mode
@@ -160,8 +174,8 @@ export function SearchFilters() {
                     variant="ghost" 
                     onClick={() => setMode('trek')}
                     className={cn(
-                        "h-8 rounded-full text-[10px] font-black uppercase tracking-widest px-4 border-2 transition-all flex items-center gap-2",
-                        mode === 'trek' ? "bg-white text-[#003580] border-white shadow-md" : "text-white/80 border-white/20 hover:bg-white/10"
+                        "h-10 rounded-full text-[10px] font-black uppercase tracking-[0.2em] px-6 border transition-all flex items-center gap-2",
+                        mode === 'trek' ? "bg-primary text-background border-primary shadow-lg" : "text-white/60 border-white/10 hover:bg-white/5 hover:text-white"
                     )}
                 >
                     <Tent className="h-3 w-3" /> Trek Mode
