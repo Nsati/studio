@@ -53,7 +53,7 @@ export default function TourPackagesPage() {
   return (
     <div className="bg-background min-h-screen text-white selection:bg-primary selection:text-background">
       {/* Cinematic Banner */}
-      <section className="relative py-32 px-6 overflow-hidden border-b border-white/5">
+      <section className="relative py-24 px-6 overflow-hidden border-b border-white/5">
         <div className="absolute inset-0 z-0">
             <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent z-10" />
             <Image 
@@ -85,10 +85,10 @@ export default function TourPackagesPage() {
         </div>
       </section>
 
-      {/* Tour Grid */}
+      {/* Tour Grid - Elite 3-Column Layout */}
       <section className="py-20 px-6 relative z-10">
         <div className="container mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
                 {isLoading ? (
                     Array.from({ length: 6 }).map((_, i) => <PackageSkeleton key={i} />)
                 ) : packages && packages.length > 0 ? (
@@ -100,7 +100,7 @@ export default function TourPackagesPage() {
                             viewport={{ once: true }}
                             transition={{ delay: i * 0.1, duration: 0.5 }}
                         >
-                            <Card className="group flex flex-col h-full overflow-hidden border border-white/10 bg-white/[0.03] backdrop-blur-xl rounded-[2rem] hover:border-primary/40 transition-all duration-500 hover:shadow-2xl">
+                            <Card className="group flex flex-col h-full overflow-hidden border border-white/10 bg-white/[0.03] backdrop-blur-xl rounded-[2.5rem] hover:border-primary/40 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2">
                                 {/* Image Container */}
                                 <div className="relative aspect-[16/10] overflow-hidden bg-slate-900">
                                     <Image
@@ -111,8 +111,8 @@ export default function TourPackagesPage() {
                                         decoding="async"
                                     />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                                    <div className="absolute top-4 left-4">
-                                        <Badge className="bg-primary text-background border-0 font-black uppercase text-[8px] tracking-widest px-4 py-1.5 rounded-full shadow-lg">
+                                    <div className="absolute top-6 left-6">
+                                        <Badge className="bg-primary text-background border-0 font-black uppercase text-[9px] tracking-widest px-5 py-2 rounded-full shadow-lg">
                                             ELITE VERIFIED
                                         </Badge>
                                     </div>
@@ -121,36 +121,36 @@ export default function TourPackagesPage() {
                                 {/* Content Details */}
                                 <div className="p-8 flex flex-col flex-grow space-y-6">
                                     <div className="space-y-4">
-                                        <div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.3em] text-[9px]">
-                                            <Clock className="h-3 w-3" /> {pkg.duration}
+                                        <div className="flex items-center gap-3 text-primary font-black uppercase tracking-[0.3em] text-[10px]">
+                                            <Clock className="h-4 w-4" /> {pkg.duration}
                                         </div>
-                                        <CardTitle className="text-2xl font-black tracking-tight text-white uppercase leading-snug group-hover:text-primary transition-colors">
+                                        <CardTitle className="text-2xl font-black tracking-tight text-white uppercase leading-snug group-hover:text-primary transition-colors min-h-[60px]">
                                             <Link href={`/tour-packages/${pkg.id}`}>{pkg.title}</Link>
                                         </CardTitle>
-                                        <div className="flex items-start gap-2 text-slate-400 font-bold text-[10px] uppercase tracking-widest leading-relaxed">
-                                            <MapPin className="h-3 w-3 text-primary shrink-0 mt-0.5" />
+                                        <div className="flex items-start gap-2 text-slate-400 font-bold text-[11px] uppercase tracking-widest leading-relaxed">
+                                            <MapPin className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
                                             <span className="line-clamp-1">{pkg.destinations?.join(' • ')}</span>
                                         </div>
                                     </div>
 
-                                    <p className="text-slate-400 text-sm leading-relaxed line-clamp-3 font-medium">
+                                    <p className="text-slate-400 text-sm leading-relaxed line-clamp-3 font-medium flex-grow">
                                         {pkg.description}
                                     </p>
 
-                                    <div className="mt-auto pt-6 border-t border-white/5 space-y-6">
+                                    <div className="pt-6 border-t border-white/5 space-y-6">
                                         <div className="flex justify-between items-end">
                                             <div className="space-y-1">
-                                                <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest">Investment</p>
+                                                <p className="text-[9px] font-black uppercase text-slate-500 tracking-[0.2em]">Investment</p>
                                                 <p className="text-3xl font-black text-white tracking-tighter">
                                                     ₹{pkg.totalCost?.toLocaleString('en-IN')}
                                                 </p>
                                             </div>
                                             <div className="flex items-center gap-1 font-black text-primary text-[10px] uppercase tracking-widest">
-                                                <Star className="h-3 w-3 fill-primary" /> 5.0
+                                                <Star className="h-4 w-4 fill-primary" /> 5.0
                                             </div>
                                         </div>
                                         
-                                        <Button asChild className="w-full bg-primary hover:bg-white hover:text-background text-background rounded-full font-black uppercase tracking-widest text-[10px] h-12 shadow-xl shadow-primary/10 transition-all active:scale-95 group/btn">
+                                        <Button asChild className="w-full bg-primary hover:bg-white hover:text-background text-background rounded-full font-black uppercase tracking-widest text-[11px] h-14 shadow-xl shadow-primary/10 transition-all active:scale-95 group/btn">
                                             <Link href={`/tour-packages/${pkg.id}`} className="flex items-center justify-center gap-2">
                                                 View Journey <ArrowRight className="h-4 w-4 transition-transform group-hover/btn:translate-x-1" />
                                             </Link>
