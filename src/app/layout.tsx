@@ -35,7 +35,7 @@ export default function RootLayout({
         <FirebaseClientProvider>
           <FirebaseErrorListener />
           <Header />
-          <main className="relative z-10 min-h-screen bg-background shadow-[0_-20px_50px_rgba(0,0,0,0.1)]">
+          <main className="relative z-10 min-h-screen bg-background shadow-2xl">
             {children}
           </main>
           <Footer />
