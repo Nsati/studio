@@ -12,12 +12,14 @@ const fontSans = PT_Sans({
   subsets: ['latin'],
   weight: ['400', '700'],
   variable: '--font-sans',
+  display: 'swap',
 });
 
 const fontHeading = Playfair_Display({
   subsets: ['latin'],
   weight: ['400', '700'],
   variable: '--font-heading',
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
@@ -48,6 +50,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://images.unsplash.com" />
+        <link rel="preconnect" href="https://images.pexels.com" />
+      </head>
       <body className={`${fontSans.variable} ${fontHeading.variable} font-sans bg-background text-foreground`}>
         <FirebaseClientProvider>
           <FirebaseErrorListener />

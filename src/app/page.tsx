@@ -1,8 +1,10 @@
+
 'use client';
 
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
 import { 
   ShieldCheck, 
@@ -13,47 +15,43 @@ import {
   Calendar,
   Users,
   MapPin,
-  Quote,
   MessageCircle,
   Clock,
   Award,
   Rocket,
   Phone,
   Compass,
-  Star
+  Star,
+  Quote
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
-export default function LandingPage() {
-  const featuredExpeditions = [
-    { 
-      id: 'kedarnath-luxury', 
-      name: 'Sacred Kedarnath Yatra', 
-      duration: '4N/5D', 
-      price: '45,000', 
-      difficulty: 'Moderate',
-      image: 'https://images.unsplash.com/photo-1693153318626-682ef3712136?auto=format&fit=crop&q=80&w=800' 
-    },
-    { 
-      id: 'auli-ski-expedition', 
-      name: 'Auli Winter Expedition', 
-      duration: '5N/6D', 
-      price: '38,000', 
-      difficulty: 'Adventure',
-      image: 'https://images.unsplash.com/photo-1515442597003-a25e0a78dae9?auto=format&fit=crop&q=80&w=800' 
-    },
-    { 
-      id: 'valley-of-flowers', 
-      name: 'Valley of Flowers Trek', 
-      duration: '6N/7D', 
-      price: '32,500', 
-      difficulty: 'Active',
-      image: 'https://images.unsplash.com/photo-1724118136076-5b0921aa529c?auto=format&fit=crop&q=80&w=800' 
-    }
-  ];
+// Optimized: Lazy load non-critical sections to improve initial load time
+const DynamicStatsSection = dynamic(() => Promise.resolve(({ stats }: any) => (
+  <section className="py-20 border-y border-white/5 relative z-10 bg-[#0f172a]/50">
+    <div className="container px-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-12">
+            {stats.map((stat: any, i: number) => (
+                <motion.div 
+                  key={i} 
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1 }}
+                  className="text-center space-y-2"
+                >
+                    <p className="text-5xl md:text-7xl font-black text-primary tracking-tighter drop-shadow-sm">{stat.value}</p>
+                    <p className="text-[10px] font-black text-white/70 uppercase tracking-[0.3em]">{stat.label}</p>
+                </motion.div>
+            ))}
+        </div>
+    </div>
+  </section>
+)), { ssr: true });
 
+export default function LandingPage() {
   const stats = [
     { label: 'Happy Travelers', value: '5000+' },
     { label: 'Expeditions', value: '150+' },
@@ -74,6 +72,7 @@ export default function LandingPage() {
       <a 
         href="https://wa.me/916399902725" 
         target="_blank" 
+        rel="noopener noreferrer"
         className="fixed bottom-8 right-8 z-[100] bg-[#25D366] text-white p-4 rounded-full shadow-2xl hover:scale-110 transition-all group active:scale-95"
       >
         <MessageCircle className="h-7 w-7" />
@@ -90,7 +89,7 @@ export default function LandingPage() {
             alt="Cinematic Himalayas" 
             fill 
             priority
-            unoptimized={true}
+            decoding="async"
             className="object-cover brightness-[0.3]" 
           />
           <div className="absolute inset-0 bg-gradient-to-b from-[#0f172a]/80 via-transparent to-[#0f172a]" />
@@ -157,26 +156,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Statistics Strip */}
-      <section className="py-20 border-y border-white/5 relative z-10 bg-[#0f172a]/50">
-        <div className="container px-6">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-12">
-                {stats.map((stat, i) => (
-                    <motion.div 
-                      key={i} 
-                      initial={{ opacity: 0 }}
-                      whileInView={{ opacity: 1 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: i * 0.1 }}
-                      className="text-center space-y-2"
-                    >
-                        <p className="text-5xl md:text-7xl font-black text-primary tracking-tighter drop-shadow-sm">{stat.value}</p>
-                        <p className="text-[10px] font-black text-white/90 uppercase tracking-[0.3em]">{stat.label}</p>
-                    </motion.div>
-                ))}
-            </div>
-        </div>
-      </section>
+      {/* Statistics Strip - Lazy loaded */}
+      <DynamicStatsSection stats={stats} />
 
       {/* Why Choose Section */}
       <section className="py-32 container px-6 relative z-10">
@@ -204,7 +185,7 @@ export default function LandingPage() {
                         <item.icon className="h-7 w-7 text-white" />
                     </div>
                     <h4 className="text-xl font-black uppercase tracking-widest mb-4 leading-tight text-white">{item.title}</h4>
-                    <p className="text-sm text-slate-200 leading-relaxed font-medium group-hover:text-white">{item.desc}</p>
+                    <p className="text-sm text-slate-300 leading-relaxed font-medium group-hover:text-white">{item.desc}</p>
                 </motion.div>
             ))}
         </div>
@@ -226,7 +207,14 @@ export default function LandingPage() {
                     { name: 'Munsiyari', size: 'md:col-span-3', img: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=1920' }
                 ].map((dest, i) => (
                     <div key={i} className={cn("relative overflow-hidden rounded-[2.5rem] group min-h-[300px] border border-white/5", dest.size)}>
-                        <Image src={dest.img} alt={dest.name} fill className="object-cover transition-transform duration-1000 group-hover:scale-110" unoptimized={true} />
+                        <Image 
+                            src={dest.img} 
+                            alt={dest.name} 
+                            fill 
+                            loading="lazy"
+                            decoding="async"
+                            className="object-cover transition-transform duration-1000 group-hover:scale-110" 
+                        />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
                         <div className="absolute bottom-10 left-10 text-white">
                             <h3 className="text-3xl font-black uppercase tracking-tighter">{dest.name}</h3>

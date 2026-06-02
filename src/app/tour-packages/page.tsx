@@ -9,7 +9,7 @@ import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import type { TourPackage } from '@/lib/types';
 import { Card, CardTitle } from '@/components/ui/card';
-import { MapPin, Compass, Sparkles, Clock, Star, ArrowRight, IndianRupee } from 'lucide-react';
+import { MapPin, Compass, Sparkles, Clock, Star, ArrowRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -67,6 +67,7 @@ export default function TourPackagesPage() {
                 alt="Mountains" 
                 fill 
                 priority
+                decoding="async"
                 className="object-cover opacity-40 grayscale"
             />
         </div>
@@ -113,7 +114,8 @@ export default function TourPackagesPage() {
                                             src={getImageUrl(pkg.image)}
                                             alt={pkg.title}
                                             fill
-                                            unoptimized={true}
+                                            loading="lazy"
+                                            decoding="async"
                                             className="object-cover transition-transform duration-3000 group-hover:scale-105 opacity-80"
                                         />
                                         <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-transparent hidden md:block" />
