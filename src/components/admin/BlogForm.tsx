@@ -6,16 +6,27 @@ import * as z from 'zod';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useFirestore, type WithId } from '@/firebase';
-import { doc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Loader2, Video, Globe, ShieldCheck, Image as ImageIcon } from 'lucide-react';
+import { Loader2, Video, Globe, ShieldCheck, Image as ImageIcon, Trash2 } from 'lucide-react';
 import slugify from 'slugify';
 import { ImageUpload } from './ImageUpload';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 const blogSchema = z.object({
   title: z.string().min(5, 'Title must be at least 5 characters.'),
@@ -34,6 +45,7 @@ export function BlogForm({ initialData }: BlogFormProps) {
   const { toast } = useToast();
   const firestore = useFirestore();
   const [isLoading, setIsLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const isEditing = !!initialData;
 
   const form = useForm<z.infer<typeof blogSchema>>({
@@ -69,6 +81,20 @@ export function BlogForm({ initialData }: BlogFormProps) {
       setIsLoading(false);
     }
   }
+
+  const handleDelete = async () => {
+    if (!firestore || !initialData) return;
+    setIsDeleting(true);
+    try {
+      await deleteDoc(doc(firestore, 'blogs', initialData.id));
+      toast({ title: 'Report Purged', description: 'Log removed successfully.' });
+      router.push('/admin/blogs');
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: 'Error', description: error.message });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <Form {...form}>
@@ -138,11 +164,36 @@ export function BlogForm({ initialData }: BlogFormProps) {
           </CardContent>
         </Card>
 
-        <div className="flex justify-start">
-          <Button type="submit" disabled={isLoading} size="lg" className="h-14 px-12 rounded-none font-black text-lg bg-primary shadow-xl">
+        <div className="flex items-center justify-between pb-10">
+          <Button type="submit" disabled={isLoading || isDeleting} size="lg" className="h-14 px-12 rounded-none font-black text-lg bg-primary shadow-xl">
             {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Globe className="mr-2 h-5 w-5" />}
             {isEditing ? 'SYNC UPDATED LOG' : 'INITIALIZE FIELD REPORT'}
           </Button>
+
+          {isEditing && (
+              <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                      <Button variant="ghost" type="button" disabled={isLoading || isDeleting} className="h-14 px-8 rounded-none font-bold text-destructive hover:bg-destructive/5">
+                          <Trash2 className="mr-2 h-5 w-5" /> Delete Forever
+                      </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent className="rounded-none border-0 shadow-2xl">
+                      <AlertDialogHeader>
+                          <AlertDialogTitle className="text-2xl font-black">Confirm Permanent Deletion</AlertDialogTitle>
+                          <AlertDialogDescription className="text-muted-foreground font-medium">
+                              This report will be completely wiped from the Northern Harrier servers. 
+                              This action is irreversible.
+                          </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter className="mt-6">
+                          <AlertDialogCancel className="rounded-none h-11 font-bold">Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90 rounded-none h-11 font-black px-8">
+                              Confirm Delete
+                          </AlertDialogAction>
+                      </AlertDialogFooter>
+                  </AlertDialogContent>
+              </AlertDialog>
+          )}
         </div>
       </form>
     </Form>
