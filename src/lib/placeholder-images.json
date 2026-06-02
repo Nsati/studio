@@ -2,45 +2,57 @@
   "placeholderImages": [
     {
       "id": "hero",
-      "description": "Panoramic view of snow-capped Himalayan mountains in Uttarakhand.",
-      "imageUrl": "https://images.unsplash.com/photo-1612539473441-dfc1cefd5e1e?auto=format&fit=crop&q=80&w=1920",
-      "imageHint": "mountain landscape"
+      "description": "Mountains and Culture Background",
+      "imageUrl": "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&q=80&w=1920",
+      "imageHint": "mountain culture"
     },
     {
       "id": "blog-aipan",
-      "description": "Sacred Geometry: Traditional Aipan art of Uttarakhand.",
+      "description": "Sacred Geometry: Aipan Art of Uttarakhand",
       "imageUrl": "https://images.unsplash.com/photo-1518998053901-5348d3961a04?auto=format&fit=crop&w=1200&q=80",
-      "imageHint": "sacred art"
+      "imageHint": "aipan art"
     },
     {
       "id": "blog-food",
-      "description": "Soul of Soil: Authentic Himalayan Thali and Cuisine.",
+      "description": "Soul of Soil: Traditional Himalayan Cuisine",
       "imageUrl": "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1200&q=80",
       "imageHint": "himalayan food"
     },
     {
       "id": "blog-dance",
-      "description": "Echoes of Valor: Traditional Chholiya warrior dance.",
+      "description": "Echoes of Valor: Chholiya Warrior Dance",
       "imageUrl": "https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=1200&q=80",
       "imageHint": "warrior dance"
     },
     {
       "id": "blog-festival",
-      "description": "Green Bond: Harela festival and nature celebration.",
+      "description": "Green Bond: Harela Festival Celebration",
       "imageUrl": "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80",
-      "imageHint": "green bond"
+      "imageHint": "green festival"
     },
     {
       "id": "blog-heritage",
-      "description": "Legacy in Wood: Traditional Likhai wood carving.",
+      "description": "Legacy in Wood: Traditional Likhai Carving",
       "imageUrl": "https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=1200&q=80",
       "imageHint": "wood carving"
     },
     {
       "id": "blog-music",
-      "description": "Heartbeat: Jhora Music and traditional hill instruments.",
+      "description": "Heartbeat: Folk Music and Traditional Instruments",
       "imageUrl": "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=1200&q=80",
       "imageHint": "mountain music"
+    },
+    {
+      "id": "village-1",
+      "description": "Himalayan Village View",
+      "imageUrl": "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=80",
+      "imageHint": "himalayan village"
+    },
+    {
+      "id": "temple-1",
+      "description": "Sacred Temple Heritage",
+      "imageUrl": "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&w=1200&q=80",
+      "imageHint": "indian temple"
     },
     {
       "id": "city-nainital",
