@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Calendar, Sparkles, ArrowRight, Bookmark, MapPin, Wind, Tent, Heart } from 'lucide-react';
+import { Calendar, Sparkles, ArrowRight, Bookmark, MapPin, Wind, Tent, Heart, Music, Building2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import Link from 'next/link';
@@ -58,16 +58,16 @@ const CULTURAL_BLOGS = [
     date: "01 May 2024",
     description: "The magnificent wood carvings on the doors of traditional Himalayan houses tell stories of divine protection.",
     imageId: "blog-heritage",
-    icon: MapPin
+    icon: Building2
   },
   {
     id: 'jhora-chhapeli-soul-music',
-    title: "Jhora: The Community's heartbeat",
+    title: "Jhora: The Community's Heartbeat",
     category: "Folk Music",
     date: "25 April 2024",
     description: "The rhythmic community dance and soulful songs that define the social fabric of every Pahadi village.",
     imageId: "blog-music",
-    icon: Sparkles
+    icon: Music
   }
 ];
 
