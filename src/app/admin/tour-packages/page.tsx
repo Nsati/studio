@@ -1,3 +1,4 @@
+
 'use client';
 import { useFirestore, useCollection, useMemoFirebase, type WithId } from '@/firebase';
 import Link from 'next/link';
@@ -7,9 +8,23 @@ import type { TourPackage } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { PlusCircle, Calendar, Package } from 'lucide-react';
+import { PlusCircle, Calendar, Package, Trash2, Edit } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { BulkUploadTourPackagesDialog } from '@/components/admin/BulkUploadTourPackagesDialog';
+import { deleteTourPackageAction } from './actions';
+import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useState } from 'react';
 
 function PackageGridSkeleton() {
     return (
@@ -31,10 +46,29 @@ function PackageGridSkeleton() {
 }
 
 function TourPackageAdminCard({ tourPackage }: { tourPackage: WithId<TourPackage> }) {
+    const { toast } = useToast();
+    const [isDeleting, setIsDeleting] = useState(false);
+
     const getImageUrl = (img: string) => {
         if (!img) return '';
         if (img.startsWith('http')) return img;
         return PlaceHolderImages.find((p) => p.id === img)?.imageUrl || '';
+    };
+
+    const handleDelete = async () => {
+        setIsDeleting(true);
+        try {
+            const res = await deleteTourPackageAction(tourPackage.id);
+            if (res.success) {
+                toast({ title: 'Expedition Purged', description: res.message });
+            } else {
+                toast({ variant: 'destructive', title: 'Purge Failed', description: res.message });
+            }
+        } catch (e: any) {
+            toast({ variant: 'destructive', title: 'Critical Error', description: e.message });
+        } finally {
+            setIsDeleting(false);
+        }
     };
 
     return (
@@ -64,9 +98,30 @@ function TourPackageAdminCard({ tourPackage }: { tourPackage: WithId<TourPackage
                     <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Starts from</span>
                     <span className="text-sm font-black text-[#1a1a1a]">₹{tourPackage.totalCost?.toLocaleString('en-IN')}</span>
                 </div>
-                <Button variant="outline" size="sm" asChild className="rounded-none h-8 px-5 text-[10px] font-black uppercase border-black/10 hover:bg-muted transition-colors">
-                    <Link href={`/admin/tour-packages/${tourPackage.id}/edit`}>Edit</Link>
-                </Button>
+                <div className="flex gap-2">
+                    <Button variant="outline" size="sm" asChild className="rounded-none h-8 px-4 text-[10px] font-black uppercase border-black/10 hover:bg-muted transition-colors">
+                        <Link href={`/admin/tour-packages/${tourPackage.id}/edit`}><Edit className="h-3 w-3 mr-1" /> Edit</Link>
+                    </Button>
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground/40 hover:text-destructive transition-colors" disabled={isDeleting}>
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent className="rounded-none">
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Purge Itinerary?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    This will permanently remove "{tourPackage.title}" from the production nodes.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel className="rounded-none">Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90 rounded-none text-white">Confirm Purge</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                </div>
             </CardFooter>
         </Card>
     )

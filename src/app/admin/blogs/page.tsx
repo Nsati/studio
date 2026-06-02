@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
@@ -5,7 +6,7 @@ import { collection, doc, deleteDoc } from 'firebase/firestore';
 import type { Blog } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { PlusCircle, PlayCircle, Trash2, Edit, Video, AlertTriangle } from 'lucide-react';
+import { PlusCircle, PlayCircle, Trash2, Edit, Video } from 'lucide-react';
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
@@ -19,8 +20,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import { useState } from 'react';
+} from "@/components/ui/alert-dialog";
 
 function BlogGridSkeleton() {
     return (
@@ -38,7 +38,6 @@ function BlogGridSkeleton() {
 export default function AdminBlogsPage() {
     const firestore = useFirestore();
     const { toast } = useToast();
-    const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
     const blogsQuery = useMemoFirebase(() => {
         if (!firestore) return null;
@@ -49,17 +48,11 @@ export default function AdminBlogsPage() {
 
     const handleDelete = async (id: string) => {
         if (!firestore) return;
-        setIsDeleting(id);
         try {
             await deleteDoc(doc(firestore, 'blogs', id));
-            toast({ 
-                title: 'Report Purged', 
-                description: 'Expedition video log removed successfully from Tripzy cloud.' 
-            });
+            toast({ title: 'Report Purged', description: 'Expedition video log removed successfully.' });
         } catch (e: any) {
             toast({ variant: 'destructive', title: 'Action Failed', description: e.message });
-        } finally {
-            setIsDeleting(null);
         }
     };
 
@@ -71,7 +64,7 @@ export default function AdminBlogsPage() {
                         <Video className="h-3 w-3" /> Visual Intelligence
                     </div>
                     <h1 className="text-4xl font-black tracking-tighter text-[#1a1a1a]">Field Reports</h1>
-                    <p className="text-muted-foreground text-sm font-medium">Manage and audit video logs from the northern frontier.</p>
+                    <p className="text-muted-foreground text-sm font-medium">Manage video logs from the northern frontier.</p>
                 </div>
                 <Button asChild className="rounded-none h-12 font-black px-8 bg-[#003580] hover:bg-[#002b60] shadow-sm">
                     <Link href="/admin/blogs/new">
@@ -98,34 +91,22 @@ export default function AdminBlogsPage() {
                                 <Button variant="outline" size="sm" asChild className="h-8 rounded-none text-[10px] font-black uppercase">
                                     <Link href={`/admin/blogs/${blog.id}/edit`}><Edit className="h-3 w-3 mr-1" /> Edit</Link>
                                 </Button>
-                                
                                 <AlertDialog>
                                     <AlertDialogTrigger asChild>
-                                        <Button 
-                                            variant="ghost" 
-                                            size="sm" 
-                                            className="h-8 rounded-none text-[10px] font-black uppercase text-destructive hover:bg-destructive/5"
-                                        >
+                                        <Button variant="ghost" size="sm" className="h-8 rounded-none text-[10px] font-black uppercase text-destructive">
                                             <Trash2 className="h-3 w-3 mr-1" /> Purge
                                         </Button>
                                     </AlertDialogTrigger>
-                                    <AlertDialogContent className="rounded-none border-0 shadow-2xl">
+                                    <AlertDialogContent className="rounded-none">
                                         <AlertDialogHeader>
-                                            <AlertDialogTitle className="text-2xl font-black tracking-tight flex items-center gap-2">
-                                                <AlertTriangle className="h-6 w-6 text-destructive" /> Confirm Purge
-                                            </AlertDialogTitle>
-                                            <AlertDialogDescription className="text-muted-foreground font-medium">
-                                                Are you sure you want to permanently delete "{blog.title}"? This action cannot be undone.
+                                            <AlertDialogTitle>Purge Field Report?</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                                This will permanently delete the visual data for "{blog.title}".
                                             </AlertDialogDescription>
                                         </AlertDialogHeader>
-                                        <AlertDialogFooter className="mt-4">
-                                            <AlertDialogCancel className="rounded-none h-11 font-bold">Cancel</AlertDialogCancel>
-                                            <AlertDialogAction 
-                                                onClick={() => handleDelete(blog.id)}
-                                                className="bg-destructive hover:bg-destructive/90 rounded-none h-11 font-black px-8"
-                                            >
-                                                Delete Permanently
-                                            </AlertDialogAction>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel className="rounded-none">Cancel</AlertDialogCancel>
+                                            <AlertDialogAction onClick={() => handleDelete(blog.id)} className="bg-destructive text-white hover:bg-destructive/90 rounded-none">Confirm Purge</AlertDialogAction>
                                         </AlertDialogFooter>
                                     </AlertDialogContent>
                                 </AlertDialog>

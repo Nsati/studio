@@ -112,3 +112,17 @@ export async function saveTourPackageAction(packageId: string, data: any) {
         return { success: false, message: e.message };
     }
 }
+
+export async function deleteTourPackageAction(packageId: string) {
+    const { adminDb, error } = getFirebaseAdmin();
+    if (error || !adminDb) return { success: false, message: "Admin SDK not initialized" };
+
+    try {
+        await adminDb.collection('tourPackages').doc(packageId).delete();
+        revalidatePath('/tour-packages');
+        revalidatePath('/');
+        return { success: true, message: "Itinerary purged from cloud nodes." };
+    } catch (e: any) {
+        return { success: false, message: e.message };
+    }
+}
