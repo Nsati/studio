@@ -1,70 +1,65 @@
+
 {
   "placeholderImages": [
     {
       "id": "hero",
-      "description": "Panoramic view of snow-capped Himalayan mountains in Uttarakhand.",
-      "imageUrl": "https://images.unsplash.com/photo-1612539473441-dfc1cefd5e1e?auto=format&fit=crop&q=80&w=1920",
-      "imageHint": "mountain landscape"
+      "description": "Mountains and Culture Background",
+      "imageUrl": "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&q=80&w=1920",
+      "imageHint": "mountain culture"
     },
     {
       "id": "blog-aipan",
-      "description": "Traditional Aipan art of Uttarakhand - Ganesh and Lotus geometric patterns.",
-      "imageUrl": "https://images.unsplash.com/photo-1621360841013-c7683c659ec6?auto=format&fit=crop&q=80&w=1200",
-      "imageHint": "Indian folk art"
+      "description": "Sacred Geometry: Aipan Art of Uttarakhand",
+      "imageUrl": "https://images.unsplash.com/photo-1518998053901-5348d3961a04?auto=format&fit=crop&w=1200&q=80",
+      "imageHint": "aipan art"
     },
     {
       "id": "blog-food",
-      "description": "Authentic Pahadi Thali with Bhatt ki Churkani and Mandua Roti.",
-      "imageUrl": "https://images.unsplash.com/photo-1626777553732-489957d1f971?auto=format&fit=crop&q=80&w=1200",
-      "imageHint": "Indian food thali"
+      "description": "Soul of Soil: Traditional Himalayan Cuisine",
+      "imageUrl": "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1200&q=80",
+      "imageHint": "himalayan food"
     },
     {
       "id": "blog-dance",
-      "description": "Traditional Choliya warrior dance with swords and shields in Uttarakhand.",
-      "imageUrl": "https://images.unsplash.com/photo-1541011400305-64f1e9488a03?auto=format&fit=crop&q=80&w=1200",
-      "imageHint": "traditional dance"
+      "description": "Echoes of Valor: Chholiya Warrior Dance",
+      "imageUrl": "https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=1200&q=80",
+      "imageHint": "warrior dance"
     },
     {
       "id": "blog-festival",
-      "description": "Harela festival celebration with fresh green shoots in the hills.",
-      "imageUrl": "https://images.unsplash.com/photo-1505933332814-7d8fdacc67a1?auto=format&fit=crop&q=80&w=1200",
+      "description": "Green Bond: Harela Festival Celebration",
+      "imageUrl": "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80",
       "imageHint": "green festival"
     },
     {
       "id": "blog-heritage",
-      "description": "Intricate wood carving in traditional Himalayan houses (Likhai Art).",
-      "imageUrl": "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&q=80&w=1200",
-      "imageHint": "stone temple"
+      "description": "Legacy in Wood: Traditional Likhai Carving",
+      "imageUrl": "https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=1200&q=80",
+      "imageHint": "wood carving"
     },
     {
       "id": "blog-music",
-      "description": "Traditional folk musicians with drums and instruments in Uttarakhand.",
-      "imageUrl": "https://images.unsplash.com/photo-1582213776866-3397500582dd?auto=format&fit=crop&q=80&w=1200",
-      "imageHint": "folk music"
+      "description": "Heartbeat: Folk Music and Traditional Instruments",
+      "imageUrl": "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=1200&q=80",
+      "imageHint": "mountain music"
     },
     {
-      "id": "city-nainital",
-      "description": "Beautiful view of Naini Lake.",
-      "imageUrl": "https://images.unsplash.com/photo-1693153318626-682ef3712136?auto=format&fit=crop&q=80&w=800",
-      "imageHint": "lake town"
+      "id": "village-1",
+      "description": "Himalayan Village View",
+      "imageUrl": "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=80",
+      "imageHint": "himalayan village"
     },
     {
-      "id": "city-auli",
-      "description": "Snow peaks of Auli.",
-      "imageUrl": "https://images.unsplash.com/photo-1515442597003-a25e0a78dae9?auto=format&fit=crop&q=80&w=800",
-      "imageHint": "ski resort"
+      "id": "temple-1",
+      "description": "Sacred Temple Heritage",
+      "imageUrl": "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&w=1200&q=80",
+      "imageHint": "indian temple"
     },
     {
-      "id": "city-rishikesh",
-      "description": "Laxman Jhula and Ganga river.",
-      "imageUrl": "https://images.unsplash.com/photo-1724118136076-5b0921aa529c?auto=format&fit=crop&q=80&w=800",
-      "imageHint": "river bridge"
-    },
-    {
-      "id": "city-mussoorie",
-      "description": "Hills of Mussoorie.",
-      "imageUrl": "https://images.unsplash.com/photo-1606220975728-f94e0d9ed642?auto=format&fit=crop&q=80&w=800",
-      "imageHint": "hill station"
+      "id": "custom-placeholder",
+      "description": "User can replace this URL to see changes",
+      "imageUrl": "https://picsum.photos/seed/custom/1200/800",
+      "imageHint": "mountain valley"
     }
   ]
 }
