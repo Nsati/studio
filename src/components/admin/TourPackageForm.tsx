@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm, useFieldArray } from 'react-hook-form';
@@ -9,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import slugify from 'slugify';
 import { useState, useEffect } from 'react';
 import type { TourPackage } from '@/lib/types';
-import { saveTourPackageAction } from '@/app/admin/tour-packages/actions';
+import { saveTourPackageAction, deleteTourPackageAction } from '@/app/admin/tour-packages/actions';
 
 import {
   Form,
@@ -35,6 +36,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, PlusCircle, Trash2, MapPin, IndianRupee, ShieldCheck } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Separator } from '../ui/separator';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 const tourImagePlaceholders = PlaceHolderImages.filter(p => p.id.startsWith('tour-') || p.id === 'hero');
 
@@ -86,6 +98,7 @@ export function TourPackageForm({ initialData }: TourPackageFormProps) {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const isEditing = !!initialData;
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -155,8 +168,6 @@ export function TourPackageForm({ initialData }: TourPackageFormProps) {
 
     try {
       const packageId = isEditing ? initialData.id : slugify(values.title, { lower: true, strict: true });
-      
-      // Using Server Action for update to trigger revalidation
       const result = await saveTourPackageAction(packageId, finalData);
 
       if (result.success) {
@@ -173,6 +184,25 @@ export function TourPackageForm({ initialData }: TourPackageFormProps) {
       toast({ variant: 'destructive', title: 'Action Failed', description: error.message });
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!initialData) return;
+    setIsDeleting(true);
+    try {
+      const res = await deleteTourPackageAction(initialData.id);
+      if (res.success) {
+        toast({ title: 'Removed', description: res.message });
+        router.push('/admin/tour-packages');
+        router.refresh();
+      } else {
+        toast({ variant: 'destructive', title: 'Error', description: res.message });
+      }
+    } catch (e: any) {
+      toast({ variant: 'destructive', title: 'Critical Failure', description: e.message });
+    } finally {
+      setIsDeleting(false);
     }
   }
 
@@ -375,8 +405,30 @@ export function TourPackageForm({ initialData }: TourPackageFormProps) {
           </TabsContent>
         </Tabs>
 
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur-md border-t z-50 flex justify-center">
-            <Button type="submit" disabled={isLoading} size="lg" className="w-full max-w-xl h-14 rounded-none font-black text-lg bg-[#003580] hover:bg-[#002b60] shadow-xl">
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur-md border-t z-50 flex justify-center gap-4">
+            {isEditing && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button type="button" variant="destructive" size="lg" className="rounded-none h-14 px-8 font-black uppercase tracking-widest border-2 border-red-600 bg-transparent text-red-600 hover:bg-red-600 hover:text-white" disabled={isDeleting}>
+                    {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
+                    Purge Itinerary
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent className="rounded-none">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Permanent Deletion?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will wipe this expedition itinerary from the production node. This action cannot be reversed.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel className="rounded-none">Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700 text-white rounded-none">Confirm Purge</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+            <Button type="submit" disabled={isLoading} size="lg" className="flex-1 max-w-xl h-14 rounded-none font-black text-lg bg-[#003580] hover:bg-[#002b60] shadow-xl">
                 {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <ShieldCheck className="mr-2 h-5 w-5" />}
                 {isEditing ? 'SYNC UPDATED PACKAGE' : 'INITIALIZE PRODUCTION PACKAGE'}
             </Button>

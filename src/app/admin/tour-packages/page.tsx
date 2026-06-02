@@ -8,22 +8,22 @@ import type { TourPackage } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { PlusCircle, Calendar, Package, Trash2, Edit } from 'lucide-react';
+import { PlusCircle, Calendar, Package, Trash2, Edit2, Loader2 } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { BulkUploadTourPackagesDialog } from '@/components/admin/BulkUploadTourPackagesDialog';
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle, 
+  AlertDialogTrigger 
+} from '@/components/ui/alert-dialog';
 import { deleteTourPackageAction } from './actions';
 import { useToast } from '@/hooks/use-toast';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { useState } from 'react';
 
 function PackageGridSkeleton() {
@@ -60,12 +60,12 @@ function TourPackageAdminCard({ tourPackage }: { tourPackage: WithId<TourPackage
         try {
             const res = await deleteTourPackageAction(tourPackage.id);
             if (res.success) {
-                toast({ title: 'Expedition Purged', description: res.message });
+                toast({ title: 'Expedition Removed', description: res.message });
             } else {
-                toast({ variant: 'destructive', title: 'Purge Failed', description: res.message });
+                toast({ variant: 'destructive', title: 'Action Failed', description: res.message });
             }
         } catch (e: any) {
-            toast({ variant: 'destructive', title: 'Critical Error', description: e.message });
+            toast({ variant: 'destructive', title: 'System Error', description: e.message });
         } finally {
             setIsDeleting(false);
         }
@@ -84,6 +84,27 @@ function TourPackageAdminCard({ tourPackage }: { tourPackage: WithId<TourPackage
                 <div className="absolute top-3 left-3 bg-black/80 px-2 py-1 text-white text-[9px] font-black uppercase tracking-widest">
                     {tourPackage.duration}
                 </div>
+                <div className="absolute top-3 right-3 flex gap-1">
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button size="icon" variant="destructive" className="h-8 w-8 rounded-none bg-red-600/90 hover:bg-red-600" disabled={isDeleting}>
+                                {isDeleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent className="rounded-none">
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Purge Itinerary?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    This action will permanently delete "{tourPackage.title}" from the production grid. This cannot be undone.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel className="rounded-none">Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700 rounded-none text-white">Confirm Purge</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                </div>
             </div>
             <CardHeader className="p-5 space-y-2">
                 <CardTitle className="line-clamp-1 leading-snug text-lg font-black tracking-tight text-[#1a1a1a]">
@@ -98,30 +119,9 @@ function TourPackageAdminCard({ tourPackage }: { tourPackage: WithId<TourPackage
                     <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Starts from</span>
                     <span className="text-sm font-black text-[#1a1a1a]">₹{tourPackage.totalCost?.toLocaleString('en-IN')}</span>
                 </div>
-                <div className="flex gap-2">
-                    <Button variant="outline" size="sm" asChild className="rounded-none h-8 px-4 text-[10px] font-black uppercase border-black/10 hover:bg-muted transition-colors">
-                        <Link href={`/admin/tour-packages/${tourPackage.id}/edit`}><Edit className="h-3 w-3 mr-1" /> Edit</Link>
-                    </Button>
-                    <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground/40 hover:text-destructive transition-colors" disabled={isDeleting}>
-                                <Trash2 className="h-4 w-4" />
-                            </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent className="rounded-none">
-                            <AlertDialogHeader>
-                                <AlertDialogTitle>Purge Itinerary?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                    This will permanently remove "{tourPackage.title}" from the production nodes.
-                                </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                                <AlertDialogCancel className="rounded-none">Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90 rounded-none text-white">Confirm Purge</AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
-                </div>
+                <Button variant="outline" size="sm" asChild className="rounded-none h-8 px-5 text-[10px] font-black uppercase border-black/10 hover:bg-muted transition-colors">
+                    <Link href={`/admin/tour-packages/${tourPackage.id}/edit`}><Edit2 className="mr-2 h-3 w-3" /> Edit</Link>
+                </Button>
             </CardFooter>
         </Card>
     )

@@ -119,10 +119,13 @@ export async function deleteTourPackageAction(packageId: string) {
 
     try {
         await adminDb.collection('tourPackages').doc(packageId).delete();
+        
         revalidatePath('/tour-packages');
         revalidatePath('/');
-        return { success: true, message: "Itinerary purged from cloud nodes." };
+        
+        return { success: true, message: 'Expedition has been permanently removed.' };
     } catch (e: any) {
-        return { success: false, message: e.message };
+        console.error("Delete failure:", e);
+        return { success: false, message: e.message || 'Failed to remove itinerary.' };
     }
 }
