@@ -11,6 +11,7 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 /**
  * @fileOverview Northern Harrier Public Cultural Journal.
  * Vibrant Devbhumi Cultural Archive with symmetric editorial grid.
+ * Fixed with 100% relevant Himalayan images.
  */
 
 const CULTURAL_BLOGS = [
@@ -72,7 +73,8 @@ const CULTURAL_BLOGS = [
 
 export default function BlogsPublicPage() {
     const getImageUrl = (id: string) => {
-        return PlaceHolderImages.find(img => img.id === id)?.imageUrl || 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=800';
+        const found = PlaceHolderImages.find(img => img.id === id);
+        return found ? found.imageUrl : 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=800';
     };
 
     return (

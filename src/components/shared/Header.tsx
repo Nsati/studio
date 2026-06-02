@@ -104,7 +104,7 @@ export default function Header() {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-primary py-4 border-b border-white/10 shadow-lg">
+    <header className="sticky top-0 z-0 w-full bg-primary py-4 border-b border-white/10 shadow-lg">
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-10">
             <Link href="/" className="flex items-center gap-3 group">
