@@ -1,3 +1,4 @@
+
 'use client';
 import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
@@ -23,8 +24,8 @@ function ResultSkeleton() {
         <Card className="w-full">
             <CardHeader className="text-center">
                 <Loader2 className="mx-auto h-10 w-10 animate-spin text-primary" />
-                <CardTitle className="font-headline text-2xl mt-4">Finding Your Perfect Vibe...</CardTitle>
-                <CardDescription>Our Tripzy Expert is looking for the best spots just for you.</CardDescription>
+                <CardTitle className="font-headline text-2xl mt-4">Finding Your Perfect Match...</CardTitle>
+                <CardDescription>Our travel expert is curating the best options for you.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
                 <Skeleton className="h-8 w-3/4 mx-auto" />
@@ -45,12 +46,12 @@ function ResultDisplay({ result }: { result: VibeMatchOutput }) {
                  <div className="p-3 bg-primary rounded-full text-primary-foreground">
                     <Sparkles className="h-8 w-8" />
                 </div>
-                <CardTitle className="font-headline text-3xl mt-4">Your Tripzy Vibe Match!</CardTitle>
+                <CardTitle className="font-headline text-3xl mt-4">Your Vibe Match!</CardTitle>
                 <CardDescription>Our smart recommendation based on your current mood.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
                 <div className="text-center bg-background p-6 rounded-lg border">
-                    <p className="text-muted-foreground">Tripzy recommends</p>
+                    <p className="text-muted-foreground">We recommend visiting</p>
                     <h3 className="text-4xl font-bold font-headline text-primary">{result.suggestedLocation}</h3>
                 </div>
                 
@@ -65,7 +66,7 @@ function ResultDisplay({ result }: { result: VibeMatchOutput }) {
                     <Card>
                         <CardHeader className="flex-row items-center gap-3 space-y-0">
                            <Hotel className="h-6 w-6 text-accent" />
-                           <CardTitle className="text-lg">Suggested Stay</CardTitle>
+                           <CardTitle className="text-lg">Stay Type</CardTitle>
                         </CardHeader>
                         <CardContent>
                            <p className="font-semibold text-lg">{result.accommodationType}</p>
@@ -74,11 +75,11 @@ function ResultDisplay({ result }: { result: VibeMatchOutput }) {
                     <Card>
                         <CardHeader className="flex-row items-center gap-3 space-y-0">
                             <Mountain className="h-6 w-6 text-accent" />
-                           <CardTitle className="text-lg">Silent Zone Score</CardTitle>
+                           <CardTitle className="text-lg">Peace Score</CardTitle>
                         </CardHeader>
                         <CardContent>
                            <p className="font-semibold text-lg">{result.silentZoneScore} / 10</p>
-                           <p className="text-xs text-muted-foreground">{result.silentZoneScore > 7 ? "Pure peace" : "A balanced vibe"}</p>
+                           <p className="text-xs text-muted-foreground">{result.silentZoneScore > 7 ? "Absolute peace" : "A balanced experience"}</p>
                         </CardContent>
                     </Card>
                      <Card>
@@ -95,7 +96,7 @@ function ResultDisplay({ result }: { result: VibeMatchOutput }) {
                 <Button asChild size="lg" className="w-full mt-6">
                     <Link href={`/search?city=${result.suggestedLocation}`}>
                         <Search className="mr-2 h-5 w-5" />
-                        Find Tripzy Hotels in {result.suggestedLocation}
+                        Explore Stays in {result.suggestedLocation}
                     </Link>
                 </Button>
 
@@ -132,17 +133,17 @@ export default function VibeMatchPage() {
     };
 
     const questions = [
-        { name: "travelVibe", label: "What's your travel vibe?", options: [{value: "peace", label: "Peace & Relaxation"}, {value: "adventure", label: "Adventure & Thrills"}], icon: Heart },
+        { name: "travelVibe", label: "What's your preferred travel style?", options: [{value: "peace", label: "Peace & Relaxation"}, {value: "adventure", label: "Adventure & Exploration"}], icon: Heart },
         { name: "travelerType", label: "Who are you traveling with?", options: [{value: "solo", label: "Solo"}, {value: "couple", label: "Couple"}, {value: "family", label: "Family"}], icon: Users },
-        { name: "atmosphere", label: "What kind of atmosphere do you prefer?", options: [{value: "spiritual", label: "Spiritual & Cultural"}, {value: "away_from_crowd", label: "Away from Crowds"}], icon: Wind },
+        { name: "atmosphere", label: "What kind of environment do you enjoy?", options: [{value: "spiritual", label: "Spiritual & Cultural"}, {value: "away_from_crowd", label: "Quiet & Serene"}], icon: Wind },
     ];
 
     return (
         <div className="container mx-auto max-w-4xl py-12 px-4 md:px-6">
             <div className="text-center mb-12">
-                <h1 className="font-headline text-4xl md:text-5xl font-bold">Tripzy Vibe Match™</h1>
+                <h1 className="font-headline text-4xl md:text-5xl font-bold">Vibe Match™</h1>
                 <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-                    Tell us your mood, and our Tripzy smart expert will find the perfect Himalayan escape for you.
+                    Share your mood with us, and our expert system will find the perfect Himalayan getaway just for you.
                 </p>
             </div>
             
@@ -178,7 +179,7 @@ export default function VibeMatchPage() {
                                                         <Label
                                                             htmlFor={`${q.name}-${opt.value}`}
                                                             className={cn(
-                                                                "flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer",
+                                                                "flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer transition-all",
                                                                 "peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
                                                             )}
                                                         >
@@ -196,7 +197,7 @@ export default function VibeMatchPage() {
 
                         <Button type="submit" size="lg" className="w-full h-14 text-lg" disabled={isLoading}>
                             {isLoading ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : <Wand2 className="mr-2 h-6 w-6" />}
-                            {isLoading ? "Finding your vibe..." : "Find My Tripzy Escape"}
+                            {isLoading ? "Analyzing your vibe..." : "Find My Perfect Escape"}
                         </Button>
                     </form>
                 </Form>
@@ -206,7 +207,7 @@ export default function VibeMatchPage() {
                 {error && (
                     <Card className="w-full border-destructive bg-destructive/10">
                         <CardHeader>
-                            <CardTitle className="text-destructive">Oops! Something went wrong.</CardTitle>
+                            <CardTitle className="text-destructive">Something went wrong.</CardTitle>
                             <CardDescription className="text-destructive">{error}</CardDescription>
                         </CardHeader>
                     </Card>

@@ -1,9 +1,10 @@
+
 'use client';
 import Link from 'next/link';
 import { useUser, useAuth } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { useRouter, usePathname } from 'next/navigation';
-import { User, LogOut, LayoutDashboard, Book, Menu, HelpCircle, Globe, Video } from 'lucide-react';
+import { User, LogOut, LayoutDashboard, Book, Menu, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -26,9 +27,9 @@ import React from 'react';
 import { Logo } from './Logo';
 
 const navLinks = [
-  { href: '/search', label: 'Stays' },
+  { href: '/search', label: 'Search Stays' },
   { href: '/tour-packages', label: 'Tours' },
-  { href: '/blogs', label: 'Blogs' },
+  { href: '/blogs', label: 'Travel Journal' },
   { href: '/vibe-match', label: 'Vibe Match™' },
 ];
 
@@ -71,17 +72,17 @@ function UserNav() {
           {userProfile?.role === 'admin' && (
             <DropdownMenuItem className="cursor-pointer rounded-xl h-12 font-bold" onClick={() => router.push('/admin')}>
               <LayoutDashboard className="mr-3 h-4 w-4 text-primary" />
-              <span>Admin Extranet</span>
+              <span>Admin Dashboard</span>
             </DropdownMenuItem>
           )}
           <DropdownMenuItem className="cursor-pointer rounded-xl h-12 font-bold" onClick={() => router.push('/my-bookings')}>
             <Book className="mr-3 h-4 w-4 text-primary" />
-            <span>My Collection</span>
+            <span>My Bookings</span>
           </DropdownMenuItem>
           <DropdownMenuSeparator className="my-2" />
           <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive font-black h-12 rounded-xl" onClick={handleSignOut}>
             <LogOut className="mr-3 h-4 w-4" />
-            <span>Log out</span>
+            <span>Log Out</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -91,10 +92,10 @@ function UserNav() {
   return (
     <div className="flex items-center gap-3">
       <Button asChild variant="ghost" className="text-white hover:bg-white/10 font-black text-[11px] uppercase tracking-widest hidden sm:flex">
-        <Link href="/login">Partner Access</Link>
+        <Link href="/login">Login</Link>
       </Button>
       <Button asChild className="bg-white text-primary hover:bg-white/90 font-black text-[11px] uppercase tracking-widest rounded-full px-6 shadow-xl">
-        <Link href="/signup">Join Harrier</Link>
+        <Link href="/signup">Sign Up</Link>
       </Button>
     </div>
   );
@@ -104,7 +105,7 @@ export default function Header() {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-0 w-full bg-primary py-4 border-b border-white/10 shadow-lg">
+    <header className="sticky top-0 z-50 w-full bg-primary py-4 border-b border-white/10 shadow-lg">
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-10">
             <Link href="/" className="flex items-center gap-3 group">

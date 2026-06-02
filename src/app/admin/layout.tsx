@@ -1,8 +1,9 @@
+
 'use client';
 import { useUser } from '@/firebase';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Hotel, Users2, Tag, LogOut, ExternalLink, BookOpen, Menu, LayoutDashboard, MapPin, Video } from 'lucide-react';
+import { Hotel, Users2, Tag, LogOut, ExternalLink, BookOpen, Menu, LayoutDashboard, MapPin } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -12,12 +13,11 @@ import { Logo } from '@/components/shared/Logo';
 
 const navItems = [
     { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/admin/bookings', label: 'Reservations', icon: BookOpen },
+    { href: '/admin/bookings', label: 'Bookings', icon: BookOpen },
     { href: '/admin/hotels', label: 'Properties', icon: Hotel },
-    { href: '/admin/tour-packages', label: 'Expeditions', icon: MapPin },
-    // Static Blog content is now curated, no longer managed via Admin for cultural consistency.
-    { href: '/admin/users', label: 'Liaisons', icon: Users2 },
-    { href: '/admin/promotions', label: 'Access Codes', icon: Tag },
+    { href: '/admin/tour-packages', label: 'Tour Packages', icon: MapPin },
+    { href: '/admin/users', label: 'Members', icon: Users2 },
+    { href: '/admin/promotions', label: 'Coupons', icon: Tag },
 ];
 
 function AdminLayoutSkeleton() {
@@ -88,7 +88,7 @@ export default function AdminLayout({
     <div className="flex min-h-screen bg-[#f8fafc]">
       {/* Mobile Header */}
       <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-[#003580] z-50 px-4 flex items-center justify-between text-white">
-        <span className="font-bold tracking-tight text-white uppercase text-[11px] font-black">Harrier Command</span>
+        <span className="font-bold tracking-tight text-white uppercase text-[11px] font-black">Admin Panel</span>
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="text-white">
@@ -97,7 +97,7 @@ export default function AdminLayout({
             </SheetTrigger>
             <SheetContent side="left" className="w-[280px] p-0 border-0">
                 <SheetHeader className="p-6 bg-[#003580] text-white">
-                    <SheetTitle className="text-white">Harrier Console</SheetTitle>
+                    <SheetTitle className="text-white">Control Panel</SheetTitle>
                 </SheetHeader>
                 <div className="p-4">
                     <NavLinks onClick={() => setIsOpen(false)} />
@@ -115,7 +115,7 @@ export default function AdminLayout({
                   Northern <span className="text-accent">Harrier</span>
                 </span>
             </Link>
-            <p className="text-[9px] text-white/50 font-black uppercase tracking-[0.2em] mt-3">Expedition Command Console</p>
+            <p className="text-[9px] text-white/50 font-black uppercase tracking-[0.2em] mt-3">Internal Management Dashboard</p>
         </div>
 
         <div className="flex-1 py-6 overflow-y-auto">
@@ -124,14 +124,14 @@ export default function AdminLayout({
 
         <div className="mt-auto border-t p-4 space-y-4">
              <div className="px-4 py-3 bg-muted/50 rounded-sm">
-                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Active Commander</p>
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Active Administrator</p>
                 <p className="text-xs font-black truncate text-[#1a1a1a]">{userProfile?.displayName}</p>
              </div>
              <Button variant="outline" asChild className="w-full justify-start rounded-none h-10 text-[10px] font-black uppercase tracking-widest border-black/5 hover:bg-muted">
-                <Link href="/" target="_blank"><ExternalLink className="mr-2 h-4 w-4 text-primary" /> Live Portal</Link>
+                <Link href="/" target="_blank"><ExternalLink className="mr-2 h-4 w-4 text-primary" /> View Live Site</Link>
              </Button>
              <Button variant="ghost" asChild className="w-full justify-start rounded-none h-10 text-[10px] font-black uppercase tracking-widest text-destructive hover:bg-destructive/5">
-                <Link href="/my-bookings"><LogOut className="mr-2 h-4 w-4" /> End Session</Link>
+                <Link href="/my-bookings"><LogOut className="mr-2 h-4 w-4" /> Log Out</Link>
              </Button>
         </div>
       </aside>
