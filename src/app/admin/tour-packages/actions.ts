@@ -9,10 +9,10 @@ import { TourPackageUploadSchema, type TourPackageUploadData } from '../schemas'
 
 /**
  * @fileOverview Production Tour Package Actions.
- * Hardened with batch chunking and data sanitization for Firestore compatibility.
+ * Normalizes headers and ensures robust CSV image processing.
  */
 
-export async function bulkUploadTourPackages(data: TourPackageUploadData[]) {
+export async function bulkUploadTourPackages(data: any[]) {
   const { adminDb, error } = getFirebaseAdmin();
   if (error || !adminDb) {
     return { success: false, message: error || "Admin SDK not initialized" };
@@ -26,10 +26,16 @@ export async function bulkUploadTourPackages(data: TourPackageUploadData[]) {
       const chunk = data.slice(i, i + chunkSize);
       const batch = adminDb.batch();
 
-      for (const row of chunk) {
-        const validation = TourPackageUploadSchema.safeParse(row);
+      for (const rawRow of chunk) {
+        // Normalize keys to lowercase to handle CSV headers like "Image", "IMAGE", etc.
+        const normalizedRow: any = {};
+        Object.keys(rawRow).forEach(key => {
+          normalizedRow[key.toLowerCase()] = rawRow[key];
+        });
+
+        const validation = TourPackageUploadSchema.safeParse(normalizedRow);
         if (!validation.success) {
-          console.warn(`Skipping invalid row: ${row.title}`, validation.error.message);
+          console.warn(`Skipping invalid row: ${normalizedRow.title || 'Untitled'}`, validation.error.message);
           continue; 
         }
 
@@ -38,21 +44,20 @@ export async function bulkUploadTourPackages(data: TourPackageUploadData[]) {
         const packageRef = adminDb.collection('tourPackages').doc(packageId);
 
         let itinerary = [];
-        try { itinerary = pkg.itinerary ? JSON.parse(pkg.itinerary) : []; } catch (e) { itinerary = []; }
+        try { itinerary = pkg.itinerary ? (typeof pkg.itinerary === 'string' ? JSON.parse(pkg.itinerary) : pkg.itinerary) : []; } catch (e) { itinerary = []; }
         
         let hotels = [];
         if (pkg.hotels) {
-          try { hotels = JSON.parse(pkg.hotels); } catch (e) { hotels = []; }
+          try { hotels = typeof pkg.hotels === 'string' ? JSON.parse(pkg.hotels) : pkg.hotels; } catch (e) { hotels = []; }
         }
 
         const totalCost = pkg.price + (pkg.price * (pkg.gst / 100));
 
-        // Data Sanitization: Ensure no 'undefined' values are passed to Firestore
         const finalDoc: any = {
           id: packageId,
           title: pkg.title || '',
           duration: pkg.duration || '',
-          destinations: pkg.destinations ? pkg.destinations.split(',').map(d => d.trim()).filter(Boolean) : [],
+          destinations: pkg.destinations ? (Array.isArray(pkg.destinations) ? pkg.destinations : pkg.destinations.split(',').map(d => d.trim()).filter(Boolean)) : [],
           price: pkg.price || 0,
           gst: pkg.gst || 0,
           totalCost: totalCost || 0,
@@ -64,13 +69,13 @@ export async function bulkUploadTourPackages(data: TourPackageUploadData[]) {
           travelDate: pkg.travelDate || '',
           itinerary: itinerary,
           hotels: hotels,
-          inclusions: pkg.inclusions ? pkg.inclusions.split(',').map(i => i.trim()).filter(Boolean) : [],
-          exclusions: pkg.exclusions ? pkg.exclusions.split(',').map(e => e.trim()).filter(Boolean) : [],
+          inclusions: pkg.inclusions ? (Array.isArray(pkg.inclusions) ? pkg.inclusions : pkg.inclusions.split(',').map(i => i.trim()).filter(Boolean)) : [],
+          exclusions: pkg.exclusions ? (Array.isArray(pkg.exclusions) ? pkg.exclusions : pkg.exclusions.split(',').map(e => e.trim()).filter(Boolean)) : [],
           policies: {
-            tcs: pkg.policy_tcs || '',
-            cancellation: pkg.policy_cancellation || '',
-            payment: pkg.policy_payment || '',
-            terms: pkg.policy_terms || ''
+            tcs: pkg.policy_tcs || 'As per govt norms',
+            cancellation: pkg.policy_cancellation || 'Standard T&C apply',
+            payment: pkg.policy_payment || 'Advance required',
+            terms: pkg.policy_terms || 'Standard terms apply'
           }
         };
 
@@ -98,15 +103,11 @@ export async function saveTourPackageAction(packageId: string, data: any) {
 
     try {
         const packageRef = adminDb.collection('tourPackages').doc(packageId);
-        // Sanitizing payload before set (JSON stringify/parse is a robust hack for deep cleaning undefineds)
         const sanitizedData = JSON.parse(JSON.stringify(data));
-        
         await packageRef.set(sanitizedData, { merge: true });
-        
         revalidatePath('/tour-packages');
         revalidatePath(`/tour-packages/${packageId}`);
         revalidatePath('/');
-        
         return { success: true };
     } catch (e: any) {
         return { success: false, message: e.message };
@@ -119,10 +120,8 @@ export async function deleteTourPackageAction(packageId: string) {
 
     try {
         await adminDb.collection('tourPackages').doc(packageId).delete();
-        
         revalidatePath('/tour-packages');
         revalidatePath('/');
-        
         return { success: true, message: 'Expedition has been permanently removed.' };
     } catch (e: any) {
         console.error("Delete failure:", e);

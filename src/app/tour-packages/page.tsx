@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -15,7 +16,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 /**
  * @fileOverview Live Tour Packages Listing.
- * Fetches real-time data from Firestore to reflect Admin Panel updates instantly.
+ * Resilient image rendering for both placeholder IDs and external URLs.
  */
 
 function PackageSkeleton() {
@@ -42,9 +43,9 @@ export default function TourPackagesPage() {
   const { data: packages, isLoading } = useCollection<TourPackage>(packagesQuery);
 
   const getImageUrl = (img: string) => {
-    if (!img) return '';
+    if (!img) return 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=800';
     if (img.startsWith('http')) return img;
-    return PlaceHolderImages.find((p) => p.id === img)?.imageUrl || '';
+    return PlaceHolderImages.find((p) => p.id === img)?.imageUrl || 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=800';
   };
 
   return (
@@ -96,7 +97,7 @@ export default function TourPackagesPage() {
                                             </CardTitle>
                                             <div className="flex items-center gap-2 text-sm text-[#006ce4] font-black uppercase tracking-widest underline decoration-2 underline-offset-4">
                                                 <MapPin className="h-4 w-4" />
-                                                {pkg.destinations.join(' • ')}
+                                                {pkg.destinations?.join(' • ')}
                                             </div>
                                         </div>
                                         
