@@ -1,6 +1,6 @@
 'use client';
 
-import { Facebook, Twitter, Instagram, Youtube, Mail, Phone, MapPin, ShieldCheck, Compass, Globe2 } from 'lucide-react';
+import { Facebook, Twitter, Instagram, Youtube, Mail, Phone, MapPin, ShieldCheck, Compass, Globe2, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
 import { Logo } from './Logo';
 
@@ -12,7 +12,7 @@ const footerLinks = {
     { label: 'Vibe Match™', href: '/vibe-match' },
   ],
   'Platform': [
-    { label: 'About Our Mission', href: '/about' },
+    { label: 'Our Mission', href: '/about' },
     { label: 'Travel Guides', href: '/blogs' },
     { label: 'Safety Protocols', href: '/terms' },
     { label: 'Contact Helpdesk', href: '/contact' },
@@ -40,12 +40,17 @@ export default function Footer() {
                 <p className="max-w-xs text-white/70 font-medium leading-relaxed text-sm">
                   Dedicated to preserving and promoting the sacred heritage of Uttarakhand while providing modern adventure protocols for the global traveler.
                 </p>
-                <div className="flex items-center gap-5">
-                  {[Facebook, Twitter, Instagram, Youtube].map((Icon, idx) => (
-                    <a key={idx} href="#" className="h-10 w-10 bg-white/10 rounded-xl flex items-center justify-center text-white transition-all hover:bg-accent hover:text-accent-foreground">
-                        <Icon className="h-5 w-5" />
-                    </a>
-                  ))}
+                <div className="flex flex-col gap-4">
+                  <a href="https://wa.me/916399902725" target="_blank" className="flex items-center gap-3 text-accent font-bold hover:underline">
+                    <MessageCircle className="h-5 w-5" /> WhatsApp Booking: +91 6399902725
+                  </a>
+                  <div className="flex items-center gap-5">
+                    {[Facebook, Twitter, Instagram, Youtube].map((Icon, idx) => (
+                      <a key={idx} href="#" className="h-10 w-10 bg-white/10 rounded-xl flex items-center justify-center text-white transition-all hover:bg-accent hover:text-accent-foreground">
+                          <Icon className="h-5 w-5" />
+                      </a>
+                    ))}
+                  </div>
                 </div>
             </div>
 
@@ -66,6 +71,16 @@ export default function Footer() {
             ))}
         </div>
         
+        {/* Payment Partner Icons Placeholder */}
+        <div className="flex items-center justify-center gap-8 py-10 border-y border-white/5 mb-12 opacity-50 grayscale hover:grayscale-0 transition-all">
+            <span className="text-[10px] font-black uppercase tracking-widest">SECURE PAYMENTS:</span>
+            <div className="flex gap-10">
+                <span className="font-black italic text-lg tracking-tighter">UPI</span>
+                <span className="font-black text-lg">Razorpay</span>
+                <span className="font-black text-lg uppercase">Paytm</span>
+            </div>
+        </div>
+
         <div className="border-t border-white/10 pt-12 flex flex-col md:flex-row justify-between items-center gap-8 text-[10px] font-bold text-white/40 uppercase tracking-widest">
             <div className="flex flex-col md:flex-row items-center gap-8 text-center md:text-left">
                 <span>© {new Date().getFullYear()} Northern Harrier Intelligence Pvt Ltd.</span>

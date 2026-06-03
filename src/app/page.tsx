@@ -7,14 +7,14 @@ import { motion } from 'framer-motion';
 import { SearchFilters } from './search/SearchFilters';
 import { 
   MapPin, 
-  Compass, 
   ShieldCheck, 
   Star, 
   ArrowRight, 
-  Mountain, 
-  Zap, 
   Users,
-  Sparkles
+  Sparkles,
+  Compass,
+  Tent,
+  Heart
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,7 +25,7 @@ export default function LandingPage() {
   return (
     <div className="bg-background min-h-screen font-sans">
       
-      {/* Hero Section with Global Search */}
+      {/* SECTION 1: Hero Section */}
       <section className="relative h-[95vh] min-h-[700px] w-full flex items-center justify-center overflow-hidden">
         <Image 
           src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&q=80&w=1920" 
@@ -54,6 +54,13 @@ export default function LandingPage() {
               <p className="mt-6 text-xl md:text-2xl text-white/90 max-w-3xl mx-auto font-medium leading-relaxed tracking-tight">
                 Authentic Himalayan journeys, spiritual pilgrimages, and adventure protocols across the Land of Gods.
               </p>
+              
+              <div className="flex items-center justify-center gap-2 text-white/80 font-bold text-sm pt-4">
+                <div className="flex text-accent">
+                   {[...Array(5)].map((_, i) => <Star key={i} size={14} fill="currentColor" />)}
+                </div>
+                <span>⭐ 4.8 from 5000+ happy travelers</span>
+              </div>
             </motion.div>
 
             <motion.div 
@@ -68,15 +75,16 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Featured Destinations Grid */}
+      {/* SECTION 2: Featured Nodes Grid */}
       <section className="py-32 bg-background relative overflow-hidden">
         <div className="container px-6">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-20 gap-6">
-            <div className="space-y-3">
+            <div className="space-y-3 text-left">
                 <div className="flex items-center gap-3 text-accent font-bold uppercase tracking-[0.3em] text-[10px]">
                     <Sparkles className="h-4 w-4" /> Spiritual Nodes
                 </div>
                 <h2 className="text-4xl md:text-6xl font-bold tracking-tighter text-primary font-heading uppercase">Divine Destinations</h2>
+                <p className="text-slate-500 font-medium">Curated access to the most sacred corners of Uttarakhand.</p>
             </div>
             <Button variant="link" asChild className="text-accent font-bold uppercase tracking-widest text-xs p-0 h-auto group">
                 <Link href="/search">
@@ -118,12 +126,12 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Trust & Heritage Section */}
+      {/* SECTION 3: Why Choose Us (Unique Selling Points) */}
       <section className="py-32 bg-muted/30 border-y border-border/10 relative">
-        <div className="container px-6">
-           <div className="max-w-4xl mx-auto text-center mb-20 space-y-4">
+        <div className="container px-6 text-center">
+           <div className="max-w-4xl mx-auto mb-20 space-y-4">
                 <h4 className="text-accent font-bold uppercase tracking-[0.4em] text-[10px]">Trust & Divinity</h4>
-                <h2 className="text-4xl md:text-5xl font-bold tracking-tighter text-primary font-heading uppercase">The Northern Promise</h2>
+                <h2 className="text-4xl md:text-5xl font-bold tracking-tighter text-primary font-heading uppercase text-center w-full">The Northern Promise</h2>
            </div>
            
            <div className="grid grid-cols-1 md:grid-cols-3 gap-16">
@@ -143,10 +151,21 @@ export default function LandingPage() {
                 </div>
               ))}
            </div>
+           
+           {/* Testimonial Quote */}
+           <motion.div 
+             initial={{ opacity: 0 }}
+             whileInView={{ opacity: 1 }}
+             className="mt-32 max-w-4xl mx-auto p-12 bg-white rounded-[3rem] shadow-2xl relative overflow-hidden italic text-xl text-primary font-medium border border-accent/10"
+           >
+              <div className="absolute top-0 left-0 w-2 h-full bg-accent" />
+              "Northern Harrier ensured that our Char Dham Yatra was not just a trip, but a life-changing spiritual experience. Their local expertise is unmatched in the Himalayas."
+              <footer className="mt-6 font-bold text-sm uppercase tracking-widest text-accent">— Giridhar Dorai, 2024 Traveller</footer>
+           </motion.div>
         </div>
       </section>
 
-      {/* Bottom CTA */}
+      {/* SECTION 4: Performance & Intent CTA */}
       <section className="py-48 relative overflow-hidden bg-primary">
         <div className="absolute inset-0 opacity-10 pointer-events-none">
             <Image src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=1920" fill alt="Texture" className="object-cover" />
@@ -170,7 +189,7 @@ export default function LandingPage() {
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
                     <Button asChild size="lg" className="h-16 px-12 rounded-full font-bold text-lg bg-accent hover:bg-white hover:text-primary transition-all shadow-xl saffron-glow group">
                         <Link href="/search" className="flex items-center gap-3">
-                            Explore Stays <ArrowRight className="ml-1 h-5 w-5 transition-transform group-hover:translate-x-2" />
+                            Plan Your Trip <ArrowRight className="ml-1 h-5 w-5 transition-transform group-hover:translate-x-2" />
                         </Link>
                     </Button>
                     <Button asChild variant="outline" size="lg" className="h-16 px-12 rounded-full font-bold text-lg border-white/20 hover:bg-white/10 text-white backdrop-blur-xl">

@@ -60,25 +60,11 @@ module.exports = {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
-        '2xl': '1.5rem',
-        '3xl': '2rem',
-        'pill': '100px',
       },
       boxShadow: {
         'apple': '0 4px 20px -5px rgba(0, 0, 0, 0.05)',
         'apple-deep': '0 20px 40px -10px rgba(0, 0, 0, 0.1)',
-        'glass': 'inset 0 0 0 1px rgba(255, 255, 255, 0.1)',
-      },
-      scale: {
-        '102': '1.02',
-      },
-      transitionTimingFunction: {
-        'apple-ease': 'cubic-bezier(0.4, 0, 0.2, 1)',
-      },
-      transitionDuration: {
-        '2000': '2000ms',
-        '3000': '3000ms',
-      },
+      }
     },
   },
   plugins: [require('tailwindcss-animate')],

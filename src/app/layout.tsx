@@ -6,6 +6,7 @@ import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
+import { MessageCircle } from 'lucide-react';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -48,9 +49,21 @@ export default function RootLayout({
         <FirebaseClientProvider>
           <FirebaseErrorListener />
           <Header />
-          <main className="relative z-10 min-h-screen pt-20">
+          <main className="relative z-10 min-h-screen">
             {children}
           </main>
+          
+          {/* Floating WhatsApp CTA */}
+          <a 
+            href="https://wa.me/916399902725" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="fixed bottom-6 right-6 z-[100] bg-[#25D366] text-white p-4 rounded-full shadow-2xl hover:scale-110 transition-transform active:scale-95 flex items-center gap-2 group"
+          >
+            <span className="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-500 whitespace-nowrap font-bold text-sm">Chat with Experts</span>
+            <MessageCircle className="h-7 w-7" />
+          </a>
+
           <Footer />
           <Toaster />
         </FirebaseClientProvider>

@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useUser, useAuth } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { useRouter, usePathname } from 'next/navigation';
-import { User, LogOut, LayoutDashboard, Book, Menu, ShieldCheck, ChevronDown, Phone, Globe } from 'lucide-react';
+import { User, LogOut, LayoutDashboard, Book, Menu, ShieldCheck, ChevronDown, Phone, Globe, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -96,7 +96,7 @@ function UserNav() {
 
   return (
     <div className="flex items-center gap-6">
-      <Link href="/login" className="text-primary/60 hover:text-primary font-bold text-[10px] tracking-widest uppercase hidden sm:block transition-colors">
+      <Link href="/login" className="text-primary font-bold text-[10px] tracking-widest uppercase hidden sm:block hover:text-accent transition-colors">
         Login
       </Link>
       <Button asChild className="bg-accent text-accent-foreground hover:bg-primary hover:text-white font-bold text-[10px] tracking-widest rounded-full px-8 h-10 shadow-lg saffron-glow">
@@ -139,7 +139,7 @@ export default function Header() {
                       href={link.href}
                       className={cn(
                           "text-[10px] font-bold tracking-widest transition-all relative py-2",
-                          pathname === link.href ? "text-accent" : (isScrolled ? "text-primary/60 hover:text-primary" : "text-white/60 hover:text-white")
+                          pathname === link.href ? "text-accent border-b-2 border-accent" : (isScrolled ? "text-primary/70 hover:text-accent" : "text-white/70 hover:text-accent")
                       )}
                     >
                       {link.label}
@@ -149,8 +149,8 @@ export default function Header() {
         </div>
 
         <div className="flex items-center gap-6">
-          <div className={cn("hidden lg:flex items-center gap-2 font-bold text-[9px] uppercase tracking-widest border-r pr-6", isScrolled ? "text-primary/30 border-border/10" : "text-white/30 border-white/10")}>
-            <Globe className="h-3 w-3" /> Northern Node
+          <div className={cn("hidden lg:flex items-center gap-2 font-bold text-[9px] uppercase tracking-widest border-r pr-6", isScrolled ? "text-primary/40 border-border/10" : "text-white/40 border-white/10")}>
+            <Globe className="h-3 w-3" /> Devbhoomi Node
           </div>
           <UserNav />
            <div className="lg:hidden">
@@ -162,7 +162,7 @@ export default function Header() {
                 </SheetTrigger>
                 <SheetContent side="right" className="bg-background border-l border-border/10 p-0">
                     <div className="h-full flex flex-col">
-                        <div className="p-10 border-b border-border/10 flex items-center justify-center bg-muted/20">
+                        <div className="p-10 border-b border-border/10 flex items-center justify-center bg-primary/10">
                             <Logo />
                         </div>
                         <nav className="flex-1 py-6">
@@ -172,7 +172,7 @@ export default function Header() {
                                   href={link.href}
                                   className={cn(
                                     "flex items-center justify-between px-8 py-6 font-bold text-[12px] tracking-widest border-b border-border/5 uppercase transition-all",
-                                    pathname === link.href ? "text-accent bg-accent/5" : "text-primary/60 hover:text-primary"
+                                    pathname === link.href ? "text-accent bg-accent/5" : "text-primary/70 hover:bg-muted"
                                   )}
                                 >
                                     <span>{link.label}</span>
@@ -181,9 +181,12 @@ export default function Header() {
                             ))}
                         </nav>
                         <div className="p-8 bg-primary/5 space-y-6">
-                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Support Node</p>
+                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Liaison Hub</p>
                             <a href="tel:+916399902725" className="flex items-center gap-3 text-lg font-bold text-primary hover:text-accent transition-colors">
                                 <Phone className="h-5 w-5" /> +91 6399902725
+                            </a>
+                             <a href="https://wa.me/916399902725" target="_blank" className="flex items-center gap-3 text-lg font-bold text-green-600 hover:text-green-700 transition-colors">
+                                <MessageSquare className="h-5 w-5" /> WhatsApp Support
                             </a>
                         </div>
                     </div>
