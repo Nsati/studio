@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { Suspense } from 'react';
@@ -10,16 +9,12 @@ import {
   ArrowRight, 
   Compass, 
   MapPin, 
-  Play, 
-  ShieldCheck, 
-  Heart, 
-  MessageSquare,
   Trophy,
-  Users,
   Mountain,
   Video,
   ChevronRight,
-  CheckCircle2
+  CheckCircle2,
+  MessageSquare
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -43,7 +38,7 @@ export default function LandingPage() {
   return (
     <div className="bg-background min-h-screen font-sans selection:bg-accent selection:text-white">
       
-      {/* 1. HERO SECTION - COMPACTED */}
+      {/* 1. HERO SECTION - REFINED CONTRAST */}
       <section className="relative h-[80vh] min-h-[600px] w-full flex items-center justify-center overflow-hidden">
         <Image 
           src="https://images.pexels.com/photos/18636614/pexels-photo-18636614.jpeg"
@@ -53,7 +48,7 @@ export default function LandingPage() {
           className="object-cover"
           unoptimized
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-background" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/30 to-background/20" />
         
         <div className="container relative z-10 px-6 text-center">
           <motion.div {...fadeInUp} className="max-w-4xl mx-auto space-y-6">
@@ -62,15 +57,15 @@ export default function LandingPage() {
             </Badge>
             
             <div className="space-y-2">
-                <h1 className="text-5xl md:text-7xl font-black text-white tracking-tighter leading-tight font-heading uppercase">
+                <h1 className="text-5xl md:text-7xl font-black text-white tracking-tighter leading-tight font-heading uppercase drop-shadow-2xl">
                     DISCOVER <span className="text-accent italic font-spiritual capitalize">Devbhoomi</span>
                 </h1>
-                <p className="text-xl md:text-2xl font-bold text-white/90 tracking-widest uppercase font-heading">
+                <p className="text-xl md:text-2xl font-bold text-white/90 tracking-widest uppercase font-heading drop-shadow-md">
                     THE SACRED HIMALAYAS
                 </p>
             </div>
             
-            <p className="mt-4 text-base md:text-lg text-white/80 max-w-2xl mx-auto font-medium leading-relaxed tracking-tight">
+            <p className="mt-4 text-base md:text-lg text-white/80 max-w-2xl mx-auto font-medium leading-relaxed tracking-tight drop-shadow-sm">
               Curated Char Dham Yatra, weekend getaways, trekking expeditions, and luxury stays in Devbhoomi.
             </p>
             
@@ -80,15 +75,15 @@ export default function LandingPage() {
                   PLAN YOUR PILGRIMAGE <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="h-14 px-8 rounded-full font-black text-sm border-2 border-white text-white hover:bg-white hover:text-primary backdrop-blur-sm transition-all">
-                <Link href="/search">EXPLORE ADVENTURES</Link>
+              <Button asChild variant="outline" size="lg" className="h-14 px-8 rounded-full font-black text-sm border-2 border-white/50 text-white hover:bg-white hover:text-primary backdrop-blur-md transition-all shadow-lg">
+                <Link href="/search" className="flex items-center justify-center">EXPLORE ADVENTURES</Link>
               </Button>
             </div>
           </motion.div>
         </div>
       </section>
 
-      {/* 2. STATS & PHOTO STRIP - COMPACTED */}
+      {/* 2. STATS & PHOTO STRIP */}
       <section className="py-16 bg-white relative z-20 -mt-12 rounded-t-[3rem]">
         <div className="container px-6">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
@@ -138,7 +133,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 3. FEATURED DESTINATIONS - COMPACTED */}
+      {/* 3. FEATURED DESTINATIONS */}
       <section className="py-20 bg-background">
         <div className="container px-6">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
@@ -177,7 +172,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 4. REVIEWS SECTION - COMPACTED */}
+      {/* 4. REVIEWS SECTION */}
       <section className="py-20 bg-white">
         <div className="container px-6">
           <div className="text-center mb-12 space-y-2">
@@ -221,7 +216,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 5. FINAL CTA BANNER - REFINED & COMPACTED */}
+      {/* 5. FINAL CTA BANNER */}
       <section className="py-24 relative overflow-hidden bg-background">
         <div className="container px-6 text-center">
             <div className="max-w-3xl mx-auto space-y-10">

@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useUser, useAuth } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { useRouter, usePathname } from 'next/navigation';
-import { User, LogOut, LayoutDashboard, Book, Menu, ShieldCheck, ChevronDown, Phone, Globe, MessageSquare, Mountain } from 'lucide-react';
+import { User, LogOut, LayoutDashboard, Book, Menu, ChevronDown, Phone, Mountain } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -97,7 +97,7 @@ function UserNav() {
 
   return (
     <div className="flex items-center gap-6">
-      <Link href="/login" className="text-primary font-bold text-[10px] tracking-widest uppercase hidden sm:block hover:text-accent transition-colors">
+      <Link href="/login" className="text-primary font-bold text-[10px] tracking-widest uppercase hidden sm:block hover:text-accent transition-colors text-shadow-sm">
         Login
       </Link>
       <Button asChild className="bg-accent text-accent-foreground hover:bg-primary hover:text-white font-bold text-[10px] tracking-widest rounded-full px-8 h-10 shadow-lg shadow-accent/20">
@@ -110,18 +110,36 @@ function UserNav() {
 export default function Header() {
   const pathname = usePathname();
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
 
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 50);
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      
+      // Scrolling down
+      if (currentScrollY > lastScrollY && currentScrollY > 150) {
+        setIsVisible(false);
+      } 
+      // Scrolling up
+      else {
+        setIsVisible(true);
+      }
+      
+      setLastScrollY(currentScrollY);
+      setIsScrolled(currentScrollY > 50);
+    };
+
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [lastScrollY]);
 
   return (
     <header 
       className={cn(
-        "fixed top-0 z-50 w-full transition-all duration-500",
-        isScrolled ? "bg-background/90 backdrop-blur-xl border-b border-muted/50 h-16" : "bg-transparent h-24"
+        "fixed top-0 z-50 w-full transition-all duration-500 transform",
+        isVisible ? "translate-y-0" : "-translate-y-full",
+        isScrolled ? "bg-background/95 backdrop-blur-xl border-b border-muted/50 h-16 shadow-sm" : "bg-transparent h-24"
       )}
     >
       <div className="container flex h-full items-center justify-between">
@@ -131,7 +149,10 @@ export default function Header() {
                    <Mountain className="h-6 w-6" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="font-heading text-xl md:text-2xl font-bold text-primary tracking-tighter uppercase group-hover:text-accent transition-all">
+                  <span className={cn(
+                    "font-heading text-xl md:text-2xl font-bold tracking-tighter uppercase group-hover:text-accent transition-all",
+                    isScrolled ? "text-primary" : "text-white"
+                  )}>
                       NORTHERN <span className="text-accent italic font-spiritual capitalize">HARRIER</span>
                   </span>
                   {!isScrolled && <span className="text-[7px] font-black uppercase text-white/60 tracking-[0.4em] -mt-1 ml-0.5">Uttarakhand Specialists</span>}
@@ -145,7 +166,7 @@ export default function Header() {
                       href={link.href}
                       className={cn(
                           "text-[10px] font-bold tracking-widest transition-all relative py-2 uppercase",
-                          pathname === link.href ? "text-accent border-b-2 border-accent" : (isScrolled ? "text-primary/70 hover:text-accent" : "text-white/70 hover:text-accent")
+                          pathname === link.href ? "text-accent border-b-2 border-accent" : (isScrolled ? "text-primary/70 hover:text-accent" : "text-white/80 hover:text-accent")
                       )}
                     >
                       {link.label}
