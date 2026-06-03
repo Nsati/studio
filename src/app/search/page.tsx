@@ -1,6 +1,6 @@
 'use client';
 import { Suspense, useState, useMemo } from 'react';
-import { useSearchParams } from 'navigation';
+import { useSearchParams } from 'next/navigation';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import type { Hotel } from '@/lib/types';
