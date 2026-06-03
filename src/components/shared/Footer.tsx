@@ -2,6 +2,7 @@
 
 import { Facebook, Twitter, Instagram, Youtube, Mail, Phone, MapPin, ShieldCheck, MessageCircle, Mountain } from 'lucide-react';
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 const footerLinks = {
   'Destinations': [
