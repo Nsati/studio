@@ -90,7 +90,6 @@ export function RoomBookingCard({ hotel, rooms, isLoadingRooms }: { hotel: WithI
       </CardHeader>
       
       <CardContent className="p-6 space-y-6">
-        {/* Date & Guest Selectors - Booking.com Inspired */}
         <div className="grid grid-cols-1 gap-4">
           <div className="space-y-1.5">
             <label className="text-[10px] font-black uppercase text-primary/40 ml-1 tracking-widest">Stay Window</label>
@@ -107,7 +106,7 @@ export function RoomBookingCard({ hotel, rooms, isLoadingRooms }: { hotel: WithI
                 </PopoverTrigger>
                 <PopoverContent 
                     className="w-auto p-0 rounded-3xl border-0 shadow-luxury bg-white overflow-hidden" 
-                    align="center"
+                    align="end"
                     sideOffset={12}
                 >
                     <Calendar 
@@ -141,7 +140,6 @@ export function RoomBookingCard({ hotel, rooms, isLoadingRooms }: { hotel: WithI
 
         <Separator className="opacity-10" />
 
-        {/* Room Selection Area */}
         <div className="space-y-4">
           <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60 ml-1">Live Inventory</h4>
           {isLoadingRooms ? (
@@ -187,7 +185,6 @@ export function RoomBookingCard({ hotel, rooms, isLoadingRooms }: { hotel: WithI
           )}
         </div>
 
-        {/* Final Action - Google Travel Style */}
         {selectedRoom && isDateRangeValid && (
           <div className='pt-2 space-y-4 animate-in fade-in slide-in-from-top-2 duration-500'>
             <Button
