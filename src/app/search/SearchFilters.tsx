@@ -23,7 +23,7 @@ import { cn } from '@/lib/utils';
 
 /**
  * @fileOverview Production Search Filter Engine.
- * Features ultra-aligned Airbnb-style calendar integration for all devices.
+ * Features ultra-aligned Airbnb-style calendar integration with dual-month desktop view.
  */
 
 export function SearchFilters() {
@@ -50,6 +50,7 @@ export function SearchFilters() {
     const [mode, setMode] = useState<'standard' | 'chardham' | 'trek'>(
         (searchParams.get('mode') as any) || 'standard'
     );
+    const [monthsToShow, setMonthsMonthsToShow] = useState(1);
     
     useEffect(() => {
         setCity(searchParams.get('city') || 'All');
@@ -62,6 +63,13 @@ export function SearchFilters() {
                 setDates({ from: new Date(checkIn), to: new Date(checkOut) });
             } catch (e) { setDates(undefined); }
         }
+
+        const handleResize = () => {
+            setMonthsMonthsToShow(window.innerWidth > 1024 ? 2 : 1);
+        };
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
     }, [searchParams]);
 
     const handleFormSubmit = (e: React.FormEvent) => {
@@ -77,7 +85,7 @@ export function SearchFilters() {
 
     return (
         <div className="space-y-6 max-w-[1200px] mx-auto w-full px-4 md:px-0">
-            <form onSubmit={handleFormSubmit} className="flex flex-col lg:flex-row items-stretch gap-2 bg-white p-2 rounded-[2.5rem] border border-black/5 shadow-luxury relative z-20 transition-all">
+            <form onSubmit={handleFormSubmit} className="flex flex-col lg:flex-row items-stretch gap-2 bg-white p-2 rounded-[2.5rem] border border-border/10 shadow-luxury relative z-20 transition-all">
                 
                 {/* Location Node */}
                 <div className="flex-[1.2] flex items-center gap-4 bg-muted/40 hover:bg-muted/60 px-6 py-3 rounded-[2rem] transition-all cursor-pointer group">
@@ -125,8 +133,9 @@ export function SearchFilters() {
                                     selected={dates}
                                     onSelect={setDates}
                                     disabled={{ before: new Date() }}
-                                    numberOfMonths={1}
+                                    numberOfMonths={monthsToShow}
                                     className="mx-auto"
+                                    weekStartsOn={1}
                                 />
                             </PopoverContent>
                         </Popover>
@@ -143,7 +152,7 @@ export function SearchFilters() {
                         <div className="flex items-center gap-2">
                             <Input 
                                 type="number" 
-                                min="1"
+                                min="1" 
                                 value={guests}
                                 onChange={(e) => setGuests(e.target.value)}
                                 className="border-0 bg-transparent p-0 h-auto focus-visible:ring-0 shadow-none font-black w-8 text-base text-primary tracking-tight"
@@ -174,7 +183,7 @@ export function SearchFilters() {
                             "h-11 rounded-full text-[10px] font-black uppercase tracking-[0.2em] px-8 border transition-all duration-500 flex items-center gap-3",
                             mode === p.id 
                                 ? "bg-primary text-white border-primary shadow-lg scale-105" 
-                                : "text-primary/40 border-black/5 hover:bg-primary/5 bg-white/50"
+                                : "text-primary/40 border-border/10 hover:bg-primary/5 bg-white/50"
                         )}
                     >
                         <p.icon className="h-3.5 w-3.5" /> {p.label}

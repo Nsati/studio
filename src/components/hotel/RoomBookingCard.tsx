@@ -32,18 +32,28 @@ import { Separator } from '../ui/separator';
 
 /**
  * @fileOverview Premium Availability Selection Card.
- * Uses Airbnb-style date range picking with perfectly centered calendar Popover.
+ * Uses Airbnb-style date range picking with 2-month desktop view and perfectly centered alignment.
  */
 
 export function RoomBookingCard({ hotel, rooms, isLoadingRooms }: { hotel: WithId<Hotel>, rooms: WithId<Room>[], isLoadingRooms: boolean }) {
   const [dates, setDates] = useState<DateRange | undefined>();
   const [selectedRoom, setSelectedRoom] = useState<WithId<Room> | null>(null);
   const [guests, setGuests] = useState('1');
+  const [monthsToShow, setMonthsMonthsToShow] = useState(1);
   const router = useRouter();
   const { toast } = useToast();
   
   const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  
+  useEffect(() => {
+    setMounted(true);
+    const handleResize = () => {
+        setMonthsMonthsToShow(window.innerWidth > 1024 ? 2 : 1);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const nights = dates?.from && dates?.to ? differenceInDays(dates.to, dates.from) : 0;
   const isDateRangeValid = nights > 0;
@@ -105,8 +115,9 @@ export function RoomBookingCard({ hotel, rooms, isLoadingRooms }: { hotel: WithI
                         selected={dates} 
                         onSelect={setDates} 
                         disabled={{ before: new Date() }}
-                        numberOfMonths={1}
+                        numberOfMonths={monthsToShow}
                         className="mx-auto"
+                        weekStartsOn={1}
                     />
                 </PopoverContent>
             </Popover>
