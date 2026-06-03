@@ -12,14 +12,13 @@ import {
   MapPin, 
   Trophy,
   Mountain,
-  Video,
   ChevronRight,
   CheckCircle2,
   MessageSquare,
   ShieldCheck,
   Calendar,
   Tent,
-  Shrine,
+  Church,
   Navigation,
   Sparkles
 } from 'lucide-react';
@@ -109,9 +108,6 @@ export default function LandingPage() {
                 <p className="text-slate-600 text-base md:text-lg font-medium leading-relaxed">
                     At Northern Harrier, we believe travel is more than visiting places—it&apos;s about creating memories that last a lifetime. We help travelers discover the true essence of Uttarakhand through carefully curated experiences, local insights, and seamless travel planning.
                 </p>
-                <p className="text-slate-500 text-sm font-medium">
-                    Whether you&apos;re seeking spiritual peace, mountain adventures, wildlife encounters, or a relaxing escape into nature, our platform connects you with the best that Uttarakhand has to offer.
-                </p>
             </div>
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mt-16">
@@ -152,7 +148,7 @@ export default function LandingPage() {
                     { title: 'Handpicked Destinations', desc: 'Explore the most beautiful locations, from famous landmarks to hidden Himalayan treasures.', icon: Mountain },
                     { title: 'Hassle-Free Planning', desc: 'Get complete travel guidance, itineraries, and destination recommendations.', icon: Navigation },
                     { title: 'Adventure & Nature', desc: 'Trekking, camping, wildlife safaris, river rafting, skiing, and more.', icon: Tent },
-                    { title: 'Spiritual Journeys', desc: 'Experience the divine charm of Uttarakhand sacred temples and pilgrimage routes.', icon: Shrine },
+                    { title: 'Spiritual Journeys', desc: 'Experience the divine charm of Uttarakhand sacred temples and pilgrimage routes.', icon: Church },
                     { title: 'Local Expertise', desc: 'Travel with confidence through authentic local knowledge and trusted recommendations.', icon: CheckCircle2 }
                 ].map((item, i) => (
                     <motion.div key={i} {...fadeInUp} transition={{ delay: i * 0.1 }} className="flex gap-6 p-8 bg-white rounded-[2.5rem] border border-black/5 hover:shadow-xl transition-all group">
@@ -177,7 +173,7 @@ export default function LandingPage() {
               <div className="flex items-center gap-2 text-accent font-black uppercase tracking-widest text-[9px]">
                 <Sparkles className="h-3 w-3" /> Explore Your Interest
               </div>
-              <h2 className="text-3xl md:text-5xl font-black tracking-tighter text-primary font-heading uppercase leading-none">Featured Collections</h2>
+              <h2 className="text-3xl md:text-5 font-black tracking-tighter text-primary font-heading uppercase leading-none">Featured Collections</h2>
             </div>
             <Button variant="link" asChild className="text-accent font-black uppercase tracking-widest text-[10px] group h-auto p-0">
               <Link href="/search" className="flex items-center gap-1">View All Destinations <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-1" /></Link>
@@ -192,7 +188,7 @@ export default function LandingPage() {
               { name: 'Wildlife & Nature', img: valley, badge: 'Wild', desc: 'Jim Corbett, Rajaji, Binsar' }
             ].map((node, i) => (
               <motion.div key={i} {...fadeInUp} transition={{ delay: i * 0.1 }}>
-                <Link href={`/search?category=${node.name}`}>
+                <Link href={`/search?city=${node.name}`}>
                   <Card className="group relative aspect-[3/4] overflow-hidden rounded-3xl border-0 shadow-lg cursor-pointer bg-muted">
                     {node.img && (
                       <Image 
