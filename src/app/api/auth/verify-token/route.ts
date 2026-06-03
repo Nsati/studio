@@ -1,3 +1,4 @@
+
 import { NextResponse } from 'next/server';
 import { getFirebaseAdmin } from '@/firebase/admin';
 import type { UserProfile } from '@/lib/types';
