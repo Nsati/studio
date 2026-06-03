@@ -127,14 +127,12 @@ export default function LandingPage() {
           <div className="overflow-hidden py-4">
              <div className="flex gap-6 animate-marquee whitespace-nowrap">
                 {[
-                  "https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?auto=format&fit=crop&q=80&w=400",
-                  "https://images.unsplash.com/photo-1544735749-2e924378a839?auto=format&fit=crop&q=80&w=400",
-                  "https://images.unsplash.com/photo-1625219973832-1594916a048a?auto=format&fit=crop&q=80&w=400",
-                  "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&q=80&w=400",
-                  "https://images.unsplash.com/photo-1596422846543-75c6fc18a5cf?auto=format&fit=crop&q=80&w=400",
-                  "https://images.unsplash.com/photo-1605649487212-47bdab064df7?auto=format&fit=crop&q=80&w=400",
-                  "https://images.unsplash.com/photo-1563810141380-032242502758?auto=format&fit=crop&q=80&w=400",
-                  "https://images.unsplash.com/photo-1506461883276-594a12b11cf3?auto=format&fit=crop&q=80&w=400"
+                  "https://images.pexels.com/photos/12321669/pexels-photo-12321669.jpeg?auto=compress&cs=tinysrgb&w=600",
+                  "https://images.pexels.com/photos/16090413/pexels-photo-16090413.jpeg?auto=compress&cs=tinysrgb&w=600",
+                  "https://images.pexels.com/photos/4143599/pexels-photo-4143599.jpeg?auto=compress&cs=tinysrgb&w=600",
+                  "https://images.pexels.com/photos/14149541/pexels-photo-14149541.jpeg?auto=compress&cs=tinysrgb&w=600",
+                  "https://images.pexels.com/photos/37618361/pexels-photo-37618361.jpeg?auto=compress&cs=tinysrgb&w=600",
+                  "https://images.pexels.com/photos/12321669/pexels-photo-12321669.jpeg?auto=compress&cs=tinysrgb&w=600"
                 ].map((url, i) => (
                   <div key={i} className="relative w-64 h-48 rounded-2xl overflow-hidden shadow-lg flex-shrink-0 group">
                     <Image 
@@ -173,10 +171,10 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
-              { name: 'Kedarnath', img: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?auto=format&fit=crop&q=80&w=800', badge: 'Spiritual', desc: 'High-altitude Jyotirlinga' },
-              { name: 'Rishikesh', img: 'https://images.unsplash.com/photo-1544735749-2e924378a839?auto=format&fit=crop&q=80&w=800', badge: 'Yoga & Rafting', desc: 'The Adventure Capital' },
-              { name: 'Auli', img: 'https://images.unsplash.com/photo-1625219973832-1594916a048a?auto=format&fit=crop&q=80&w=800', badge: 'Winter Sports', desc: 'Ski Slopes of India' },
-              { name: 'Nainital', img: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&q=80&w=800', badge: 'Family Retreat', desc: 'The Lake District' }
+              { name: 'Kedarnath', img: 'https://images.pexels.com/photos/16090413/pexels-photo-16090413.jpeg?auto=compress&cs=tinysrgb&w=800', badge: 'Spiritual', desc: 'High-altitude Jyotirlinga' },
+              { name: 'Rishikesh', img: 'https://images.pexels.com/photos/37618361/pexels-photo-37618361.jpeg?auto=compress&cs=tinysrgb&w=800', badge: 'Yoga & Rafting', desc: 'The Adventure Capital' },
+              { name: 'Auli', img: 'https://images.pexels.com/photos/14149541/pexels-photo-14149541.jpeg?auto=compress&cs=tinysrgb&w=800', badge: 'Winter Sports', desc: 'Ski Slopes of India' },
+              { name: 'Nainital', img: 'https://images.pexels.com/photos/4143599/pexels-photo-4143599.jpeg?auto=compress&cs=tinysrgb&w=800', badge: 'Family Retreat', desc: 'The Lake District' }
             ].map((node, i) => (
               <motion.div key={i} {...fadeInUp} transition={{ delay: i * 0.1 }}>
                 <Link href={`/search?city=${node.name}`}>
@@ -228,7 +226,7 @@ export default function LandingPage() {
            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto pt-12">
               <div className="flex items-center gap-6 p-6 bg-background rounded-3xl border border-muted hover:shadow-xl cursor-pointer group">
                  <div className="relative h-20 w-32 rounded-xl overflow-hidden shrink-0">
-                    <Image src="https://images.unsplash.com/photo-1544735749-2e924378a839?auto=format&fit=crop&q=80&w=200" alt="Rafting" fill unoptimized={true} className="object-cover" />
+                    <Image src="https://images.pexels.com/photos/37618361/pexels-photo-37618361.jpeg?auto=compress&cs=tinysrgb&w=200" alt="Rafting" fill unoptimized={true} className="object-cover" />
                     <div className="absolute inset-0 bg-black/20 flex items-center justify-center"><Play size={16} color="white" /></div>
                  </div>
                  <div className="text-left">
@@ -238,7 +236,7 @@ export default function LandingPage() {
               </div>
               <div className="flex items-center gap-6 p-6 bg-background rounded-3xl border border-muted hover:shadow-xl cursor-pointer group">
                  <div className="relative h-20 w-32 rounded-xl overflow-hidden shrink-0">
-                    <Image src="https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?auto=format&fit=crop&q=80&w=200" alt="Kedarnath" fill unoptimized={true} className="object-cover" />
+                    <Image src="https://images.pexels.com/photos/16090413/pexels-photo-16090413.jpeg?auto=compress&cs=tinysrgb&w=200" alt="Kedarnath" fill unoptimized={true} className="object-cover" />
                     <div className="absolute inset-0 bg-black/20 flex items-center justify-center"><Play size={16} color="white" /></div>
                  </div>
                  <div className="text-left">
@@ -308,7 +306,7 @@ export default function LandingPage() {
       {/* 6. WHY CHOOSE US (USP SECTION) */}
       <section className="py-32 bg-primary text-white relative overflow-hidden">
         <div className="absolute inset-0 opacity-10 pointer-events-none">
-            <Image src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=1920" fill alt="Texture" className="object-cover" unoptimized={true} />
+            <Image src="https://images.pexels.com/photos/14149541/pexels-photo-14149541.jpeg?auto=compress&cs=tinysrgb&w=1920" fill alt="Texture" className="object-cover" unoptimized={true} />
         </div>
         <div className="container px-6 relative z-10">
           <div className="text-center mb-20 space-y-4">
