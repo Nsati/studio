@@ -4,7 +4,7 @@
     {
       "id": "hero",
       "description": "Sacred Himalayas and Ganga Aarti Background",
-      "imageUrl": "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&q=80&w=1920",
+      "imageUrl": "https://images.pexels.com/photos/18636614/pexels-photo-18636614.jpeg",
       "imageHint": "kedarnath himalayas"
     },
     {
@@ -30,6 +30,24 @@
       "description": "Aerial View of Naini Lake",
       "imageUrl": "https://images.pexels.com/photos/4143599/pexels-photo-4143599.jpeg?auto=compress&cs=tinysrgb&w=1200",
       "imageHint": "nainital lake"
+    },
+    {
+      "id": "valley-view",
+      "description": "Lush Green Uttarakhand Valley",
+      "imageUrl": "https://images.pexels.com/photos/12321669/pexels-photo-12321669.jpeg?auto=compress&cs=tinysrgb&w=1200",
+      "imageHint": "uttarakhand valley"
+    },
+    {
+      "id": "himalaya-range",
+      "description": "Majestic Himalayan Range",
+      "imageUrl": "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=1200",
+      "imageHint": "himalaya mountains"
+    },
+    {
+      "id": "trekking-exp",
+      "description": "Trekking in the Himalayas",
+      "imageUrl": "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&q=80&w=1200",
+      "imageHint": "trekking uttarakhand"
     },
     {
       "id": "blog-aipan",

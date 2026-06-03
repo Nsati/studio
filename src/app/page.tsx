@@ -1,6 +1,7 @@
+
 'use client';
 
-import React, { Suspense } from 'react';
+import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -26,6 +27,7 @@ import {
   CarouselNext, 
   CarouselPrevious 
 } from '@/components/ui/carousel';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 const fadeInUp = {
   initial: { opacity: 0, y: 20 },
@@ -35,19 +37,31 @@ const fadeInUp = {
 };
 
 export default function LandingPage() {
+  const heroImage = PlaceHolderImages.find(img => img.id === 'hero');
+  const kedarnath = PlaceHolderImages.find(img => img.id === 'dest-kedarnath');
+  const rishikesh = PlaceHolderImages.find(img => img.id === 'dest-rishikesh');
+  const auli = PlaceHolderImages.find(img => img.id === 'dest-auli');
+  const nainital = PlaceHolderImages.find(img => img.id === 'dest-nainital');
+  const valley = PlaceHolderImages.find(img => img.id === 'valley-view');
+  const range = PlaceHolderImages.find(img => img.id === 'himalaya-range');
+  const trek = PlaceHolderImages.find(img => img.id === 'trekking-exp');
+
   return (
     <div className="bg-background min-h-screen font-sans selection:bg-accent selection:text-white">
       
-      {/* 1. HERO SECTION - REFINED CONTRAST */}
+      {/* 1. HERO SECTION */}
       <section className="relative h-[80vh] min-h-[600px] w-full flex items-center justify-center overflow-hidden">
-        <Image 
-          src="https://images.pexels.com/photos/18636614/pexels-photo-18636614.jpeg"
-          alt="Devbhoomi Uttarakhand Temple"
-          fill
-          priority
-          className="object-cover"
-          unoptimized
-        />
+        {heroImage && (
+          <Image 
+            src={heroImage.imageUrl}
+            alt={heroImage.description}
+            data-ai-hint={heroImage.imageHint}
+            fill
+            priority
+            className="object-cover"
+            unoptimized
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/30 to-background/20" />
         
         <div className="container relative z-10 px-6 text-center">
@@ -110,22 +124,18 @@ export default function LandingPage() {
 
           <div className="overflow-hidden py-4">
              <div className="flex gap-4 animate-marquee whitespace-nowrap">
-                {[
-                  "https://images.pexels.com/photos/12321669/pexels-photo-12321669.jpeg?auto=compress&cs=tinysrgb&w=600",
-                  "https://images.pexels.com/photos/16090413/pexels-photo-16090413.jpeg?auto=compress&cs=tinysrgb&w=600",
-                  "https://images.pexels.com/photos/4143599/pexels-photo-4143599.jpeg?auto=compress&cs=tinysrgb&w=600",
-                  "https://images.pexels.com/photos/14149541/pexels-photo-14149541.jpeg?auto=compress&cs=tinysrgb&w=600",
-                  "https://images.pexels.com/photos/37618361/pexels-photo-37618361.jpeg?auto=compress&cs=tinysrgb&w=600",
-                  "https://images.pexels.com/photos/12321669/pexels-photo-12321669.jpeg?auto=compress&cs=tinysrgb&w=600"
-                ].map((url, i) => (
+                {[valley, range, trek, kedarnath, rishikesh, auli].map((img, i) => (
                   <div key={i} className="relative w-56 h-40 rounded-2xl overflow-hidden shadow-md flex-shrink-0 group border border-black/5">
-                    <Image 
-                      src={url} 
-                      alt="Uttarakhand Guest Moment" 
-                      fill 
-                      unoptimized={true}
-                      className="object-cover transition-transform duration-1000 group-hover:scale-110"
-                    />
+                    {img && (
+                      <Image 
+                        src={img.imageUrl} 
+                        alt={img.description} 
+                        data-ai-hint={img.imageHint}
+                        fill 
+                        unoptimized={true}
+                        className="object-cover transition-transform duration-1000 group-hover:scale-110"
+                      />
+                    )}
                   </div>
                 ))}
              </div>
@@ -150,15 +160,24 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { name: 'Kedarnath', img: 'https://images.pexels.com/photos/16090413/pexels-photo-16090413.jpeg?auto=compress&cs=tinysrgb&w=800', badge: 'Spiritual', desc: 'Jyotirlinga' },
-              { name: 'Rishikesh', img: 'https://images.pexels.com/photos/37618361/pexels-photo-37618361.jpeg?auto=compress&cs=tinysrgb&w=800', badge: 'Adventure', desc: 'Yoga Capital' },
-              { name: 'Auli', img: 'https://images.pexels.com/photos/14149541/pexels-photo-14149541.jpeg?auto=compress&cs=tinysrgb&w=800', badge: 'Ski Node', desc: 'Snow Slopes' },
-              { name: 'Nainital', img: 'https://images.pexels.com/photos/4143599/pexels-photo-4143599.jpeg?auto=compress&cs=tinysrgb&w=800', badge: 'Family', desc: 'Lake District' }
+              { name: 'Kedarnath', img: kedarnath, badge: 'Spiritual', desc: 'Jyotirlinga' },
+              { name: 'Rishikesh', img: rishikesh, badge: 'Adventure', desc: 'Yoga Capital' },
+              { name: 'Auli', img: auli, badge: 'Ski Node', desc: 'Snow Slopes' },
+              { name: 'Nainital', img: nainital, badge: 'Family', desc: 'Lake District' }
             ].map((node, i) => (
               <motion.div key={i} {...fadeInUp} transition={{ delay: i * 0.1 }}>
                 <Link href={`/search?city=${node.name}`}>
                   <Card className="group relative aspect-[3/4] overflow-hidden rounded-3xl border-0 shadow-lg cursor-pointer bg-muted">
-                    <Image src={node.img} alt={node.name} fill unoptimized={true} className="object-cover transition-transform duration-700 group-hover:scale-110" />
+                    {node.img && (
+                      <Image 
+                        src={node.img.imageUrl} 
+                        alt={node.name} 
+                        data-ai-hint={node.img.imageHint}
+                        fill 
+                        unoptimized={true} 
+                        className="object-cover transition-transform duration-700 group-hover:scale-110" 
+                      />
+                    )}
                     <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-transparent to-transparent opacity-80" />
                     <div className="absolute bottom-6 left-6 right-6 space-y-1">
                       <h3 className="text-2xl font-black text-white tracking-tighter uppercase font-heading">{node.name}</h3>
