@@ -9,7 +9,7 @@ import { doc } from 'firebase/firestore';
 import type { TourPackage } from '@/lib/types';
 import { 
   Calendar, MapPin, Clock, ArrowLeft, 
-  CheckCircle2, XCircle, ChevronRight, Users, Bed, Car, Star, Sparkles, Receipt
+  CheckCircle2, XCircle, ChevronRight, Users, Bed, Car, Star, Sparkles, Receipt, Phone, MessageCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -235,11 +235,18 @@ export default function TourPackageDetailPage() {
 
                  <Separator />
 
-                 <Button asChild className="w-full h-24 rounded-full font-bold text-xl bg-accent hover:bg-accent/90 text-accent-foreground transition-all shadow-xl saffron-glow group active:scale-95">
-                   <Link href="/contact" className="flex items-center justify-center gap-4">
-                        Initialize Journey <ChevronRight className="h-6 w-6 transition-transform group-hover:translate-x-2" />
-                   </Link>
-                 </Button>
+                 <div className="space-y-4">
+                    <Button asChild className="w-full h-20 rounded-full font-bold text-lg bg-primary hover:bg-primary/90 text-white transition-all shadow-xl group active:scale-95">
+                        <a href="tel:+916399902725" className="flex items-center justify-center gap-4">
+                            <Phone className="h-6 w-6" /> CALL TO BOOK
+                        </a>
+                    </Button>
+                    <Button asChild className="w-full h-20 rounded-full font-bold text-lg bg-[#25D366] hover:bg-[#20ba5a] text-white transition-all shadow-xl group active:scale-95">
+                        <a href="https://wa.me/916399902725" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-4">
+                            <MessageCircle className="h-6 w-6" /> WHATSAPP BOOKING
+                        </a>
+                    </Button>
+                 </div>
 
                  <p className="text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                     Best Rate Guaranteed for Devbhoomi

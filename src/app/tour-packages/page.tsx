@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -8,7 +9,7 @@ import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import type { TourPackage } from '@/lib/types';
 import { Card, CardTitle, CardHeader, CardFooter } from '@/components/ui/card';
-import { MapPin, Clock, Star, ArrowRight, Info, Package } from 'lucide-react';
+import { MapPin, Clock, Star, ArrowRight, Info, Package, Phone } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -116,7 +117,7 @@ export default function TourPackagesPage() {
                                     </div>
                                 </CardHeader>
 
-                                {/* Footer - FIXED SPACING */}
+                                {/* Footer */}
                                 <CardFooter className="p-8 pt-0 flex flex-col gap-8">
                                     <div className="h-px w-full bg-muted" />
                                     <div className="flex flex-col sm:flex-row items-center justify-between gap-6 w-full">
@@ -127,11 +128,18 @@ export default function TourPackagesPage() {
                                             </p>
                                         </div>
                                         
-                                        <Button asChild size="lg" className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground rounded-full font-bold text-[10px] tracking-widest uppercase px-8 h-14 shadow-lg shadow-primary/20 transition-all active:scale-95">
-                                            <Link href={`/tour-packages/${pkg.id}`}>
-                                                EXPLORE <ArrowRight className="ml-2 h-4 w-4" />
-                                            </Link>
-                                        </Button>
+                                        <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+                                            <Button asChild variant="outline" className="w-full sm:w-auto rounded-full font-bold text-[10px] tracking-widest uppercase px-6 h-14 border-primary/20 hover:bg-primary/5 text-primary">
+                                                <a href="tel:+916399902725">
+                                                    <Phone className="mr-2 h-4 w-4" /> CALL
+                                                </a>
+                                            </Button>
+                                            <Button asChild size="lg" className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground rounded-full font-bold text-[10px] tracking-widest uppercase px-8 h-14 shadow-lg shadow-primary/20 transition-all active:scale-95">
+                                                <Link href={`/tour-packages/${pkg.id}`}>
+                                                    EXPLORE <ArrowRight className="ml-2 h-4 w-4" />
+                                                </Link>
+                                            </Button>
+                                        </div>
                                     </div>
                                 </CardFooter>
                             </Card>
