@@ -5,35 +5,35 @@
 
 @layer base {
   :root {
-    --background: 222 47% 7%; /* Deep Navy Background */
+    --background: 222 47% 4%; /* Near Black Navy */
     --foreground: 210 40% 98%;
 
-    --card: 222 47% 11%;
+    --card: 222 47% 8%;
     --card-foreground: 210 40% 98%;
 
-    --popover: 222 47% 11%;
+    --popover: 222 47% 6%;
     --popover-foreground: 210 40% 98%;
 
     --primary: 43 96% 58%; /* Harrier Gold #febb02 */
-    --primary-foreground: 222 47% 7%;
+    --primary-foreground: 222 47% 4%;
 
-    --secondary: 222 47% 15%;
+    --secondary: 222 47% 12%;
     --secondary-foreground: 210 40% 98%;
 
-    --muted: 222 47% 15%;
+    --muted: 222 47% 12%;
     --muted-foreground: 215 20.2% 65.1%;
 
     --accent: 43 96% 58%;
-    --accent-foreground: 222 47% 11%;
+    --accent-foreground: 222 47% 8%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
+    --border: 217.2 32.6% 12%;
+    --input: 217.2 32.6% 12%;
     --ring: 43 96% 58%;
 
-    --radius: 0.75rem;
+    --radius: 1rem;
   }
 }
 
@@ -52,17 +52,21 @@
 }
 
 .glass-card {
-  @apply bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl;
+  @apply bg-white/5 backdrop-blur-2xl border border-white/10 shadow-2xl;
 }
 
 .luxury-shadow {
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.8);
 }
 
 .gold-edge {
-  border-left: 4px solid hsl(var(--primary));
+  border-left: 6px solid hsl(var(--primary));
 }
 
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
+}
+
+.text-shadow-elite {
+    text-shadow: 0 10px 30px rgba(0,0,0,0.5);
 }

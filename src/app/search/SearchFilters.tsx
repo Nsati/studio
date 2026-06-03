@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -15,15 +16,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { MapPin, Calendar as CalendarIcon, Users, Compass, Tent, Search } from 'lucide-react';
+import { MapPin, Calendar as CalendarIcon, Users, Compass, Tent, Search, ArrowRight } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
 /**
- * @fileOverview Elite Search Filters for Northern Harrier.
- * Hardened visibility for Dark Luxury theme.
+ * @fileOverview Studio Elite Search Filters.
+ * High-visibility inputs with glassmorphism and bold gold accents.
  */
 
 export function SearchFilters() {
@@ -76,110 +77,101 @@ export function SearchFilters() {
     }
 
     return (
-        <div className="space-y-6">
-            <form onSubmit={handleFormSubmit} className="flex flex-col lg:flex-row items-stretch gap-2 bg-white/5 backdrop-blur-2xl p-2 rounded-[2.5rem] border border-white/10 shadow-2xl">
-                {/* Location */}
-                <div className="flex-1 flex items-center gap-4 bg-slate-900/50 hover:bg-slate-900/80 px-6 py-4 rounded-2xl border border-transparent focus-within:border-primary/50 transition-all cursor-pointer group">
-                    <MapPin className="h-5 w-5 text-primary group-hover:scale-110 transition-transform" />
+        <div className="space-y-8">
+            {/* Main Search Pill */}
+            <form onSubmit={handleFormSubmit} className="flex flex-col lg:flex-row items-stretch gap-3 bg-white/5 backdrop-blur-3xl p-3 rounded-[3rem] border border-white/10 shadow-2xl luxury-shadow">
+                
+                {/* Location Node */}
+                <div className="flex-[1.2] flex items-center gap-6 bg-slate-950/60 hover:bg-slate-900/80 px-8 py-5 rounded-[2.5rem] border border-white/5 focus-within:border-primary/40 transition-all cursor-pointer group">
+                    <MapPin className="h-6 w-6 text-primary group-hover:scale-110 transition-transform duration-500" />
                     <div className="flex flex-col items-start flex-1 text-left">
-                        <span className="text-[9px] font-black uppercase tracking-widest text-primary">Destination</span>
+                        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary/70 mb-1">Destination Node</span>
                         <Select value={city} onValueChange={setCity}>
-                            <SelectTrigger className="border-0 bg-transparent p-0 h-auto focus:ring-0 shadow-none font-bold text-white text-sm w-full">
-                                <SelectValue placeholder="Where to?" />
+                            <SelectTrigger className="border-0 bg-transparent p-0 h-auto focus:ring-0 shadow-none font-black text-white text-lg w-full tracking-tight">
+                                <SelectValue placeholder="Target Hub" />
                             </SelectTrigger>
-                            <SelectContent className="bg-slate-900 border-white/10 text-white rounded-xl">
-                                <SelectItem value="All" className="focus:bg-primary/20 focus:text-white">All Uttarakhand</SelectItem>
+                            <SelectContent className="bg-slate-950 border-white/10 text-white rounded-2xl shadow-3xl">
+                                <SelectItem value="All" className="focus:bg-primary/20 focus:text-white font-bold py-3">All Uttarakhand</SelectItem>
                                 {cities?.map((c) => (
-                                    <SelectItem key={c} value={c} className="focus:bg-primary/20 focus:text-white">{c}</SelectItem>
+                                    <SelectItem key={c} value={c} className="focus:bg-primary/20 focus:text-white font-bold py-3">{c}</SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
                     </div>
                 </div>
 
-                {/* Dates */}
-                <div className="flex-1 flex items-center gap-4 bg-slate-900/50 hover:bg-slate-900/80 px-6 py-4 rounded-2xl border border-transparent focus-within:border-primary/50 transition-all cursor-pointer group">
-                    <CalendarIcon className="h-5 w-5 text-primary group-hover:scale-110 transition-transform" />
+                {/* Temporal Window (Dates) */}
+                <div className="flex-1 flex items-center gap-6 bg-slate-950/60 hover:bg-slate-900/80 px-8 py-5 rounded-[2.5rem] border border-white/5 focus-within:border-primary/40 transition-all cursor-pointer group">
+                    <CalendarIcon className="h-6 w-6 text-primary group-hover:scale-110 transition-transform duration-500" />
                     <div className="flex flex-col items-start flex-1 text-left">
-                        <span className="text-[9px] font-black uppercase tracking-widest text-primary">Travel Window</span>
+                        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary/70 mb-1">Travel Window</span>
                         <Popover>
                             <PopoverTrigger asChild>
-                                <button type="button" className="text-sm font-bold text-white truncate hover:text-primary transition-colors text-left w-full">
+                                <button type="button" className="text-lg font-black text-white truncate hover:text-primary transition-colors text-left w-full tracking-tight">
                                     {dates?.from ? (
                                         dates.to ? `${format(dates.from, 'MMM dd')} — ${format(dates.to, 'MMM dd')}` : format(dates.from, 'MMM dd')
-                                    ) : "Select dates"}
+                                    ) : "Initialize Dates"}
                                 </button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0 border-white/10 bg-slate-900" align="center">
+                            <PopoverContent className="w-auto p-0 border-white/10 bg-slate-950 rounded-3xl overflow-hidden shadow-3xl" align="center">
                                 <CalendarComponent
                                     mode="range"
                                     selected={dates}
                                     onSelect={setDates}
                                     disabled={{ before: new Date() }}
                                     numberOfMonths={2}
-                                    className="bg-slate-900 text-white"
+                                    className="bg-slate-950 text-white p-6"
                                 />
                             </PopoverContent>
                         </Popover>
                     </div>
                 </div>
 
-                {/* Guests */}
-                <div className="flex-[0.7] flex items-center gap-4 bg-slate-900/50 hover:bg-slate-900/80 px-6 py-4 rounded-2xl border border-transparent focus-within:border-primary/50 transition-all group">
-                    <Users className="h-5 w-5 text-primary group-hover:scale-110 transition-transform" />
+                {/* Explorer Capacity (Guests) */}
+                <div className="flex-[0.8] flex items-center gap-6 bg-slate-950/60 hover:bg-slate-900/80 px-8 py-5 rounded-[2.5rem] border border-white/5 focus-within:border-primary/40 transition-all group">
+                    <Users className="h-6 w-6 text-primary group-hover:scale-110 transition-transform duration-500" />
                     <div className="flex flex-col items-start flex-1 text-left">
-                        <span className="text-[9px] font-black uppercase tracking-widest text-primary">Travelers</span>
-                        <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary/70 mb-1">Explorer Count</span>
+                        <div className="flex items-center gap-3">
                             <Input 
                                 type="number" 
                                 min="1"
                                 value={guests}
                                 onChange={(e) => setGuests(e.target.value)}
-                                className="border-0 bg-transparent p-0 h-auto focus-visible:ring-0 shadow-none font-bold w-8 text-sm text-white"
+                                className="border-0 bg-transparent p-0 h-auto focus-visible:ring-0 shadow-none font-black w-10 text-xl text-white tracking-tighter"
                             />
-                            <span className="text-[10px] font-bold text-white/50 uppercase tracking-widest">Guests</span>
+                            <span className="text-[11px] font-black text-white/40 uppercase tracking-widest">PAX</span>
                         </div>
                     </div>
                 </div>
                 
-                {/* Search Button */}
-                <Button type="submit" size="lg" className="h-auto bg-primary hover:bg-primary/90 text-background rounded-2xl px-12 text-lg font-black shadow-lg transition-all active:scale-95 py-6 lg:py-0">
-                    Execute Search
+                {/* Execute Button */}
+                <Button type="submit" size="lg" className="h-auto bg-primary hover:bg-white text-background rounded-[2.2rem] px-12 text-xl font-black shadow-2xl transition-all active:scale-95 py-8 lg:py-0 group">
+                    EXECUTE <ArrowRight className="ml-3 h-6 w-6 transition-transform group-hover:translate-x-2" />
                 </Button>
             </form>
 
-            {/* Mode Selectors */}
-            <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
-                <Button 
-                    variant="ghost" 
-                    onClick={() => setMode('standard')}
-                    className={cn(
-                        "h-10 rounded-full text-[10px] font-black uppercase tracking-[0.2em] px-6 border transition-all",
-                        mode === 'standard' ? "bg-primary text-background border-primary shadow-lg" : "text-white/60 border-white/10 hover:bg-white/5 hover:text-white"
-                    )}
-                >
-                    Standard Stay
-                </Button>
-                <Button 
-                    variant="ghost" 
-                    onClick={() => setMode('chardham')}
-                    className={cn(
-                        "h-10 rounded-full text-[10px] font-black uppercase tracking-[0.2em] px-6 border transition-all flex items-center gap-2",
-                        mode === 'chardham' ? "bg-primary text-background border-primary shadow-lg" : "text-white/60 border-white/10 hover:bg-white/5 hover:text-white"
-                    )}
-                >
-                    <Compass className="h-3 w-3" /> Char Dham Mode
-                </Button>
-                <Button 
-                    variant="ghost" 
-                    onClick={() => setMode('trek')}
-                    className={cn(
-                        "h-10 rounded-full text-[10px] font-black uppercase tracking-[0.2em] px-6 border transition-all flex items-center gap-2",
-                        mode === 'trek' ? "bg-primary text-background border-primary shadow-lg" : "text-white/60 border-white/10 hover:bg-white/5 hover:text-white"
-                    )}
-                >
-                    <Tent className="h-3 w-3" /> Trek Mode
-                </Button>
+            {/* Protocol Selectors */}
+            <div className="flex flex-wrap gap-4 justify-center">
+                {[
+                    { id: 'standard', label: 'Standard Protocol', icon: Compass },
+                    { id: 'chardham', label: 'Char Dham Node', icon: Star },
+                    { id: 'trek', label: 'Trek Protocol', icon: Tent }
+                ].map((p) => (
+                    <Button 
+                        key={p.id}
+                        variant="ghost" 
+                        onClick={() => setMode(p.id as any)}
+                        className={cn(
+                            "h-12 rounded-full text-[11px] font-black uppercase tracking-[0.4em] px-10 border transition-all duration-500 flex items-center gap-3",
+                            mode === p.id 
+                                ? "bg-primary text-background border-primary shadow-[0_10px_30px_rgba(254,187,2,0.2)]" 
+                                : "text-white/40 border-white/10 hover:bg-white/5 hover:text-white"
+                        )}
+                    >
+                        <p.icon className="h-4 w-4" /> {p.label}
+                    </Button>
+                ))}
             </div>
         </div>
     );
