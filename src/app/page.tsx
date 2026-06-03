@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -233,52 +234,92 @@ export default function LandingPage() {
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 auto-rows-[200px] md:auto-rows-[250px]">
-                {/* Kedarnath Drone - Video Style */}
-                <div className="col-span-2 row-span-2 relative group overflow-hidden rounded-[3rem] cursor-pointer shadow-luxury">
-                    <Image src="https://images.pexels.com/photos/18636614/pexels-photo-18636614.jpeg" alt="Kedarnath Drone" fill className="object-cover transition-transform duration-1000 group-hover:scale-110" />
-                    <div className="absolute inset-0 bg-black/30 group-hover:bg-black/50 transition-colors" />
+                {/* Main Featured Video Slot */}
+                <div className="col-span-2 row-span-2 relative group overflow-hidden rounded-[3rem] cursor-pointer shadow-luxury bg-black">
+                    <video 
+                        autoPlay 
+                        muted 
+                        loop 
+                        playsInline 
+                        className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-[2000ms]"
+                    >
+                        <source src="https://www.pexels.com/download/video/20594056/" type="video/mp4" />
+                    </video>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                     <div className="absolute inset-0 flex items-center justify-center">
                         <div className="h-20 w-20 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border border-white/40 group-hover:scale-110 transition-transform">
                             <Play className="h-8 w-8 text-white fill-white" />
                         </div>
                     </div>
                     <div className="absolute bottom-10 left-10 text-white space-y-1">
-                        <p className="text-[10px] font-black uppercase tracking-widest opacity-80">Video Insight</p>
-                        <h4 className="text-2xl font-black uppercase tracking-tighter">Kedarnath Drone Reel</h4>
+                        <p className="text-[10px] font-black uppercase tracking-widest opacity-80">Atmosphere Stream</p>
+                        <h4 className="text-2xl font-black uppercase tracking-tighter">Mist on the Horizon</h4>
                     </div>
                 </div>
 
-                {/* River Rafting */}
+                {/* Nainital Lake Aerial */}
                 <div className="relative group overflow-hidden rounded-[2.5rem] cursor-pointer shadow-apple-deep">
-                    <Image src="https://images.pexels.com/photos/37618361/pexels-photo-37618361.jpeg" alt="Rafting" fill className="object-cover group-hover:scale-110 transition-transform duration-700" />
+                    <Image 
+                        src="https://images.pexels.com/photos/4143599/pexels-photo-4143599.jpeg" 
+                        alt="Nainital Lake Aerial" 
+                        fill 
+                        className="object-cover group-hover:scale-110 transition-transform duration-700" 
+                    />
                     <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="absolute bottom-4 left-4">
+                        <Badge className="bg-white/90 text-primary border-0 font-black text-[7px] px-2 py-0.5 rounded-full uppercase tracking-tighter">Nainital Lake</Badge>
+                    </div>
                 </div>
 
-                {/* Auli Snow */}
+                {/* Auli Snow Slopes */}
                 <div className="relative group overflow-hidden rounded-[2.5rem] cursor-pointer shadow-apple-deep">
-                    <Image src="https://images.pexels.com/photos/14149541/pexels-photo-14149541.jpeg" alt="Auli" fill className="object-cover group-hover:scale-110 transition-transform duration-700" />
+                    <Image 
+                        src="https://images.pexels.com/photos/14149541/pexels-photo-14149541.jpeg" 
+                        alt="Auli Skiing" 
+                        fill 
+                        className="object-cover group-hover:scale-110 transition-transform duration-700" 
+                    />
                     <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="absolute bottom-4 left-4">
+                        <Badge className="bg-white/90 text-primary border-0 font-black text-[7px] px-2 py-0.5 rounded-full uppercase tracking-tighter">Auli Skiing</Badge>
+                    </div>
                 </div>
 
-                {/* Valley View - Wide Video Still */}
+                {/* Rishikesh River Wide */}
                 <div className="col-span-2 relative group overflow-hidden rounded-[2.5rem] cursor-pointer shadow-luxury">
-                    <Image src="https://images.pexels.com/photos/12321669/pexels-photo-12321669.jpeg" alt="Valley View" fill className="object-cover group-hover:scale-110 transition-transform duration-1000" />
+                    <Image 
+                        src="https://images.pexels.com/photos/37618361/pexels-photo-37618361.jpeg" 
+                        alt="Rishikesh Rafting" 
+                        fill 
+                        className="object-cover group-hover:scale-110 transition-transform duration-1000" 
+                    />
                     <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors" />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="h-12 w-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border border-white/40">
-                            <Play className="h-4 w-4 text-white fill-white" />
-                        </div>
+                    <div className="absolute bottom-6 left-6 text-white">
+                        <h4 className="text-xl font-black uppercase tracking-tighter">Rishikesh Rapids</h4>
                     </div>
                 </div>
 
-                {/* Village Life */}
+                {/* Kedarnath Temple in Snow */}
                 <div className="relative group overflow-hidden rounded-[2.5rem] cursor-pointer shadow-apple-deep">
-                    <Image src="https://images.pexels.com/photos/15815340/pexels-photo-15815340.jpeg" alt="Culture" fill className="object-cover group-hover:scale-110 transition-transform duration-700" />
+                    <Image 
+                        src="https://images.pexels.com/photos/16090413/pexels-photo-16090413.jpeg" 
+                        alt="Kedarnath Temple Snow" 
+                        fill 
+                        className="object-cover group-hover:scale-110 transition-transform duration-700" 
+                    />
+                    <div className="absolute bottom-4 left-4">
+                        <Badge className="bg-white/90 text-primary border-0 font-black text-[7px] px-2 py-0.5 rounded-full uppercase tracking-tighter">Sacred Kedarnath</Badge>
+                    </div>
                 </div>
 
-                {/* Sunset Range */}
+                {/* Valley Sunset */}
                 <div className="relative group overflow-hidden rounded-[2.5rem] cursor-pointer shadow-apple-deep">
-                    <Image src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=800" alt="Range" fill className="object-cover group-hover:scale-110 transition-transform duration-700" />
+                    <Image 
+                        src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=800" 
+                        alt="Himalayan Range" 
+                        fill 
+                        className="object-cover group-hover:scale-110 transition-transform duration-700" 
+                    />
                 </div>
             </div>
             
