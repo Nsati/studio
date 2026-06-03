@@ -11,7 +11,7 @@ export type CalendarProps = React.ComponentProps<typeof DayPicker>
 
 /**
  * @fileOverview Production-grade Premium Booking Calendar.
- * Centered and aligned for Airbnb/Booking.com precision.
+ * Optimized for horizontal alignment (column precision).
  */
 
 function Calendar({
@@ -23,32 +23,32 @@ function Calendar({
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
-      className={cn("p-6 bg-white", className)}
+      className={cn("p-4 bg-white", className)}
       classNames={{
-        months: "flex flex-col sm:flex-row space-y-4 sm:space-x-8 sm:space-y-0 justify-center items-center",
-        month: "space-y-6 flex flex-col items-center",
-        caption: "flex justify-center pt-2 relative items-center mb-4 w-full",
+        months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0 justify-center",
+        month: "space-y-4 w-full",
+        caption: "flex justify-center pt-2 relative items-center mb-2",
         caption_label: "text-sm font-black uppercase tracking-widest text-primary",
         nav: "space-x-1 flex items-center",
         nav_button: cn(
           buttonVariants({ variant: "outline" }),
-          "h-8 w-8 bg-transparent p-0 opacity-80 hover:opacity-100 transition-all border-black/5 rounded-full"
+          "h-7 w-7 bg-transparent p-0 opacity-80 hover:opacity-100 transition-all border-black/5 rounded-full"
         ),
         nav_button_previous: "absolute left-1",
         nav_button_next: "absolute right-1",
-        table: "w-fit border-collapse mx-auto",
-        head_row: "flex justify-center mb-3",
-        head_cell: "text-primary/40 w-10 font-black text-[10px] uppercase tracking-tighter flex items-center justify-center",
-        row: "flex w-full mt-1 justify-center",
+        table: "w-full border-collapse mx-auto",
+        head_row: "flex w-full mb-2",
+        head_cell: "text-primary/40 flex-1 font-black text-[10px] uppercase tracking-widest flex items-center justify-center h-10",
+        row: "flex w-full mt-1",
         cell: cn(
-          "relative h-10 w-10 p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-accent/10 first:[&:has([aria-selected])]:rounded-l-full last:[&:has([aria-selected])]:rounded-r-full transition-all flex items-center justify-center",
+          "relative h-10 flex-1 p-0 text-center text-sm focus-within:relative focus-within:z-20 transition-all flex items-center justify-center",
           props.mode === "range"
-            ? "[&:has(>.day-range-end)]:rounded-r-full [&:has(>.day-range-start)]:rounded-l-full"
+            ? "[&.day-range-end]:rounded-r-full [&.day-range-start]:rounded-l-full"
             : "[&:has([aria-selected])]:rounded-full"
         ),
         day: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-10 w-10 p-0 font-bold rounded-full aria-selected:opacity-100 hover:bg-primary/5 transition-all flex items-center justify-center"
+          "h-10 w-full p-0 font-bold rounded-full aria-selected:opacity-100 hover:bg-primary/5 transition-all flex items-center justify-center"
         ),
         day_range_start: "day-range-start bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground rounded-full shadow-lg z-10",
         day_range_end: "day-range-end bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground rounded-full shadow-lg z-10",
@@ -61,8 +61,8 @@ function Calendar({
         ...classNames,
       }}
       components={{
-        IconLeft: ({ ...props }) => <ChevronLeft className="h-5 w-5" />,
-        IconRight: ({ ...props }) => <ChevronRight className="h-5 w-5" />,
+        IconLeft: ({ ...props }) => <ChevronLeft className="h-4 w-4" />,
+        IconRight: ({ ...props }) => <ChevronRight className="h-4 w-4" />,
       }}
       {...props}
     />
