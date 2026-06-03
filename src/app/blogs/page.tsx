@@ -21,7 +21,7 @@ import Image from 'next/image';
 
 /**
  * @fileOverview Professional Travel Journal for Northern Harrier.
- * Symmetric layout with clean English copy.
+ * Symmetric layout with clean English copy and immersive hero visuals.
  */
 
 const CULTURAL_PILLARS = [
@@ -29,7 +29,7 @@ const CULTURAL_PILLARS = [
     id: 'aipan-art-ritual-geometry',
     title: "Sacred Geometry: Aipan",
     category: "Traditional Art",
-    desc: "A beautiful ritualistic folk art that welcomes positive energy.",
+    desc: "A beautiful ritualistic folk art that welcomes positive energy into Himalayan homes.",
     imageUrl: "https://images.pexels.com/photos/15815340/pexels-photo-15815340.jpeg",
     icon: Sparkles
   },
@@ -37,7 +37,7 @@ const CULTURAL_PILLARS = [
     id: 'pahadi-cuisine-himalayan-feast',
     title: "Soul of the Soil: Cuisine",
     category: "Local Flavors",
-    desc: "Discover the nutritious and unique flavors of the Himalayan belt.",
+    desc: "Discover the high-altitude grains and unique flavors of the Northern belt.",
     imageUrl: "https://images.pexels.com/photos/30205313/pexels-photo-30205313.jpeg",
     icon: Utensils
   },
@@ -53,7 +53,7 @@ const CULTURAL_PILLARS = [
     id: 'harela-festival-nature-bond',
     title: "Green Bond: Harela",
     category: "Festivals",
-    desc: "Celebrating the arrival of monsoon and the cycle of life.",
+    desc: "Celebrating the arrival of monsoon and the eternal cycle of life in the hills.",
     imageUrl: "https://images.pexels.com/photos/946186/pexels-photo-946186.jpeg",
     icon: Calendar
   },
@@ -61,7 +61,7 @@ const CULTURAL_PILLARS = [
     id: 'likhai-wood-carving-heritage',
     title: "Legacy in Wood: Likhai",
     category: "Heritage",
-    desc: "Intricate wood carvings found on ancient Himalayan thresholds.",
+    desc: "Intricate wood carvings found on ancient Himalayan thresholds and temples.",
     imageUrl: "https://images.pexels.com/photos/4611607/pexels-photo-4611607.jpeg",
     icon: Building2
   },
@@ -69,7 +69,7 @@ const CULTURAL_PILLARS = [
     id: 'jhora-chhapeli-soul-music',
     title: "The Heartbeat: Folk Music",
     category: "Folk Music",
-    desc: "Rhythmic community dances representing unity and love.",
+    desc: "Rhythmic community dances representing unity, love, and mountain spirit.",
     imageUrl: "https://images.pexels.com/photos/10405322/pexels-photo-10405322.jpeg",
     icon: Music
   }
@@ -77,34 +77,34 @@ const CULTURAL_PILLARS = [
 
 export default function BlogsPublicPage() {
     return (
-        <div className="min-h-screen bg-white selection:bg-accent selection:text-white font-sans">
+        <div className="min-h-screen bg-background selection:bg-accent selection:text-white font-sans">
             
             {/* Hero Section */}
-            <section className="relative h-[60vh] min-h-[450px] w-full flex items-center justify-center overflow-hidden">
+            <section className="relative h-[70vh] min-h-[500px] w-full flex items-center justify-center overflow-hidden">
                 <Image 
-                    src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&q=80&w=1920" 
-                    alt="Uttarakhand Heritage" 
+                    src="https://images.pexels.com/photos/34971545/pexels-photo-34971545.jpeg" 
+                    alt="Uttarakhand Sacred Journal" 
                     fill 
                     priority
                     unoptimized={true}
-                    className="object-cover brightness-[0.5]"
+                    className="object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-white" />
+                <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/20 to-background" />
                 
-                <div className="container relative z-10 px-6 text-center space-y-6">
+                <div className="container relative z-10 px-6 text-center space-y-8">
                     <motion.div 
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.8 }}
-                        className="space-y-4"
+                        className="max-w-4xl mx-auto space-y-4"
                     >
-                        <Badge className="bg-white/10 backdrop-blur-md text-accent border border-white/20 px-8 py-2 rounded-full font-black uppercase tracking-[0.4em] text-[10px] mb-2">
-                            The Travel Journal
+                        <Badge className="bg-accent/90 text-accent-foreground border-0 px-8 py-2 rounded-full font-black uppercase tracking-[0.4em] text-[10px] shadow-xl saffron-glow">
+                            THE TRAVEL JOURNAL
                         </Badge>
-                        <h1 className="text-5xl md:text-[6rem] font-black text-white tracking-tighter leading-none uppercase">
-                            Soul of <br/> <span className="text-accent italic font-heading font-light capitalize">Uttarakhand</span>
+                        <h1 className="text-5xl md:text-8xl font-black text-white tracking-tighter leading-[0.9] uppercase font-heading drop-shadow-2xl">
+                            Soul of <br/> <span className="text-accent italic font-spiritual capitalize">Uttarakhand</span>
                         </h1>
-                        <p className="mt-2 text-lg md:text-xl text-white/80 max-w-2xl mx-auto font-medium leading-relaxed tracking-tight">
+                        <p className="text-lg md:text-xl text-white/90 max-w-2xl mx-auto font-bold uppercase tracking-tight font-heading drop-shadow-md">
                             Explore the traditions, spirituality, and vibrant folk life of the Northern frontier.
                         </p>
                     </motion.div>
@@ -112,16 +112,16 @@ export default function BlogsPublicPage() {
             </section>
 
             {/* Content Grid */}
-            <section className="py-20 bg-white">
+            <section className="py-24 relative z-20 -mt-12 bg-background rounded-t-[3rem]">
                 <div className="container px-6">
-                    <div className="text-center mb-16 space-y-3">
-                        <div className="flex items-center justify-center gap-3 text-accent font-black uppercase tracking-[0.4em] text-[9px]">
-                            <Compass className="h-4 w-4" /> Explore Local Culture
+                    <div className="text-center mb-16 space-y-4">
+                        <div className="flex items-center justify-center gap-3 text-accent font-black uppercase tracking-[0.4em] text-[10px]">
+                            <Compass className="h-4 w-4" /> Discover Cultural Nodes
                         </div>
-                        <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-slate-900 uppercase leading-none">Cultural Heritage</h2>
+                        <h2 className="text-3xl md:text-5xl font-black tracking-tighter text-primary uppercase leading-tight font-heading">Expedition Insights</h2>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
                         {CULTURAL_PILLARS.map((item, i) => (
                             <motion.div 
                                 key={item.id}
@@ -130,34 +130,34 @@ export default function BlogsPublicPage() {
                                 viewport={{ once: true }}
                                 transition={{ delay: i * 0.1, duration: 0.5 }}
                             >
-                                <Card className="group overflow-hidden rounded-[2rem] border-black/5 bg-white shadow-apple-deep hover:shadow-2xl transition-all duration-500 hover:-translate-y-2">
+                                <Card className="group overflow-hidden rounded-[2.5rem] border-black/5 bg-white shadow-apple-deep hover:shadow-2xl transition-all duration-700 hover:-translate-y-2">
                                     <Link href={`/blogs/${item.id}`}>
                                         <CardContent className="p-0">
-                                            <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
+                                            <div className="relative aspect-[4/3] overflow-hidden bg-muted">
                                                 <img 
                                                     src={item.imageUrl} 
                                                     alt={item.title} 
-                                                    className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" 
+                                                    className="w-full h-full object-cover transition-transform duration-2000 group-hover:scale-110" 
                                                 />
                                                 <div className="absolute top-6 left-6">
-                                                    <Badge className="bg-white/95 backdrop-blur-md text-primary border-0 font-black px-4 py-1.5 rounded-full text-[9px] uppercase tracking-widest shadow-sm">
+                                                    <Badge className="bg-white/95 backdrop-blur-md text-primary border-0 font-black px-5 py-2 rounded-full text-[9px] uppercase tracking-widest shadow-lg">
                                                         {item.category}
                                                     </Badge>
                                                 </div>
                                             </div>
                                             <div className="p-8 space-y-4">
-                                                <div className="flex items-center gap-3 text-accent font-black uppercase tracking-[0.2em] text-[8px]">
-                                                    <item.icon className="h-4 w-4" /> Verified Insights
+                                                <div className="flex items-center gap-3 text-accent font-black uppercase tracking-[0.2em] text-[9px]">
+                                                    <item.icon className="h-4 w-4" /> VERIFIED LOG
                                                 </div>
-                                                <h3 className="text-2xl font-black text-slate-900 leading-tight uppercase group-hover:text-primary transition-colors">
+                                                <h3 className="text-2xl font-black text-foreground leading-tight uppercase font-heading group-hover:text-primary transition-colors">
                                                     {item.title}
                                                 </h3>
-                                                <p className="text-slate-400 font-medium text-xs leading-relaxed line-clamp-2">
+                                                <p className="text-slate-500 font-medium text-xs leading-relaxed line-clamp-2">
                                                     {item.desc}
                                                 </p>
-                                                <div className="pt-4 border-t border-slate-50">
-                                                    <Button variant="link" className="p-0 h-auto font-black text-[10px] uppercase tracking-widest text-primary hover:text-accent group">
-                                                        Read More <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-2" />
+                                                <div className="pt-6 border-t border-muted/50">
+                                                    <Button variant="link" className="p-0 h-auto font-black text-[10px] uppercase tracking-[0.3em] text-primary hover:text-accent group">
+                                                        Read Full Report <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-2" />
                                                     </Button>
                                                 </div>
                                             </div>
@@ -172,3 +172,4 @@ export default function BlogsPublicPage() {
         </div>
     );
 }
+
