@@ -11,8 +11,7 @@ export type CalendarProps = React.ComponentProps<typeof DayPicker>
 
 /**
  * @fileOverview Production-grade Premium Booking Calendar.
- * Designed with Airbnb/Booking.com aesthetics. 
- * Features rigid grid alignment and clear range selection states.
+ * Centered and aligned for Airbnb/Booking.com precision.
  */
 
 function Calendar({
@@ -24,11 +23,11 @@ function Calendar({
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
-      className={cn("p-4 bg-white", className)}
+      className={cn("p-6 bg-white", className)}
       classNames={{
-        months: "flex flex-col sm:flex-row space-y-4 sm:space-x-8 sm:space-y-0 justify-center",
-        month: "space-y-6",
-        caption: "flex justify-center pt-2 relative items-center mb-4",
+        months: "flex flex-col sm:flex-row space-y-4 sm:space-x-8 sm:space-y-0 justify-center items-center",
+        month: "space-y-6 flex flex-col items-center",
+        caption: "flex justify-center pt-2 relative items-center mb-4 w-full",
         caption_label: "text-sm font-black uppercase tracking-widest text-primary",
         nav: "space-x-1 flex items-center",
         nav_button: cn(
@@ -37,8 +36,8 @@ function Calendar({
         ),
         nav_button_previous: "absolute left-1",
         nav_button_next: "absolute right-1",
-        table: "w-full border-collapse",
-        head_row: "flex justify-center mb-2",
+        table: "w-fit border-collapse mx-auto",
+        head_row: "flex justify-center mb-3",
         head_cell: "text-primary/40 w-10 font-black text-[10px] uppercase tracking-tighter flex items-center justify-center",
         row: "flex w-full mt-1 justify-center",
         cell: cn(
@@ -49,7 +48,7 @@ function Calendar({
         ),
         day: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-10 w-10 p-0 font-bold rounded-full aria-selected:opacity-100 hover:bg-primary/5 transition-all"
+          "h-10 w-10 p-0 font-bold rounded-full aria-selected:opacity-100 hover:bg-primary/5 transition-all flex items-center justify-center"
         ),
         day_range_start: "day-range-start bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground rounded-full shadow-lg z-10",
         day_range_end: "day-range-end bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground rounded-full shadow-lg z-10",
