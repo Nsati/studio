@@ -43,53 +43,58 @@ export default function LandingPage() {
   return (
     <div className="bg-background min-h-screen font-sans selection:bg-accent selection:text-white">
       
-      {/* 1. HERO SECTION WITH VIDEO BACKGROUND */}
-      <section className="relative h-screen min-h-[700px] w-full flex items-center justify-center overflow-hidden">
-        <video 
-          autoPlay 
-          muted 
-          loop 
-          playsInline 
-          className="absolute inset-0 w-full h-full object-cover scale-105"
-        >
-          <source src="https://player.vimeo.com/external/434045526.sd.mp4?s=c27dc3699705027c11f581056489814560950d11&profile_id=164&oauth2_token_id=57447761" type="video/mp4" />
-        </video>
-        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/30 to-background" />
+      {/* 1. HERO SECTION WITH TEMPLE BACKGROUND */}
+      <section className="relative h-screen min-h-[750px] w-full flex items-center justify-center overflow-hidden">
+        <Image 
+          src="https://images.pexels.com/photos/18636614/pexels-photo-18636614.jpeg"
+          alt="Devbhoomi Uttarakhand Temple"
+          fill
+          priority
+          className="object-cover scale-105"
+          unoptimized
+        />
+        {/* Deeper gradient for superior text readability on mobile and desktop */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-background/90" />
         
         <div className="container relative z-10 px-6 text-center">
-          <motion.div {...fadeInUp} className="max-w-4xl mx-auto space-y-8">
-            <Badge className="bg-white/10 backdrop-blur-md text-accent border border-white/20 px-6 py-2 rounded-full font-bold uppercase tracking-[0.2em] text-[10px] mb-4">
-              ⚡ India's Most Loved Uttarakhand Specialist | 10,000+ Happy Pilgrims
+          <motion.div {...fadeInUp} className="max-w-5xl mx-auto space-y-8">
+            <Badge className="bg-accent/90 backdrop-blur-sm text-accent-foreground border-0 px-8 py-3 rounded-full font-black uppercase tracking-[0.2em] text-[10px] mb-4 shadow-2xl saffron-glow animate-in fade-in zoom-in duration-1000">
+              ⚡ INDIA'S MOST LOVED UTTARAKHAND SPECIALIST | 10,000+ HAPPY PILGRIMS
             </Badge>
             
-            <h1 className="text-5xl md:text-8xl font-bold text-white tracking-tighter leading-[0.85] font-heading uppercase">
-              Discover <span className="text-accent italic font-spiritual capitalize">Devbhoomi</span> <br/> The Sacred Himalayas
-            </h1>
+            <div className="space-y-4">
+                <h1 className="text-6xl md:text-9xl font-black text-white tracking-tighter leading-[0.8] font-heading uppercase drop-shadow-2xl">
+                    DISCOVER <br className="hidden md:block" /> <span className="text-accent italic font-spiritual capitalize drop-shadow-none">Devbhoomi</span>
+                </h1>
+                <p className="text-2xl md:text-4xl font-bold text-white/90 tracking-[0.2em] uppercase font-heading">
+                    THE SACRED HIMALAYAS
+                </p>
+            </div>
             
-            <p className="mt-6 text-xl md:text-2xl text-white/90 max-w-2xl mx-auto font-medium leading-relaxed tracking-tight">
+            <p className="mt-8 text-lg md:text-2xl text-white/80 max-w-3xl mx-auto font-medium leading-relaxed tracking-tight" style={{ textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>
               Curated Char Dham Yatra, weekend getaways, trekking expeditions, and luxury stays in Nainital, Rishikesh & more.
             </p>
             
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-8">
-              <Button asChild size="lg" className="h-16 px-10 rounded-full font-bold text-lg bg-accent hover:bg-white hover:text-primary transition-all shadow-2xl group">
-                <Link href="/tour-packages" className="flex items-center gap-3">
-                  🕉️ Plan Your Pilgrimage <ArrowRight className="ml-1 h-5 w-5 transition-transform group-hover:translate-x-2" />
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-10">
+              <Button asChild size="lg" className="h-20 px-12 rounded-full font-black text-xl bg-accent hover:bg-white hover:text-primary transition-all shadow-2xl group active:scale-95">
+                <Link href="/tour-packages" className="flex items-center gap-4">
+                  🕉️ PLAN YOUR PILGRIMAGE <ArrowRight className="ml-1 h-6 w-6 transition-transform group-hover:translate-x-2" />
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="h-16 px-10 rounded-full font-bold text-lg border-white text-white hover:bg-white hover:text-primary backdrop-blur-sm">
-                <Link href="/search">🏕️ Explore Adventures</Link>
+              <Button asChild variant="outline" size="lg" className="h-20 px-12 rounded-full font-black text-xl border-2 border-white text-white hover:bg-white hover:text-primary backdrop-blur-sm transition-all">
+                <Link href="/search">🏕️ EXPLORE ADVENTURES</Link>
               </Button>
             </div>
 
-            <div className="pt-12">
+            <div className="pt-16 max-w-4xl mx-auto">
               <Suspense fallback={<div className="h-20 bg-white/10 rounded-full animate-pulse" />}>
-                <div className="max-w-3xl mx-auto bg-white p-2 rounded-full shadow-2xl flex items-center overflow-hidden">
-                  <div className="flex-1 px-6 text-left">
-                    <p className="text-[10px] font-bold uppercase text-slate-400">Where in Uttarakhand?</p>
-                    <p className="text-slate-800 font-bold truncate">Kedarnath, Rishikesh, Auli...</p>
+                <div className="bg-white/95 backdrop-blur-md p-3 rounded-full shadow-3xl flex items-center overflow-hidden border border-white/20">
+                  <div className="flex-1 px-8 text-left hidden sm:block">
+                    <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Target Node</p>
+                    <p className="text-slate-800 font-black text-lg truncate">Where in Devbhoomi?</p>
                   </div>
-                  <Button asChild className="bg-primary hover:bg-accent rounded-full h-12 px-8 shrink-0">
-                    <Link href="/search">Search Hub <ChevronRight className="ml-2 h-4 w-4" /></Link>
+                  <Button asChild className="bg-primary hover:bg-accent rounded-full h-14 px-12 shrink-0 font-black text-sm uppercase tracking-widest">
+                    <Link href="/search">INITIALIZE SEARCH <ChevronRight className="ml-2 h-4 w-4" /></Link>
                   </Button>
                 </div>
               </Suspense>
@@ -99,7 +104,7 @@ export default function LandingPage() {
       </section>
 
       {/* 2. UTTARAKHAND IN NUMBERS + PHOTO STRIP */}
-      <section className="py-24 bg-white relative z-20 -mt-20">
+      <section className="py-24 bg-white relative z-20 -mt-20 rounded-t-[4rem]">
         <div className="container px-6">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
             {[
@@ -112,20 +117,20 @@ export default function LandingPage() {
                 key={i} 
                 {...fadeInUp} 
                 transition={{ delay: i * 0.1 }}
-                className="bg-background p-8 rounded-3xl border border-muted text-center space-y-2 hover:shadow-xl transition-all group"
+                className="bg-background p-8 rounded-[2.5rem] border border-muted text-center space-y-2 hover:shadow-2xl transition-all group"
               >
-                <div className="mx-auto w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <stat.icon className="h-6 w-6 text-primary" />
+                <div className="mx-auto w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <stat.icon className="h-7 w-7 text-primary" />
                 </div>
-                <h4 className="text-3xl font-bold tracking-tighter text-primary">{stat.val}</h4>
+                <h4 className="text-4xl font-black tracking-tighter text-primary uppercase font-heading">{stat.val}</h4>
                 <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{stat.label}</p>
-                <p className="text-xs font-medium text-slate-500">{stat.sub}</p>
+                <p className="text-xs font-bold text-slate-500">{stat.sub}</p>
               </motion.div>
             ))}
           </div>
 
-          <div className="overflow-hidden py-4">
-             <div className="flex gap-6 animate-marquee whitespace-nowrap">
+          <div className="overflow-hidden py-8">
+             <div className="flex gap-8 animate-marquee whitespace-nowrap">
                 {[
                   "https://images.pexels.com/photos/12321669/pexels-photo-12321669.jpeg?auto=compress&cs=tinysrgb&w=600",
                   "https://images.pexels.com/photos/16090413/pexels-photo-16090413.jpeg?auto=compress&cs=tinysrgb&w=600",
@@ -134,17 +139,17 @@ export default function LandingPage() {
                   "https://images.pexels.com/photos/37618361/pexels-photo-37618361.jpeg?auto=compress&cs=tinysrgb&w=600",
                   "https://images.pexels.com/photos/12321669/pexels-photo-12321669.jpeg?auto=compress&cs=tinysrgb&w=600"
                 ].map((url, i) => (
-                  <div key={i} className="relative w-64 h-48 rounded-2xl overflow-hidden shadow-lg flex-shrink-0 group">
+                  <div key={i} className="relative w-72 h-56 rounded-3xl overflow-hidden shadow-xl flex-shrink-0 group border border-black/5">
                     <Image 
                       src={url} 
                       alt="Uttarakhand Guest Moment" 
                       fill 
                       unoptimized={true}
-                      className="object-cover transition-transform group-hover:scale-110"
+                      className="object-cover transition-transform duration-1000 group-hover:scale-110"
                     />
-                    <div className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-sm p-2 rounded-full flex items-center gap-1.5 shadow-sm">
-                      <Heart className="h-3 w-3 text-red-500 fill-red-500" />
-                      <span className="text-[10px] font-bold">{Math.floor(Math.random() * 500) + 100}</span>
+                    <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-full flex items-center gap-2 shadow-lg">
+                      <Heart className="h-3.5 w-3.5 text-red-500 fill-red-500" />
+                      <span className="text-[10px] font-black">{Math.floor(Math.random() * 500) + 100}</span>
                     </div>
                   </div>
                 ))}
@@ -156,39 +161,39 @@ export default function LandingPage() {
       {/* 3. FEATURED DESTINATIONS GRID */}
       <section className="py-32 bg-background">
         <div className="container px-6">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-20 gap-6">
-            <div className="space-y-3">
-              <div className="flex items-center gap-3 text-accent font-bold uppercase tracking-[0.3em] text-[10px]">
-                <Trophy className="h-4 w-4" /> Iconic Experiences
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-20 gap-8">
+            <div className="space-y-4">
+              <div className="flex items-center gap-3 text-accent font-black uppercase tracking-[0.4em] text-[10px]">
+                <Trophy className="h-4 w-4" /> Iconic Node Access
               </div>
-              <h2 className="text-4xl md:text-6xl font-bold tracking-tighter text-primary font-heading uppercase">Divine Nodes</h2>
-              <p className="text-slate-500 font-medium">From sacred shrines to adventure hubs — find your perfect escape.</p>
+              <h2 className="text-4xl md:text-7xl font-black tracking-tighter text-primary font-heading uppercase leading-none">Divine Hubs</h2>
+              <p className="text-slate-500 font-bold text-lg">From sacred peaks to high-adventure ghats.</p>
             </div>
-            <Button variant="link" asChild className="text-accent font-bold uppercase tracking-widest text-xs group">
-              <Link href="/search" className="flex items-center">View All 25+ Destinations <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-2" /></Link>
+            <Button variant="link" asChild className="text-accent font-black uppercase tracking-widest text-xs group">
+              <Link href="/search" className="flex items-center gap-2">View Global Grid <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-2" /></Link>
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
             {[
-              { name: 'Kedarnath', img: 'https://images.pexels.com/photos/16090413/pexels-photo-16090413.jpeg?auto=compress&cs=tinysrgb&w=800', badge: 'Spiritual', desc: 'High-altitude Jyotirlinga' },
-              { name: 'Rishikesh', img: 'https://images.pexels.com/photos/37618361/pexels-photo-37618361.jpeg?auto=compress&cs=tinysrgb&w=800', badge: 'Yoga & Rafting', desc: 'The Adventure Capital' },
-              { name: 'Auli', img: 'https://images.pexels.com/photos/14149541/pexels-photo-14149541.jpeg?auto=compress&cs=tinysrgb&w=800', badge: 'Winter Sports', desc: 'Ski Slopes of India' },
+              { name: 'Kedarnath', img: 'https://images.pexels.com/photos/16090413/pexels-photo-16090413.jpeg?auto=compress&cs=tinysrgb&w=800', badge: 'Spiritual Peak', desc: 'High-altitude Jyotirlinga' },
+              { name: 'Rishikesh', img: 'https://images.pexels.com/photos/37618361/pexels-photo-37618361.jpeg?auto=compress&cs=tinysrgb&w=800', badge: 'Yoga & Raft', desc: 'The Adventure Capital' },
+              { name: 'Auli', img: 'https://images.pexels.com/photos/14149541/pexels-photo-14149541.jpeg?auto=compress&cs=tinysrgb&w=800', badge: 'Ski Node', desc: 'Snow Slopes of India' },
               { name: 'Nainital', img: 'https://images.pexels.com/photos/4143599/pexels-photo-4143599.jpeg?auto=compress&cs=tinysrgb&w=800', badge: 'Family Retreat', desc: 'The Lake District' }
             ].map((node, i) => (
               <motion.div key={i} {...fadeInUp} transition={{ delay: i * 0.1 }}>
                 <Link href={`/search?city=${node.name}`}>
-                  <Card className="group relative aspect-[3/4] overflow-hidden rounded-[2.5rem] border-0 shadow-2xl cursor-pointer">
+                  <Card className="group relative aspect-[3/4.5] overflow-hidden rounded-[3rem] border-0 shadow-3xl cursor-pointer bg-muted">
                     <Image src={node.img} alt={node.name} fill unoptimized={true} className="object-cover transition-transform duration-2000 group-hover:scale-110" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-transparent to-transparent opacity-60" />
-                    <div className="absolute top-6 left-6">
-                      <Badge className="bg-accent text-accent-foreground border-0 font-bold text-[9px] px-4 py-1.5 tracking-widest rounded-full">{node.badge}</Badge>
+                    <div className="absolute inset-0 bg-gradient-to-t from-primary/95 via-transparent to-transparent opacity-70" />
+                    <div className="absolute top-8 left-8">
+                      <Badge className="bg-accent text-accent-foreground border-0 font-black text-[9px] px-5 py-2 tracking-widest rounded-full shadow-xl uppercase">{node.badge}</Badge>
                     </div>
-                    <div className="absolute bottom-8 left-8 right-8 space-y-1">
-                      <h3 className="text-3xl font-bold text-white tracking-tighter uppercase font-heading">{node.name}</h3>
-                      <p className="text-white/70 text-xs font-medium">{node.desc}</p>
-                      <div className="pt-4">
-                         <span className="text-[10px] font-black uppercase text-accent tracking-widest flex items-center gap-2 group-hover:translate-x-2 transition-transform">Explore Node <ArrowRight className="h-3 w-3" /></span>
+                    <div className="absolute bottom-10 left-10 right-10 space-y-2">
+                      <h3 className="text-4xl font-black text-white tracking-tighter uppercase font-heading">{node.name}</h3>
+                      <p className="text-white/80 text-xs font-bold uppercase tracking-widest">{node.desc}</p>
+                      <div className="pt-6">
+                         <span className="text-[10px] font-black uppercase text-accent tracking-[0.3em] flex items-center gap-3 group-hover:translate-x-3 transition-transform">Initalize Node <ArrowRight className="h-4 w-4" /></span>
                       </div>
                     </div>
                   </Card>
@@ -201,47 +206,42 @@ export default function LandingPage() {
 
       {/* 4. VIDEO SHOWREEL SECTION */}
       <section className="py-32 bg-white">
-        <div className="container px-6 text-center space-y-12">
-           <div className="max-w-2xl mx-auto space-y-4">
-              <div className="flex items-center justify-center gap-3 text-accent font-bold uppercase tracking-[0.3em] text-[10px]">
-                <Video className="h-4 w-4" /> Visual Intelligence
+        <div className="container px-6 text-center space-y-16">
+           <div className="max-w-3xl mx-auto space-y-6">
+              <div className="flex items-center justify-center gap-3 text-accent font-black uppercase tracking-[0.4em] text-[10px]">
+                <Video className="h-4 w-4" /> Visual Intelligence Log
               </div>
-              <h2 className="text-4xl md:text-5xl font-bold tracking-tighter text-primary font-heading uppercase leading-tight">Experience Uttarakhand Through Our Lens</h2>
+              <h2 className="text-4xl md:text-7xl font-black tracking-tighter text-primary font-heading uppercase leading-[0.9]">Experience Devbhoomi Through Our Lens</h2>
            </div>
            
-           <div className="relative aspect-video max-w-5xl mx-auto rounded-[3rem] overflow-hidden shadow-apple-deep group">
+           <div className="relative aspect-video max-w-6xl mx-auto rounded-[4rem] overflow-hidden shadow-apple-deep group border-8 border-background luxury-shadow bg-slate-900">
               <iframe 
                 className="w-full h-full" 
-                src="https://www.youtube.com/embed/S2Z790Q-t_A?autoplay=0&controls=0&mute=1&loop=1" 
+                src="https://www.youtube.com/embed/S2Z790Q-t_A?autoplay=0&controls=1&mute=0&loop=1" 
                 title="Uttarakhand Travel Film"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               />
-              <div className="absolute inset-0 bg-black/40 flex items-center justify-center group-hover:opacity-0 transition-opacity pointer-events-none">
-                 <div className="h-20 w-20 bg-accent text-white rounded-full flex items-center justify-center shadow-2xl scale-110">
-                    <Play className="h-8 w-8 fill-current" />
-                 </div>
-              </div>
            </div>
 
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto pt-12">
-              <div className="flex items-center gap-6 p-6 bg-background rounded-3xl border border-muted hover:shadow-xl cursor-pointer group">
-                 <div className="relative h-20 w-32 rounded-xl overflow-hidden shrink-0">
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-5xl mx-auto">
+              <div className="flex items-center gap-8 p-8 bg-background rounded-[2.5rem] border border-muted hover:shadow-2xl cursor-pointer group transition-all">
+                 <div className="relative h-24 w-40 rounded-2xl overflow-hidden shrink-0 shadow-lg">
                     <Image src="https://images.pexels.com/photos/37618361/pexels-photo-37618361.jpeg?auto=compress&cs=tinysrgb&w=200" alt="Rafting" fill unoptimized={true} className="object-cover" />
-                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center"><Play size={16} color="white" /></div>
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center group-hover:bg-black/20 transition-all"><Play size={20} color="white" fill="white" /></div>
                  </div>
                  <div className="text-left">
-                    <p className="text-sm font-bold text-primary">Rafting in Rishikesh</p>
-                    <p className="text-[10px] font-medium text-slate-500">by Rajesh & Group</p>
+                    <p className="text-lg font-black text-primary uppercase tracking-tight">Rafting Protocol</p>
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Ganga Rapids, Rishikesh</p>
                  </div>
               </div>
-              <div className="flex items-center gap-6 p-6 bg-background rounded-3xl border border-muted hover:shadow-xl cursor-pointer group">
-                 <div className="relative h-20 w-32 rounded-xl overflow-hidden shrink-0">
+              <div className="flex items-center gap-8 p-8 bg-background rounded-[2.5rem] border border-muted hover:shadow-2xl cursor-pointer group transition-all">
+                 <div className="relative h-24 w-40 rounded-2xl overflow-hidden shrink-0 shadow-lg">
                     <Image src="https://images.pexels.com/photos/16090413/pexels-photo-16090413.jpeg?auto=compress&cs=tinysrgb&w=200" alt="Kedarnath" fill unoptimized={true} className="object-cover" />
-                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center"><Play size={16} color="white" /></div>
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center group-hover:bg-black/20 transition-all"><Play size={20} color="white" fill="white" /></div>
                  </div>
                  <div className="text-left">
-                    <p className="text-sm font-bold text-primary">Kedarnath Yatra</p>
-                    <p className="text-[10px] font-medium text-slate-500">by Priya Family</p>
+                    <p className="text-lg font-black text-primary uppercase tracking-tight">Temple Sync</p>
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Kedarnath Sanctuary</p>
                  </div>
               </div>
            </div>
@@ -251,53 +251,52 @@ export default function LandingPage() {
       {/* 5. CUSTOMER REVIEWS SECTION */}
       <section className="py-32 bg-background overflow-hidden">
         <div className="container px-6">
-          <div className="flex flex-col md:flex-row md:items-center justify-between mb-20 gap-8">
-            <div className="space-y-3">
-               <div className="flex items-center gap-3 text-accent font-bold uppercase tracking-[0.3em] text-[10px]">
+          <div className="flex flex-col md:flex-row md:items-center justify-between mb-20 gap-10">
+            <div className="space-y-4">
+               <div className="flex items-center gap-3 text-accent font-black uppercase tracking-[0.4em] text-[10px]">
                   <MessageSquare className="h-4 w-4" /> Guest Protocols
                </div>
-               <h2 className="text-4xl md:text-5xl font-bold tracking-tighter text-primary font-heading uppercase">What Our Travelers Say</h2>
+               <h2 className="text-4xl md:text-7xl font-black tracking-tighter text-primary font-heading uppercase leading-none">The Traveler <br/> Network</h2>
             </div>
-            <div className="flex items-center gap-4 bg-white px-8 py-4 rounded-3xl shadow-xl border border-muted">
-               <div className="flex text-amber-400"><Star size={20} fill="currentColor" /><Star size={20} fill="currentColor" /><Star size={20} fill="currentColor" /><Star size={20} fill="currentColor" /><Star size={20} fill="currentColor" /></div>
-               <div className="h-8 w-px bg-muted" />
-               <p className="text-sm font-bold text-primary">4.9 | 980+ Reviews</p>
+            <div className="flex items-center gap-6 bg-white px-10 py-6 rounded-[2.5rem] shadow-3xl border border-muted">
+               <div className="flex text-amber-400 gap-1"><Star size={24} fill="currentColor" /><Star size={24} fill="currentColor" /><Star size={24} fill="currentColor" /><Star size={24} fill="currentColor" /><Star size={24} fill="currentColor" /></div>
+               <div className="h-10 w-px bg-muted" />
+               <p className="text-base font-black text-primary uppercase tracking-widest">4.9 Average</p>
             </div>
           </div>
 
           <Carousel className="w-full">
-            <CarouselContent className="-ml-8">
+            <CarouselContent className="-ml-10">
               {[
                 { name: 'Meera Sharma', city: 'Delhi', text: 'The Char Dham package was seamless. They managed everything — permits, helicopter booking, even oxygen cylinders. Highly recommend!', type: 'Char Dham Yatra' },
                 { name: 'Amit Gupta', city: 'Mumbai', text: 'Rishikesh rafting and camping was mind-blowing. The local guides are so knowledgeable and caring. Best adventure trip ever.', type: 'Adventure' },
                 { name: 'Rohan Joshi', city: 'Pune', text: 'Spent 5 days in Auli. The hotel views were exactly as promised. The transport was reliable even in heavy snow conditions.', type: 'Winter Escape' },
               ].map((review, i) => (
-                <CarouselItem key={i} className="pl-8 md:basis-1/2 lg:basis-1/3">
-                  <Card className="rounded-[2.5rem] border-0 shadow-apple-deep overflow-hidden h-full">
-                    <CardContent className="p-10 space-y-6">
-                      <div className="flex items-center gap-4">
-                        <div className="h-14 w-14 rounded-full bg-muted border-2 border-accent/20 overflow-hidden shrink-0">
-                          <Image src={`https://i.pravatar.cc/150?u=${i}`} alt={review.name} width={56} height={56} className="object-cover" />
+                <CarouselItem key={i} className="pl-10 md:basis-1/2 lg:basis-1/3">
+                  <Card className="rounded-[3rem] border-0 shadow-apple-deep overflow-hidden h-full group hover:shadow-3xl transition-all duration-700">
+                    <CardContent className="p-12 space-y-8">
+                      <div className="flex items-center gap-6">
+                        <div className="h-16 w-16 rounded-full bg-muted border-2 border-accent/20 overflow-hidden shrink-0 shadow-xl">
+                          <Image src={`https://i.pravatar.cc/150?u=${i}`} alt={review.name} width={64} height={64} className="object-cover" />
                         </div>
                         <div>
-                           <p className="font-bold text-primary">{review.name}</p>
-                           <p className="text-[10px] font-black uppercase text-slate-400">{review.city}</p>
+                           <p className="font-black text-primary uppercase tracking-tight text-lg">{review.name}</p>
+                           <p className="text-[10px] font-black uppercase text-slate-400 tracking-[0.3em]">{review.city}</p>
                         </div>
                       </div>
-                      <div className="flex text-amber-400 gap-1"><Star size={12} fill="currentColor" /><Star size={12} fill="currentColor" /><Star size={12} fill="currentColor" /><Star size={12} fill="currentColor" /><Star size={12} fill="currentColor" /></div>
-                      <p className="text-slate-600 font-medium leading-relaxed italic">&quot;{review.text}&quot;</p>
-                      <div className="flex justify-between items-center pt-4 border-t border-muted">
-                        <Badge variant="outline" className="rounded-full text-[9px] font-bold uppercase tracking-widest">{review.type}</Badge>
-                        <div className="flex items-center gap-1.5 text-[9px] font-bold text-green-600 uppercase"><CheckCircle2 className="h-3.5 w-3.5" /> Verified Guest</div>
+                      <p className="text-slate-600 font-bold text-lg leading-relaxed italic">&quot;{review.text}&quot;</p>
+                      <div className="flex justify-between items-center pt-8 border-t border-muted">
+                        <Badge variant="outline" className="rounded-full text-[9px] font-black uppercase tracking-[0.2em] px-5 py-2 border-primary/20">{review.type}</Badge>
+                        <div className="flex items-center gap-2 text-[9px] font-black text-green-600 uppercase tracking-widest"><CheckCircle2 className="h-4 w-4" /> Verified Node</div>
                       </div>
                     </CardContent>
                   </Card>
                 </CarouselItem>
               ))}
             </CarouselContent>
-            <div className="flex justify-center gap-4 mt-12">
-               <CarouselPrevious className="static translate-y-0 h-12 w-12 border-primary text-primary" />
-               <CarouselNext className="static translate-y-0 h-12 w-12 bg-primary text-white" />
+            <div className="flex justify-center gap-6 mt-16">
+               <CarouselPrevious className="static translate-y-0 h-14 w-14 border-primary text-primary hover:bg-primary hover:text-white" />
+               <CarouselNext className="static translate-y-0 h-14 w-14 bg-primary text-white hover:bg-accent hover:border-accent" />
             </div>
           </Carousel>
         </div>
@@ -305,74 +304,74 @@ export default function LandingPage() {
 
       {/* 6. WHY CHOOSE US (USP SECTION) */}
       <section className="py-32 bg-primary text-white relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10 pointer-events-none">
+        <div className="absolute inset-0 opacity-10 pointer-events-none grayscale">
             <Image src="https://images.pexels.com/photos/14149541/pexels-photo-14149541.jpeg?auto=compress&cs=tinysrgb&w=1920" fill alt="Texture" className="object-cover" unoptimized={true} />
         </div>
         <div className="container px-6 relative z-10">
-          <div className="text-center mb-20 space-y-4">
-             <div className="flex items-center justify-center gap-3 text-accent font-bold uppercase tracking-[0.3em] text-[10px]">
-                <ShieldCheck className="h-4 w-4" /> Integrity Report
+          <div className="text-center mb-24 space-y-6">
+             <div className="flex items-center justify-center gap-3 text-accent font-black uppercase tracking-[0.4em] text-[10px]">
+                <ShieldCheck className="h-5 w-5" /> Integrity Protocol
              </div>
-             <h2 className="text-4xl md:text-6xl font-bold tracking-tighter text-white font-heading uppercase">Why Northern Harrier?</h2>
+             <h2 className="text-4xl md:text-8xl font-black tracking-tighter text-white font-heading uppercase leading-none">Elite Himalayan Specialists</h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
              {[
-               { title: 'Local Experts', desc: 'Guides born and brought up in Garhwal & Kumaon peaks.', icon: MapPin },
-               { title: 'Best Stays', desc: 'Handpicked hotels, homestays, and high-altitude camps.', icon: Trophy },
-               { title: 'Reliable Nodes', desc: 'Premium tempo travellers & rugged SUVs for hill nodes.', icon: Users },
-               { title: '24/7 Support', desc: 'Dedicated helpline active even in the most remote areas.', icon: MessageSquare }
+               { title: 'Local Expertise', desc: 'Agents born and raised in high-altitude Garhwal & Kumaon peaks.', icon: MapPin },
+               { title: 'Premium Stays', desc: 'Handpicked elite resorts, authentic homestays, and verified camps.', icon: Trophy },
+               { title: 'Rugged Logistics', desc: 'Premium tempo travellers & heavy-duty SUVs for safe mountain transit.', icon: Users },
+               { title: 'Node Support', desc: 'Dedicated 24/7 helpline active even in the deepest Himalayan valleys.', icon: MessageSquare }
              ].map((usp, i) => (
-               <div key={i} className="space-y-6 text-center md:text-left">
-                  <div className="w-16 h-16 bg-white/10 rounded-[2rem] flex items-center justify-center mb-6">
-                    <usp.icon className="h-8 w-8 text-accent" />
+               <div key={i} className="space-y-8 text-center md:text-left group">
+                  <div className="w-20 h-20 bg-white/10 rounded-[2.5rem] flex items-center justify-center mb-8 group-hover:bg-accent group-hover:text-primary transition-all shadow-xl">
+                    <usp.icon className="h-10 w-10 text-accent group-hover:text-primary transition-all" />
                   </div>
-                  <h3 className="text-xl font-bold tracking-tight uppercase">{usp.title}</h3>
-                  <p className="text-white/60 text-sm leading-relaxed font-medium">{usp.desc}</p>
+                  <h3 className="text-2xl font-black tracking-tight uppercase font-heading">{usp.title}</h3>
+                  <p className="text-white/60 text-base leading-relaxed font-bold uppercase tracking-widest">{usp.desc}</p>
                </div>
              ))}
           </div>
           
-          <div className="mt-24 pt-12 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-8">
-             <div className="flex items-center gap-6">
-                <div className="h-20 w-20 bg-accent text-primary rounded-full flex items-center justify-center text-2xl font-bold">NH</div>
+          <div className="mt-32 pt-16 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-12">
+             <div className="flex items-center gap-10">
+                <div className="h-24 w-24 bg-accent text-primary rounded-full flex items-center justify-center text-3xl font-black shadow-2xl">NH</div>
                 <div className="space-y-1">
-                   <p className="text-lg font-bold uppercase tracking-tight">Official Partner</p>
-                   <p className="text-[10px] font-black uppercase text-accent tracking-[0.3em]">Uttarakhand Tourism Council</p>
+                   <p className="text-2xl font-black uppercase tracking-tighter">Official Partner</p>
+                   <p className="text-[11px] font-black uppercase text-accent tracking-[0.5em]">Uttarakhand Tourism Liaison</p>
                 </div>
              </div>
-             <div className="flex gap-10 items-center grayscale opacity-50 text-white font-black text-xl">
+             <div className="flex gap-12 items-center grayscale opacity-40 text-white font-black text-2xl tracking-tighter uppercase">
                 <span>RAZORPAY</span>
-                <span>UPI</span>
-                <span>VISA</span>
+                <span>UPI Node</span>
+                <span>Visa Elite</span>
              </div>
           </div>
         </div>
       </section>
 
       {/* 7. FINAL CTA BANNER */}
-      <section className="py-48 relative overflow-hidden bg-white">
+      <section className="py-56 relative overflow-hidden bg-white">
         <div className="container px-6 text-center">
-            <div className="max-w-4xl mx-auto space-y-12">
-                <motion.div {...fadeInUp} className="space-y-6">
-                    <h2 className="text-5xl md:text-8xl font-bold tracking-tighter text-primary leading-[0.9] font-heading uppercase">
-                        Initialize Your <br className="hidden md:block"/> <span className="text-accent italic font-spiritual capitalize">Sacred Voyage</span>
+            <div className="max-w-5xl mx-auto space-y-16">
+                <motion.div {...fadeInUp} className="space-y-8">
+                    <h2 className="text-5xl md:text-[10rem] font-black tracking-tighter text-primary leading-[0.8] font-heading uppercase">
+                        INITIALIZE <br className="hidden md:block"/> <span className="text-accent italic font-spiritual capitalize">SACRED VOYAGE</span>
                     </h2>
-                    <p className="text-lg md:text-xl text-slate-500 font-medium tracking-wide max-w-2xl mx-auto">
-                        Ready to experience the magic of Devbhoomi? Talk to our Uttarakhand experts today for a free custom itinerary.
+                    <p className="text-xl md:text-3xl text-slate-500 font-bold tracking-tight max-w-3xl mx-auto uppercase">
+                        Ready to experience the magic of Devbhoomi? Talk to our specialists today for a free custom itinerary.
                     </p>
                 </motion.div>
                 
-                <div className="flex flex-col items-center gap-8">
-                    <Button asChild size="lg" className="h-20 px-16 rounded-full font-bold text-xl bg-accent hover:bg-primary hover:text-white transition-all shadow-2xl group">
-                        <Link href="/contact" className="flex items-center gap-4">
-                            🙏 Request a Free Quote <ArrowRight className="h-6 w-6 transition-transform group-hover:translate-x-2" />
+                <div className="flex flex-col items-center gap-12">
+                    <Button asChild size="lg" className="h-24 px-20 rounded-full font-black text-2xl bg-accent hover:bg-primary hover:text-white transition-all shadow-3xl saffron-glow group active:scale-95">
+                        <Link href="/contact" className="flex items-center gap-6">
+                            🙏 REQUEST A FREE QUOTE <ArrowRight className="h-8 w-8 transition-transform group-hover:translate-x-3" />
                         </Link>
                     </Button>
-                    <div className="flex flex-wrap items-center justify-center gap-8 text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]">
-                        <span className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-green-600" /> Instant Confirmation</span>
-                        <span className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-green-600" /> Best Price Guarantee</span>
-                        <span className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-green-600" /> Free Cancellation</span>
+                    <div className="flex flex-wrap items-center justify-center gap-10 text-[11px] font-black uppercase text-slate-400 tracking-[0.4em]">
+                        <span className="flex items-center gap-3"><CheckCircle2 className="h-5 w-5 text-green-600" /> INSTANT SYNC</span>
+                        <span className="flex items-center gap-3"><CheckCircle2 className="h-5 w-5 text-green-600" /> BEST RATE DATA</span>
+                        <span className="flex items-center gap-3"><CheckCircle2 className="h-5 w-5 text-green-600" /> FREE ABORT</span>
                     </div>
                 </div>
             </div>
@@ -381,3 +380,4 @@ export default function LandingPage() {
     </div>
   );
 }
+
