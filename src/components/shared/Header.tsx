@@ -33,7 +33,7 @@ const navLinks = [
   { href: '/contact', label: 'REVIEWS' },
 ];
 
-function UserNav() {
+function UserNav({ isScrolled }: { isScrolled: boolean }) {
   const { user, userProfile, isLoading } = useUser();
   const auth = useAuth();
   const router = useRouter();
@@ -45,21 +45,27 @@ function UserNav() {
   };
 
   if (isLoading) {
-    return <Skeleton className="h-10 w-10 rounded-full bg-primary/10" />;
+    return <Skeleton className="h-10 w-10 rounded-full bg-white/10" />;
   }
 
   if (user) {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="relative h-11 w-auto rounded-full flex items-center gap-3 border border-border/10 hover:bg-primary/5 px-2">
+          <Button variant="ghost" className={cn(
+            "relative h-11 w-auto rounded-full flex items-center gap-3 border transition-all px-2",
+            isScrolled ? "border-primary/10 hover:bg-primary/5" : "border-white/20 hover:bg-white/10"
+          )}>
             <Avatar className="h-9 w-9 ring-2 ring-accent/20">
                <AvatarImage src={user.photoURL || ''} alt={userProfile?.displayName || 'User'} />
               <AvatarFallback className="bg-primary text-white text-[10px] font-bold">
                 {userProfile?.displayName?.charAt(0).toUpperCase() || <User className="h-4 w-4" />}
               </AvatarFallback>
             </Avatar>
-            <span className="text-[10px] font-bold text-primary hidden lg:block uppercase tracking-widest ml-1">Account</span>
+            <span className={cn(
+              "text-[10px] font-black hidden lg:block uppercase tracking-widest ml-1",
+              isScrolled ? "text-primary" : "text-white"
+            )}>Account</span>
             <ChevronDown className="h-3 w-3 text-slate-400" />
           </Button>
         </DropdownMenuTrigger>
@@ -97,10 +103,13 @@ function UserNav() {
 
   return (
     <div className="flex items-center gap-6">
-      <Link href="/login" className="text-primary font-bold text-[10px] tracking-widest uppercase hidden sm:block hover:text-accent transition-colors text-shadow-sm">
+      <Link href="/login" className={cn(
+        "font-black text-[10px] tracking-widest uppercase hidden sm:block hover:text-accent transition-colors",
+        isScrolled ? "text-primary" : "text-white text-shadow-md"
+      )}>
         Login
       </Link>
-      <Button asChild className="bg-accent text-accent-foreground hover:bg-primary hover:text-white font-bold text-[10px] tracking-widest rounded-full px-8 h-10 shadow-lg shadow-accent/20">
+      <Button asChild className="bg-accent text-accent-foreground hover:bg-primary hover:text-white font-black text-[10px] tracking-widest rounded-full px-8 h-10 shadow-lg transition-all active:scale-95">
         <Link href="/signup">SIGN UP</Link>
       </Button>
     </div>
@@ -116,20 +125,11 @@ export default function Header() {
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-      
-      // Scrolling down
-      if (currentScrollY > lastScrollY && currentScrollY > 150) {
-        setIsVisible(false);
-      } 
-      // Scrolling up
-      else {
-        setIsVisible(true);
-      }
-      
+      if (currentScrollY > lastScrollY && currentScrollY > 150) setIsVisible(false);
+      else setIsVisible(true);
       setLastScrollY(currentScrollY);
       setIsScrolled(currentScrollY > 50);
     };
-
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, [lastScrollY]);
@@ -139,7 +139,7 @@ export default function Header() {
       className={cn(
         "fixed top-0 z-50 w-full transition-all duration-500 transform",
         isVisible ? "translate-y-0" : "-translate-y-full",
-        isScrolled ? "bg-background/95 backdrop-blur-xl border-b border-muted/50 h-16 shadow-sm" : "bg-transparent h-24"
+        isScrolled ? "bg-white/95 backdrop-blur-xl border-b border-black/5 h-16 shadow-sm" : "bg-transparent h-24"
       )}
     >
       <div className="container flex h-full items-center justify-between">
@@ -150,12 +150,12 @@ export default function Header() {
                 </div>
                 <div className="flex flex-col">
                   <span className={cn(
-                    "font-heading text-xl md:text-2xl font-bold tracking-tighter uppercase group-hover:text-accent transition-all",
-                    isScrolled ? "text-primary" : "text-white"
+                    "font-heading text-xl md:text-2xl font-black tracking-tighter uppercase group-hover:text-accent transition-all",
+                    isScrolled ? "text-primary" : "text-white text-shadow-md"
                   )}>
                       NORTHERN <span className="text-accent italic font-spiritual capitalize">HARRIER</span>
                   </span>
-                  {!isScrolled && <span className="text-[7px] font-black uppercase text-white/60 tracking-[0.4em] -mt-1 ml-0.5">Uttarakhand Specialists</span>}
+                  {!isScrolled && <span className="text-[7px] font-black uppercase text-white/60 tracking-[0.4em] -mt-1 ml-0.5 text-shadow-sm">Uttarakhand Specialists</span>}
                 </div>
             </Link>
             
@@ -165,8 +165,10 @@ export default function Header() {
                       key={link.href}
                       href={link.href}
                       className={cn(
-                          "text-[10px] font-bold tracking-widest transition-all relative py-2 uppercase",
-                          pathname === link.href ? "text-accent border-b-2 border-accent" : (isScrolled ? "text-primary/70 hover:text-accent" : "text-white/80 hover:text-accent")
+                          "text-[10px] font-black tracking-widest transition-all relative py-2 uppercase",
+                          pathname === link.href 
+                            ? "text-accent border-b-2 border-accent" 
+                            : (isScrolled ? "text-primary/70 hover:text-accent" : "text-white hover:text-accent text-shadow-md")
                       )}
                     >
                       {link.label}
@@ -176,10 +178,13 @@ export default function Header() {
         </div>
 
         <div className="flex items-center gap-6">
-          <div className={cn("hidden lg:flex items-center gap-2 font-bold text-[9px] uppercase tracking-widest border-r pr-6", isScrolled ? "text-primary/40 border-muted" : "text-white/40 border-white/10")}>
-            <Phone className="h-3 w-3" /> +91-XXXXXXXXXX
+          <div className={cn(
+            "hidden lg:flex items-center gap-2 font-black text-[9px] uppercase tracking-widest border-r pr-6",
+            isScrolled ? "text-primary/40 border-muted" : "text-white/40 border-white/10"
+          )}>
+            <Phone className="h-3 w-3" /> +91-6399902725
           </div>
-          <UserNav />
+          <UserNav isScrolled={isScrolled} />
            <div className="lg:hidden">
             <Sheet>
                 <SheetTrigger asChild>
@@ -198,7 +203,7 @@ export default function Header() {
                                 <Link
                                   href={link.href}
                                   className={cn(
-                                    "flex items-center justify-between px-8 py-6 font-bold text-[12px] tracking-widest border-b border-muted/20 uppercase transition-all",
+                                    "flex items-center justify-between px-8 py-6 font-black text-[12px] tracking-widest border-b border-muted/20 uppercase transition-all",
                                     pathname === link.href ? "text-accent bg-accent/5" : "text-primary/70 hover:bg-muted"
                                   )}
                                 >

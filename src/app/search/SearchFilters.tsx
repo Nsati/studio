@@ -71,22 +71,24 @@ export function SearchFilters() {
     }
 
     return (
-        <div className="space-y-6">
-            <form onSubmit={handleFormSubmit} className="flex flex-col lg:flex-row items-stretch gap-2 bg-white p-2 rounded-[2.5rem] border border-border/10 shadow-2xl saffron-glow">
+        <div className="space-y-8">
+            <form onSubmit={handleFormSubmit} className="flex flex-col lg:flex-row items-stretch gap-3 bg-white p-3 rounded-[3rem] border border-black/5 shadow-luxury saffron-glow relative z-20">
                 
                 {/* Location Node */}
-                <div className="flex-[1.2] flex items-center gap-4 bg-muted/30 hover:bg-muted/50 px-8 py-4 rounded-[2rem] transition-all cursor-pointer group">
-                    <MapPin className="h-5 w-5 text-primary group-hover:scale-110 transition-transform duration-500" />
+                <div className="flex-[1.2] flex items-center gap-5 bg-muted/40 hover:bg-muted/60 px-8 py-5 rounded-[2.5rem] transition-all cursor-pointer group">
+                    <div className="h-12 w-12 rounded-2xl bg-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                        <MapPin className="h-5 w-5 text-primary" />
+                    </div>
                     <div className="flex flex-col items-start flex-1 text-left">
-                        <span className="text-[9px] font-bold uppercase tracking-widest text-primary/60 mb-1">Target Hub</span>
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60 mb-1">Target Node</span>
                         <Select value={city} onValueChange={setCity}>
-                            <SelectTrigger className="border-0 bg-transparent p-0 h-auto focus:ring-0 shadow-none font-bold text-primary text-base w-full tracking-tight">
-                                <SelectValue placeholder="Target Node" />
+                            <SelectTrigger className="border-0 bg-transparent p-0 h-auto focus:ring-0 shadow-none font-black text-primary text-lg w-full tracking-tighter">
+                                <SelectValue placeholder="All Devbhoomi" />
                             </SelectTrigger>
-                            <SelectContent className="bg-white border-border/10 rounded-2xl shadow-3xl">
-                                <SelectItem value="All" className="focus:bg-primary/5 font-bold py-3 text-primary">All Devbhoomi</SelectItem>
+                            <SelectContent className="bg-white border-black/5 rounded-3xl shadow-3xl">
+                                <SelectItem value="All" className="focus:bg-primary/5 font-bold py-4 text-primary text-sm uppercase">All Uttarakhand</SelectItem>
                                 {cities?.map((c) => (
-                                    <SelectItem key={c} value={c} className="focus:bg-primary/5 font-bold py-3 text-primary">{c}</SelectItem>
+                                    <SelectItem key={c} value={c} className="focus:bg-primary/5 font-bold py-4 text-primary text-sm uppercase">{c}</SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
@@ -94,26 +96,28 @@ export function SearchFilters() {
                 </div>
 
                 {/* Date Window */}
-                <div className="flex-1 flex items-center gap-4 bg-muted/30 hover:bg-muted/50 px-8 py-4 rounded-[2rem] transition-all cursor-pointer group">
-                    <CalendarIcon className="h-5 w-5 text-primary group-hover:scale-110 transition-transform duration-500" />
+                <div className="flex-1 flex items-center gap-5 bg-muted/40 hover:bg-muted/60 px-8 py-5 rounded-[2.5rem] transition-all cursor-pointer group">
+                    <div className="h-12 w-12 rounded-2xl bg-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                        <CalendarIcon className="h-5 w-5 text-primary" />
+                    </div>
                     <div className="flex flex-col items-start flex-1 text-left">
-                        <span className="text-[9px] font-bold uppercase tracking-widest text-primary/60 mb-1">Stay Window</span>
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60 mb-1">Stay Window</span>
                         <Popover>
                             <PopoverTrigger asChild>
-                                <button type="button" className="text-base font-bold text-primary truncate hover:text-accent transition-colors text-left w-full tracking-tight">
+                                <button type="button" className="text-lg font-black text-primary truncate hover:text-accent transition-colors text-left w-full tracking-tighter uppercase">
                                     {dates?.from ? (
                                         dates.to ? `${format(dates.from, 'MMM dd')} - ${format(dates.to, 'MMM dd')}` : format(dates.from, 'MMM dd')
                                     ) : "Select Dates"}
                                 </button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0 border-border/10 bg-white rounded-3xl overflow-hidden shadow-3xl" align="center">
+                            <PopoverContent className="w-auto p-0 border-black/5 bg-white rounded-[2rem] overflow-hidden shadow-luxury" align="center">
                                 <CalendarComponent
                                     mode="range"
                                     selected={dates}
                                     onSelect={setDates}
                                     disabled={{ before: new Date() }}
                                     numberOfMonths={2}
-                                    className="bg-white text-primary p-4"
+                                    className="bg-white text-primary p-6"
                                 />
                             </PopoverContent>
                         </Popover>
@@ -121,31 +125,33 @@ export function SearchFilters() {
                 </div>
 
                 {/* Guests */}
-                <div className="flex-[0.8] flex items-center gap-4 bg-muted/30 hover:bg-muted/50 px-8 py-4 rounded-[2rem] transition-all group">
-                    <Users className="h-5 w-5 text-primary group-hover:scale-110 transition-transform duration-500" />
+                <div className="flex-[0.8] flex items-center gap-5 bg-muted/40 hover:bg-muted/60 px-8 py-5 rounded-[2.5rem] transition-all group">
+                    <div className="h-12 w-12 rounded-2xl bg-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                        <Users className="h-5 w-5 text-primary" />
+                    </div>
                     <div className="flex flex-col items-start flex-1 text-left">
-                        <span className="text-[9px] font-bold uppercase tracking-widest text-primary/60 mb-1">Travelers</span>
-                        <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60 mb-1">Travelers</span>
+                        <div className="flex items-center gap-3">
                             <Input 
                                 type="number" 
                                 min="1"
                                 value={guests}
                                 onChange={(e) => setGuests(e.target.value)}
-                                className="border-0 bg-transparent p-0 h-auto focus-visible:ring-0 shadow-none font-bold w-10 text-lg text-primary tracking-tighter"
+                                className="border-0 bg-transparent p-0 h-auto focus-visible:ring-0 shadow-none font-black w-10 text-xl text-primary tracking-tighter"
                             />
-                            <span className="text-[10px] font-bold text-primary/40 uppercase tracking-widest">PAX</span>
+                            <span className="text-[10px] font-black text-primary/40 uppercase tracking-widest">PAX</span>
                         </div>
                     </div>
                 </div>
                 
                 {/* Execute Button */}
-                <Button type="submit" size="lg" className="h-auto bg-accent hover:bg-primary text-accent-foreground hover:text-white rounded-[2rem] px-10 text-lg font-bold shadow-xl transition-all active:scale-95 py-6 lg:py-0 group saffron-glow">
-                    SEARCH <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                <Button type="submit" size="lg" className="h-auto bg-accent hover:bg-primary text-accent-foreground hover:text-white rounded-[2.5rem] px-12 text-lg font-black shadow-2xl transition-all active:scale-95 py-6 lg:py-0 group saffron-glow uppercase tracking-widest">
+                    EXPLORE <ArrowRight className="ml-3 h-6 w-6 transition-transform group-hover:translate-x-2" />
                 </Button>
             </form>
 
             {/* Protocol Selectors */}
-            <div className="flex flex-wrap gap-3 justify-center">
+            <div className="flex flex-wrap gap-4 justify-center">
                 {[
                     { id: 'standard', label: 'Traditional Trail', icon: Compass },
                     { id: 'chardham', label: 'Sacred Char Dham', icon: Star },
@@ -156,13 +162,13 @@ export function SearchFilters() {
                         variant="ghost" 
                         onClick={() => setMode(p.id as any)}
                         className={cn(
-                            "h-10 rounded-full text-[10px] font-bold uppercase tracking-widest px-8 border transition-all duration-300 flex items-center gap-2",
+                            "h-12 rounded-full text-[10px] font-black uppercase tracking-[0.3em] px-10 border transition-all duration-500 flex items-center gap-3",
                             mode === p.id 
-                                ? "bg-primary text-white border-primary shadow-lg" 
-                                : "text-primary/60 border-primary/10 hover:bg-primary/5"
+                                ? "bg-primary text-white border-primary shadow-xl scale-105" 
+                                : "text-primary/40 border-black/5 hover:bg-primary/5 bg-white/50"
                         )}
                     >
-                        <p.icon className="h-3.5 w-3.5" /> {p.label}
+                        <p.icon className="h-4 w-4" /> {p.label}
                     </Button>
                 ))}
             </div>
