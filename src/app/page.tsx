@@ -83,12 +83,12 @@ export default function LandingPage() {
 
             <div className="pt-12">
               <Suspense fallback={<div className="h-20 bg-white/10 rounded-full animate-pulse" />}>
-                <div className="max-w-3xl mx-auto bg-white p-2 rounded-full shadow-2xl flex items-center">
+                <div className="max-w-3xl mx-auto bg-white p-2 rounded-full shadow-2xl flex items-center overflow-hidden">
                   <div className="flex-1 px-6 text-left">
                     <p className="text-[10px] font-bold uppercase text-slate-400">Where in Uttarakhand?</p>
-                    <p className="text-slate-800 font-bold">Kedarnath, Rishikesh, Auli...</p>
+                    <p className="text-slate-800 font-bold truncate">Kedarnath, Rishikesh, Auli...</p>
                   </div>
-                  <Button asChild className="bg-primary hover:bg-accent rounded-full h-12 px-8">
+                  <Button asChild className="bg-primary hover:bg-accent rounded-full h-12 px-8 shrink-0">
                     <Link href="/search">Search Hub <ChevronRight className="ml-2 h-4 w-4" /></Link>
                   </Button>
                 </div>
@@ -126,12 +126,13 @@ export default function LandingPage() {
 
           <div className="overflow-hidden py-4">
              <div className="flex gap-6 animate-marquee whitespace-nowrap">
-                {[1,2,3,4,5,6].map((i) => (
+                {[1,2,3,4,5,6,7,8].map((i) => (
                   <div key={i} className="relative w-64 h-48 rounded-2xl overflow-hidden shadow-lg flex-shrink-0 group">
                     <Image 
-                      src={`https://picsum.photos/seed/guest-${i}/400/300`} 
+                      src={`https://picsum.photos/seed/guest-moment-${i}/400/300`} 
                       alt="Guest Travel" 
                       fill 
+                      unoptimized={true}
                       className="object-cover transition-transform group-hover:scale-110"
                     />
                     <div className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-sm p-2 rounded-full flex items-center gap-1.5 shadow-sm">
@@ -169,20 +170,22 @@ export default function LandingPage() {
               { name: 'Nainital', img: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&q=80&w=800', badge: 'Family Retreat', desc: 'The Lake District' }
             ].map((node, i) => (
               <motion.div key={i} {...fadeInUp} transition={{ delay: i * 0.1 }}>
-                <Card className="group relative aspect-[3/4] overflow-hidden rounded-[2.5rem] border-0 shadow-2xl saffron-glow cursor-pointer">
-                  <Image src={node.img} alt={node.name} fill className="object-cover transition-transform duration-2000 group-hover:scale-110" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-transparent to-transparent opacity-60" />
-                  <div className="absolute top-6 left-6">
-                    <Badge className="bg-accent text-accent-foreground border-0 font-bold text-[9px] px-4 py-1.5 tracking-widest rounded-full">{node.badge}</Badge>
-                  </div>
-                  <div className="absolute bottom-8 left-8 right-8 space-y-1">
-                    <h3 className="text-3xl font-bold text-white tracking-tighter uppercase font-heading">{node.name}</h3>
-                    <p className="text-white/70 text-xs font-medium">{node.desc}</p>
-                    <div className="pt-4">
-                       <span className="text-[10px] font-black uppercase text-accent tracking-widest flex items-center gap-2 group-hover:translate-x-2 transition-transform">Explore Node <ArrowRight className="h-3 w-3" /></span>
+                <Link href={`/search?city=${node.name}`}>
+                  <Card className="group relative aspect-[3/4] overflow-hidden rounded-[2.5rem] border-0 shadow-2xl saffron-glow cursor-pointer">
+                    <Image src={node.img} alt={node.name} fill unoptimized={true} className="object-cover transition-transform duration-2000 group-hover:scale-110" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-transparent to-transparent opacity-60" />
+                    <div className="absolute top-6 left-6">
+                      <Badge className="bg-accent text-accent-foreground border-0 font-bold text-[9px] px-4 py-1.5 tracking-widest rounded-full">{node.badge}</Badge>
                     </div>
-                  </div>
-                </Card>
+                    <div className="absolute bottom-8 left-8 right-8 space-y-1">
+                      <h3 className="text-3xl font-bold text-white tracking-tighter uppercase font-heading">{node.name}</h3>
+                      <p className="text-white/70 text-xs font-medium">{node.desc}</p>
+                      <div className="pt-4">
+                         <span className="text-[10px] font-black uppercase text-accent tracking-widest flex items-center gap-2 group-hover:translate-x-2 transition-transform">Explore Node <ArrowRight className="h-3 w-3" /></span>
+                      </div>
+                    </div>
+                  </Card>
+                </Link>
               </motion.div>
             ))}
           </div>
@@ -214,9 +217,9 @@ export default function LandingPage() {
            </div>
 
            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto pt-12">
-              <div className="flex items-center gap-6 p-6 bg-background rounded-3xl border border-muted hover:shadow-xl transition-all cursor-pointer group">
+              <div className="flex items-center gap-6 p-6 bg-background rounded-3xl border border-muted hover:shadow-xl cursor-pointer group">
                  <div className="relative h-20 w-32 rounded-xl overflow-hidden shrink-0">
-                    <Image src="https://images.unsplash.com/photo-1544735749-2e924378a839?auto=format&fit=crop&q=80&w=200" alt="Rafting" fill className="object-cover" />
+                    <Image src="https://images.unsplash.com/photo-1544735749-2e924378a839?auto=format&fit=crop&q=80&w=200" alt="Rafting" fill unoptimized={true} className="object-cover" />
                     <div className="absolute inset-0 bg-black/20 flex items-center justify-center"><Play size={16} color="white" /></div>
                  </div>
                  <div className="text-left">
@@ -224,9 +227,9 @@ export default function LandingPage() {
                     <p className="text-[10px] font-medium text-slate-500">by Rajesh & Group</p>
                  </div>
               </div>
-              <div className="flex items-center gap-6 p-6 bg-background rounded-3xl border border-muted hover:shadow-xl transition-all cursor-pointer group">
+              <div className="flex items-center gap-6 p-6 bg-background rounded-3xl border border-muted hover:shadow-xl cursor-pointer group">
                  <div className="relative h-20 w-32 rounded-xl overflow-hidden shrink-0">
-                    <Image src="https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?auto=format&fit=crop&q=80&w=200" alt="Kedarnath" fill className="object-cover" />
+                    <Image src="https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?auto=format&fit=crop&q=80&w=200" alt="Kedarnath" fill unoptimized={true} className="object-cover" />
                     <div className="absolute inset-0 bg-black/20 flex items-center justify-center"><Play size={16} color="white" /></div>
                  </div>
                  <div className="text-left">
@@ -296,7 +299,7 @@ export default function LandingPage() {
       {/* 6. WHY CHOOSE US (USP SECTION) */}
       <section className="py-32 bg-primary text-white relative overflow-hidden">
         <div className="absolute inset-0 opacity-10 pointer-events-none">
-            <Image src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=1920" fill alt="Texture" className="object-cover" />
+            <Image src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=1920" fill alt="Texture" className="object-cover" unoptimized={true} />
         </div>
         <div className="container px-6 relative z-10">
           <div className="text-center mb-20 space-y-4">
@@ -369,16 +372,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* FLOATING WHATSAPP CTA */}
-      <a 
-        href="https://wa.me/916399902725" 
-        target="_blank" 
-        rel="noopener noreferrer"
-        className="fixed bottom-8 right-8 z-[100] bg-[#25D366] text-white p-5 rounded-full shadow-2xl hover:scale-110 transition-transform active:scale-95 flex items-center gap-3 group group"
-      >
-        <span className="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-500 whitespace-nowrap font-bold text-sm">Need help? Chat with experts!</span>
-        <MessageSquare className="h-8 w-8" />
-      </a>
+      {/* REMOVED DUPLICATE WHATSAPP BUTTON - NOW MANAGED IN layout.tsx */}
     </div>
   );
 }

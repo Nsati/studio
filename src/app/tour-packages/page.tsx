@@ -1,4 +1,3 @@
-
 'use client';
 
 import React from 'react';
@@ -87,6 +86,7 @@ export default function TourPackagesPage() {
                                         alt={pkg.title}
                                         fill
                                         className="object-cover transition-transform duration-2000 group-hover:scale-105"
+                                        unoptimized={true}
                                     />
                                     <div className="absolute top-6 left-6">
                                         <Badge className="bg-primary text-primary-foreground border-0 font-bold uppercase text-[8px] tracking-widest px-4 py-2 rounded-full shadow-lg">
@@ -116,18 +116,18 @@ export default function TourPackagesPage() {
                                     </div>
                                 </CardHeader>
 
-                                {/* Footer */}
+                                {/* Footer - FIXED SPACING */}
                                 <CardFooter className="p-8 pt-0 flex flex-col gap-8">
                                     <div className="h-px w-full bg-muted" />
-                                    <div className="flex items-center justify-between">
-                                        <div className="space-y-1">
+                                    <div className="flex flex-col sm:flex-row items-center justify-between gap-6 w-full">
+                                        <div className="space-y-1 text-center sm:text-left">
                                             <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Investment</p>
                                             <p className="text-3xl font-bold text-foreground tracking-tighter">
                                                 ₹{pkg.totalCost?.toLocaleString('en-IN')}
                                             </p>
                                         </div>
                                         
-                                        <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full font-bold text-[10px] tracking-widest uppercase px-8 h-14 shadow-lg shadow-primary/20 transition-all active:scale-95">
+                                        <Button asChild size="lg" className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground rounded-full font-bold text-[10px] tracking-widest uppercase px-8 h-14 shadow-lg shadow-primary/20 transition-all active:scale-95">
                                             <Link href={`/tour-packages/${pkg.id}`}>
                                                 EXPLORE <ArrowRight className="ml-2 h-4 w-4" />
                                             </Link>
