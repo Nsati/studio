@@ -35,8 +35,7 @@ export default function LandingPage() {
   const kedarnath = PlaceHolderImages.find(img => img.id === 'dest-kedarnath');
   const rishikesh = PlaceHolderImages.find(img => img.id === 'dest-rishikesh');
   const auli = PlaceHolderImages.find(img => img.id === 'dest-auli');
-  const valley = PlaceHolderImages.find(img => img.id === 'valley-view');
-  const trek = PlaceHolderImages.find(img => img.id === 'trekking-exp');
+  const nainital = PlaceHolderImages.find(img => img.id === 'dest-nainital');
 
   return (
     <div className="bg-background min-h-screen font-sans selection:bg-accent selection:text-white">
@@ -94,7 +93,7 @@ export default function LandingPage() {
         <div className="container px-6">
             <div className="max-w-4xl mx-auto text-center space-y-8">
                 <div className="flex items-center justify-center gap-3 text-accent font-black uppercase tracking-[0.4em] text-[10px]">
-                    <ShieldCheck className="h-5 w-5" /> The Northern Harrier Edge
+                    <ShieldCheck className="h-5 w-5" /> THE NORTHERN HARRIER EDGE
                 </div>
                 <h2 className="text-3xl md:text-6xl font-black tracking-tighter text-primary font-heading uppercase leading-none">
                     Your Trusted Travel Companion <br/> <span className="italic font-light text-accent capitalize">in Uttarakhand</span>
@@ -167,7 +166,7 @@ export default function LandingPage() {
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-8">
             <div className="space-y-4">
               <div className="flex items-center gap-3 text-accent font-black uppercase tracking-widest text-[10px]">
-                <Sparkles className="h-5 w-5" /> Explore Your Interest
+                <Sparkles className="h-5 w-5" /> EXPLORE YOUR INTEREST
               </div>
               <h2 className="text-3xl md:text-6xl font-black tracking-tighter text-primary font-heading uppercase leading-none">Featured Collections</h2>
             </div>
@@ -178,10 +177,10 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
-              { name: 'Mountains & Hills', img: auli, badge: 'Cool Escapes', desc: 'Mussoorie, Nainital, Auli, Chopta' },
-              { name: 'Spiritual Escapes', img: kedarnath, badge: 'Divine', desc: 'Kedarnath, Badrinath, Rishikesh' },
-              { name: 'Adventure Trails', img: trek, badge: 'Thrilling', desc: 'Valley of Flowers, Kedarkantha' },
-              { name: 'Wildlife & Nature', img: valley, badge: 'Wild', desc: 'Jim Corbett, Rajaji, Binsar' }
+              { name: 'Kedarnath', img: kedarnath, badge: 'Sacred Node', desc: 'The Abode of Lord Shiva' },
+              { name: 'Rishikesh', img: rishikesh, badge: 'Spiritual Hub', desc: 'Yoga Capital of the World' },
+              { name: 'Auli', img: auli, badge: 'Skiing Hub', desc: 'The Himalayan Ski Destination' },
+              { name: 'Nainital', img: nainital, badge: 'Lake City', desc: 'The Queen of Lakes' }
             ].map((node, i) => (
               <motion.div key={i} {...fadeInUp} transition={{ delay: i * 0.1 }}>
                 <Link href={`/search?city=${node.name}`}>
@@ -197,11 +196,16 @@ export default function LandingPage() {
                       />
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-primary/95 via-transparent to-transparent opacity-80" />
+                    <div className="absolute top-8 left-8">
+                        <Badge className="bg-accent/90 text-accent-foreground border-0 font-black uppercase text-[8px] tracking-[0.2em] px-4 py-1.5 rounded-full shadow-lg">
+                            {node.badge}
+                        </Badge>
+                    </div>
                     <div className="absolute bottom-10 left-10 right-10 space-y-2">
                       <h3 className="text-2xl md:text-3xl font-black text-white tracking-tighter uppercase font-heading">{node.name}</h3>
                       <p className="text-white/80 text-[10px] font-black uppercase tracking-widest line-clamp-1">{node.desc}</p>
                       <div className="pt-6 opacity-0 group-hover:opacity-100 transition-all transform translate-y-4 group-hover:translate-y-0">
-                         <span className="text-[10px] font-black text-accent uppercase tracking-[0.3em] flex items-center gap-3">Explore Now <ArrowRight className="h-4 w-4"/></span>
+                         <span className="text-[10px] font-black text-accent uppercase tracking-[0.3em] flex items-center gap-3">Explore Hotels <ArrowRight className="h-4 w-4"/></span>
                       </div>
                     </div>
                   </Card>
