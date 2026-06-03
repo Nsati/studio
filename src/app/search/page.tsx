@@ -1,7 +1,6 @@
-
 'use client';
 import { Suspense, useState, useMemo } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'navigation';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import type { Hotel } from '@/lib/types';
@@ -103,7 +102,7 @@ function SearchResults({ filters }: { filters: any }) {
 
 function SearchFiltersWrapper() {
   return (
-    <Suspense fallback={<Skeleton className="h-24 w-full rounded-[2.5rem] bg-white shadow-xl" />}>
+    <Suspense fallback={<Skeleton className="h-20 w-full rounded-[2rem] bg-white shadow-xl" />}>
       <SearchFilters />
     </Suspense>
   );
@@ -136,13 +135,16 @@ export default function SearchPage() {
 
   return (
     <div className="min-h-screen bg-background font-sans">
-        <div className="relative z-10 bg-primary/5 border-y border-border/10 py-12 md:py-16">
+        {/* Compact Header Spacing */}
+        <div className="relative z-10 bg-primary/5 border-y border-border/10 py-8 md:py-10">
             <div className="container mx-auto max-w-7xl px-4 md:px-6">
-                <SearchFiltersWrapper />
+                <div className="max-w-5xl mx-auto">
+                    <SearchFiltersWrapper />
+                </div>
             </div>
         </div>
 
-        <div className="relative z-10 container mx-auto max-w-7xl py-12 md:py-20 px-4 md:px-6">
+        <div className="relative z-10 container mx-auto max-w-7xl py-12 md:py-16 px-4 md:px-6">
             <div className="flex flex-col lg:flex-row gap-16">
                 {/* Filters Sidebar */}
                 <aside className="hidden lg:block w-80 space-y-6 shrink-0">
