@@ -128,7 +128,7 @@ export default function Header() {
             <Link href="/" className="flex items-center gap-3 group">
                 <Logo />
                 <span className="font-heading text-xl md:text-2xl font-bold text-primary tracking-tighter uppercase group-hover:text-accent transition-all">
-                    TRIPZY
+                    NORTHERN <span className="text-accent italic font-light">HARRIER</span>
                 </span>
             </Link>
             

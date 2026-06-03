@@ -34,7 +34,7 @@ export default function Footer() {
                 <Link href="/" className="flex items-center gap-3">
                     <Logo />
                     <span className="font-heading text-3xl font-bold text-white tracking-tight">
-                        TRIPZY
+                        NORTHERN <span className="text-accent italic font-light">HARRIER</span>
                     </span>
                 </Link>
                 <p className="max-w-xs text-white/70 font-medium leading-relaxed text-sm">
