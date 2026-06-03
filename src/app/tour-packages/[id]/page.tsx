@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useParams, notFound } from 'next/navigation';
@@ -21,6 +20,7 @@ import { motion } from 'framer-motion';
 /**
  * @fileOverview Professional Tour Package Detail View.
  * Balanced typography and spacing for high-end travel aesthetics.
+ * Sub-header removed as per user request for a cleaner look.
  */
 
 export default function TourPackageDetailPage() {
@@ -55,19 +55,7 @@ export default function TourPackageDetailPage() {
   return (
     <div className="min-h-screen bg-background text-foreground pb-24 font-sans">
       
-      {/* Sub-Header Navigation */}
-      <div className="bg-white border-b border-border/5 py-4 sticky top-[64px] md:top-[72px] z-40">
-        <div className="container mx-auto px-4 md:px-6 flex justify-between items-center">
-          <Link href="/tour-packages" className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-primary hover:text-accent transition-all group">
-            <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" /> Back to Packages
-          </Link>
-          <Badge className="bg-primary/5 text-primary border-primary/10 rounded-full font-bold text-[9px] px-4 py-1.5 uppercase tracking-widest">
-            Verified Himalayan Expedition
-          </Badge>
-        </div>
-      </div>
-
-      <div className="container mx-auto px-4 md:px-6 pt-10 relative z-10">
+      <div className="container mx-auto px-4 md:px-6 pt-24 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-16">
           
           {/* Left Column: Core Itinerary & Details */}
@@ -108,7 +96,7 @@ export default function TourPackageDetailPage() {
               </div>
             </div>
 
-            {/* Logistics Grid - Refined sizes */}
+            {/* Logistics Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
                {[
                  { icon: Users, label: 'PAX Count', val: `${pkg.persons} Adults` },
@@ -126,7 +114,7 @@ export default function TourPackageDetailPage() {
                ))}
             </div>
 
-            {/* Journey Details Tabs - Balanced padding */}
+            {/* Journey Details Tabs */}
             <Tabs defaultValue="itinerary" className="w-full">
               <TabsList className="w-full justify-start border-b border-border/5 rounded-none h-auto p-0 bg-transparent gap-8 md:gap-12 overflow-x-auto scrollbar-hide">
                 <TabsTrigger value="itinerary" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-0 py-4 font-bold uppercase text-[10px] tracking-widest text-slate-400 data-[state=active]:text-foreground">Itinerary</TabsTrigger>
@@ -217,12 +205,12 @@ export default function TourPackageDetailPage() {
             </Tabs>
           </div>
 
-          {/* Right Column: Pricing Sidebar - Minified & Professional */}
+          {/* Right Column: Pricing Sidebar */}
           <div className="space-y-8">
             <motion.div 
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="rounded-2xl border border-border/10 bg-white sticky top-[140px] shadow-2xl overflow-hidden border-t-4 border-primary"
+                className="rounded-2xl border border-border/10 bg-white sticky top-[100px] shadow-2xl overflow-hidden border-t-4 border-primary"
             >
               <div className="bg-primary text-primary-foreground p-8 space-y-4">
                  <div className="flex justify-between items-center">
