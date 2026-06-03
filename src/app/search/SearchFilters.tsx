@@ -21,11 +21,6 @@ import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
-/**
- * @fileOverview Studio Elite Search Filters.
- * High-visibility inputs with glassmorphism and bold gold accents.
- */
-
 export function SearchFilters() {
     const firestore = useFirestore();
     const searchParams = useSearchParams();
@@ -76,99 +71,98 @@ export function SearchFilters() {
     }
 
     return (
-        <div className="space-y-8">
-            {/* Main Search Pill */}
-            <form onSubmit={handleFormSubmit} className="flex flex-col lg:flex-row items-stretch gap-3 bg-white/5 backdrop-blur-3xl p-3 rounded-[3rem] border border-white/10 shadow-2xl luxury-shadow">
+        <div className="space-y-6">
+            <form onSubmit={handleFormSubmit} className="flex flex-col lg:flex-row items-stretch gap-2 bg-white p-2 rounded-[2.5rem] border border-border/10 shadow-2xl saffron-glow">
                 
                 {/* Location Node */}
-                <div className="flex-[1.2] flex items-center gap-6 bg-slate-950/60 hover:bg-slate-900/80 px-8 py-5 rounded-[2.5rem] border border-white/5 focus-within:border-primary/40 transition-all cursor-pointer group">
-                    <MapPin className="h-6 w-6 text-primary group-hover:scale-110 transition-transform duration-500" />
+                <div className="flex-[1.2] flex items-center gap-4 bg-muted/30 hover:bg-muted/50 px-8 py-4 rounded-[2rem] transition-all cursor-pointer group">
+                    <MapPin className="h-5 w-5 text-primary group-hover:scale-110 transition-transform duration-500" />
                     <div className="flex flex-col items-start flex-1 text-left">
-                        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary/70 mb-1">Destination Node</span>
+                        <span className="text-[9px] font-bold uppercase tracking-widest text-primary/60 mb-1">Target Hub</span>
                         <Select value={city} onValueChange={setCity}>
-                            <SelectTrigger className="border-0 bg-transparent p-0 h-auto focus:ring-0 shadow-none font-black text-white text-lg w-full tracking-tight">
-                                <SelectValue placeholder="Target Hub" />
+                            <SelectTrigger className="border-0 bg-transparent p-0 h-auto focus:ring-0 shadow-none font-bold text-primary text-base w-full tracking-tight">
+                                <SelectValue placeholder="Target Node" />
                             </SelectTrigger>
-                            <SelectContent className="bg-slate-950 border-white/10 text-white rounded-2xl shadow-3xl">
-                                <SelectItem value="All" className="focus:bg-primary/20 focus:text-white font-bold py-3">All Uttarakhand</SelectItem>
+                            <SelectContent className="bg-white border-border/10 rounded-2xl shadow-3xl">
+                                <SelectItem value="All" className="focus:bg-primary/5 font-bold py-3 text-primary">All Devbhoomi</SelectItem>
                                 {cities?.map((c) => (
-                                    <SelectItem key={c} value={c} className="focus:bg-primary/20 focus:text-white font-bold py-3">{c}</SelectItem>
+                                    <SelectItem key={c} value={c} className="focus:bg-primary/5 font-bold py-3 text-primary">{c}</SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
                     </div>
                 </div>
 
-                {/* Temporal Window (Dates) */}
-                <div className="flex-1 flex items-center gap-6 bg-slate-950/60 hover:bg-slate-900/80 px-8 py-5 rounded-[2.5rem] border border-white/5 focus-within:border-primary/40 transition-all cursor-pointer group">
-                    <CalendarIcon className="h-6 w-6 text-primary group-hover:scale-110 transition-transform duration-500" />
+                {/* Date Window */}
+                <div className="flex-1 flex items-center gap-4 bg-muted/30 hover:bg-muted/50 px-8 py-4 rounded-[2rem] transition-all cursor-pointer group">
+                    <CalendarIcon className="h-5 w-5 text-primary group-hover:scale-110 transition-transform duration-500" />
                     <div className="flex flex-col items-start flex-1 text-left">
-                        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary/70 mb-1">Travel Window</span>
+                        <span className="text-[9px] font-bold uppercase tracking-widest text-primary/60 mb-1">Stay Window</span>
                         <Popover>
                             <PopoverTrigger asChild>
-                                <button type="button" className="text-lg font-black text-white truncate hover:text-primary transition-colors text-left w-full tracking-tight">
+                                <button type="button" className="text-base font-bold text-primary truncate hover:text-accent transition-colors text-left w-full tracking-tight">
                                     {dates?.from ? (
-                                        dates.to ? `${format(dates.from, 'MMM dd')} — ${format(dates.to, 'MMM dd')}` : format(dates.from, 'MMM dd')
-                                    ) : "Initialize Dates"}
+                                        dates.to ? `${format(dates.from, 'MMM dd')} - ${format(dates.to, 'MMM dd')}` : format(dates.from, 'MMM dd')
+                                    ) : "Select Dates"}
                                 </button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0 border-white/10 bg-slate-950 rounded-3xl overflow-hidden shadow-3xl" align="center">
+                            <PopoverContent className="w-auto p-0 border-border/10 bg-white rounded-3xl overflow-hidden shadow-3xl" align="center">
                                 <CalendarComponent
                                     mode="range"
                                     selected={dates}
                                     onSelect={setDates}
                                     disabled={{ before: new Date() }}
                                     numberOfMonths={2}
-                                    className="bg-slate-950 text-white p-6"
+                                    className="bg-white text-primary p-4"
                                 />
                             </PopoverContent>
                         </Popover>
                     </div>
                 </div>
 
-                {/* Explorer Capacity (Guests) */}
-                <div className="flex-[0.8] flex items-center gap-6 bg-slate-950/60 hover:bg-slate-900/80 px-8 py-5 rounded-[2.5rem] border border-white/5 focus-within:border-primary/40 transition-all group">
-                    <Users className="h-6 w-6 text-primary group-hover:scale-110 transition-transform duration-500" />
+                {/* Guests */}
+                <div className="flex-[0.8] flex items-center gap-4 bg-muted/30 hover:bg-muted/50 px-8 py-4 rounded-[2rem] transition-all group">
+                    <Users className="h-5 w-5 text-primary group-hover:scale-110 transition-transform duration-500" />
                     <div className="flex flex-col items-start flex-1 text-left">
-                        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary/70 mb-1">Explorer Count</span>
-                        <div className="flex items-center gap-3">
+                        <span className="text-[9px] font-bold uppercase tracking-widest text-primary/60 mb-1">Travelers</span>
+                        <div className="flex items-center gap-2">
                             <Input 
                                 type="number" 
                                 min="1"
                                 value={guests}
                                 onChange={(e) => setGuests(e.target.value)}
-                                className="border-0 bg-transparent p-0 h-auto focus-visible:ring-0 shadow-none font-black w-10 text-xl text-white tracking-tighter"
+                                className="border-0 bg-transparent p-0 h-auto focus-visible:ring-0 shadow-none font-bold w-10 text-lg text-primary tracking-tighter"
                             />
-                            <span className="text-[11px] font-black text-white/40 uppercase tracking-widest">PAX</span>
+                            <span className="text-[10px] font-bold text-primary/40 uppercase tracking-widest">PAX</span>
                         </div>
                     </div>
                 </div>
                 
                 {/* Execute Button */}
-                <Button type="submit" size="lg" className="h-auto bg-primary hover:bg-white text-background rounded-[2.2rem] px-12 text-xl font-black shadow-2xl transition-all active:scale-95 py-8 lg:py-0 group">
-                    EXECUTE <ArrowRight className="ml-3 h-6 w-6 transition-transform group-hover:translate-x-2" />
+                <Button type="submit" size="lg" className="h-auto bg-accent hover:bg-primary text-accent-foreground hover:text-white rounded-[2rem] px-10 text-lg font-bold shadow-xl transition-all active:scale-95 py-6 lg:py-0 group saffron-glow">
+                    SEARCH <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                 </Button>
             </form>
 
             {/* Protocol Selectors */}
-            <div className="flex flex-wrap gap-4 justify-center">
+            <div className="flex flex-wrap gap-3 justify-center">
                 {[
-                    { id: 'standard', label: 'Standard Protocol', icon: Compass },
-                    { id: 'chardham', label: 'Char Dham Node', icon: Star },
-                    { id: 'trek', label: 'Trek Protocol', icon: Tent }
+                    { id: 'standard', label: 'Traditional Trail', icon: Compass },
+                    { id: 'chardham', label: 'Sacred Char Dham', icon: Star },
+                    { id: 'trek', label: 'Mountain Trek', icon: Tent }
                 ].map((p) => (
                     <Button 
                         key={p.id}
                         variant="ghost" 
                         onClick={() => setMode(p.id as any)}
                         className={cn(
-                            "h-12 rounded-full text-[11px] font-black uppercase tracking-[0.4em] px-10 border transition-all duration-500 flex items-center gap-3",
+                            "h-10 rounded-full text-[10px] font-bold uppercase tracking-widest px-8 border transition-all duration-300 flex items-center gap-2",
                             mode === p.id 
-                                ? "bg-primary text-background border-primary shadow-[0_10px_30px_rgba(254,187,2,0.2)]" 
-                                : "text-white/40 border-white/10 hover:bg-white/5 hover:text-white"
+                                ? "bg-primary text-white border-primary shadow-lg" 
+                                : "text-primary/60 border-primary/10 hover:bg-primary/5"
                         )}
                     >
-                        <p.icon className="h-4 w-4" /> {p.label}
+                        <p.icon className="h-3.5 w-3.5" /> {p.label}
                     </Button>
                 ))}
             </div>

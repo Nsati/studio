@@ -1,37 +1,42 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 222 47% 4%; /* Near Black Navy */
-    --foreground: 210 40% 98%;
+    /* Himalayan Snow Background */
+    --background: 80 14% 96%; 
+    --foreground: 222 47% 11%; /* Dark Charcoal */
 
-    --card: 222 47% 8%;
-    --card-foreground: 210 40% 98%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
 
-    --popover: 222 47% 6%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
 
-    --primary: 43 96% 58%; /* Harrier Gold #febb02 */
-    --primary-foreground: 222 47% 4%;
+    /* Forest Green Primary */
+    --primary: 144 48% 21%; 
+    --primary-foreground: 80 14% 96%;
 
-    --secondary: 222 47% 12%;
-    --secondary-foreground: 210 40% 98%;
+    /* Deep Teal Secondary */
+    --secondary: 168 47% 32%;
+    --secondary-foreground: 80 14% 96%;
 
-    --muted: 222 47% 12%;
-    --muted-foreground: 215 20.2% 65.1%;
+    /* Mountain Mist Muted */
+    --muted: 96 15% 91%;
+    --muted-foreground: 215 16% 47%;
 
-    --accent: 43 96% 58%;
-    --accent-foreground: 222 47% 8%;
+    /* Sacred Saffron Accent */
+    --accent: 23 100% 63%;
+    --accent-foreground: 222 47% 11%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 217.2 32.6% 12%;
-    --input: 217.2 32.6% 12%;
-    --ring: 43 96% 58%;
+    /* Earthy Brown Borders */
+    --border: 31 52% 35%;
+    --input: 31 52% 35%;
+    --ring: 23 100% 63%;
 
     --radius: 1rem;
   }
@@ -39,7 +44,7 @@
 
 @layer base {
   * {
-    @apply border-border outline-none;
+    @apply border-border/20 outline-none;
   }
   body {
     @apply bg-background text-foreground;
@@ -47,26 +52,22 @@
     -webkit-font-smoothing: antialiased;
   }
   h1, h2, h3, h4, h5, h6 {
-    @apply font-heading tracking-tight text-white;
+    @apply font-heading tracking-tight text-primary;
   }
 }
 
-.glass-card {
-  @apply bg-white/5 backdrop-blur-2xl border border-white/10 shadow-2xl;
+.hero-gradient {
+  background: linear-gradient(135deg, #1B4D2E 0%, #2C7A6B 100%);
 }
 
-.luxury-shadow {
-  box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.8);
+.saffron-glow {
+  box-shadow: 0 0 20px rgba(255, 140, 66, 0.3);
 }
 
-.gold-edge {
-  border-left: 6px solid hsl(var(--primary));
+.mountain-card {
+  @apply bg-white border border-border/10 shadow-md hover:shadow-xl transition-all duration-300;
 }
 
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
-}
-
-.text-shadow-elite {
-    text-shadow: 0 10px 30px rgba(0,0,0,0.5);
 }
