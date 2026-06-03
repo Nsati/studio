@@ -1,36 +1,37 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 210 20% 98%; /* Very Light Gray/White */
-    --foreground: 222 47% 11%;
+    --background: 222 47% 7%; /* Deep Navy Background */
+    --foreground: 210 40% 98%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card: 222 47% 11%;
+    --card-foreground: 210 40% 98%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 40% 98%;
 
-    --primary: 221 83% 53%; /* PickYourTrail Blue #3063E6 */
-    --primary-foreground: 210 40% 98%;
+    --primary: 43 96% 58%; /* Harrier Gold #febb02 */
+    --primary-foreground: 222 47% 7%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222 47% 11.2%;
+    --secondary: 222 47% 15%;
+    --secondary-foreground: 210 40% 98%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 222 47% 15%;
+    --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 221 83% 53%;
-    --accent-foreground: 222 47% 11.2%;
+    --accent: 43 96% 58%;
+    --accent-foreground: 222 47% 11%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221 83% 53%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 43 96% 58%;
 
     --radius: 0.75rem;
   }
@@ -46,20 +47,20 @@
     -webkit-font-smoothing: antialiased;
   }
   h1, h2, h3, h4, h5, h6 {
-    @apply font-heading tracking-tight text-slate-900;
+    @apply font-heading tracking-tight text-white;
   }
 }
 
 .glass-card {
-  @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-sm;
+  @apply bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl;
 }
 
-.modern-shadow {
-  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.04);
+.luxury-shadow {
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
 
-.blue-gradient {
-  background: linear-gradient(135deg, #3063E6 0%, #1E40AF 100%);
+.gold-edge {
+  border-left: 4px solid hsl(var(--primary));
 }
 
 .scrollbar-hide::-webkit-scrollbar {
