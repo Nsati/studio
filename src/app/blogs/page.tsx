@@ -79,17 +79,17 @@ export default function BlogsPublicPage() {
     return (
         <div className="min-h-screen bg-background selection:bg-accent selection:text-white font-sans">
             
-            {/* Hero Section */}
+            {/* Hero Section - Updated with Misty Mountain Visual */}
             <section className="relative h-[70vh] min-h-[500px] w-full flex items-center justify-center overflow-hidden">
                 <Image 
-                    src="https://images.pexels.com/photos/34971545/pexels-photo-34971545.jpeg" 
+                    src="https://images.pexels.com/photos/6149892/pexels-photo-6149892.jpeg" 
                     alt="Uttarakhand Sacred Journal" 
                     fill 
                     priority
                     unoptimized={true}
                     className="object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/20 to-background" />
+                <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/30 to-background" />
                 
                 <div className="container relative z-10 px-6 text-center space-y-8">
                     <motion.div 
@@ -172,4 +172,3 @@ export default function BlogsPublicPage() {
         </div>
     );
 }
-
