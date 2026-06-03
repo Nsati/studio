@@ -1,66 +1,64 @@
 'use client';
 
-import { Facebook, Twitter, Instagram, Youtube, Mail, Phone, MapPin, ShieldCheck, Compass } from 'lucide-react';
+import { Facebook, Twitter, Instagram, Youtube, Mail, Phone, MapPin, ShieldCheck, Compass, Globe2 } from 'lucide-react';
 import Link from 'next/link';
 import { Logo } from './Logo';
 
 const footerLinks = {
-  'The Collection': [
-    { label: 'Stays & Retreats', href: '/search' },
-    { label: 'Elite Expeditions', href: '/tour-packages' },
-    { label: 'Travel Journal', href: '/blogs' },
-    { label: 'Vibe Match™ AI', href: '/vibe-match' },
+  'Product': [
+    { label: 'Hotels', href: '/search' },
+    { label: 'Vacations', href: '/tour-packages' },
+    { label: 'Itineraries', href: '/tour-packages' },
+    { label: 'Vibe Match™', href: '/vibe-match' },
   ],
-  'Explorer': [
-    { label: 'Concierge Desk', href: '/my-bookings' },
-    { label: 'Elite Membership', href: '/signup' },
-    { label: 'Our Story', href: '/about' },
-    { label: 'Admin Terminal', href: '/admin' },
+  'Company': [
+    { label: 'About Us', href: '/about' },
+    { label: 'Careers', href: '#' },
+    { label: 'Travel Guides', href: '/blogs' },
+    { label: 'Contact', href: '/contact' },
   ],
-  'Legal & Safety': [
-    { label: 'Safety Protocols', href: '/terms' },
+  'Support': [
+    { label: 'Help Center', href: '/contact' },
+    { label: 'Terms of Service', href: '/terms' },
     { label: 'Privacy Policy', href: '/privacy' },
-    { label: 'Refund Policy', href: '/refund-policy' },
-    { label: 'Shipping Policy', href: '/shipping-policy' },
-    { label: 'Contact Support', href: '/contact' },
+    { label: 'Cancellation Policy', href: '/refund-policy' },
   ],
 };
 
 
 export default function Footer() {
   return (
-    <footer className="border-t border-white/10 bg-background text-white pt-24 pb-12">
+    <footer className="bg-slate-900 text-white pt-20 pb-10">
       <div className="container">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-16 mb-24">
-            {/* Branding Section */}
-            <div className="lg:col-span-2 space-y-10">
-                <Link href="/" className="flex items-center gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 mb-16">
+            {/* Branding */}
+            <div className="lg:col-span-2 space-y-6">
+                <Link href="/" className="flex items-center gap-2">
                     <Logo />
-                    <span className="font-heading text-4xl font-black text-white tracking-tighter uppercase">
-                        Northern <span className="text-primary">Harrier</span>
+                    <span className="font-heading text-2xl font-black text-white tracking-tight">
+                        Tripzy
                     </span>
                 </Link>
-                <p className="max-w-sm text-lg text-white font-medium leading-relaxed italic opacity-80">
-                  "Beyond the horizon lies the sacred truth of the peaks. We engineer the journeys that bring you there."
+                <p className="max-w-xs text-slate-400 font-medium leading-relaxed">
+                  The world's most personalized travel planner. We make sure you spend more time traveling and less time searching.
                 </p>
-                <div className="flex items-center gap-6">
+                <div className="flex items-center gap-4">
                   {[Facebook, Twitter, Instagram, Youtube].map((Icon, idx) => (
-                    <a key={idx} href="#" className="h-12 w-12 glass-card rounded-full flex items-center justify-center text-white transition-all hover:text-primary hover:border-primary">
-                        <Icon className="h-5 w-5" />
+                    <a key={idx} href="#" className="h-10 w-10 bg-white/5 rounded-full flex items-center justify-center text-white transition-all hover:bg-primary">
+                        <Icon className="h-4 w-4" />
                     </a>
                   ))}
                 </div>
             </div>
 
-            {/* Link Sections */}
+            {/* Links */}
             {Object.entries(footerLinks).map(([title, links]) => (
-                <div key={title} className="space-y-8">
-                    <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-primary">{title}</h3>
-                    <ul className="space-y-4">
+                <div key={title} className="space-y-6">
+                    <h3 className="text-sm font-black uppercase tracking-widest text-slate-100">{title}</h3>
+                    <ul className="space-y-3">
                         {links.map(link => (
                             <li key={link.label}>
-                                <Link href={link.href} className="text-sm text-white hover:text-primary transition-colors font-medium flex items-center group">
-                                    <span className="w-0 group-hover:w-4 h-px bg-primary mr-0 group-hover:mr-3 transition-all duration-300" />
+                                <Link href={link.href} className="text-sm text-slate-400 hover:text-primary transition-colors font-medium">
                                     {link.label}
                                 </Link>
                             </li>
@@ -70,49 +68,15 @@ export default function Footer() {
             ))}
         </div>
         
-        {/* Contact Strip */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 py-12 border-y border-white/10">
-            <div className="flex items-center gap-4">
-                <div className="h-12 w-12 glass-card rounded-2xl flex items-center justify-center text-primary">
-                    <Phone className="h-5 w-5" />
-                </div>
-                <div>
-                    <p className="text-[9px] font-black uppercase text-white/60 tracking-widest">Global Support</p>
-                    <p className="text-sm font-bold text-white">+91 6399902725</p>
-                </div>
+        <div className="border-t border-white/5 pt-10 flex flex-col md:flex-row justify-between items-center gap-6 text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+            <div className="flex items-center gap-8">
+                <span>© {new Date().getFullYear()} Tripzy Technologies Pvt Ltd.</span>
+                <span className="flex items-center gap-2 text-green-500"><ShieldCheck className="h-4 w-4" /> SECURE BOOKING</span>
             </div>
-            <div className="flex items-center gap-4">
-                <div className="h-12 w-12 glass-card rounded-2xl flex items-center justify-center text-primary">
-                    <Mail className="h-5 w-5" />
-                </div>
-                <div>
-                    <p className="text-[9px] font-black uppercase text-white/60 tracking-widest">Email Enquiries</p>
-                    <p className="text-sm font-bold text-white">expeditions@northernharrier.com</p>
-                </div>
-            </div>
-            <div className="flex items-center gap-4">
-                <div className="h-12 w-12 glass-card rounded-2xl flex items-center justify-center text-primary">
-                    <MapPin className="h-5 w-5" />
-                </div>
-                <div>
-                    <p className="text-[9px] font-black uppercase text-white/60 tracking-widest">Headquarters</p>
-                    <p className="text-sm font-bold text-white">Mall Road, Nainital, Uttarakhand</p>
-                </div>
-            </div>
-        </div>
-
-        <div className="mt-12 flex flex-col md:flex-row justify-between items-center gap-8">
-            <p className="text-[10px] text-white font-black uppercase tracking-[0.3em] opacity-40">
-                © {new Date().getFullYear()} Northern Harrier Expeditions Pvt Ltd.
-            </p>
-            <div className="flex items-center gap-8 text-[9px] font-black uppercase tracking-widest text-white/40">
-                <div className="flex items-center gap-2">
-                    <ShieldCheck className="h-3 w-3 text-primary" /> Verified Standards
-                </div>
-                <div className="flex items-center gap-2">
-                    <Compass className="h-3 w-3 text-primary" /> Mountain Network
-                </div>
-                <div className="hover:text-primary cursor-pointer transition-colors text-white">Harrier Status</div>
+            <div className="flex items-center gap-6">
+                <span className="hover:text-white cursor-pointer transition-colors">Affiliates</span>
+                <span className="hover:text-white cursor-pointer transition-colors">Safety Protocols</span>
+                <span className="hover:text-white cursor-pointer transition-colors">Himalayan Protocol</span>
             </div>
         </div>
       </div>
