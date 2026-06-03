@@ -80,8 +80,8 @@ export default function LandingPage() {
                   Plan Your Trip <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="h-16 px-12 rounded-full font-black text-xs border-2 border-white/50 text-white hover:bg-white hover:text-primary backdrop-blur-md transition-all shadow-xl">
-                <Link href="/search" className="flex items-center justify-center uppercase tracking-widest">Explore Destinations</Link>
+              <Button asChild variant="outline" size="lg" className="h-16 px-12 rounded-full font-black text-xs border-2 border-white/60 text-white hover:bg-white hover:text-primary backdrop-blur-md transition-all shadow-xl">
+                <Link href="/search" className="flex items-center justify-center uppercase tracking-widest text-white text-shadow-md">Explore Destinations</Link>
               </Button>
             </div>
           </motion.div>

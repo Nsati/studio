@@ -22,7 +22,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '../ui/skeleton';
 import { cn } from '@/lib/utils';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Logo } from './Logo';
 
 const navLinks = [
@@ -120,24 +120,31 @@ export default function Header() {
   const pathname = usePathname();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
+  const lastScrollY = useRef(0);
 
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-      if (currentScrollY > lastScrollY && currentScrollY > 150) setIsVisible(false);
-      else setIsVisible(true);
-      setLastScrollY(currentScrollY);
-      setIsScrolled(currentScrollY > 50);
+      
+      // Smart Hide/Show Logic
+      if (currentScrollY > lastScrollY.current && currentScrollY > 120) {
+        setIsVisible(false); // Hide on scroll down
+      } else {
+        setIsVisible(true); // Show on scroll up
+      }
+
+      setIsScrolled(currentScrollY > 60);
+      lastScrollY.current = currentScrollY;
     };
+
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [lastScrollY]);
+  }, []);
 
   return (
     <header 
       className={cn(
-        "fixed top-0 z-50 w-full transition-all duration-500 transform",
+        "fixed top-0 z-[100] w-full transition-all duration-300 transform",
         isVisible ? "translate-y-0" : "-translate-y-full",
         isScrolled ? "bg-white/95 backdrop-blur-xl border-b border-black/5 h-16 shadow-sm" : "bg-transparent h-24"
       )}
