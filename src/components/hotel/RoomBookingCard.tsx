@@ -32,7 +32,7 @@ import { Separator } from '../ui/separator';
 
 /**
  * @fileOverview Standardized, high-conversion Availability Selection Form.
- * Styled to match the professional design language with fixed calendar logic.
+ * Styled to match the professional design language with fixed calendar centering and balance.
  */
 
 export function RoomBookingCard({ hotel, rooms, isLoadingRooms }: { hotel: WithId<Hotel>, rooms: WithId<Room>[], isLoadingRooms: boolean }) {
@@ -93,14 +93,20 @@ export function RoomBookingCard({ hotel, rooms, isLoadingRooms }: { hotel: WithI
                     ) : "Select Travel Dates"}
                 </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 rounded-none border-0 shadow-2xl" align="center">
-                    <Calendar 
-                      mode="range" 
-                      selected={dates} 
-                      onSelect={setDates} 
-                      disabled={{ before: new Date() }}
-                      numberOfMonths={1}
-                    />
+                <PopoverContent 
+                    className="w-[340px] p-0 rounded-none border-0 shadow-2xl bg-white overflow-hidden" 
+                    align="center"
+                    sideOffset={8}
+                >
+                    <div className="flex items-center justify-center w-full">
+                        <Calendar 
+                            mode="range" 
+                            selected={dates} 
+                            onSelect={setDates} 
+                            disabled={{ before: new Date() }}
+                            numberOfMonths={1}
+                        />
+                    </div>
                 </PopoverContent>
             </Popover>
           </div>

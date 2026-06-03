@@ -21,6 +21,11 @@ import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
+/**
+ * @fileOverview Production Search Filter Engine.
+ * Features ultra-aligned calendar integration for all devices.
+ */
+
 export function SearchFilters() {
     const firestore = useFirestore();
     const searchParams = useSearchParams();
@@ -71,8 +76,8 @@ export function SearchFilters() {
     }
 
     return (
-        <div className="space-y-6">
-            <form onSubmit={handleFormSubmit} className="flex flex-col lg:flex-row items-stretch gap-2 bg-white p-2 rounded-[2rem] border border-black/5 shadow-luxury relative z-20">
+        <div className="space-y-6 max-w-[1200px] mx-auto w-full px-4 md:px-0">
+            <form onSubmit={handleFormSubmit} className="flex flex-col lg:flex-row items-stretch gap-2 bg-white p-2 rounded-[2rem] border border-black/5 shadow-luxury relative z-20 transition-all">
                 
                 {/* Location Node */}
                 <div className="flex-[1.2] flex items-center gap-4 bg-muted/40 hover:bg-muted/60 px-6 py-3 rounded-[1.5rem] transition-all cursor-pointer group">
@@ -110,14 +115,18 @@ export function SearchFilters() {
                                     ) : "Select Dates"}
                                 </button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0 border-black/5 bg-white rounded-[1.5rem] overflow-hidden shadow-luxury" align="center">
+                            <PopoverContent 
+                                className="w-auto p-0 border-0 bg-white rounded-[2rem] overflow-hidden shadow-luxury mt-2 flex items-center justify-center" 
+                                align="center"
+                                sideOffset={12}
+                            >
                                 <CalendarComponent
                                     mode="range"
                                     selected={dates}
                                     onSelect={setDates}
                                     disabled={{ before: new Date() }}
-                                    numberOfMonths={2}
-                                    className="bg-white text-primary p-4"
+                                    numberOfMonths={1}
+                                    className="bg-white p-6"
                                 />
                             </PopoverContent>
                         </Popover>
