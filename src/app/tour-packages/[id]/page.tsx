@@ -1,14 +1,14 @@
+
 'use client';
 
 import { useParams, notFound } from 'next/navigation';
 import Image from 'next/image';
-import Link from 'next/link';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import type { TourPackage } from '@/lib/types';
 import { 
-  Calendar, MapPin, Clock, ArrowLeft, 
-  CheckCircle2, XCircle, ChevronRight, Users, Bed, Car, Star, Sparkles, Receipt, Phone, MessageCircle
+  Calendar, MapPin, ArrowLeft, 
+  CheckCircle2, XCircle, Users, Bed, Car, Star, Receipt, Phone, MessageCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -19,8 +19,7 @@ import { motion } from 'framer-motion';
 
 /**
  * @fileOverview Professional Tour Package Detail View.
- * Balanced typography and spacing for high-end travel aesthetics.
- * Sub-header removed as per user request for a cleaner look.
+ * Call to Book buttons updated with primary branding and better visibility.
  */
 
 export default function TourPackageDetailPage() {
@@ -61,7 +60,6 @@ export default function TourPackageDetailPage() {
           {/* Left Column: Core Itinerary & Details */}
           <div className="lg:col-span-2 space-y-12">
             
-            {/* Professional Headline Header */}
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
               <div className="flex flex-wrap gap-2">
                 <Badge className="bg-accent text-accent-foreground rounded-full border-0 font-bold uppercase tracking-widest text-[9px] px-4 py-1 shadow-md">PLATINUM SERIES</Badge>
@@ -76,7 +74,6 @@ export default function TourPackageDetailPage() {
               </div>
             </motion.div>
 
-            {/* Visual Centerpiece */}
             <div className="relative aspect-video md:aspect-[21/9] rounded-2xl overflow-hidden shadow-xl border border-border/5 bg-muted">
               <Image 
                 src={getImageUrl(pkg.image)} 
@@ -96,7 +93,6 @@ export default function TourPackageDetailPage() {
               </div>
             </div>
 
-            {/* Logistics Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
                {[
                  { icon: Users, label: 'PAX Count', val: `${pkg.persons} Adults` },
@@ -114,7 +110,6 @@ export default function TourPackageDetailPage() {
                ))}
             </div>
 
-            {/* Journey Details Tabs */}
             <Tabs defaultValue="itinerary" className="w-full">
               <TabsList className="w-full justify-start border-b border-border/5 rounded-none h-auto p-0 bg-transparent gap-8 md:gap-12 overflow-x-auto scrollbar-hide">
                 <TabsTrigger value="itinerary" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-0 py-4 font-bold uppercase text-[10px] tracking-widest text-slate-400 data-[state=active]:text-foreground">Itinerary</TabsTrigger>
@@ -210,7 +205,7 @@ export default function TourPackageDetailPage() {
             <motion.div 
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="rounded-2xl border border-border/10 bg-white sticky top-[100px] shadow-2xl overflow-hidden border-t-4 border-primary"
+                className="rounded-2xl border border-border/10 bg-white sticky top-[100px] shadow-2xl overflow-hidden border-t-4 border-accent"
             >
               <div className="bg-primary text-primary-foreground p-8 space-y-4">
                  <div className="flex justify-between items-center">
@@ -248,14 +243,14 @@ export default function TourPackageDetailPage() {
                  <Separator />
 
                  <div className="space-y-3">
-                    <Button asChild className="w-full h-14 rounded-xl font-black text-xs bg-primary hover:bg-primary/90 text-white transition-all shadow-lg group uppercase tracking-widest">
+                    <Button asChild className="w-full h-14 rounded-xl font-black text-xs bg-accent hover:bg-accent/90 text-accent-foreground transition-all shadow-xl group uppercase tracking-widest saffron-glow">
                         <a href="tel:+916399902725" className="flex items-center justify-center gap-3">
-                            <Phone className="h-4 w-4" /> Call to Book
+                            <Phone className="h-4 w-4" /> CALL TO BOOK
                         </a>
                     </Button>
                     <Button asChild variant="outline" className="w-full h-14 rounded-xl font-black text-xs border-[#25D366] text-[#25D366] hover:bg-[#25D366]/5 transition-all group uppercase tracking-widest">
                         <a href="https://wa.me/916399902725" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-3">
-                            <MessageCircle className="h-4 w-4" /> WhatsApp Us
+                            <MessageCircle className="h-4 w-4" /> WhatsApp Chat
                         </a>
                     </Button>
                  </div>

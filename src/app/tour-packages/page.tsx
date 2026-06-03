@@ -9,7 +9,7 @@ import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import type { TourPackage } from '@/lib/types';
 import { Card, CardTitle, CardHeader, CardFooter } from '@/components/ui/card';
-import { MapPin, Clock, Star, ArrowRight, Info, Package, Phone } from 'lucide-react';
+import { MapPin, Clock, Star, Info, Package, Phone } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -129,9 +129,9 @@ export default function TourPackagesPage() {
                                         </div>
                                         
                                         <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
-                                            <Button asChild size="lg" className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground rounded-full font-bold text-[10px] tracking-widest uppercase px-12 h-14 shadow-lg shadow-primary/20 transition-all active:scale-95">
-                                                <a href="tel:+916399902725">
-                                                    <Phone className="mr-2 h-4 w-4" /> CALL TO BOOK
+                                            <Button asChild size="lg" className="w-full sm:w-auto bg-accent hover:bg-primary text-accent-foreground hover:text-white rounded-full font-black text-[10px] tracking-widest uppercase px-10 h-14 shadow-xl transition-all active:scale-95 saffron-glow">
+                                                <a href="tel:+916399902725" className="flex items-center justify-center gap-2">
+                                                    <Phone className="h-4 w-4" /> CALL TO BOOK
                                                 </a>
                                             </Button>
                                         </div>
