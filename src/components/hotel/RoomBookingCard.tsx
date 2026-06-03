@@ -39,7 +39,7 @@ export function RoomBookingCard({ hotel, rooms, isLoadingRooms }: { hotel: WithI
   const [dates, setDates] = useState<DateRange | undefined>();
   const [selectedRoom, setSelectedRoom] = useState<WithId<Room> | null>(null);
   const [guests, setGuests] = useState('1');
-  const [monthsToShow, setMonthsMonthsToShow] = useState(1);
+  const [monthsToShow, setMonthsToShow] = useState(1);
   const router = useRouter();
   const { toast } = useToast();
   
@@ -48,7 +48,7 @@ export function RoomBookingCard({ hotel, rooms, isLoadingRooms }: { hotel: WithI
   useEffect(() => {
     setMounted(true);
     const handleResize = () => {
-        setMonthsMonthsToShow(window.innerWidth > 1024 ? 2 : 1);
+        setMonthsToShow(window.innerWidth > 1024 ? 2 : 1);
     };
     handleResize();
     window.addEventListener('resize', handleResize);

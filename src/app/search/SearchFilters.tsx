@@ -50,7 +50,7 @@ export function SearchFilters() {
     const [mode, setMode] = useState<'standard' | 'chardham' | 'trek'>(
         (searchParams.get('mode') as any) || 'standard'
     );
-    const [monthsToShow, setMonthsMonthsToShow] = useState(1);
+    const [monthsToShow, setMonthsToShow] = useState(1);
     
     useEffect(() => {
         setCity(searchParams.get('city') || 'All');
@@ -65,7 +65,7 @@ export function SearchFilters() {
         }
 
         const handleResize = () => {
-            setMonthsMonthsToShow(window.innerWidth > 1024 ? 2 : 1);
+            setMonthsToShow(window.innerWidth > 1024 ? 2 : 1);
         };
         handleResize();
         window.addEventListener('resize', handleResize);
