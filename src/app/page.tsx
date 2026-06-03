@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { Suspense } from 'react';
@@ -30,7 +31,6 @@ import {
   CarouselNext, 
   CarouselPrevious 
 } from '@/components/ui/carousel';
-import { SearchFilters } from './search/SearchFilters';
 
 const fadeInUp = {
   initial: { opacity: 0, y: 30 },
@@ -126,11 +126,20 @@ export default function LandingPage() {
 
           <div className="overflow-hidden py-4">
              <div className="flex gap-6 animate-marquee whitespace-nowrap">
-                {[1,2,3,4,5,6,7,8].map((i) => (
+                {[
+                  "https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?auto=format&fit=crop&q=80&w=400",
+                  "https://images.unsplash.com/photo-1544735749-2e924378a839?auto=format&fit=crop&q=80&w=400",
+                  "https://images.unsplash.com/photo-1625219973832-1594916a048a?auto=format&fit=crop&q=80&w=400",
+                  "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&q=80&w=400",
+                  "https://images.unsplash.com/photo-1596422846543-75c6fc18a5cf?auto=format&fit=crop&q=80&w=400",
+                  "https://images.unsplash.com/photo-1605649487212-47bdab064df7?auto=format&fit=crop&q=80&w=400",
+                  "https://images.unsplash.com/photo-1563810141380-032242502758?auto=format&fit=crop&q=80&w=400",
+                  "https://images.unsplash.com/photo-1506461883276-594a12b11cf3?auto=format&fit=crop&q=80&w=400"
+                ].map((url, i) => (
                   <div key={i} className="relative w-64 h-48 rounded-2xl overflow-hidden shadow-lg flex-shrink-0 group">
                     <Image 
-                      src={`https://picsum.photos/seed/guest-moment-${i}/400/300`} 
-                      alt="Guest Travel" 
+                      src={url} 
+                      alt="Uttarakhand Guest Moment" 
                       fill 
                       unoptimized={true}
                       className="object-cover transition-transform group-hover:scale-110"
@@ -171,7 +180,7 @@ export default function LandingPage() {
             ].map((node, i) => (
               <motion.div key={i} {...fadeInUp} transition={{ delay: i * 0.1 }}>
                 <Link href={`/search?city=${node.name}`}>
-                  <Card className="group relative aspect-[3/4] overflow-hidden rounded-[2.5rem] border-0 shadow-2xl saffron-glow cursor-pointer">
+                  <Card className="group relative aspect-[3/4] overflow-hidden rounded-[2.5rem] border-0 shadow-2xl cursor-pointer">
                     <Image src={node.img} alt={node.name} fill unoptimized={true} className="object-cover transition-transform duration-2000 group-hover:scale-110" />
                     <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-transparent to-transparent opacity-60" />
                     <div className="absolute top-6 left-6">
@@ -261,9 +270,9 @@ export default function LandingPage() {
           <Carousel className="w-full">
             <CarouselContent className="-ml-8">
               {[
-                { name: 'Meera Sharma', city: 'Delhi', text: 'The Char Dham package was seamless. They managed everything — permits, helicopter booking, even oxygen cylinders. Highly recommend!', type: 'Char Dham Yatra', img: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?auto=format&fit=crop&q=80&w=400' },
-                { name: 'Amit Gupta', city: 'Mumbai', text: 'Rishikesh rafting and camping was mind-blowing. The local guides are so knowledgeable and caring. Best adventure trip ever.', type: 'Adventure', img: 'https://images.unsplash.com/photo-1544735749-2e924378a839?auto=format&fit=crop&q=80&w=400' },
-                { name: 'Rohan Joshi', city: 'Pune', text: 'Spent 5 days in Auli. The hotel views were exactly as promised. The transport was reliable even in heavy snow conditions.', type: 'Winter Escape', img: 'https://images.unsplash.com/photo-1625219973832-1594916a048a?auto=format&fit=crop&q=80&w=400' },
+                { name: 'Meera Sharma', city: 'Delhi', text: 'The Char Dham package was seamless. They managed everything — permits, helicopter booking, even oxygen cylinders. Highly recommend!', type: 'Char Dham Yatra' },
+                { name: 'Amit Gupta', city: 'Mumbai', text: 'Rishikesh rafting and camping was mind-blowing. The local guides are so knowledgeable and caring. Best adventure trip ever.', type: 'Adventure' },
+                { name: 'Rohan Joshi', city: 'Pune', text: 'Spent 5 days in Auli. The hotel views were exactly as promised. The transport was reliable even in heavy snow conditions.', type: 'Winter Escape' },
               ].map((review, i) => (
                 <CarouselItem key={i} className="pl-8 md:basis-1/2 lg:basis-1/3">
                   <Card className="rounded-[2.5rem] border-0 shadow-apple-deep overflow-hidden h-full">
@@ -328,16 +337,16 @@ export default function LandingPage() {
           
           <div className="mt-24 pt-12 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-8">
              <div className="flex items-center gap-6">
-                <div className="h-20 w-20 bg-accent text-primary rounded-full flex items-center justify-center text-2xl font-bold shadow-2xl saffron-glow">NH</div>
+                <div className="h-20 w-20 bg-accent text-primary rounded-full flex items-center justify-center text-2xl font-bold">NH</div>
                 <div className="space-y-1">
                    <p className="text-lg font-bold uppercase tracking-tight">Official Partner</p>
                    <p className="text-[10px] font-black uppercase text-accent tracking-[0.3em]">Uttarakhand Tourism Council</p>
                 </div>
              </div>
-             <div className="flex gap-10 items-center grayscale opacity-50">
-                <span className="font-black text-2xl tracking-tighter">RAZORPAY</span>
-                <span className="font-black text-2xl italic tracking-tighter">UPI</span>
-                <span className="font-black text-2xl tracking-tighter">VISA</span>
+             <div className="flex gap-10 items-center grayscale opacity-50 text-white font-black text-xl">
+                <span>RAZORPAY</span>
+                <span>UPI</span>
+                <span>VISA</span>
              </div>
           </div>
         </div>
@@ -357,7 +366,7 @@ export default function LandingPage() {
                 </motion.div>
                 
                 <div className="flex flex-col items-center gap-8">
-                    <Button asChild size="lg" className="h-20 px-16 rounded-full font-bold text-xl bg-accent hover:bg-primary hover:text-white transition-all shadow-2xl saffron-glow group">
+                    <Button asChild size="lg" className="h-20 px-16 rounded-full font-bold text-xl bg-accent hover:bg-primary hover:text-white transition-all shadow-2xl group">
                         <Link href="/contact" className="flex items-center gap-4">
                             🙏 Request a Free Quote <ArrowRight className="h-6 w-6 transition-transform group-hover:translate-x-2" />
                         </Link>
@@ -371,8 +380,6 @@ export default function LandingPage() {
             </div>
         </div>
       </section>
-
-      {/* REMOVED DUPLICATE WHATSAPP BUTTON - NOW MANAGED IN layout.tsx */}
     </div>
   );
 }

@@ -3,9 +3,33 @@
   "placeholderImages": [
     {
       "id": "hero",
-      "description": "Mountains and Culture Background",
+      "description": "Sacred Himalayas and Ganga Aarti Background",
       "imageUrl": "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&q=80&w=1920",
-      "imageHint": "mountain culture"
+      "imageHint": "kedarnath himalayas"
+    },
+    {
+      "id": "dest-kedarnath",
+      "description": "Kedarnath Temple in Snow",
+      "imageUrl": "https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?auto=format&fit=crop&q=80&w=1200",
+      "imageHint": "kedarnath temple"
+    },
+    {
+      "id": "dest-rishikesh",
+      "description": "Ganga River Rafting in Rishikesh",
+      "imageUrl": "https://images.unsplash.com/photo-1544735749-2e924378a839?auto=format&fit=crop&q=80&w=1200",
+      "imageHint": "rishikesh rafting"
+    },
+    {
+      "id": "dest-auli",
+      "description": "Snowy Slopes of Auli Ski Resort",
+      "imageUrl": "https://images.unsplash.com/photo-1625219973832-1594916a048a?auto=format&fit=crop&q=80&w=1200",
+      "imageHint": "auli skiing"
+    },
+    {
+      "id": "dest-nainital",
+      "description": "Aerial View of Naini Lake",
+      "imageUrl": "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&q=80&w=1200",
+      "imageHint": "nainital lake"
     },
     {
       "id": "blog-aipan",
@@ -24,24 +48,6 @@
       "description": "Echoes of Valor: Chholiya Warrior Dance",
       "imageUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQIch1Ra3e7tUarWTPbij4k631cwRR6PxETbQ&s",
       "imageHint": "warrior dance"
-    },
-    {
-      "id": "blog-festival",
-      "description": "Green Bond: Harela Festival Celebration",
-      "imageUrl": "https://images.pexels.com/photos/946186/pexels-photo-946186.jpeg?auto=compress&cs=tinysrgb&w=1200",
-      "imageHint": "green festival"
-    },
-    {
-      "id": "blog-heritage",
-      "description": "Legacy in Wood: Traditional Likhai Carving",
-      "imageUrl": "https://images.pexels.com/photos/4611607/pexels-photo-4611607.jpeg?auto=compress&cs=tinysrgb&w=1200",
-      "imageHint": "wood carving"
-    },
-    {
-      "id": "blog-music",
-      "description": "Heartbeat: Folk Music and Traditional Instruments",
-      "imageUrl": "https://images.pexels.com/photos/10405322/pexels-photo-10405322.jpeg?auto=compress&cs=tinysrgb&w=1200",
-      "imageHint": "mountain music"
     }
   ]
 }
