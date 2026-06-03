@@ -16,7 +16,10 @@ import {
   Tent,
   Church,
   Navigation,
-  Sparkles
+  Sparkles,
+  Play,
+  Camera,
+  Compass
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -41,7 +44,7 @@ export default function LandingPage() {
     <div className="bg-background min-h-screen font-sans selection:bg-accent selection:text-white">
       
       {/* 1. HERO SECTION */}
-      <section className="relative h-[85vh] min-h-[600px] w-full flex items-center justify-center overflow-hidden">
+      <section className="relative h-[95vh] min-h-[700px] w-full flex items-center justify-center overflow-hidden">
         {heroImage && (
           <Image 
             src={heroImage.imageUrl}
@@ -56,32 +59,32 @@ export default function LandingPage() {
         <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-background/20" />
         
         <div className="container relative z-10 px-6 text-center">
-          <motion.div {...fadeInUp} className="max-w-4xl mx-auto space-y-8">
-            <Badge className="bg-accent/90 backdrop-blur-md text-accent-foreground border-0 px-6 py-2.5 rounded-full font-black uppercase tracking-[0.2em] text-[10px] mb-2 shadow-2xl saffron-glow">
+          <motion.div {...fadeInUp} className="max-w-4xl mx-auto space-y-10">
+            <Badge className="bg-accent text-accent-foreground border-0 px-8 py-2.5 rounded-full font-black uppercase tracking-[0.3em] text-[11px] mb-2 shadow-2xl saffron-glow">
               ⚡ INDIA'S MOST LOVED UTTARAKHAND SPECIALIST
             </Badge>
             
             <div className="space-y-4">
-                <h1 className="text-4xl md:text-7xl font-black text-white tracking-tighter leading-[1.1] font-heading uppercase drop-shadow-2xl">
+                <h1 className="text-4xl md:text-7xl font-black text-white tracking-tighter leading-[1.1] font-heading uppercase drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)]">
                     Discover Uttarakhand <br/> <span className="text-accent italic font-spiritual capitalize">with Northern Harrier</span>
                 </h1>
-                <p className="text-lg md:text-xl font-black text-white/90 tracking-[0.3em] uppercase font-heading drop-shadow-lg">
+                <p className="text-lg md:text-2xl font-black text-white/95 tracking-[0.4em] uppercase font-heading drop-shadow-[0_4px_10px_rgba(0,0,0,0.8)]">
                     Where Every Journey Becomes a Story
                 </p>
             </div>
             
-            <p className="text-sm md:text-lg text-white/80 max-w-3xl mx-auto font-bold leading-relaxed tracking-tight drop-shadow-md uppercase">
-              From snow-covered peaks to ancient temples, we bring you the finest travel experiences across Devbhoomi.
+            <p className="text-sm md:text-xl text-white font-bold leading-relaxed tracking-tight drop-shadow-[0_2px_4px_rgba(0,0,0,1)] uppercase max-w-3xl mx-auto">
+              From snow-covered Himalayan peaks to serene lakes, ancient temples, and thrilling adventure trails, Northern Harrier brings you the finest travel experiences.
             </p>
             
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8">
-              <Button asChild size="lg" className="h-16 px-12 rounded-full font-black text-xs bg-accent hover:bg-white hover:text-primary transition-all shadow-2xl group saffron-glow">
-                <Link href="/tour-packages" className="flex items-center gap-3 uppercase tracking-widest">
-                  Plan Your Trip <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-8">
+              <Button asChild size="lg" className="h-20 px-14 rounded-full font-black text-sm bg-accent hover:bg-white hover:text-primary transition-all shadow-2xl group saffron-glow">
+                <Link href="/tour-packages" className="flex items-center gap-4 uppercase tracking-[0.2em]">
+                  Plan Your Trip <ArrowRight className="h-6 w-6 transition-transform group-hover:translate-x-2" />
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="h-16 px-12 rounded-full font-black text-xs border-2 border-white/60 text-white hover:bg-white hover:text-primary backdrop-blur-md transition-all shadow-2xl bg-black/10">
-                <Link href="/search" className="flex items-center justify-center uppercase tracking-widest text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
+              <Button asChild size="lg" className="h-20 px-14 rounded-full font-black text-sm border-2 border-white text-white hover:bg-white hover:text-primary backdrop-blur-xl transition-all shadow-2xl bg-black/40">
+                <Link href="/search" className="flex items-center justify-center uppercase tracking-[0.2em] text-white drop-shadow-[0_5px_5px_rgba(0,0,0,1)]">
                   Explore Destinations
                 </Link>
               </Button>
@@ -218,8 +221,77 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 5. FINAL CTA BANNER */}
-      <section className="py-24 relative overflow-hidden bg-background">
+      {/* 5. VISUAL ARCHIVE - IMAGE AND VIDEO GALLERY */}
+      <section className="py-24 bg-background">
+        <div className="container px-6">
+            <div className="text-center mb-20 space-y-4">
+                <div className="flex items-center justify-center gap-3 text-accent font-black uppercase tracking-[0.4em] text-[10px]">
+                    <Camera className="h-4 w-4" /> THE VISUAL ARCHIVE
+                </div>
+                <h2 className="text-3xl md:text-6xl font-black tracking-tighter text-primary uppercase font-heading">Himalayan Moments</h2>
+                <p className="text-slate-500 font-bold uppercase text-xs tracking-widest max-w-2xl mx-auto">Capturing the raw beauty and spiritual energy of the northern frontier through our explorers' lenses.</p>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 auto-rows-[200px] md:auto-rows-[250px]">
+                {/* Kedarnath Drone - Video Style */}
+                <div className="col-span-2 row-span-2 relative group overflow-hidden rounded-[3rem] cursor-pointer shadow-luxury">
+                    <Image src="https://images.pexels.com/photos/18636614/pexels-photo-18636614.jpeg" alt="Kedarnath Drone" fill className="object-cover transition-transform duration-1000 group-hover:scale-110" />
+                    <div className="absolute inset-0 bg-black/30 group-hover:bg-black/50 transition-colors" />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="h-20 w-20 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border border-white/40 group-hover:scale-110 transition-transform">
+                            <Play className="h-8 w-8 text-white fill-white" />
+                        </div>
+                    </div>
+                    <div className="absolute bottom-10 left-10 text-white space-y-1">
+                        <p className="text-[10px] font-black uppercase tracking-widest opacity-80">Video Insight</p>
+                        <h4 className="text-2xl font-black uppercase tracking-tighter">Kedarnath Drone Reel</h4>
+                    </div>
+                </div>
+
+                {/* River Rafting */}
+                <div className="relative group overflow-hidden rounded-[2.5rem] cursor-pointer shadow-apple-deep">
+                    <Image src="https://images.pexels.com/photos/37618361/pexels-photo-37618361.jpeg" alt="Rafting" fill className="object-cover group-hover:scale-110 transition-transform duration-700" />
+                    <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+
+                {/* Auli Snow */}
+                <div className="relative group overflow-hidden rounded-[2.5rem] cursor-pointer shadow-apple-deep">
+                    <Image src="https://images.pexels.com/photos/14149541/pexels-photo-14149541.jpeg" alt="Auli" fill className="object-cover group-hover:scale-110 transition-transform duration-700" />
+                    <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+
+                {/* Valley View - Wide Video Still */}
+                <div className="col-span-2 relative group overflow-hidden rounded-[2.5rem] cursor-pointer shadow-luxury">
+                    <Image src="https://images.pexels.com/photos/12321669/pexels-photo-12321669.jpeg" alt="Valley View" fill className="object-cover group-hover:scale-110 transition-transform duration-1000" />
+                    <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors" />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="h-12 w-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border border-white/40">
+                            <Play className="h-4 w-4 text-white fill-white" />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Village Life */}
+                <div className="relative group overflow-hidden rounded-[2.5rem] cursor-pointer shadow-apple-deep">
+                    <Image src="https://images.pexels.com/photos/15815340/pexels-photo-15815340.jpeg" alt="Culture" fill className="object-cover group-hover:scale-110 transition-transform duration-700" />
+                </div>
+
+                {/* Sunset Range */}
+                <div className="relative group overflow-hidden rounded-[2.5rem] cursor-pointer shadow-apple-deep">
+                    <Image src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=800" alt="Range" fill className="object-cover group-hover:scale-110 transition-transform duration-700" />
+                </div>
+            </div>
+            
+            <div className="mt-16 text-center">
+                <Button variant="outline" className="rounded-full px-12 h-14 font-black uppercase text-xs tracking-widest border-primary text-primary hover:bg-primary hover:text-white transition-all">
+                    View Full Archive
+                </Button>
+            </div>
+        </div>
+      </section>
+
+      {/* 6. FINAL CTA BANNER */}
+      <section className="py-24 relative overflow-hidden bg-white">
         <div className="container px-6 text-center">
             <div className="max-w-4xl mx-auto space-y-12">
                 <motion.div {...fadeInUp} className="space-y-6">
