@@ -50,7 +50,8 @@ export default function RootLayout({
         <FirebaseClientProvider>
           <FirebaseErrorListener />
           <Header />
-          <main className="relative z-10 flex-grow">
+          {/* pt-16 ensures content is not hidden under the fixed header on standard pages */}
+          <main className="relative z-10 flex-grow pt-16 lg:pt-20">
             {children}
           </main>
           

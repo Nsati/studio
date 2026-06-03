@@ -22,7 +22,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '../ui/skeleton';
 import { cn } from '@/lib/utils';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Logo } from './Logo';
 
 const navLinks = [
@@ -119,34 +119,27 @@ function UserNav({ isScrolled }: { isScrolled: boolean }) {
 export default function Header() {
   const pathname = usePathname();
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isVisible, setIsVisible] = useState(true);
-  const lastScrollY = useRef(0);
+  const isHomePage = pathname === '/';
 
   useEffect(() => {
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      
-      // Fixed Hide/Show Logic
-      if (currentScrollY > lastScrollY.current && currentScrollY > 200) {
-        setIsVisible(false);
-      } else {
-        setIsVisible(true);
-      }
-
-      setIsScrolled(currentScrollY > 50);
-      lastScrollY.current = currentScrollY;
+      setIsScrolled(window.scrollY > 50);
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // On non-homepage pages, we always want a solid background
+  const showSolidBackground = isScrolled || !isHomePage;
+
   return (
     <header 
       className={cn(
-        "fixed top-0 z-[100] w-full transition-all duration-500 transform",
-        isVisible ? "translate-y-0" : "-translate-y-full",
-        isScrolled ? "bg-white/95 backdrop-blur-xl border-b border-black/5 h-16 shadow-xl" : "bg-transparent h-24"
+        "fixed top-0 z-[100] w-full transition-all duration-500",
+        showSolidBackground 
+          ? "bg-white/95 backdrop-blur-xl border-b border-black/5 h-16 shadow-xl" 
+          : "bg-transparent h-20"
       )}
     >
       <div className="container flex h-full items-center justify-between">
@@ -158,11 +151,11 @@ export default function Header() {
                 <div className="flex flex-col">
                   <span className={cn(
                     "font-heading text-xl md:text-2xl font-black tracking-tighter uppercase group-hover:text-accent transition-all",
-                    isScrolled ? "text-primary" : "text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]"
+                    showSolidBackground ? "text-primary" : "text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]"
                   )}>
                       NORTHERN <span className="text-accent italic font-spiritual capitalize">HARRIER</span>
                   </span>
-                  {!isScrolled && <span className="text-[7px] font-black uppercase text-white/90 tracking-[0.4em] -mt-1 ml-0.5 drop-shadow-md">Uttarakhand Specialists</span>}
+                  {!showSolidBackground && <span className="text-[7px] font-black uppercase text-white/90 tracking-[0.4em] -mt-1 ml-0.5 drop-shadow-md">Uttarakhand Specialists</span>}
                 </div>
             </Link>
             
@@ -175,7 +168,7 @@ export default function Header() {
                           "text-[10px] font-black tracking-widest transition-all relative py-2 uppercase",
                           pathname === link.href 
                             ? "text-accent border-b-2 border-accent" 
-                            : (isScrolled ? "text-primary/70 hover:text-accent" : "text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] hover:text-accent")
+                            : (showSolidBackground ? "text-primary/70 hover:text-accent" : "text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] hover:text-accent")
                       )}
                     >
                       {link.label}
@@ -187,15 +180,15 @@ export default function Header() {
         <div className="flex items-center gap-6">
           <div className={cn(
             "hidden lg:flex items-center gap-2 font-black text-[9px] uppercase tracking-widest border-r pr-6",
-            isScrolled ? "text-primary/40 border-muted" : "text-white/80 border-white/20 drop-shadow-md"
+            showSolidBackground ? "text-primary/40 border-muted" : "text-white/80 border-white/20 drop-shadow-md"
           )}>
             <Phone className="h-3 w-3" /> +91-6399902725
           </div>
-          <UserNav isScrolled={isScrolled} />
+          <UserNav isScrolled={showSolidBackground} />
            <div className="lg:hidden">
             <Sheet>
                 <SheetTrigger asChild>
-                    <Button variant="ghost" size="icon" className={cn("h-10 w-10 hover:bg-white/10 rounded-full", isScrolled ? "text-primary" : "text-white drop-shadow-xl")}>
+                    <Button variant="ghost" size="icon" className={cn("h-10 w-10 hover:bg-white/10 rounded-full", showSolidBackground ? "text-primary" : "text-white drop-shadow-xl")}>
                         <Menu className="h-6 w-6" />
                     </Button>
                 </SheetTrigger>

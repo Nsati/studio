@@ -1,4 +1,3 @@
-
 'use client';
 
 import React from 'react';
@@ -42,7 +41,7 @@ export default function LandingPage() {
   const nainital = PlaceHolderImages.find(img => img.id === 'dest-nainital');
 
   return (
-    <div className="bg-background min-h-screen font-sans selection:bg-accent selection:text-white">
+    <div className="bg-background min-h-screen font-sans selection:bg-accent selection:text-white -mt-16 lg:-mt-20">
       
       {/* 1. HERO SECTION - Reduced Height */}
       <section className="relative h-[85vh] min-h-[600px] w-full flex items-center justify-center overflow-hidden">
@@ -349,4 +348,3 @@ export default function LandingPage() {
     </div>
   );
 }
-
