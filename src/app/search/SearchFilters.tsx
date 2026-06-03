@@ -116,18 +116,20 @@ export function SearchFilters() {
                                 </button>
                             </PopoverTrigger>
                             <PopoverContent 
-                                className="w-auto p-0 border-0 bg-white rounded-[2rem] overflow-hidden shadow-luxury mt-2 flex items-center justify-center" 
+                                className="w-auto p-0 border-0 bg-white rounded-none overflow-hidden shadow-luxury mt-2 flex items-center justify-center" 
                                 align="center"
                                 sideOffset={12}
                             >
-                                <CalendarComponent
-                                    mode="range"
-                                    selected={dates}
-                                    onSelect={setDates}
-                                    disabled={{ before: new Date() }}
-                                    numberOfMonths={1}
-                                    className="bg-white p-6"
-                                />
+                                <div className="p-2 flex items-center justify-center w-full">
+                                    <CalendarComponent
+                                        mode="range"
+                                        selected={dates}
+                                        onSelect={setDates}
+                                        disabled={{ before: new Date() }}
+                                        numberOfMonths={1}
+                                        className="mx-auto"
+                                    />
+                                </div>
                             </PopoverContent>
                         </Popover>
                     </div>

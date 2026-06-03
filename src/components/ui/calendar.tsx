@@ -10,7 +10,7 @@ import { buttonVariants } from "@/components/ui/button"
 export type CalendarProps = React.ComponentProps<typeof DayPicker>
 
 /**
- * @fileOverview Production-ready Calendar Component with Pixel-Perfect Grid Alignment.
+ * @fileOverview Production-grade Calendar Component with Pixel-Perfect Grid Alignment.
  * Ensures that headers (Days) and content (Dates) are perfectly centered and balanced.
  */
 
@@ -27,7 +27,7 @@ function Calendar({
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-8 sm:space-y-0",
         month: "space-y-6",
-        caption: "flex justify-center pt-2 relative items-center",
+        caption: "flex justify-center pt-2 relative items-center mb-4",
         caption_label: "text-sm font-black uppercase tracking-widest text-primary",
         nav: "space-x-1 flex items-center",
         nav_button: cn(
@@ -36,13 +36,13 @@ function Calendar({
         ),
         nav_button_previous: "absolute left-1",
         nav_button_next: "absolute right-1",
-        table: "w-full border-collapse space-y-2",
-        head_row: "flex justify-between",
+        table: "w-full border-collapse space-y-1",
+        head_row: "flex justify-center gap-1",
         head_cell:
-          "text-primary/40 rounded-md w-10 font-black text-[10px] uppercase tracking-tighter text-center",
-        row: "flex w-full mt-3 justify-between",
+          "text-primary/40 rounded-md w-10 h-10 font-black text-[10px] uppercase tracking-tighter flex items-center justify-center",
+        row: "flex w-full mt-1 justify-center gap-1",
         cell: cn(
-          "h-10 w-10 text-center text-sm p-0 relative focus-within:relative focus-within:z-20 transition-all",
+          "h-10 w-10 text-center text-sm p-0 relative focus-within:relative focus-within:z-20 transition-all flex items-center justify-center",
           "[&:has([aria-selected].day-range-end)]:rounded-r-full",
           "[&:has([aria-selected].day-outside)]:bg-accent/50",
           "[&:has([aria-selected])]:bg-accent",
@@ -51,7 +51,7 @@ function Calendar({
         ),
         day: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-10 w-10 p-0 font-bold rounded-full aria-selected:opacity-100 hover:bg-primary/5"
+          "h-10 w-10 p-0 font-bold rounded-full aria-selected:opacity-100 hover:bg-primary/5 flex items-center justify-center"
         ),
         day_range_end: "day-range-end",
         day_selected:

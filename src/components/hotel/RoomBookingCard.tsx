@@ -94,17 +94,18 @@ export function RoomBookingCard({ hotel, rooms, isLoadingRooms }: { hotel: WithI
                 </Button>
                 </PopoverTrigger>
                 <PopoverContent 
-                    className="w-[340px] p-0 rounded-none border-0 shadow-2xl bg-white overflow-hidden" 
+                    className="w-auto p-0 rounded-none border-0 shadow-2xl bg-white overflow-hidden" 
                     align="center"
-                    sideOffset={8}
+                    sideOffset={12}
                 >
-                    <div className="flex items-center justify-center w-full">
+                    <div className="flex items-center justify-center w-full p-2">
                         <Calendar 
                             mode="range" 
                             selected={dates} 
                             onSelect={setDates} 
                             disabled={{ before: new Date() }}
                             numberOfMonths={1}
+                            className="mx-auto"
                         />
                     </div>
                 </PopoverContent>
