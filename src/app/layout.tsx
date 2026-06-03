@@ -7,6 +7,7 @@ import Footer from '@/components/shared/Footer';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { MessageCircle } from 'lucide-react';
+import React from 'react';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -45,11 +46,11 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
-      <body className={`${inter.variable} ${poppins.variable} ${playfair.variable} font-sans bg-background text-foreground`}>
+      <body className={`${inter.variable} ${poppins.variable} ${playfair.variable} font-sans bg-background text-foreground min-h-screen flex flex-col`}>
         <FirebaseClientProvider>
           <FirebaseErrorListener />
           <Header />
-          <main className="relative z-10 min-h-screen">
+          <main className="relative z-10 flex-grow">
             {children}
           </main>
           

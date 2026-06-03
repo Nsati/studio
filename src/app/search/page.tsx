@@ -100,6 +100,14 @@ function SearchResults({ filters }: { filters: any }) {
   );
 }
 
+function SearchFiltersWrapper() {
+  return (
+    <Suspense fallback={<Skeleton className="h-24 w-full rounded-[2.5rem] bg-white/5" />}>
+      <SearchFilters />
+    </Suspense>
+  );
+}
+
 export default function SearchPage() {
   const [priceRange, setPriceRange] = useState([0, 100000]);
   const [selectedRatings, setSelectedRatings] = useState<number[]>([]);
@@ -134,7 +142,7 @@ export default function SearchPage() {
 
         <div className="relative z-10 bg-primary/10 border-y border-white/5 py-12 md:py-16">
             <div className="container mx-auto max-w-7xl px-4 md:px-6">
-                <SearchFilters />
+                <SearchFiltersWrapper />
             </div>
         </div>
 

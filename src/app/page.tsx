@@ -1,25 +1,24 @@
 'use client';
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { SearchFilters } from './search/SearchFilters';
 import { 
-  MapPin, 
-  ShieldCheck, 
   Star, 
   ArrowRight, 
-  Users,
   Sparkles,
-  Compass,
-  Tent,
-  Heart
 } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { dummyCities } from '@/lib/dummy-data';
+import { Skeleton } from '@/components/ui/skeleton';
+
+function SearchFiltersFallback() {
+  return <Skeleton className="h-24 w-full max-w-5xl mx-auto rounded-[2.5rem] bg-white/10" />;
+}
 
 export default function LandingPage() {
   return (
@@ -69,7 +68,9 @@ export default function LandingPage() {
               transition={{ delay: 0.5, duration: 0.8 }}
               className="pt-8"
             >
-              <SearchFilters />
+              <Suspense fallback={<SearchFiltersFallback />}>
+                <SearchFilters />
+              </Suspense>
             </motion.div>
           </div>
         </div>
@@ -123,45 +124,6 @@ export default function LandingPage() {
               </motion.div>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* SECTION 3: Why Choose Us (Unique Selling Points) */}
-      <section className="py-32 bg-muted/30 border-y border-border/10 relative">
-        <div className="container px-6 text-center">
-           <div className="max-w-4xl mx-auto mb-20 space-y-4">
-                <h4 className="text-accent font-bold uppercase tracking-[0.4em] text-[10px]">Trust & Divinity</h4>
-                <h2 className="text-4xl md:text-5xl font-bold tracking-tighter text-primary font-heading uppercase text-center w-full">The Northern Promise</h2>
-           </div>
-           
-           <div className="grid grid-cols-1 md:grid-cols-3 gap-16">
-              {[
-                { icon: ShieldCheck, title: "Verified Safety", desc: "Real-time mountain access protocols and weather-synchronized itineraries for every traveler." },
-                { icon: Star, title: "Sacred Stays", desc: "Curated collection of hotels and homestays that blend Himalayan comfort with authentic hospitality." },
-                { icon: Users, title: "Local Liaison", desc: "Dedicated team of Pahadi experts providing 24/7 on-ground assistance and spiritual guidance." }
-              ].map((item, i) => (
-                <div key={i} className="space-y-6 text-center group">
-                  <div className="h-20 w-20 bg-primary/10 rounded-[2rem] flex items-center justify-center text-primary transition-all group-hover:bg-accent group-hover:text-accent-foreground mx-auto saffron-glow">
-                    <item.icon className="h-8 w-8" />
-                  </div>
-                  <div className="space-y-3">
-                    <h4 className="text-xl font-bold text-primary uppercase tracking-tight font-heading">{item.title}</h4>
-                    <p className="text-slate-600 font-medium leading-relaxed text-sm opacity-90">{item.desc}</p>
-                  </div>
-                </div>
-              ))}
-           </div>
-           
-           {/* Testimonial Quote */}
-           <motion.div 
-             initial={{ opacity: 0 }}
-             whileInView={{ opacity: 1 }}
-             className="mt-32 max-w-4xl mx-auto p-12 bg-white rounded-[3rem] shadow-2xl relative overflow-hidden italic text-xl text-primary font-medium border border-accent/10"
-           >
-              <div className="absolute top-0 left-0 w-2 h-full bg-accent" />
-              "Northern Harrier ensured that our Char Dham Yatra was not just a trip, but a life-changing spiritual experience. Their local expertise is unmatched in the Himalayas."
-              <footer className="mt-6 font-bold text-sm uppercase tracking-widest text-accent">— Giridhar Dorai, 2024 Traveller</footer>
-           </motion.div>
         </div>
       </section>
 
