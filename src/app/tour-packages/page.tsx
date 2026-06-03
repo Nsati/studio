@@ -16,11 +16,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 function PackageSkeleton() {
     return (
-        <Card className="overflow-hidden border-white/5 bg-white/[0.03] rounded-[2rem] h-full shadow-2xl animate-pulse">
-            <div className="h-48 w-full bg-white/5" />
+        <Card className="overflow-hidden border-border/10 bg-white rounded-[2rem] h-full shadow-lg animate-pulse">
+            <div className="h-48 w-full bg-muted" />
             <div className="p-8 space-y-4">
-                <div className="h-6 w-3/4 bg-white/5 rounded" />
-                <div className="h-4 w-1/2 bg-white/5 rounded" />
+                <div className="h-6 w-3/4 bg-muted rounded" />
+                <div className="h-4 w-1/2 bg-muted rounded" />
             </div>
         </Card>
     );
@@ -43,22 +43,22 @@ export default function TourPackagesPage() {
   };
 
   return (
-    <div className="bg-background min-h-screen pb-32">
+    <div className="bg-background min-h-screen pb-32 font-sans">
       {/* Header Section */}
-      <section className="relative h-[50vh] min-h-[400px] flex items-center justify-center overflow-hidden">
+      <section className="relative h-[45vh] min-h-[400px] flex items-center justify-center overflow-hidden">
         <Image 
           src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=1920"
           alt="Expedition Banner"
           fill
-          className="object-cover brightness-[0.3]"
+          className="object-cover brightness-[0.4]"
           priority
         />
         <div className="container relative z-10 px-6 text-center space-y-6">
-            <Badge className="bg-primary/20 text-primary border border-primary/30 px-6 py-2 rounded-full font-black uppercase tracking-[0.4em] text-[10px] mb-4">
+            <Badge className="bg-accent text-accent-foreground border-0 px-6 py-2 rounded-full font-bold uppercase tracking-[0.4em] text-[10px] mb-4">
                 Global Tour Grid
             </Badge>
-            <h1 className="text-5xl md:text-8xl font-black text-white tracking-tighter uppercase leading-[0.85]">
-                Active <br/> <span className="text-primary italic font-heading font-light capitalize">Expeditions</span>
+            <h1 className="text-5xl md:text-7xl font-bold text-white tracking-tighter uppercase leading-[0.85] font-heading">
+                Active <br/> <span className="text-accent italic font-light capitalize">Expeditions</span>
             </h1>
         </div>
       </section>
@@ -79,9 +79,9 @@ export default function TourPackagesPage() {
                             transition={{ delay: i * 0.1, duration: 0.5 }}
                             className="h-full"
                         >
-                            <Card className="group flex flex-col h-full overflow-hidden border border-white/5 bg-white/[0.03] backdrop-blur-xl rounded-[2.5rem] hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 luxury-shadow">
+                            <Card className="group flex flex-col h-full overflow-hidden border-border/10 bg-white rounded-[2.5rem] hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 shadow-apple-deep">
                                 {/* Image Header */}
-                                <div className="relative aspect-[16/10] overflow-hidden bg-slate-900">
+                                <div className="relative aspect-[16/10] overflow-hidden bg-muted">
                                     <Image
                                         src={getImageUrl(pkg.image)}
                                         alt={pkg.title}
@@ -89,7 +89,7 @@ export default function TourPackagesPage() {
                                         className="object-cover transition-transform duration-2000 group-hover:scale-105"
                                     />
                                     <div className="absolute top-6 left-6">
-                                        <Badge className="bg-primary text-background border-0 font-black uppercase text-[8px] tracking-widest px-4 py-2 rounded-full shadow-2xl">
+                                        <Badge className="bg-primary text-primary-foreground border-0 font-bold uppercase text-[8px] tracking-widest px-4 py-2 rounded-full shadow-lg">
                                             ELITE VERIFIED
                                         </Badge>
                                     </div>
@@ -98,19 +98,19 @@ export default function TourPackagesPage() {
                                 {/* Content */}
                                 <CardHeader className="p-8 space-y-6 flex-1">
                                     <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2 text-primary font-black text-[10px] uppercase tracking-widest">
+                                        <div className="flex items-center gap-2 text-primary font-bold text-[10px] uppercase tracking-widest">
                                             <Clock className="h-3.5 w-3.5" /> {pkg.duration}
                                         </div>
                                         <div className="flex items-center gap-1.5 text-slate-400 font-bold text-xs">
-                                            <Star className="h-3.5 w-3.5 text-primary fill-primary" /> 4.9
+                                            <Star className="h-3.5 w-3.5 text-accent fill-accent" /> 4.9
                                         </div>
                                     </div>
 
-                                    <CardTitle className="text-2xl font-black tracking-tight text-white group-hover:text-primary transition-colors line-clamp-2 leading-snug uppercase">
+                                    <CardTitle className="text-2xl font-bold tracking-tight text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-snug uppercase font-heading">
                                         <Link href={`/tour-packages/${pkg.id}`}>{pkg.title}</Link>
                                     </CardTitle>
 
-                                    <div className="flex items-start gap-2 text-slate-400 font-medium text-xs line-clamp-2 uppercase tracking-widest leading-relaxed">
+                                    <div className="flex items-start gap-2 text-slate-500 font-medium text-xs line-clamp-2 uppercase tracking-widest leading-relaxed">
                                         <MapPin className="h-4 w-4 text-primary shrink-0" />
                                         <span>{pkg.destinations?.join(' — ')}</span>
                                     </div>
@@ -118,16 +118,16 @@ export default function TourPackagesPage() {
 
                                 {/* Footer */}
                                 <CardFooter className="p-8 pt-0 flex flex-col gap-8">
-                                    <div className="h-px w-full bg-white/5" />
+                                    <div className="h-px w-full bg-muted" />
                                     <div className="flex items-center justify-between">
                                         <div className="space-y-1">
-                                            <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Investment</p>
-                                            <p className="text-3xl font-black text-white tracking-tighter">
+                                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Investment</p>
+                                            <p className="text-3xl font-bold text-foreground tracking-tighter">
                                                 ₹{pkg.totalCost?.toLocaleString('en-IN')}
                                             </p>
                                         </div>
                                         
-                                        <Button asChild size="lg" className="bg-primary hover:bg-white text-background rounded-full font-black text-[10px] tracking-widest uppercase px-8 h-14 shadow-2xl shadow-primary/20 transition-all active:scale-95">
+                                        <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full font-bold text-[10px] tracking-widest uppercase px-8 h-14 shadow-lg shadow-primary/20 transition-all active:scale-95">
                                             <Link href={`/tour-packages/${pkg.id}`}>
                                                 EXPLORE <ArrowRight className="ml-2 h-4 w-4" />
                                             </Link>
@@ -138,23 +138,23 @@ export default function TourPackagesPage() {
                         </motion.div>
                     ))
                 ) : (
-                    <div className="col-span-full py-40 text-center border-2 border-dashed border-white/5 rounded-[3rem] bg-white/[0.02]">
-                        <Package className="h-16 w-16 text-slate-700 mx-auto mb-6" />
-                        <h3 className="text-xl font-black text-slate-500 uppercase tracking-widest">No Active Expeditions Found</h3>
+                    <div className="col-span-full py-40 text-center border-2 border-dashed border-border rounded-[3rem] bg-white">
+                        <Package className="h-16 w-16 text-slate-300 mx-auto mb-6" />
+                        <h3 className="text-xl font-bold text-slate-400 uppercase tracking-widest">No Active Expeditions Found</h3>
                     </div>
                 )}
             </div>
             
             <div className="mt-20 flex items-center justify-center">
-                 <div className="bg-white/[0.03] backdrop-blur-md px-12 py-6 rounded-[2.5rem] border border-white/5 flex flex-col md:flex-row items-center gap-8 shadow-2xl">
+                 <div className="bg-white px-12 py-6 rounded-[2.5rem] border border-border/10 flex flex-col md:flex-row items-center gap-8 shadow-xl">
                     <div className="p-4 bg-primary/10 rounded-2xl">
                         <Info className="h-8 w-8 text-primary" />
                     </div>
                     <div className="text-center md:text-left">
-                        <p className="text-sm font-black text-white uppercase tracking-widest">Custom Node Required?</p>
+                        <p className="text-sm font-bold text-foreground uppercase tracking-widest">Custom Node Required?</p>
                         <p className="text-xs text-slate-500 font-medium mt-1">Build your own itinerary with our Himalayan specialists.</p>
                     </div>
-                    <Button variant="link" className="text-primary font-black uppercase tracking-[0.2em] text-[10px] hover:text-white">CONCIERGE DESK</Button>
+                    <Button variant="link" className="text-primary font-bold uppercase tracking-[0.2em] text-[10px] hover:text-accent">CONCIERGE DESK</Button>
                  </div>
             </div>
         </div>

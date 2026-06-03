@@ -1,12 +1,13 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    /* Himalayan Snow Background */
+    /* Himalayan Snow Background - Very Light Nature Tone */
     --background: 80 14% 96%; 
-    --foreground: 222 47% 11%; /* Dark Charcoal */
+    --foreground: 222 47% 11%; /* Dark Charcoal - Standard Text */
 
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
@@ -26,7 +27,7 @@
     --muted: 96 15% 91%;
     --muted-foreground: 215 16% 47%;
 
-    /* Sacred Saffron Accent */
+    /* Sacred Saffron Accent - Vibrant High Contrast */
     --accent: 23 100% 63%;
     --accent-foreground: 222 47% 11%;
 
@@ -38,13 +39,13 @@
     --input: 31 52% 35%;
     --ring: 23 100% 63%;
 
-    --radius: 1rem;
+    --radius: 1.25rem;
   }
 }
 
 @layer base {
   * {
-    @apply border-border/20 outline-none;
+    @apply border-border/10 outline-none;
   }
   body {
     @apply bg-background text-foreground;
@@ -52,7 +53,7 @@
     -webkit-font-smoothing: antialiased;
   }
   h1, h2, h3, h4, h5, h6 {
-    @apply font-heading tracking-tight text-primary;
+    @apply font-heading tracking-tight text-foreground;
   }
 }
 
@@ -61,11 +62,15 @@
 }
 
 .saffron-glow {
-  box-shadow: 0 0 20px rgba(255, 140, 66, 0.3);
+  box-shadow: 0 10px 30px -5px rgba(255, 140, 66, 0.4);
 }
 
-.mountain-card {
-  @apply bg-white border border-border/10 shadow-md hover:shadow-xl transition-all duration-300;
+.shadow-apple-deep {
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
+}
+
+.luxury-shadow {
+  box-shadow: 0 35px 70px -15px rgba(0, 53, 128, 0.1);
 }
 
 .scrollbar-hide::-webkit-scrollbar {
