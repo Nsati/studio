@@ -54,7 +54,7 @@ function UserNav({ isScrolled }: { isScrolled: boolean }) {
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className={cn(
             "relative h-11 w-auto rounded-full flex items-center gap-3 border transition-all px-2",
-            isScrolled ? "border-primary/10 hover:bg-primary/5" : "border-white/20 hover:bg-white/10"
+            isScrolled ? "border-primary/10 hover:bg-primary/5" : "border-white/40 hover:bg-white/10 bg-black/10 backdrop-blur-sm"
           )}>
             <Avatar className="h-9 w-9 ring-2 ring-accent/20">
                <AvatarImage src={user.photoURL || ''} alt={userProfile?.displayName || 'User'} />
@@ -64,7 +64,7 @@ function UserNav({ isScrolled }: { isScrolled: boolean }) {
             </Avatar>
             <span className={cn(
               "text-[10px] font-black hidden lg:block uppercase tracking-widest ml-1",
-              isScrolled ? "text-primary" : "text-white"
+              isScrolled ? "text-primary" : "text-white drop-shadow-md"
             )}>Account</span>
             <ChevronDown className="h-3 w-3 text-slate-400" />
           </Button>
@@ -105,7 +105,7 @@ function UserNav({ isScrolled }: { isScrolled: boolean }) {
     <div className="flex items-center gap-6">
       <Link href="/login" className={cn(
         "font-black text-[10px] tracking-widest uppercase hidden sm:block hover:text-accent transition-colors",
-        isScrolled ? "text-primary" : "text-white text-shadow-md"
+        isScrolled ? "text-primary" : "text-white drop-shadow-lg"
       )}>
         Login
       </Link>
@@ -126,8 +126,8 @@ export default function Header() {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
       
-      // Smart Hide/Show Logic
-      if (currentScrollY > lastScrollY.current && currentScrollY > 120) {
+      // Better Hide/Show Logic
+      if (currentScrollY > lastScrollY.current && currentScrollY > 150) {
         setIsVisible(false); // Hide on scroll down
       } else {
         setIsVisible(true); // Show on scroll up
@@ -144,9 +144,9 @@ export default function Header() {
   return (
     <header 
       className={cn(
-        "fixed top-0 z-[100] w-full transition-all duration-300 transform",
+        "fixed top-0 z-[100] w-full transition-all duration-500 transform",
         isVisible ? "translate-y-0" : "-translate-y-full",
-        isScrolled ? "bg-white/95 backdrop-blur-xl border-b border-black/5 h-16 shadow-sm" : "bg-transparent h-24"
+        isScrolled ? "bg-white/95 backdrop-blur-xl border-b border-black/5 h-16 shadow-lg" : "bg-transparent h-24"
       )}
     >
       <div className="container flex h-full items-center justify-between">
@@ -158,11 +158,11 @@ export default function Header() {
                 <div className="flex flex-col">
                   <span className={cn(
                     "font-heading text-xl md:text-2xl font-black tracking-tighter uppercase group-hover:text-accent transition-all",
-                    isScrolled ? "text-primary" : "text-white text-shadow-md"
+                    isScrolled ? "text-primary" : "text-white drop-shadow-2xl"
                   )}>
                       NORTHERN <span className="text-accent italic font-spiritual capitalize">HARRIER</span>
                   </span>
-                  {!isScrolled && <span className="text-[7px] font-black uppercase text-white/60 tracking-[0.4em] -mt-1 ml-0.5 text-shadow-sm">Uttarakhand Specialists</span>}
+                  {!isScrolled && <span className="text-[7px] font-black uppercase text-white/80 tracking-[0.4em] -mt-1 ml-0.5 drop-shadow-md">Uttarakhand Specialists</span>}
                 </div>
             </Link>
             
@@ -172,10 +172,10 @@ export default function Header() {
                       key={link.href}
                       href={link.href}
                       className={cn(
-                          "text-[10px] font-black tracking-widest transition-all relative py-2 uppercase",
+                          "text-[10px] font-black tracking-widest transition-all relative py-2 uppercase drop-shadow-md",
                           pathname === link.href 
                             ? "text-accent border-b-2 border-accent" 
-                            : (isScrolled ? "text-primary/70 hover:text-accent" : "text-white hover:text-accent text-shadow-md")
+                            : (isScrolled ? "text-primary/70 hover:text-accent" : "text-white hover:text-accent")
                       )}
                     >
                       {link.label}
@@ -187,7 +187,7 @@ export default function Header() {
         <div className="flex items-center gap-6">
           <div className={cn(
             "hidden lg:flex items-center gap-2 font-black text-[9px] uppercase tracking-widest border-r pr-6",
-            isScrolled ? "text-primary/40 border-muted" : "text-white/40 border-white/10"
+            isScrolled ? "text-primary/40 border-muted" : "text-white/60 border-white/20 drop-shadow-md"
           )}>
             <Phone className="h-3 w-3" /> +91-6399902725
           </div>
@@ -195,7 +195,7 @@ export default function Header() {
            <div className="lg:hidden">
             <Sheet>
                 <SheetTrigger asChild>
-                    <Button variant="ghost" size="icon" className={cn("h-10 w-10 hover:bg-primary/5 rounded-full", isScrolled ? "text-primary" : "text-white")}>
+                    <Button variant="ghost" size="icon" className={cn("h-10 w-10 hover:bg-white/10 rounded-full", isScrolled ? "text-primary" : "text-white drop-shadow-lg")}>
                         <Menu className="h-6 w-6" />
                     </Button>
                 </SheetTrigger>

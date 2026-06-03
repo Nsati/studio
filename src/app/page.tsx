@@ -53,7 +53,7 @@ export default function LandingPage() {
             unoptimized
           />
         )}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/30 to-background/20" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-background/20" />
         
         <div className="container relative z-10 px-6 text-center">
           <motion.div {...fadeInUp} className="max-w-4xl mx-auto space-y-8">
@@ -65,12 +65,12 @@ export default function LandingPage() {
                 <h1 className="text-4xl md:text-7xl font-black text-white tracking-tighter leading-[1.1] font-heading uppercase drop-shadow-2xl">
                     Discover Uttarakhand <br/> <span className="text-accent italic font-spiritual capitalize">with Northern Harrier</span>
                 </h1>
-                <p className="text-lg md:text-xl font-black text-white/90 tracking-[0.3em] uppercase font-heading drop-shadow-md">
+                <p className="text-lg md:text-xl font-black text-white/90 tracking-[0.3em] uppercase font-heading drop-shadow-lg">
                     Where Every Journey Becomes a Story
                 </p>
             </div>
             
-            <p className="text-sm md:text-lg text-white/80 max-w-3xl mx-auto font-bold leading-relaxed tracking-tight drop-shadow-sm uppercase">
+            <p className="text-sm md:text-lg text-white/80 max-w-3xl mx-auto font-bold leading-relaxed tracking-tight drop-shadow-md uppercase">
               From snow-covered peaks to ancient temples, we bring you the finest travel experiences across Devbhoomi.
             </p>
             
@@ -80,8 +80,10 @@ export default function LandingPage() {
                   Plan Your Trip <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="h-16 px-12 rounded-full font-black text-xs border-2 border-white/60 text-white hover:bg-white hover:text-primary backdrop-blur-md transition-all shadow-xl">
-                <Link href="/search" className="flex items-center justify-center uppercase tracking-widest text-white text-shadow-md">Explore Destinations</Link>
+              <Button asChild variant="outline" size="lg" className="h-16 px-12 rounded-full font-black text-xs border-2 border-white/60 text-white hover:bg-white hover:text-primary backdrop-blur-md transition-all shadow-2xl bg-black/10">
+                <Link href="/search" className="flex items-center justify-center uppercase tracking-widest text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
+                  Explore Destinations
+                </Link>
               </Button>
             </div>
           </motion.div>
