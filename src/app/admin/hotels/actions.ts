@@ -29,28 +29,33 @@ export async function bulkUploadHotels(hotelsData: HotelUploadData[]): Promise<{
 
             const roomsToCreate: Room[] = [];
             
-            // Process rooms if they exist in CSV
+            // Process rooms (1 to 3) if they exist in CSV
             for (let i = 1; i <= 3; i++) {
-                const type = hotel[`room_${i}_type` as keyof HotelUploadData];
-                const price = hotel[`room_${i}_price` as keyof HotelUploadData];
-                const capacity = hotel[`room_${i}_capacity` as keyof HotelUploadData];
-                const totalRooms = hotel[`room_${i}_total` as keyof HotelUploadData];
+                const typeKey = `room_${i}_type` as keyof HotelUploadData;
+                const priceKey = `room_${i}_price` as keyof HotelUploadData;
+                const capacityKey = `room_${i}_capacity` as keyof HotelUploadData;
+                const totalKey = `room_${i}_total` as keyof HotelUploadData;
 
-                if (type && price && capacity && totalRooms) {
+                const type = hotel[typeKey];
+                const price = hotel[priceKey];
+                const capacity = hotel[capacityKey];
+                const totalRooms = hotel[totalKey];
+
+                if (type && price) {
                     const tempRoomId = slugify(`${hotel.name} ${type} ${Math.random().toString(36).substring(2, 7)}`, { lower: true, strict: true });
                     roomsToCreate.push({ 
                         id: tempRoomId,
                         hotelId,
-                        type: type as 'Standard' | 'Deluxe' | 'Suite', 
+                        type: type as any, 
                         price: Number(price), 
-                        capacity: Number(capacity), 
-                        totalRooms: Number(totalRooms),
-                        availableRooms: Number(totalRooms)
+                        capacity: Number(capacity) || 2, 
+                        totalRooms: Number(totalRooms) || 10,
+                        availableRooms: Number(totalRooms) || 10
                     });
                 }
             }
 
-            const minPrice = roomsToCreate.length > 0 ? Math.min(...roomsToCreate.map(r => r.price)) : 0;
+            const minPrice = roomsToCreate.length > 0 ? Math.min(...roomsToCreate.map(r => r.price)) : (hotel.room_1_price || 0);
 
             const hotelDoc: Hotel = {
                 name: hotel.name,
@@ -89,7 +94,7 @@ export async function bulkUploadHotels(hotelsData: HotelUploadData[]): Promise<{
 
         await batch.commit();
         revalidatePath('/admin/hotels');
-        return { success: true, message: `Successfully synchronized ${hotelsData.length} properties. Rooms can be added manually via Edit.` };
+        return { success: true, message: `Successfully synchronized ${hotelsData.length} properties with room inventory.` };
 
     } catch (e: any) {
         console.error("Failed to bulk upload hotels:", e);
@@ -104,7 +109,6 @@ export async function deleteHotelAction(hotelId: string) {
     try {
         const hotelRef = adminDb.collection('hotels').doc(hotelId);
         
-        // Fetch subcollections to delete (Rooms and Reviews)
         const roomsSnap = await hotelRef.collection('rooms').get();
         const reviewsSnap = await hotelRef.collection('reviews').get();
 

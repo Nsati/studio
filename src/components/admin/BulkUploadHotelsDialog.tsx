@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Upload, Loader2, FileCheck2, AlertTriangle, TableIcon, Info } from 'lucide-react';
+import { Upload, Loader2, FileCheck2, AlertTriangle, Info } from 'lucide-react';
 import { bulkUploadHotels } from '@/app/admin/hotels/actions';
 import { type HotelUploadData } from '@/app/admin/schemas';
 import { useRouter } from 'next/navigation';
@@ -85,9 +85,8 @@ export function BulkUploadHotelsDialog() {
         }
     };
     
-    const requiredHeaders = [
-        'name', 'city', 'description', 'address', 'rating', 'discount', 'amenities', 'images'
-    ];
+    const baseHeaders = ['name', 'city', 'description', 'address', 'rating', 'discount', 'amenities', 'images'];
+    const roomHeaders = ['room_1_type', 'room_1_price', 'room_1_capacity', 'room_1_total'];
 
     return (
         <Dialog onOpenChange={(open) => {
@@ -106,7 +105,7 @@ export function BulkUploadHotelsDialog() {
                 <DialogHeader>
                     <DialogTitle className="text-2xl font-black">Bulk Property Sync</DialogTitle>
                     <DialogDescription className="font-medium">
-                        Upload basic property data. You can add room inventory manually later.
+                        Upload properties and room inventory simultaneously via CSV.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
@@ -132,7 +131,7 @@ export function BulkUploadHotelsDialog() {
                                         <TableRow>
                                             <TableHead className="text-[10px] font-black uppercase">Name</TableHead>
                                             <TableHead className="text-[10px] font-black uppercase">City</TableHead>
-                                            <TableHead className="text-[10px] font-black uppercase">Rating</TableHead>
+                                            <TableHead className="text-[10px] font-black uppercase">Room 1</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -140,7 +139,7 @@ export function BulkUploadHotelsDialog() {
                                             <TableRow key={index}>
                                                 <TableCell className="text-xs font-bold">{hotel.name}</TableCell>
                                                 <TableCell className="text-xs">{hotel.city}</TableCell>
-                                                <TableCell className="text-xs font-black">{hotel.rating}</TableCell>
+                                                <TableCell className="text-xs font-black">{hotel.room_1_type || 'N/A'}</TableCell>
                                             </TableRow>
                                         ))}
                                     </TableBody>
@@ -161,10 +160,11 @@ export function BulkUploadHotelsDialog() {
                          <div className="space-y-1">
                             <p className="text-[10px] font-black uppercase text-blue-800 tracking-widest">Required CSV Headers:</p>
                             <p className="text-[11px] font-medium text-blue-700 leading-relaxed">
-                                <b>{requiredHeaders.join(', ')}</b>
+                                <b>{baseHeaders.join(', ')}</b>
                             </p>
-                            <p className="text-[9px] font-bold text-blue-600 mt-2">
-                                Note: Amenities and Images should be comma-separated URLs/text.
+                            <p className="text-[10px] font-black uppercase text-blue-800 tracking-widest mt-3">Room Sync (Optional):</p>
+                            <p className="text-[11px] font-medium text-blue-700 leading-relaxed">
+                                <b>{roomHeaders.join(', ')}</b> (up to room_3_...)
                             </p>
                          </div>
                     </div>
