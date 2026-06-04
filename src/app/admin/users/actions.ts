@@ -8,7 +8,7 @@ import { UpdateUserSchema, type UpdateUserInput } from '../schemas';
 
 /**
  * @fileOverview Hardened User Management Actions for Tripzy.
- * Fixed circular variable referencing and hardened for production.
+ * Resolved COLLECTION_GROUP index error by using direct sub-collection access.
  */
 
 type ActionResponse = {
@@ -21,6 +21,10 @@ interface UserDetailsForAdmin extends UserProfile {
     totalBookings: number;
 }
 
+/**
+ * Fetches user details and their associated bookings.
+ * FIXED: Replaced collectionGroup query with direct sub-collection access to avoid index errors.
+ */
 export async function getUserDetailsForAdmin(uid: string): Promise<UserDetailsForAdmin> {
     const { adminDb, error: adminError } = getFirebaseAdmin();
     if (adminError || !adminDb) {
@@ -29,7 +33,9 @@ export async function getUserDetailsForAdmin(uid: string): Promise<UserDetailsFo
 
     try {
         const userRef = adminDb.doc(`users/${uid}`);
-        const bookingsQuery = adminDb.collectionGroup('bookings').where('userId', '==', uid);
+        // Instead of searching globally (collectionGroup), we query the specific user's sub-collection
+        // This avoids the need for a COLLECTION_GROUP_ASC index on 'userId'.
+        const bookingsQuery = adminDb.collection(`users/${uid}/bookings`);
 
         const [userDoc, bookingsSnapshot] = await Promise.all([
             userRef.get(),
