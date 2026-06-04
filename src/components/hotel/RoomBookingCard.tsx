@@ -30,6 +30,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 
+/**
+ * @fileOverview Hardened Room Booking Card.
+ * Fixed production import paths and stabilized alignment.
+ */
+
 export function RoomBookingCard({ hotel, rooms, isLoadingRooms }: { hotel: WithId<Hotel>, rooms: WithId<Room>[], isLoadingRooms: boolean }) {
   const [dates, setDates] = useState<DateRange | undefined>();
   const [selectedRoom, setSelectedRoom] = useState<WithId<Room> | null>(null);
