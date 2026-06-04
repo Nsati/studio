@@ -20,12 +20,12 @@ export const HotelUploadSchema = z.object({
     name: z.string().min(3),
     city: z.string().min(1),
     description: z.string().min(10),
-    address: z.string().optional(),
-    rating: z.coerce.number().min(1).max(5),
-    discount: z.coerce.number().min(0).max(100).optional(),
-    amenities: z.string(), // comma separated
-    images: z.string(), // comma separated
-    // Room fields are optional but supported for bulk sync
+    address: z.string().optional().default(''),
+    rating: z.coerce.number().min(1).max(5).default(4),
+    discount: z.coerce.number().min(0).max(100).default(0),
+    amenities: z.string().optional().default(''), 
+    images: z.string().optional().default(''), 
+    // Room fields are optional for bulk sync
     room_1_type: z.string().optional(),
     room_1_price: z.coerce.number().positive().optional(),
     room_1_capacity: z.coerce.number().positive().int().optional(),
