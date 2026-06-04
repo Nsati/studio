@@ -1,12 +1,19 @@
+
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { getFirebaseAdmin } from '@/firebase/admin';
+import { sendBookingConfirmationEmail } from '@/lib/mail-service';
+
+/**
+ * @fileOverview Hardened Razorpay Webhook for Production.
+ * Handles payment verification, Firestore sync, and Bill generation/Email.
+ */
 
 export async function POST(req: Request) {
   const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
 
   if (!secret) {
-    console.error('RAZORPAY_WEBHOOK_SECRET is not set');
+    console.error('CRITICAL: RAZORPAY_WEBHOOK_SECRET is not set');
     return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
   }
 
@@ -22,6 +29,7 @@ export async function POST(req: Request) {
   const generatedSignature = hmac.digest('hex');
 
   if (generatedSignature !== signature) {
+    console.error('[WEBHOOK] Invalid signature detected.');
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
   }
 
@@ -33,27 +41,49 @@ export async function POST(req: Request) {
   try {
     const event = JSON.parse(text);
 
-    if (event.event === 'payment.captured') {
+    // Only process successful payment events
+    if (event.event === 'payment.captured' || event.event === 'order.paid') {
       const paymentEntity = event.payload.payment.entity;
       const notes = paymentEntity.notes;
       const bookingId = notes?.booking_id;
       const userId = notes?.user_id;
 
       if (!bookingId || !userId) {
-        console.warn('Webhook received without a booking_id or user_id in notes. Cannot process.');
-        // Return 200 OK because this is not a server error, we just can't process it. Razorpay won't retry.
+        console.warn('[WEBHOOK] Missing booking_id or user_id in notes.');
         return NextResponse.json({ status: 'ok, missing notes' });
       }
 
       const bookingRef = adminDb.doc(`users/${userId}/bookings/${bookingId}`);
+      const bookingSnap = await bookingRef.get();
 
-      // Fixed: Using Admin SDK's .update() method instead of client SDK's updateDoc()
+      if (!bookingSnap.exists) {
+        console.warn(`[WEBHOOK] Booking ${bookingId} not found in Firestore.`);
+        return NextResponse.json({ status: 'booking not found' });
+      }
+
+      const bookingData = bookingSnap.data();
+
+      // 1. Update status in Firestore
       await bookingRef.update({
         status: 'CONFIRMED',
         razorpayPaymentId: paymentEntity.id,
+        updatedAt: new Date().toISOString(),
       });
 
-      console.log(`Webhook confirmed booking: ${bookingId}`);
+      console.log(`[WEBHOOK] Verified & Confirmed: ${bookingId}`);
+
+      // 2. Generate Bill & Send Email
+      if (bookingData?.customerEmail) {
+        await sendBookingConfirmationEmail(bookingData.customerEmail, {
+          customerName: bookingData.customerName || 'Guest',
+          bookingId: bookingId,
+          hotelName: bookingData.hotelName || 'Himalayan Property',
+          checkIn: bookingData.checkIn || 'TBD',
+          checkOut: bookingData.checkOut || 'TBD',
+          amount: paymentEntity.amount / 100, // Convert from paise
+          paymentId: paymentEntity.id,
+        });
+      }
     }
 
     return NextResponse.json({ status: 'received' });
