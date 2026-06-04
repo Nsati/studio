@@ -33,11 +33,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { dummyCities } from '@/lib/dummy-data';
-import { Loader2, Trash2, PlusCircle, ShieldAlert } from 'lucide-react';
+import { Loader2, Trash2, PlusCircle, ShieldAlert, Link as LinkIcon } from 'lucide-react';
 import { Separator } from '../ui/separator';
 import { Card, CardContent, CardHeader } from '../ui/card';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
-import { ImageUpload } from './ImageUpload';
 
 const allAmenities = ['wifi', 'parking', 'restaurant', 'bar', 'spa', 'pool', 'gym', 'mountain-view', 'garden', 'library', 'river-view', 'ghat', 'adventure', 'trekking', 'skiing', 'heritage', 'safari'];
 
@@ -58,7 +57,7 @@ const formSchema = z.object({
   rating: z.coerce.number().min(1).max(5).positive(),
   discount: z.coerce.number().min(0).max(100).optional(),
   amenities: z.array(z.string()).min(1, 'Please select at least one amenity.'),
-  images: z.array(z.string()).min(1, 'Please upload at least one image.'),
+  imagesRaw: z.string().min(1, 'At least one image link is required'),
   rooms: z.array(roomSchema).min(1, 'Please add at least one room type.'),
   isVerifiedPahadiHost: z.boolean().default(false),
   ecoPractices: z.object({
@@ -98,7 +97,7 @@ export function EditHotelForm({ hotel, rooms: initialRooms }: EditHotelFormProps
       rating: hotel.rating,
       discount: hotel.discount || 0,
       amenities: hotel.amenities,
-      images: hotel.images,
+      imagesRaw: hotel.images.join(', '),
       rooms: initialRooms.map(r => ({...r})),
       isVerifiedPahadiHost: hotel.isVerifiedPahadiHost || false,
       ecoPractices: hotel.ecoPractices || { waterSaving: false, plasticFree: false, localSourcing: false },
@@ -118,12 +117,19 @@ export function EditHotelForm({ hotel, rooms: initialRooms }: EditHotelFormProps
     setIsLoading(true);
     const hotelId = hotel.id;
     const batch = writeBatch(firestore);
+
+    // Normalize image links
+    const imagesArray = values.imagesRaw.split(',').map(url => url.trim()).filter(Boolean);
     
     const minPrice = values.rooms.length > 0 ? Math.min(...values.rooms.map(r => r.price)) : 0;
 
     const hotelRef = doc(firestore, 'hotels', hotelId);
-    const { rooms, ...hotelData } = values;
-    batch.update(hotelRef, { ...hotelData, minPrice });
+    const { rooms, imagesRaw, ...hotelData } = values;
+    batch.update(hotelRef, { 
+        ...hotelData, 
+        images: imagesArray,
+        minPrice 
+    });
 
     for (const room of rooms) {
         const { id: roomId, ...roomData } = room;
@@ -205,20 +211,26 @@ export function EditHotelForm({ hotel, rooms: initialRooms }: EditHotelFormProps
 
         <Separator />
 
-        <div>
-            <h3 className="text-lg font-black tracking-tight text-primary uppercase flex items-center gap-2">
-                <PlusCircle className="h-5 w-5" /> Gallery Management
-            </h3>
-            <FormDescription className="text-[10px] font-black uppercase tracking-widest">Upload high-res property photos for the Northern Harrier grid.</FormDescription>
+        <div className="space-y-4">
+            <div className="flex items-center gap-2">
+                <LinkIcon className="h-5 w-5 text-primary" />
+                <h3 className="text-lg font-black tracking-tight text-primary uppercase">Gallery Image Links</h3>
+            </div>
+            <FormField control={form.control} name="imagesRaw" render={({ field }) => (
+                <FormItem>
+                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Photo URLs</FormLabel>
+                    <FormControl>
+                        <Textarea 
+                            placeholder="Paste direct image links here, separated by commas" 
+                            className="min-h-[120px] rounded-none font-sans" 
+                            {...field} 
+                        />
+                    </FormControl>
+                    <FormDescription className="text-[10px] font-black uppercase tracking-widest">Provide a comma-separated list of image links.</FormDescription>
+                    <FormMessage />
+                </FormItem>
+            )} />
         </div>
-        <FormField control={form.control} name="images" render={({ field }) => (
-            <FormItem>
-                <FormControl>
-                    <ImageUpload value={field.value} onChange={field.onChange} maxImages={15} />
-                </FormControl>
-                <FormMessage />
-            </FormItem>
-        )} />
 
         <Separator />
 

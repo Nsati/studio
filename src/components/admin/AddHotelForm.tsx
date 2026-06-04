@@ -31,13 +31,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { dummyCities } from '@/lib/dummy-data';
-import { Loader2, Trash2, PlusCircle } from 'lucide-react';
+import { Loader2, Trash2, PlusCircle, Link as LinkIcon } from 'lucide-react';
 import { Separator } from '../ui/separator';
 import { Card, CardContent, CardHeader } from '../ui/card';
-import { ImageUpload } from './ImageUpload';
 
 const allAmenities = ['wifi', 'parking', 'restaurant', 'bar', 'spa', 'pool', 'gym', 'mountain-view', 'garden', 'library', 'river-view', 'ghat', 'adventure', 'trekking', 'skiing', 'heritage', 'safari'];
-const allSpiritualAmenities = ['meditation-friendly', 'silent-zone', 'sunrise-view', 'temple-nearby', 'yoga-sessions'];
 
 const roomSchema = z.object({
   type: z.enum(['Standard', 'Deluxe', 'Suite']),
@@ -45,7 +43,6 @@ const roomSchema = z.object({
   capacity: z.coerce.number().min(1, 'Capacity must be at least 1.'),
   totalRooms: z.coerce.number().min(1, 'Total rooms must be at least 1.'),
 });
-
 
 const formSchema = z.object({
   name: z.string().min(3, 'Hotel name must be at least 3 characters long.'),
@@ -55,7 +52,7 @@ const formSchema = z.object({
   rating: z.coerce.number().min(1).max(5).positive(),
   discount: z.coerce.number().min(0).max(100).optional(),
   amenities: z.array(z.string()).min(1, 'Please select at least one amenity.'),
-  images: z.array(z.string()).min(1, 'Please upload at least one image.'),
+  imagesRaw: z.string().min(1, 'Please add at least one image link.'),
   rooms: z.array(roomSchema).min(1, 'Please add at least one room type.'),
   isVerifiedPahadiHost: z.boolean().default(false),
   ecoPractices: z.object({
@@ -70,7 +67,6 @@ const formSchema = z.object({
   }).default({ nearestHospital: '', policeStation: '', networkCoverage: '' }),
   spiritualAmenities: z.array(z.string()).default([]),
 });
-
 
 export function AddHotelForm() {
   const router = useRouter();
@@ -88,7 +84,7 @@ export function AddHotelForm() {
       rating: 4,
       discount: 0,
       amenities: [],
-      images: [],
+      imagesRaw: '',
       rooms: [{ type: 'Standard', price: 5000, capacity: 2, totalRooms: 10 }],
       isVerifiedPahadiHost: false,
       ecoPractices: { waterSaving: false, plasticFree: false, localSourcing: false },
@@ -112,12 +108,16 @@ export function AddHotelForm() {
     const hotelId = slugify(values.name, { lower: true, strict: true });
     const batch = writeBatch(firestore);
 
+    // Normalize image links
+    const imagesArray = values.imagesRaw.split(',').map(url => url.trim()).filter(Boolean);
+
     const minPrice = Math.min(...values.rooms.map(r => r.price));
 
     const hotelRef = doc(firestore, 'hotels', hotelId);
-    const { rooms, ...hotelData } = values;
+    const { rooms, imagesRaw, ...hotelData } = values;
     batch.set(hotelRef, {
         ...hotelData,
+        images: imagesArray,
         minPrice,
     });
 
@@ -208,18 +208,28 @@ export function AddHotelForm() {
 
         <Separator />
 
-        <div>
-            <h3 className="text-lg font-black tracking-tight">Gallery Management</h3>
-            <FormDescription className="text-[10px] font-black uppercase tracking-widest">Upload original high-quality photos of the property.</FormDescription>
+        <div className="space-y-4">
+            <div className="flex items-center gap-2">
+                <LinkIcon className="h-5 w-5 text-primary" />
+                <h3 className="text-lg font-black tracking-tight">Gallery Image Links</h3>
+            </div>
+            <FormField control={form.control} name="imagesRaw" render={({ field }) => (
+                <FormItem>
+                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Photos URLs</FormLabel>
+                    <FormControl>
+                        <Textarea 
+                            placeholder="Paste direct image links here, separated by commas (e.g. https://img1.jpg, https://img2.jpg)" 
+                            className="min-h-[120px] rounded-none font-sans" 
+                            {...field} 
+                        />
+                    </FormControl>
+                    <FormDescription className="text-[9px] font-bold text-blue-600">
+                        Enter links ending in .jpg, .png or .webp. First link will be the main preview.
+                    </FormDescription>
+                    <FormMessage />
+                </FormItem>
+            )} />
         </div>
-        <FormField control={form.control} name="images" render={({ field }) => (
-            <FormItem>
-                <FormControl>
-                    <ImageUpload value={field.value} onChange={field.onChange} maxImages={15} />
-                </FormControl>
-                <FormMessage />
-            </FormItem>
-        )} />
 
         <Separator />
 
