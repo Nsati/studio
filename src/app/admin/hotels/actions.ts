@@ -1,36 +1,48 @@
-
 'use server';
 
 import { getFirebaseAdmin } from '@/firebase/admin';
 import type { Hotel, Room } from '@/lib/types';
 import slugify from 'slugify';
 import { revalidatePath } from 'next/cache';
-import { HotelUploadSchema, type HotelUploadData } from '../schemas';
+import { HotelUploadSchema } from '../schemas';
 
 /**
- * @fileOverview Production-Grade Bulk Upload for Hotels.
- * Optimized for resilience and large datasets (Batching & Normalization).
+ * @fileOverview Hardened Production Bulk Upload for Hotels.
+ * Features: Multi-Header Normalization, Robust Room Mapping, and Error Resilience.
  */
 
-export async function bulkUploadHotels(hotelsData: HotelUploadData[]): Promise<{ success: boolean; message: string }> {
+export async function bulkUploadHotels(rawHotelsData: any[]): Promise<{ success: boolean; message: string }> {
     const { adminDb, error } = getFirebaseAdmin();
     if (error || !adminDb) {
-        console.error("Bulk upload error:", error);
         return { success: false, message: error || "Admin SDK not initialized" };
     }
 
     try {
-        const chunkSize = 100; // Process in chunks to stay within batch limits
+        const chunkSize = 100;
         let totalProcessed = 0;
 
-        for (let i = 0; i < hotelsData.length; i += chunkSize) {
-            const chunk = hotelsData.slice(i, i + chunkSize);
+        for (let i = 0; i < rawHotelsData.length; i += chunkSize) {
+            const chunk = rawHotelsData.slice(i, i + chunkSize);
             const batch = adminDb.batch();
 
-            for (const row of chunk) {
-                const validation = HotelUploadSchema.safeParse(row);
+            for (const rawRow of chunk) {
+                // 1. Header Normalization (Handle common synonyms and casing)
+                const normalizedRow: any = {};
+                Object.keys(rawRow).forEach(key => {
+                    const k = key.toLowerCase().trim().replace(/\s+/g, '_');
+                    
+                    // Map common synonyms to schema keys
+                    if (k === 'hotel_name' || k === 'property_name' || k === 'title') normalizedRow['name'] = rawRow[key];
+                    else if (k === 'facilities' || k === 'amenity') normalizedRow['amenities'] = rawRow[key];
+                    else if (k === 'photos' || k === 'gallery' || k === 'image') normalizedRow['images'] = rawRow[key];
+                    else if (k === 'location') normalizedRow['city'] = rawRow[key];
+                    else normalizedRow[k] = rawRow[key];
+                });
+
+                // 2. Schema Validation
+                const validation = HotelUploadSchema.safeParse(normalizedRow);
                 if (!validation.success) {
-                    console.warn(`[UPLOAD SKIP] Row "${row.name || 'Unknown'}" failed validation:`, validation.error.format());
+                    console.warn(`[UPLOAD SKIP] Row "${normalizedRow.name || 'Unknown'}" failed validation:`, validation.error.format());
                     continue; 
                 }
 
@@ -38,13 +50,13 @@ export async function bulkUploadHotels(hotelsData: HotelUploadData[]): Promise<{
                 const hotelId = slugify(data.name, { lower: true, strict: true }) + '-' + Math.random().toString(36).substring(2, 5);
                 const hotelRef = adminDb.collection('hotels').doc(hotelId);
 
-                // 1. Process Rooms Safely
+                // 3. Process Rooms (Standardized logic for up to 3 types)
                 const roomsToCreate: Room[] = [];
                 for (let rIdx = 1; rIdx <= 3; rIdx++) {
-                    const type = data[`room_${rIdx}_type` as keyof HotelUploadData];
-                    const price = data[`room_${rIdx}_price` as keyof HotelUploadData];
-                    const cap = data[`room_${rIdx}_capacity` as keyof HotelUploadData];
-                    const tot = data[`room_${rIdx}_total` as keyof HotelUploadData];
+                    const type = data[`room_${rIdx}_type` as keyof typeof data];
+                    const price = data[`room_${rIdx}_price` as keyof typeof data];
+                    const cap = data[`room_${rIdx}_capacity` as keyof typeof data];
+                    const tot = data[`room_${rIdx}_total` as keyof typeof data];
 
                     if (type && price) {
                         const tempRoomId = slugify(`${data.name} ${type} ${Math.random().toString(36).substring(2, 7)}`, { lower: true, strict: true });
@@ -62,9 +74,9 @@ export async function bulkUploadHotels(hotelsData: HotelUploadData[]): Promise<{
 
                 const minPrice = roomsToCreate.length > 0 ? Math.min(...roomsToCreate.map(r => r.price)) : 0;
 
-                // 2. Normalize Array Fields
-                const amenities = data.amenities ? data.amenities.split(',').map(a => a.trim().toLowerCase()).filter(Boolean) : [];
-                const images = data.images ? data.images.split(',').map(img => img.trim()).filter(Boolean) : [];
+                // 4. Normalize Arrays
+                const amenities = data.amenities ? String(data.amenities).split(',').map(a => a.trim().toLowerCase()).filter(Boolean) : [];
+                const images = data.images ? String(data.images).split(',').map(img => img.trim()).filter(Boolean) : [];
 
                 const hotelDoc: Hotel = {
                     name: data.name,
@@ -113,7 +125,7 @@ export async function bulkUploadHotels(hotelsData: HotelUploadData[]): Promise<{
         
         return { 
             success: true, 
-            message: `Cloud Sync Complete: ${totalProcessed} properties synchronized with inventory.` 
+            message: `Cloud Grid Synchronized: ${totalProcessed} properties established in the network.` 
         };
 
     } catch (e: any) {
