@@ -30,9 +30,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { dummyCities } from '@/lib/dummy-data';
-import { Loader2, Trash2, PlusCircle, Link as LinkIcon, Check } from 'lucide-react';
+import { Loader2, Trash2, PlusCircle, Image as ImageIcon, Check } from 'lucide-react';
 import { Separator } from '../ui/separator';
 import { Card, CardContent, CardHeader } from '../ui/card';
+import { ImageUpload } from './ImageUpload';
 
 const allAmenities = ['wifi', 'parking', 'restaurant', 'bar', 'spa', 'pool', 'gym', 'mountain-view', 'garden', 'library', 'river-view', 'ghat', 'adventure', 'trekking', 'skiing', 'heritage', 'safari'];
 
@@ -51,7 +52,7 @@ const formSchema = z.object({
   rating: z.coerce.number().min(1).max(5).positive(),
   discount: z.coerce.number().min(0).max(100).optional(),
   amenities: z.array(z.string()).min(1, 'Please select at least one amenity.'),
-  imagesRaw: z.string().min(1, 'Please add at least one image link.'),
+  images: z.array(z.string()).min(1, 'Please upload at least one image.'),
   rooms: z.array(roomSchema).min(1, 'Please add at least one room type.'),
 });
 
@@ -71,7 +72,7 @@ export function AddHotelForm() {
       rating: 4,
       discount: 0,
       amenities: [],
-      imagesRaw: '',
+      images: [],
       rooms: [{ type: 'Standard', price: 5000, capacity: 2, totalRooms: 10 }],
     },
   });
@@ -91,15 +92,13 @@ export function AddHotelForm() {
     try {
         const hotelId = slugify(values.name, { lower: true, strict: true }) + '-' + Math.random().toString(36).substring(2, 5);
         const batch = writeBatch(firestore);
-        const imagesArray = values.imagesRaw.split(',').map(url => url.trim()).filter(Boolean);
         const minPrice = Math.min(...values.rooms.map(r => r.price));
 
         const hotelRef = doc(firestore, 'hotels', hotelId);
-        const { rooms, imagesRaw, ...hotelData } = values;
+        const { rooms, ...hotelData } = values;
         
         batch.set(hotelRef, {
             ...hotelData,
-            images: imagesArray,
             minPrice,
             mountainSafetyScore: 80,
             landslideRisk: 'Low',
@@ -197,22 +196,23 @@ export function AddHotelForm() {
 
         <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <LinkIcon className="h-5 w-5 text-primary" />
-            <h3 className="text-lg font-black tracking-tight text-primary uppercase">Gallery Image Links</h3>
+            <ImageIcon className="h-5 w-5 text-primary" />
+            <h3 className="text-lg font-black tracking-tight text-primary uppercase">Hotel Visuals</h3>
           </div>
           <FormField
             control={form.control}
-            name="imagesRaw"
+            name="images"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Photos URLs (Comma Separated)</FormLabel>
+                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Upload Photos</FormLabel>
                 <FormControl>
-                  <Textarea 
-                    placeholder="https://img1.jpg, https://img2.jpg" 
-                    className="min-h-[120px] rounded-none font-sans" 
-                    {...field} 
+                  <ImageUpload 
+                    value={field.value} 
+                    onChange={field.onChange} 
+                    maxImages={10} 
                   />
                 </FormControl>
+                <FormDescription className="text-[9px] font-bold">Select up to 10 photos of the property.</FormDescription>
                 <FormMessage />
               </FormItem>
             )}

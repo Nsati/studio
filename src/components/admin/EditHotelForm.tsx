@@ -32,9 +32,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { dummyCities } from '@/lib/dummy-data';
-import { Loader2, Trash2, PlusCircle, ShieldAlert, Link as LinkIcon, Check } from 'lucide-react';
+import { Loader2, Trash2, PlusCircle, ShieldAlert, Image as ImageIcon, Check } from 'lucide-react';
 import { Separator } from '../ui/separator';
 import { Card, CardContent, CardHeader } from '../ui/card';
+import { ImageUpload } from './ImageUpload';
 import { 
   AlertDialog, 
   AlertDialogAction, 
@@ -64,7 +65,7 @@ const formSchema = z.object({
   rating: z.coerce.number().min(1).max(5).positive(),
   discount: z.coerce.number().min(0).max(100).optional(),
   amenities: z.array(z.string()).min(1, 'Please select at least one amenity.'),
-  imagesRaw: z.string().min(1, 'At least one image link is required'),
+  images: z.array(z.string()).min(1, 'At least one image is required'),
   rooms: z.array(roomSchema).min(1, 'Please add at least one room type.'),
 });
 
@@ -91,7 +92,7 @@ export function EditHotelForm({ hotel, rooms: initialRooms }: EditHotelFormProps
       rating: hotel.rating || 4,
       discount: hotel.discount || 0,
       amenities: hotel.amenities || [],
-      imagesRaw: hotel.images?.join(', ') || '',
+      images: hotel.images || [],
       rooms: initialRooms.map(r => ({ ...r })),
     },
   });
@@ -108,15 +109,13 @@ export function EditHotelForm({ hotel, rooms: initialRooms }: EditHotelFormProps
     try {
         const hotelId = hotel.id;
         const batch = writeBatch(firestore);
-        const imagesArray = values.imagesRaw.split(',').map(url => url.trim()).filter(Boolean);
         const minPrice = values.rooms.length > 0 ? Math.min(...values.rooms.map(r => r.price)) : 0;
 
         const hotelRef = doc(firestore, 'hotels', hotelId);
-        const { rooms, imagesRaw, ...hotelData } = values;
+        const { rooms, ...hotelData } = values;
         
         batch.update(hotelRef, { 
             ...hotelData, 
-            images: imagesArray,
             minPrice,
             updatedAt: new Date().toISOString()
         });
@@ -238,20 +237,20 @@ export function EditHotelForm({ hotel, rooms: initialRooms }: EditHotelFormProps
 
         <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <LinkIcon className="h-5 w-5 text-primary" />
-            <h3 className="text-lg font-black tracking-tight text-primary uppercase">Gallery Image Links</h3>
+            <ImageIcon className="h-5 w-5 text-primary" />
+            <h3 className="text-lg font-black tracking-tight text-primary uppercase">Gallery Management</h3>
           </div>
           <FormField
             control={form.control}
-            name="imagesRaw"
+            name="images"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Photo URLs (Comma Separated)</FormLabel>
+                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Photos</FormLabel>
                 <FormControl>
-                  <Textarea
-                    placeholder="Paste direct image links here, separated by commas"
-                    className="min-h-[120px] rounded-none font-sans"
-                    {...field}
+                  <ImageUpload 
+                    value={field.value} 
+                    onChange={field.onChange} 
+                    maxImages={10} 
                   />
                 </FormControl>
                 <FormMessage />
