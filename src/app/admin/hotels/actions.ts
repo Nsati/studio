@@ -1,3 +1,4 @@
+
 'use server';
 
 import { getFirebaseAdmin } from '@/firebase/admin';
@@ -23,16 +24,17 @@ export async function bulkUploadHotels(hotelsData: HotelUploadData[]): Promise<{
             }
 
             const hotel = validation.data; 
-            const hotelId = slugify(hotel.name, { lower: true, strict: true });
+            const hotelId = slugify(hotel.name, { lower: true, strict: true }) + '-' + Math.random().toString(36).substring(2, 5);
             const hotelRef = adminDb.collection('hotels').doc(hotelId);
 
             const roomsToCreate: Room[] = [];
             
+            // Process rooms if they exist in CSV
             for (let i = 1; i <= 3; i++) {
-                const type = hotel[`room_${i}_type` as 'room_1_type' | 'room_2_type' | 'room_3_type'];
-                const price = hotel[`room_${i}_price` as 'room_1_price' | 'room_2_price' | 'room_3_price'];
-                const capacity = hotel[`room_${i}_capacity` as 'room_1_capacity' | 'room_2_capacity' | 'room_3_capacity'];
-                const totalRooms = hotel[`room_${i}_total` as 'room_1_total' | 'room_2_total' | 'room_3_total'];
+                const type = hotel[`room_${i}_type` as keyof HotelUploadData];
+                const price = hotel[`room_${i}_price` as keyof HotelUploadData];
+                const capacity = hotel[`room_${i}_capacity` as keyof HotelUploadData];
+                const totalRooms = hotel[`room_${i}_total` as keyof HotelUploadData];
 
                 if (type && price && capacity && totalRooms) {
                     const tempRoomId = slugify(`${hotel.name} ${type} ${Math.random().toString(36).substring(2, 7)}`, { lower: true, strict: true });
@@ -40,29 +42,25 @@ export async function bulkUploadHotels(hotelsData: HotelUploadData[]): Promise<{
                         id: tempRoomId,
                         hotelId,
                         type: type as 'Standard' | 'Deluxe' | 'Suite', 
-                        price, 
-                        capacity, 
-                        totalRooms,
-                        availableRooms: totalRooms
+                        price: Number(price), 
+                        capacity: Number(capacity), 
+                        totalRooms: Number(totalRooms),
+                        availableRooms: Number(totalRooms)
                     });
                 }
             }
 
-            if (roomsToCreate.length === 0) {
-                 throw new Error(`Hotel "${hotel.name}" must have at least one valid room definition.`);
-            }
-
-            const minPrice = Math.min(...roomsToCreate.map(r => r.price));
+            const minPrice = roomsToCreate.length > 0 ? Math.min(...roomsToCreate.map(r => r.price)) : 0;
 
             const hotelDoc: Hotel = {
                 name: hotel.name,
                 city: hotel.city,
                 description: hotel.description,
                 address: hotel.address || '',
-                rating: hotel.rating,
+                rating: hotel.rating || 4,
                 discount: hotel.discount || 0,
-                amenities: hotel.amenities.split(',').map(a => a.trim()).filter(Boolean),
-                images: hotel.images.split(',').map(i => i.trim()).filter(Boolean),
+                amenities: hotel.amenities ? hotel.amenities.split(',').map(a => a.trim()).filter(Boolean) : [],
+                images: hotel.images ? hotel.images.split(',').map(i => i.trim()).filter(Boolean) : [],
                 minPrice,
                 mountainSafetyScore: 85,
                 landslideRisk: 'Low',
@@ -91,7 +89,7 @@ export async function bulkUploadHotels(hotelsData: HotelUploadData[]): Promise<{
 
         await batch.commit();
         revalidatePath('/admin/hotels');
-        return { success: true, message: `Successfully uploaded ${hotelsData.length} hotels to Tripzy.` };
+        return { success: true, message: `Successfully synchronized ${hotelsData.length} properties. Rooms can be added manually via Edit.` };
 
     } catch (e: any) {
         console.error("Failed to bulk upload hotels:", e);

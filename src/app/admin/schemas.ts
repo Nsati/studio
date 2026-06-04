@@ -25,15 +25,16 @@ export const HotelUploadSchema = z.object({
     discount: z.coerce.number().min(0).max(100).optional(),
     amenities: z.string(), // comma separated
     images: z.string(), // comma separated
-    room_1_type: z.enum(['Standard', 'Deluxe', 'Suite']).optional(),
+    // Room fields are now strictly optional for easy bulk import
+    room_1_type: z.string().optional(),
     room_1_price: z.coerce.number().positive().optional(),
     room_1_capacity: z.coerce.number().positive().int().optional(),
     room_1_total: z.coerce.number().positive().int().optional(),
-    room_2_type: z.enum(['Standard', 'Deluxe', 'Suite']).optional(),
+    room_2_type: z.string().optional(),
     room_2_price: z.coerce.number().positive().optional(),
     room_2_capacity: z.coerce.number().positive().int().optional(),
     room_2_total: z.coerce.number().positive().int().optional(),
-    room_3_type: z.enum(['Standard', 'Deluxe', 'Suite']).optional(),
+    room_3_type: z.string().optional(),
     room_3_price: z.coerce.number().positive().optional(),
     room_3_capacity: z.coerce.number().positive().int().optional(),
     room_3_total: z.coerce.number().positive().int().optional(),

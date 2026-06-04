@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Upload, Loader2, FileCheck2, AlertTriangle, TableIcon } from 'lucide-react';
+import { Upload, Loader2, FileCheck2, AlertTriangle, TableIcon, Info } from 'lucide-react';
 import { bulkUploadHotels } from '@/app/admin/hotels/actions';
 import { type HotelUploadData } from '@/app/admin/schemas';
 import { useRouter } from 'next/navigation';
@@ -66,6 +66,8 @@ export function BulkUploadHotelsDialog() {
                     title: 'Upload Successful!',
                     description: result.message,
                 });
+                setFile(null);
+                setParsedData([]);
                 router.refresh();
             } else {
                  throw new Error(result.message);
@@ -83,95 +85,96 @@ export function BulkUploadHotelsDialog() {
         }
     };
     
-    const expectedHeaders = [
-        'name', 'city', 'description', 'address', 'rating', 'discount', 'amenities', 'images',
-        'room_1_type', 'room_1_price', 'room_1_capacity', 'room_1_total',
-        'room_2_type', 'room_2_price', 'room_2_capacity', 'room_2_total',
-        'room_3_type', 'room_3_price', 'room_3_capacity', 'room_3_total',
+    const requiredHeaders = [
+        'name', 'city', 'description', 'address', 'rating', 'discount', 'amenities', 'images'
     ];
 
     return (
-        <Dialog onOpenChange={() => {
-            setFile(null);
-            setParsedData([]);
-            setError('');
+        <Dialog onOpenChange={(open) => {
+            if (!open) {
+                setFile(null);
+                setParsedData([]);
+                setError('');
+            }
         }}>
             <DialogTrigger asChild>
-                <Button variant="outline">
-                    <Upload className="mr-2 h-4 w-4" />
-                    Bulk Upload
+                <Button variant="outline" className="rounded-none font-bold">
+                    <Upload className="mr-2 h-4 w-4" /> Bulk Hotel Upload
                 </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-4xl">
+            <DialogContent className="max-w-4xl rounded-none">
                 <DialogHeader>
-                    <DialogTitle>Bulk Upload Hotels via CSV</DialogTitle>
-                    <DialogDescription>
-                        Upload a CSV file to add multiple hotels at once. The file must contain the correct headers.
+                    <DialogTitle className="text-2xl font-black">Bulk Property Sync</DialogTitle>
+                    <DialogDescription className="font-medium">
+                        Upload basic property data. You can add room inventory manually later.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
-                    <div className="grid w-full max-w-sm items-center gap-1.5">
-                        <Input id="csv-file" type="file" accept=".csv" onChange={handleFileChange} />
+                    <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed rounded-2xl bg-muted/20 border-black/5">
+                        <Input id="csv-file" type="file" accept=".csv" onChange={handleFileChange} className="max-w-xs h-12 bg-white cursor-pointer" />
+                        <p className="mt-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">Select .csv file with required headers</p>
                     </div>
 
                     {file && parsedData.length > 0 && (
-                         <Alert>
-                             <FileCheck2 className="h-4 w-4" />
-                             <AlertDescription className="font-semibold">
-                                 Successfully parsed {parsedData.length} hotels from <span className="font-mono">{file.name}</span>. Review the data below before uploading.
+                         <Alert className="bg-green-50 border-green-200">
+                             <FileCheck2 className="h-4 w-4 text-green-700" />
+                             <AlertDescription className="font-bold text-green-800">
+                                 Parsed {parsedData.length} properties from {file.name}.
                             </AlertDescription>
                         </Alert>
                     )}
                     
                     {parsedData.length > 0 && (
-                        <ScrollArea className="h-72 w-full rounded-md border">
-                            <Table>
-                                <TableHeader className="sticky top-0 bg-muted">
-                                    <TableRow>
-                                        <TableHead>Name</TableHead>
-                                        <TableHead>City</TableHead>
-                                        <TableHead>Rating</TableHead>
-                                        <TableHead>Rooms</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {parsedData.map((hotel, index) => (
-                                        <TableRow key={index}>
-                                            <TableCell className="font-medium">{hotel.name}</TableCell>
-                                            <TableCell>{hotel.city}</TableCell>
-                                            <TableCell>{hotel.rating}</TableCell>
-                                            <TableCell>
-                                                {[1,2,3].map(i => hotel[`room_${i}_type` as keyof typeof hotel] ? <span key={i} className="text-xs font-mono bg-muted-foreground/10 p-1 rounded-sm mr-1">{hotel[`room_${i}_type` as keyof typeof hotel]}</span> : null).filter(Boolean).length}
-                                            </TableCell>
+                        <div className="border rounded-xl overflow-hidden bg-white">
+                            <ScrollArea className="h-48 w-full">
+                                <Table>
+                                    <TableHeader className="sticky top-0 bg-muted z-10">
+                                        <TableRow>
+                                            <TableHead className="text-[10px] font-black uppercase">Name</TableHead>
+                                            <TableHead className="text-[10px] font-black uppercase">City</TableHead>
+                                            <TableHead className="text-[10px] font-black uppercase">Rating</TableHead>
                                         </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </ScrollArea>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {parsedData.slice(0, 10).map((hotel, index) => (
+                                            <TableRow key={index}>
+                                                <TableCell className="text-xs font-bold">{hotel.name}</TableCell>
+                                                <TableCell className="text-xs">{hotel.city}</TableCell>
+                                                <TableCell className="text-xs font-black">{hotel.rating}</TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </ScrollArea>
+                        </div>
                     )}
 
                     {error && (
                         <Alert variant="destructive">
                             <AlertTriangle className="h-4 w-4" />
-                            <AlertDescription>{error}</AlertDescription>
+                            <AlertDescription className="font-bold">{error}</AlertDescription>
                         </Alert>
                     )}
-                    {!file && (
-                        <Alert variant="default" className="bg-blue-50 border-blue-200">
-                             <TableIcon className="h-4 w-4 !text-blue-600" />
-                            <AlertDescription className="text-blue-800">
-                                <b>Required CSV Headers:</b> {expectedHeaders.slice(0,8).join(', ')}, etc. Room columns (e.g. `room_1_type`) are optional, but at least one full room definition is required per hotel.
-                            </AlertDescription>
-                        </Alert>
-                    )}
+                    
+                    <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl flex gap-3">
+                         <Info className="h-5 w-5 text-blue-600 shrink-0" />
+                         <div className="space-y-1">
+                            <p className="text-[10px] font-black uppercase text-blue-800 tracking-widest">Required CSV Headers:</p>
+                            <p className="text-[11px] font-medium text-blue-700 leading-relaxed">
+                                <b>{requiredHeaders.join(', ')}</b>
+                            </p>
+                            <p className="text-[9px] font-bold text-blue-600 mt-2">
+                                Note: Amenities and Images should be comma-separated URLs/text.
+                            </p>
+                         </div>
+                    </div>
                 </div>
-                <DialogFooter>
+                <DialogFooter className="border-t pt-6">
                     <DialogClose asChild>
-                        <Button type="button" variant="outline">Cancel</Button>
+                        <Button type="button" variant="ghost" className="rounded-none font-bold h-12 px-8">Cancel</Button>
                     </DialogClose>
-                    <Button onClick={handleUpload} disabled={isUploading || parsedData.length === 0}>
-                        {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
-                        {isUploading ? 'Uploading...' : `Upload ${parsedData.length} Hotels`}
+                    <Button onClick={handleUpload} disabled={isUploading || parsedData.length === 0} className="rounded-none font-black px-12 h-12 bg-primary shadow-xl">
+                        {isUploading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Synchronizing...</> : `Commit ${parsedData.length} Properties`}
                     </Button>
                 </DialogFooter>
             </DialogContent>
