@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo, useState, useEffect } from 'react';
@@ -16,7 +15,6 @@ import {
   Hotel as HotelIcon, 
   Calendar, 
   Users, 
-  CreditCard, 
   ArrowRight, 
   Download, 
   MapPin, 
@@ -108,7 +106,7 @@ function BookingItem({ booking }: { booking: WithId<Booking> }) {
               src={hotelImage}
               alt={booking.hotelName}
               fill
-              className="object-cover transition-transform duration-2000 group-hover:scale-110"
+              className="object-cover transition-transform duration-700 group-hover:scale-110"
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center bg-muted">

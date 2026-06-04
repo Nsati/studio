@@ -1,4 +1,3 @@
-
 'use client';
 
 import React from 'react';
@@ -137,7 +136,7 @@ export default function BlogsPublicPage() {
                                                 <img 
                                                     src={item.imageUrl} 
                                                     alt={item.title} 
-                                                    className="w-full h-full object-cover transition-transform duration-2000 group-hover:scale-110" 
+                                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
                                                 />
                                                 <div className="absolute top-6 left-6">
                                                     <Badge className="bg-white/95 backdrop-blur-md text-primary border-0 font-black px-5 py-2 rounded-full text-[9px] uppercase tracking-widest shadow-lg">

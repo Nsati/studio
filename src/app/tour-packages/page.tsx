@@ -1,4 +1,3 @@
-
 'use client';
 
 import React from 'react';
@@ -93,7 +92,7 @@ export default function TourPackagesPage() {
                                         src={getImageUrl(pkg.image)}
                                         alt={pkg.title}
                                         fill
-                                        className="object-cover transition-transform duration-2000 group-hover:scale-110"
+                                        className="object-cover transition-transform duration-700 group-hover:scale-110"
                                         unoptimized={true}
                                     />
                                     <div className="absolute top-6 left-6">
