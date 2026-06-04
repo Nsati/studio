@@ -8,8 +8,8 @@ import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
 
 /**
- * @fileOverview Production-ready Calendar for react-day-picker v9.
- * Fixed "IconLeft/IconRight" type errors and optimized for production builds.
+ * @fileOverview Production-hardened Calendar component.
+ * Updated for react-day-picker v9 compatibility to resolve "IconLeft/IconRight" build errors.
  */
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>

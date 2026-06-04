@@ -32,7 +32,7 @@ import { Separator } from '@/components/ui/separator';
 
 /**
  * @fileOverview Hardened Room Booking Card.
- * Fixed production import paths and stabilized alignment.
+ * Fixed production import paths (Badge, Separator) and stabilized alignment.
  */
 
 export function RoomBookingCard({ hotel, rooms, isLoadingRooms }: { hotel: WithId<Hotel>, rooms: WithId<Room>[], isLoadingRooms: boolean }) {
