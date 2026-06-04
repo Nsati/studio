@@ -2,11 +2,12 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { getFirebaseAdmin } from '@/firebase/admin';
-import { sendBookingConfirmationEmail } from '@/lib/mail-service';
+import { generateInvoicePDF } from '@/lib/pdf-service';
+import { sendInvoiceEmail } from '@/lib/email-service';
 
 /**
  * @fileOverview Hardened Razorpay Webhook for Production.
- * Handles payment verification, Firestore sync, and Bill generation/Email.
+ * Handles payment verification, Firestore sync, and Automated PDF Billing via SMTP.
  */
 
 export async function POST(req: Request) {
@@ -70,18 +71,31 @@ export async function POST(req: Request) {
         updatedAt: new Date().toISOString(),
       });
 
-      console.log(`[WEBHOOK] Verified & Confirmed: ${bookingId}`);
+      console.log(`✅ [WEBHOOK] Booking ${bookingId} synchronized.`);
 
-      // 2. Generate Bill & Send Email
+      // 2. Generate PDF & Send Email
       if (bookingData?.customerEmail) {
-        await sendBookingConfirmationEmail(bookingData.customerEmail, {
-          customerName: bookingData.customerName || 'Guest',
+        const amount = paymentEntity.amount / 100; // Convert from paise
+        
+        // Generate PDF Buffer
+        const pdfBuffer = await generateInvoicePDF({
+          userName: bookingData.customerName || 'Explorer',
+          userEmail: bookingData.customerEmail,
           bookingId: bookingId,
-          hotelName: bookingData.hotelName || 'Himalayan Property',
+          hotelName: bookingData.hotelName || 'Himalayan Stay',
           checkIn: bookingData.checkIn || 'TBD',
           checkOut: bookingData.checkOut || 'TBD',
-          amount: paymentEntity.amount / 100, // Convert from paise
-          paymentId: paymentEntity.id,
+          amount: amount,
+          date: new Date().toLocaleDateString()
+        });
+
+        // Send via SMTP
+        await sendInvoiceEmail({
+          to: bookingData.customerEmail,
+          userName: bookingData.customerName || 'Explorer',
+          bookingId: bookingId,
+          amount: amount,
+          pdfBuffer: pdfBuffer
         });
       }
     }
