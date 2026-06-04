@@ -43,7 +43,7 @@ export default function LandingPage() {
   return (
     <div className="bg-background min-h-screen font-sans selection:bg-accent selection:text-white -mt-16 lg:-mt-20">
       
-      {/* 1. HERO SECTION - Reduced Height */}
+      {/* 1. HERO SECTION */}
       <section className="relative h-[85vh] min-h-[600px] w-full flex items-center justify-center overflow-hidden">
         {heroImage && (
           <Image 
@@ -93,7 +93,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 2. ABOUT SECTION - Reduced Padding */}
+      {/* 2. ABOUT SECTION */}
       <section className="py-16 md:py-20 bg-white relative z-20 -mt-12 rounded-t-[3rem]">
         <div className="container px-6">
             <div className="max-w-4xl mx-auto text-center space-y-6">
@@ -135,7 +135,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 3. WHY CHOOSE US - Compact Layout */}
+      {/* 3. WHY CHOOSE US */}
       <section className="py-16 md:py-20 bg-background">
         <div className="container px-6">
             <div className="text-center mb-12 space-y-2">
@@ -165,7 +165,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 4. FEATURED DESTINATIONS - Smaller Cards */}
+      {/* 4. FEATURED DESTINATIONS */}
       <section className="py-16 md:py-20 bg-white">
         <div className="container px-6">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
@@ -218,7 +218,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 5. VISUAL ARCHIVE - Compact Gallery */}
+      {/* 5. VISUAL ARCHIVE */}
       <section className="py-16 md:py-20 bg-background">
         <div className="container px-6">
             <div className="text-center mb-12 space-y-2">
@@ -236,7 +236,7 @@ export default function LandingPage() {
                         muted 
                         loop 
                         playsInline 
-                        className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-[2000ms]"
+                        className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-1000"
                     >
                         <source src="https://www.pexels.com/download/video/20594056/" type="video/mp4" />
                     </video>
@@ -317,7 +317,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 6. FINAL CTA BANNER - Compact */}
+      {/* 6. FINAL CTA BANNER */}
       <section className="py-16 md:py-20 relative overflow-hidden bg-white">
         <div className="container px-6 text-center">
             <div className="max-w-4xl mx-auto space-y-8">
