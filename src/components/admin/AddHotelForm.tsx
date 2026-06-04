@@ -31,14 +31,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { dummyCities } from '@/lib/dummy-data';
-import { Loader2, Trash2, PlusCircle, Link as LinkIcon } from 'lucide-react';
+import { Loader2, Trash2, PlusCircle, Link as LinkIcon, Check } from 'lucide-react';
 import { Separator } from '../ui/separator';
 import { Card, CardContent, CardHeader } from '../ui/card';
 
 const allAmenities = ['wifi', 'parking', 'restaurant', 'bar', 'spa', 'pool', 'gym', 'mountain-view', 'garden', 'library', 'river-view', 'ghat', 'adventure', 'trekking', 'skiing', 'heritage', 'safari'];
 
 const roomSchema = z.object({
-  type: z.enum(['Standard', 'Deluxe', 'Suite']),
+  type: z.string().min(2, 'Room type is required'),
   price: z.coerce.number().min(1, 'Price must be positive.'),
   capacity: z.coerce.number().min(1, 'Capacity must be at least 1.'),
   totalRooms: z.coerce.number().min(1, 'Total rooms must be at least 1.'),
@@ -105,37 +105,48 @@ export function AddHotelForm() {
     }
     setIsLoading(true);
 
-    const hotelId = slugify(values.name, { lower: true, strict: true });
-    const batch = writeBatch(firestore);
-
-    // Normalize image links
-    const imagesArray = values.imagesRaw.split(',').map(url => url.trim()).filter(Boolean);
-
-    const minPrice = Math.min(...values.rooms.map(r => r.price));
-
-    const hotelRef = doc(firestore, 'hotels', hotelId);
-    const { rooms, imagesRaw, ...hotelData } = values;
-    batch.set(hotelRef, {
-        ...hotelData,
-        images: imagesArray,
-        minPrice,
-    });
-
-    for (const room of rooms) {
-        const roomId = slugify(`${values.name} ${room.type} ${Math.random().toString(36).substring(2, 7)}`, { lower: true, strict: true });
-        const roomRef = doc(firestore, 'hotels', hotelId, 'rooms', roomId);
-        batch.set(roomRef, {
-            hotelId: hotelId,
-            ...room,
-            availableRooms: room.totalRooms,
-        });
-    }
-    
     try {
+        const hotelId = slugify(values.name, { lower: true, strict: true }) + '-' + Math.random().toString(36).substring(2, 5);
+        const batch = writeBatch(firestore);
+
+        const imagesArray = values.imagesRaw.split(',').map(url => url.trim()).filter(Boolean);
+        const minPrice = Math.min(...values.rooms.map(r => r.price));
+
+        const hotelRef = doc(firestore, 'hotels', hotelId);
+        const { rooms, imagesRaw, ...hotelData } = values;
+        
+        batch.set(hotelRef, {
+            ...hotelData,
+            images: imagesArray,
+            minPrice,
+            mountainSafetyScore: 80,
+            landslideRisk: 'Low',
+            roadCondition: 'Good',
+            networkJio: true,
+            networkAirtel: true,
+            networkBsnl: false,
+            isSnowFriendly: true,
+            isElderlySafe: true,
+            hasPowerBackup: true,
+            nearestAtmKm: 2,
+            cabFareToCenter: 300,
+            balconyWorthIt: true,
+        });
+
+        for (const room of rooms) {
+            const roomId = slugify(`${values.name} ${room.type} ${Math.random().toString(36).substring(2, 7)}`, { lower: true, strict: true });
+            const roomRef = doc(firestore, 'hotels', hotelId, 'rooms', roomId);
+            batch.set(roomRef, {
+                hotelId: hotelId,
+                ...room,
+                availableRooms: room.totalRooms,
+            });
+        }
+    
         await batch.commit();
         toast({
             title: 'Hotel Added!',
-            description: `${values.name} has been successfully created.`,
+            description: `${values.name} node has been established.`,
         });
         router.push('/admin/hotels');
         router.refresh();
@@ -144,7 +155,7 @@ export function AddHotelForm() {
         toast({
             variant: 'destructive',
             title: 'Error',
-            description: error.message || 'Could not add hotel.',
+            description: error.message || 'Could not add hotel node.',
         });
       } finally {
         setIsLoading(false);
@@ -157,16 +168,16 @@ export function AddHotelForm() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <FormField control={form.control} name="name" render={({ field }) => (
                 <FormItem>
-                <FormLabel>Hotel Name</FormLabel>
-                <FormControl><Input placeholder="e.g. The Grand Himalayan" {...field} /></FormControl>
+                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Hotel Name</FormLabel>
+                <FormControl><Input placeholder="e.g. The Grand Himalayan" {...field} className="h-12 rounded-none" /></FormControl>
                 <FormMessage />
                 </FormItem>
             )} />
              <FormField control={form.control} name="city" render={({ field }) => (
                 <FormItem>
-                <FormLabel>City</FormLabel>
+                <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">City Hub</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl><SelectTrigger><SelectValue placeholder="Select a city" /></SelectTrigger></FormControl>
+                    <FormControl><SelectTrigger className="h-12 rounded-none"><SelectValue placeholder="Select a city" /></SelectTrigger></FormControl>
                     <SelectContent>
                     {dummyCities.map(city => (<SelectItem key={city.id} value={city.name}>{city.name}</SelectItem>))}
                     </SelectContent>
@@ -177,143 +188,98 @@ export function AddHotelForm() {
         </div>
         <FormField control={form.control} name="description" render={({ field }) => (
             <FormItem>
-            <FormLabel>Description</FormLabel>
-            <FormControl><Textarea placeholder="Tell us about this wonderful hotel" className="resize-y" {...field} /></FormControl>
+            <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Detailed Summary</FormLabel>
+            <FormControl><Textarea placeholder="Describe the property node..." className="resize-y min-h-[150px] rounded-none" {...field} /></FormControl>
             <FormMessage />
             </FormItem>
         )} />
-        <FormField control={form.control} name="address" render={({ field }) => (
-            <FormItem>
-            <FormLabel>Full Address</FormLabel>
-            <FormControl><Textarea placeholder="e.g. Mall Road, Near High Court, Nainital, Uttarakhand 263001" className="resize-y" {...field} /></FormControl>
-            <FormMessage />
-            </FormItem>
-        )} />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <FormField control={form.control} name="rating" render={({ field }) => (
-                <FormItem>
-                <FormLabel>Rating</FormLabel>
-                <FormControl><Input type="number" step="0.1" min="1" max="5" {...field} /></FormControl>
-                <FormMessage />
-                </FormItem>
-            )} />
-             <FormField control={form.control} name="discount" render={({ field }) => (
-                <FormItem>
-                <FormLabel>Discount (%)</FormLabel>
-                <FormControl><Input type="number" step="1" min="0" max="100" placeholder="e.g. 15" {...field} onChange={event => field.onChange(+event.target.value)} /></FormControl>
-                <FormMessage />
-                </FormItem>
-            )} />
-        </div>
-
+        
         <Separator />
 
         <div className="space-y-4">
             <div className="flex items-center gap-2">
                 <LinkIcon className="h-5 w-5 text-primary" />
-                <h3 className="text-lg font-black tracking-tight">Gallery Image Links</h3>
+                <h3 className="text-lg font-black tracking-tight text-primary uppercase">Gallery Image Links</h3>
             </div>
             <FormField control={form.control} name="imagesRaw" render={({ field }) => (
                 <FormItem>
-                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Photos URLs</FormLabel>
+                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Photos URLs (Comma Separated)</FormLabel>
                     <FormControl>
                         <Textarea 
-                            placeholder="Paste direct image links here, separated by commas (e.g. https://img1.jpg, https://img2.jpg)" 
+                            placeholder="https://img1.jpg, https://img2.jpg" 
                             className="min-h-[120px] rounded-none font-sans" 
                             {...field} 
                         />
                     </FormControl>
-                    <FormDescription className="text-[9px] font-bold text-blue-600">
-                        Enter links ending in .jpg, .png or .webp. First link will be the main preview.
-                    </FormDescription>
                     <FormMessage />
                 </FormItem>
             )} />
         </div>
 
         <Separator />
-
-        <div>
-            <h3 className="text-lg font-medium">Unique Features</h3>
-            <FormDescription>Add special details that make this hotel stand out.</FormDescription>
-        </div>
-        <FormField control={form.control} name="isVerifiedPahadiHost" render={({ field }) => (
-            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                <div className="space-y-0.5">
-                    <FormLabel>Verified Pahadi Host</FormLabel>
-                    <FormDescription>Enable this badge for locally owned properties.</FormDescription>
-                </div>
-                <FormControl><Switch checked={field.value} onCheckedChange={field.onChange}/></FormControl>
-            </FormItem>
-        )} />
         
-        <Separator />
+        <div>
+            <h3 className="text-lg font-black tracking-tight text-primary uppercase">Standard Amenities</h3>
+            <FormDescription className="text-[10px] font-bold uppercase">Select facilities available at this node.</FormDescription>
+        </div>
         
         <FormField control={form.control} name="amenities" render={() => (
             <FormItem>
-                <div className="mb-4"><FormLabel className="text-base">Standard Amenities</FormLabel></div>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-2 border rounded-md">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-6 border bg-muted/10 rounded-none">
                 {allAmenities.map((item) => (
                     <FormField key={item} control={form.control} name="amenities" render={({ field }) => (
                         <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                             <FormControl><Checkbox checked={field.value?.includes(item)} onCheckedChange={(checked) => (checked ? field.onChange([...(field.value || []), item]) : field.onChange((field.value || [])?.filter((value) => value !== item)))}/></FormControl>
-                            <FormLabel className="text-sm font-normal capitalize">{item.replace('-', ' ')}</FormLabel>
+                            <FormLabel className="text-[10px] font-black uppercase tracking-tight cursor-pointer">{item.replace('-', ' ')}</FormLabel>
                         </FormItem>
                     )} />
                 ))}
                 </div>
-                <FormMessage className="mt-2" />
+                <FormMessage />
             </FormItem>
         )} />
 
         <Separator />
         
         <div>
-            <h3 className="text-lg font-medium">Room Types</h3>
-            <FormDescription>Define the rooms available in this hotel.</FormDescription>
+            <h3 className="text-lg font-black tracking-tight text-primary uppercase">Inventory Configuration</h3>
+            <FormDescription className="text-[10px] font-bold uppercase">Define available room types and pricing.</FormDescription>
         </div>
 
         <div className="space-y-4">
           {roomFields.map((field, index) => (
-            <Card key={field.id} className="p-4 bg-muted/30">
-                <CardHeader className="flex flex-row items-center justify-between p-0 pb-4">
-                     <h4 className="font-semibold">Room Configuration {index + 1}</h4>
-                     <Button type="button" variant="ghost" size="icon" onClick={() => removeRoom(index)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+            <Card key={field.id} className="rounded-none border-border bg-white shadow-sm overflow-hidden">
+                <CardHeader className="flex flex-row items-center justify-between bg-muted/10 border-b p-4">
+                     <h4 className="text-xs font-black uppercase tracking-widest">Room Cluster {index + 1}</h4>
+                     <Button type="button" variant="ghost" size="icon" onClick={() => removeRoom(index)} className="h-8 w-8 text-destructive"><Trash2 className="h-4 w-4" /></Button>
                 </CardHeader>
-                <CardContent className="p-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <CardContent className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <FormField control={form.control} name={`rooms.${index}.type`} render={({ field }) => (
                         <FormItem>
-                        <FormLabel>Type</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl><SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger></FormControl>
-                            <SelectContent>
-                                <SelectItem value="Standard">Standard</SelectItem>
-                                <SelectItem value="Deluxe">Deluxe</SelectItem>
-                                <SelectItem value="Suite">Suite</SelectItem>
-                            </SelectContent>
-                        </Select>
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Type Label</FormControl>
+                        <FormControl><Input placeholder="e.g. Standard Deluxe" {...field} className="h-10 rounded-none" /></FormControl>
                         <FormMessage />
                         </FormItem>
                     )} />
                      <FormField control={form.control} name={`rooms.${index}.price`} render={({ field }) => (
-                        <FormItem><FormLabel>Price/night</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+                        <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Net Price</FormLabel><FormControl><Input type="number" {...field} className="h-10 rounded-none" /></FormControl><FormMessage /></FormItem>
                     )} />
                     <FormField control={form.control} name={`rooms.${index}.capacity`} render={({ field }) => (
-                        <FormItem><FormLabel>Capacity</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+                        <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Max Pax</FormLabel><FormControl><Input type="number" {...field} className="h-10 rounded-none" /></FormControl><FormMessage /></FormItem>
                     )} />
                      <FormField control={form.control} name={`rooms.${index}.totalRooms`} render={({ field }) => (
-                        <FormItem><FormLabel>Total Units</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+                        <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Inventory Units</FormLabel><FormControl><Input type="number" {...field} className="h-10 rounded-none" /></FormControl><FormMessage /></FormItem>
                     )} />
                 </CardContent>
             </Card>
           ))}
-          <Button type="button" variant="outline" size="sm" onClick={() => appendRoom({ type: 'Standard', price: 5000, capacity: 2, totalRooms: 10 })}><PlusCircle className="mr-2 h-4 w-4" /> Add Room Type</Button>
+          <Button type="button" variant="outline" className="rounded-none font-bold" onClick={() => appendRoom({ type: 'Standard', price: 5000, capacity: 2, totalRooms: 10 })}><PlusCircle className="mr-2 h-4 w-4" /> Add Room Category</Button>
         </div>
 
         <div className="flex items-center justify-start pt-8 border-t">
-            <Button type="submit" disabled={isLoading} className="h-14 px-10 rounded-full font-black text-lg">
-                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isLoading ? 'Saving Property...' : 'Register Hotel'}
+            <Button type="submit" disabled={isLoading} className="h-14 px-12 rounded-none font-black text-lg bg-primary shadow-xl">
+                {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Check className="mr-2 h-5 w-5" />}
+                {isLoading ? 'Synchronizing...' : 'Initialize Property'}
             </Button>
         </div>
       </form>

@@ -33,7 +33,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { dummyCities } from '@/lib/dummy-data';
-import { Loader2, Trash2, PlusCircle, ShieldAlert, Link as LinkIcon } from 'lucide-react';
+import { Loader2, Trash2, PlusCircle, ShieldAlert, Link as LinkIcon, Check } from 'lucide-react';
 import { Separator } from '../ui/separator';
 import { Card, CardContent, CardHeader } from '../ui/card';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
@@ -42,7 +42,7 @@ const allAmenities = ['wifi', 'parking', 'restaurant', 'bar', 'spa', 'pool', 'gy
 
 const roomSchema = z.object({
   id: z.string().optional(),
-  type: z.enum(['Standard', 'Deluxe', 'Suite']),
+  type: z.string().min(2, 'Room type is required'),
   price: z.coerce.number().min(1, 'Price must be positive.'),
   capacity: z.coerce.number().min(1, 'Capacity must be at least 1.'),
   totalRooms: z.coerce.number().min(1, 'Total rooms must be at least 1.'),
@@ -90,14 +90,14 @@ export function EditHotelForm({ hotel, rooms: initialRooms }: EditHotelFormProps
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: hotel.name,
-      city: hotel.city,
-      description: hotel.description,
+      name: hotel.name || '',
+      city: hotel.city || '',
+      description: hotel.description || '',
       address: hotel.address || '',
-      rating: hotel.rating,
+      rating: hotel.rating || 4,
       discount: hotel.discount || 0,
-      amenities: hotel.amenities,
-      imagesRaw: hotel.images.join(', '),
+      amenities: hotel.amenities || [],
+      imagesRaw: hotel.images?.join(', ') || '',
       rooms: initialRooms.map(r => ({...r})),
       isVerifiedPahadiHost: hotel.isVerifiedPahadiHost || false,
       ecoPractices: hotel.ecoPractices || { waterSaving: false, plasticFree: false, localSourcing: false },
@@ -118,54 +118,55 @@ export function EditHotelForm({ hotel, rooms: initialRooms }: EditHotelFormProps
     const hotelId = hotel.id;
     const batch = writeBatch(firestore);
 
-    // Normalize image links
-    const imagesArray = values.imagesRaw.split(',').map(url => url.trim()).filter(Boolean);
-    
-    const minPrice = values.rooms.length > 0 ? Math.min(...values.rooms.map(r => r.price)) : 0;
-
-    const hotelRef = doc(firestore, 'hotels', hotelId);
-    const { rooms, imagesRaw, ...hotelData } = values;
-    batch.update(hotelRef, { 
-        ...hotelData, 
-        images: imagesArray,
-        minPrice 
-    });
-
-    for (const room of rooms) {
-        const { id: roomId, ...roomData } = room;
-        if (roomId) {
-            const roomRef = doc(firestore, 'hotels', hotelId, 'rooms', roomId);
-            const currentInitialRoom = initialRooms.find(r => r.id === roomId);
-            const totalRoomsDelta = currentInitialRoom ? room.totalRooms - currentInitialRoom.totalRooms : 0;
-            const newAvailableRooms = (currentInitialRoom?.availableRooms ?? 0) + totalRoomsDelta;
-
-            batch.update(roomRef, { 
-                ...roomData,
-                availableRooms: newAvailableRooms >= 0 ? newAvailableRooms : 0,
-            });
-        } else {
-            const newRoomId = slugify(`${values.name} ${room.type} ${Math.random().toString(36).substring(2, 7)}`, { lower: true, strict: true });
-            const roomRef = doc(firestore, 'hotels', hotelId, 'rooms', newRoomId);
-            batch.set(roomRef, {
-                hotelId: hotelId,
-                ...roomData,
-                availableRooms: room.totalRooms,
-            });
-        }
-    }
-
-    for (const rid of roomsToDelete) {
-        const roomRef = doc(firestore, 'hotels', hotelId, 'rooms', rid);
-        batch.delete(roomRef);
-    }
-    
     try {
+        const imagesArray = values.imagesRaw.split(',').map(url => url.trim()).filter(Boolean);
+        const minPrice = values.rooms.length > 0 ? Math.min(...values.rooms.map(r => r.price)) : 0;
+
+        const hotelRef = doc(firestore, 'hotels', hotelId);
+        const { rooms, imagesRaw, ...hotelData } = values;
+        
+        batch.update(hotelRef, { 
+            ...hotelData, 
+            images: imagesArray,
+            minPrice,
+            updatedAt: new Date().toISOString()
+        });
+
+        for (const room of rooms) {
+            const { id: roomId, ...roomData } = room;
+            if (roomId) {
+                const roomRef = doc(firestore, 'hotels', hotelId, 'rooms', roomId);
+                const currentInitialRoom = initialRooms.find(r => r.id === roomId);
+                const totalRoomsDelta = currentInitialRoom ? room.totalRooms - currentInitialRoom.totalRooms : 0;
+                const newAvailableRooms = (currentInitialRoom?.availableRooms ?? 0) + totalRoomsDelta;
+
+                batch.update(roomRef, { 
+                    ...roomData,
+                    availableRooms: newAvailableRooms >= 0 ? newAvailableRooms : 0,
+                });
+            } else {
+                const newRoomId = slugify(`${values.name} ${room.type} ${Math.random().toString(36).substring(2, 7)}`, { lower: true, strict: true });
+                const roomRef = doc(firestore, 'hotels', hotelId, 'rooms', newRoomId);
+                batch.set(roomRef, {
+                    hotelId: hotelId,
+                    ...roomData,
+                    availableRooms: room.totalRooms,
+                });
+            }
+        }
+
+        for (const rid of roomsToDelete) {
+            const roomRef = doc(firestore, 'hotels', hotelId, 'rooms', rid);
+            batch.delete(roomRef);
+        }
+    
         await batch.commit();
-        toast({ title: 'Hotel Updated!', description: `${values.name} inventory synced.` });
+        toast({ title: 'Hotel Updated!', description: `Inventory for "${values.name}" synchronized.` });
         router.push('/admin/hotels');
         router.refresh();
       } catch (error: any) {
-        toast({ variant: 'destructive', title: 'Error', description: error.message });
+        console.error("[FORM ERROR]:", error);
+        toast({ variant: 'destructive', title: 'Update Failed', description: error.message || 'Could not sync property data.' });
       } finally {
         setIsLoading(false);
       }
@@ -191,7 +192,7 @@ export function EditHotelForm({ hotel, rooms: initialRooms }: EditHotelFormProps
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(onSubmit, (err) => console.log("Validation Errors:", err))} className="space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <FormField control={form.control} name="name" render={({ field }) => (
                 <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Property Name</FormLabel><FormControl><Input {...field} className="h-12 rounded-none" /></FormControl><FormMessage /></FormItem>
@@ -218,7 +219,7 @@ export function EditHotelForm({ hotel, rooms: initialRooms }: EditHotelFormProps
             </div>
             <FormField control={form.control} name="imagesRaw" render={({ field }) => (
                 <FormItem>
-                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Photo URLs</FormLabel>
+                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Photo URLs (Comma Separated)</FormLabel>
                     <FormControl>
                         <Textarea 
                             placeholder="Paste direct image links here, separated by commas" 
@@ -226,7 +227,6 @@ export function EditHotelForm({ hotel, rooms: initialRooms }: EditHotelFormProps
                             {...field} 
                         />
                     </FormControl>
-                    <FormDescription className="text-[10px] font-black uppercase tracking-widest">Provide a comma-separated list of image links.</FormDescription>
                     <FormMessage />
                 </FormItem>
             )} />
@@ -244,10 +244,48 @@ export function EditHotelForm({ hotel, rooms: initialRooms }: EditHotelFormProps
         </div>
 
         <Separator />
+
+        <div>
+            <h3 className="text-lg font-black tracking-tight text-primary uppercase">Inventory Sync</h3>
+            <FormDescription className="text-[10px] font-bold uppercase">Update room categories and pricing.</FormDescription>
+        </div>
+
+        <div className="space-y-4">
+          {roomFields.map((field, index) => (
+            <Card key={field.id} className="rounded-none border-border bg-white overflow-hidden shadow-sm">
+                <CardHeader className="flex flex-row items-center justify-between bg-muted/10 border-b p-4">
+                     <h4 className="text-xs font-black uppercase tracking-widest">Category Cluster {index + 1}</h4>
+                     <Button type="button" variant="ghost" size="icon" onClick={() => {
+                         if (field.id) setRoomsToDelete(prev => [...prev, field.id as string]);
+                         removeRoom(index);
+                     }} className="h-8 w-8 text-destructive"><Trash2 className="h-4 w-4" /></Button>
+                </CardHeader>
+                <CardContent className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <FormField control={form.control} name={`rooms.${index}.type`} render={({ field }) => (
+                        <FormItem>
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Label</FormControl>
+                        <FormControl><Input placeholder="e.g. Superior View" {...field} className="h-10 rounded-none" /></FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )} />
+                     <FormField control={form.control} name={`rooms.${index}.price`} render={({ field }) => (
+                        <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Rate</FormLabel><FormControl><Input type="number" {...field} className="h-10 rounded-none" /></FormControl><FormMessage /></FormItem>
+                    )} />
+                    <FormField control={form.control} name={`rooms.${index}.capacity`} render={({ field }) => (
+                        <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Pax</FormLabel><FormControl><Input type="number" {...field} className="h-10 rounded-none" /></FormControl><FormMessage /></FormItem>
+                    )} />
+                     <FormField control={form.control} name={`rooms.${index}.totalRooms`} render={({ field }) => (
+                        <FormItem><FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Units</FormLabel><FormControl><Input type="number" {...field} className="h-10 rounded-none" /></FormControl><FormMessage /></FormItem>
+                    )} />
+                </CardContent>
+            </Card>
+          ))}
+          <Button type="button" variant="outline" className="rounded-none font-bold" onClick={() => appendRoom({ type: 'Standard', price: 5000, capacity: 2, totalRooms: 10 })}><PlusCircle className="mr-2 h-4 w-4" /> Add Inventory Tier</Button>
+        </div>
         
         <div className="flex items-center justify-between pt-8 border-t gap-4">
             <Button type="submit" disabled={isLoading || isDeleting} className="h-14 px-10 rounded-none font-black text-lg bg-[#003580] hover:bg-[#002b60] shadow-xl flex-1">
-                {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PlusCircle className="mr-2 h-4 w-4" />}
+                {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
                 {isLoading ? 'Synchronizing...' : 'Sync Property Data'}
             </Button>
             
@@ -264,13 +302,13 @@ export function EditHotelForm({ hotel, rooms: initialRooms }: EditHotelFormProps
                             <ShieldAlert className="h-6 w-6 text-red-600" /> Confirm Deletion
                         </AlertDialogTitle>
                         <AlertDialogDescription className="text-muted-foreground font-medium text-base">
-                            This will wipe all room inventory, reviews, and current booking associations for <strong>"{hotel.name}"</strong> from the Northern Harrier cloud. This is irreversible.
+                            This will wipe all inventory for <strong>"{hotel.name}"</strong>.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="mt-6">
                         <AlertDialogCancel className="rounded-none h-11 font-bold">Cancel</AlertDialogCancel>
                         <AlertDialogAction onClick={handleDeleteHotel} className="bg-red-600 hover:bg-red-700 text-white rounded-none h-11 font-black px-8">
-                            Confirm Permanent Purge
+                            Confirm Purge
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
