@@ -1,10 +1,16 @@
-import { genkit } from 'genkit';
+import { genkit, z } from 'genkit';
 import { googleAI } from '@genkit-ai/google-genai';
 
-// This is the central AI configuration for the application.
-// It initializes Genkit with the Google AI plugin, allowing us to use models like Gemini.
+/**
+ * @fileOverview Central AI configuration for Northern Harrier.
+ * Initialized with Genkit v1.x and Google AI plugin.
+ */
+
 export const ai = genkit({
   plugins: [
     googleAI(),
   ],
+  model: googleAI.model('gemini-2.5-flash'), // Set production default model
 });
+
+export { z };

@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview Tripzy Review Summarizer.
@@ -6,6 +5,7 @@
  */
 
 import { ai } from '@/ai/genkit';
+import { googleAI } from '@genkit-ai/google-genai';
 import { z } from 'genkit';
 
 const ReviewSummaryInputSchema = z.object({
@@ -24,7 +24,7 @@ export async function summarizeReviewsAction(input: z.infer<typeof ReviewSummary
 
 const prompt = ai.definePrompt({
   name: 'reviewSummaryPrompt',
-  model: 'googleai/gemini-1.5-flash',
+  model: googleAI.model('gemini-2.5-flash'),
   input: { schema: ReviewSummaryInputSchema },
   output: { schema: ReviewSummaryOutputSchema },
   prompt: `You are Tripzy's resident hotel critic.

@@ -1,10 +1,11 @@
 'use server';
 /**
  * @fileOverview Tripzy AI Destination Vibe Matcher.
- * Uses Gemini 1.5 Flash to suggest the perfect Himalayan escape.
+ * Uses Gemini 2.5 Flash to suggest the perfect Himalayan escape.
  */
 
 import { ai } from '@/ai/genkit';
+import { googleAI } from '@genkit-ai/google-genai';
 import {
   VibeMatchInputSchema,
   VibeMatchOutputSchema,
@@ -21,7 +22,7 @@ type VibeMatchResult = {
 
 const suggestionPrompt = ai.definePrompt({
   name: 'vibeMatchPrompt',
-  model: 'googleai/gemini-1.5-flash',
+  model: googleAI.model('gemini-2.5-flash'),
   input: { schema: VibeMatchInputSchema },
   output: { schema: VibeMatchOutputSchema },
   prompt: `You are a professional travel curator for Tripzy, specialized in Uttarakhand.
