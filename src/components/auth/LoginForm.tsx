@@ -18,13 +18,9 @@ import {
   Mountain, 
   Star, 
   Heart, 
-  ShieldCheck, 
-  Shield, 
-  Headphones 
 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import Image from 'next/image';
-import { cn } from '@/lib/utils';
 
 /**
  * @fileOverview Cinematic Split-Panel Login Node.
@@ -199,7 +195,7 @@ export function LoginForm() {
                         <div className="space-y-2">
                             <div className="flex justify-between items-center px-1">
                                 <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Password</Label>
-                                <Link href="/forgot-password text-[10px] font-black text-primary hover:underline">Forgot Password?</Link>
+                                <Link href="/forgot-password" size="sm" className="text-[10px] font-black text-primary hover:underline">Forgot Password?</Link>
                             </div>
                             <div className="relative">
                                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -242,19 +238,6 @@ export function LoginForm() {
                 </div>
             </div>
         </div>
-      </div>
-
-      {/* Trust Badges Footer */}
-      <div className="fixed bottom-8 w-full left-0 flex justify-center items-center gap-10 md:gap-20 text-[10px] font-black text-slate-400 uppercase tracking-widest z-10 hidden md:flex">
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4" /> Secure & Private
-          </div>
-          <div className="flex items-center gap-2">
-            <Shield className="h-4 w-4" /> Your data is safe with us
-          </div>
-          <div className="flex items-center gap-2">
-            <Headphones className="h-4 w-4" /> 24/7 Customer Support
-          </div>
       </div>
     </div>
   );

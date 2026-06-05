@@ -24,9 +24,6 @@ import {
   Mountain, 
   Star, 
   Heart, 
-  ShieldCheck, 
-  Shield, 
-  Headphones,
   UserPlus,
   Mail,
   Lock,
@@ -296,12 +293,6 @@ export function SignupForm() {
                 </p>
             </div>
         </div>
-      </div>
-
-      <div className="fixed bottom-8 w-full left-0 flex justify-center items-center gap-10 md:gap-20 text-[10px] font-black text-slate-400 uppercase tracking-widest z-10 hidden md:flex">
-          <div className="flex items-center gap-2"><ShieldCheck className="h-4 w-4" /> Secure & Private</div>
-          <div className="flex items-center gap-2"><Shield className="h-4 w-4" /> Your data is safe with us</div>
-          <div className="flex items-center gap-2"><Headphones className="h-4 w-4" /> 24/7 Customer Support</div>
       </div>
     </div>
   );
