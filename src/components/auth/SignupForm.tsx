@@ -36,20 +36,19 @@ import { Separator } from '@/components/ui/separator';
 import { sendSignupOTPAction, verifyOTPAction } from '@/app/auth/actions';
 
 /**
- * @fileOverview Premium Expedition Onboarding Node for Northern Harrier.
- * Multi-step verification with luxury Himalayan styling.
+ * @fileOverview Compact Expedition Onboarding Node.
  */
 
 const formSchema = z.object({
-  name: z.string().min(2, { message: 'Legal name must be at least 2 characters.' }),
+  name: z.string().min(2, { message: 'Legal name required.' }),
   email: z.string().email({ message: 'Valid email node required.' }),
   mobile: z
     .string()
-    .length(10, { message: 'Mobile node must be exactly 10 digits.' })
-    .regex(/^\d{10}$/, { message: 'Numeric characters only.' }),
+    .length(10, { message: '10 digits required.' })
+    .regex(/^\d{10}$/, { message: 'Numbers only.' }),
   password: z
     .string()
-    .min(8, { message: 'Key must be at least 8 characters long.' })
+    .min(8, { message: 'Min 8 characters.' })
 });
 
 export function SignupForm() {
@@ -105,11 +104,11 @@ export function SignupForm() {
         status: 'active',
       }, { merge: true });
 
-      toast({ title: 'Identity Established', description: 'Welcome to Northern Harrier.' });
+      toast({ title: 'Identity Established', description: 'Welcome explorer.' });
       router.push('/my-bookings');
     } catch (err: any) {
       if (err.code !== 'auth/popup-closed-by-user') {
-        setServerError(err.message || "Identity link failed.");
+        setServerError("Identity link failed.");
       }
     } finally {
       setIsGoogleLoading(false);
@@ -129,13 +128,13 @@ export function SignupForm() {
         
         if (res.success) {
           setOtpSent(true);
-          toast({ title: 'Protocol Initialized', description: res.message });
+          toast({ title: 'Code Dispatched', description: res.message });
         } else {
           setServerError(res.message);
           setUseFallback(true);
         }
     } catch (e: any) {
-        setServerError("Authentication server unreachable.");
+        setServerError("Auth node offline.");
         setUseFallback(true);
     } finally {
         setIsLoading(false);
@@ -154,7 +153,7 @@ export function SignupForm() {
     if (verifyRes.success) {
         handleStandardRegistration();
     } else {
-        setServerError(verifyRes.message || "Incorrect verification sequence.");
+        setServerError(verifyRes.message || "Incorrect sequence.");
     }
     setIsVerifying(false);
   };
@@ -175,95 +174,95 @@ export function SignupForm() {
             status: 'active',
         };
         await setDoc(doc(firestore, 'users', fbUser.uid), newUserProfile);
-        toast({ title: 'Node Established', description: 'Welcome to the expedition grid.' });
+        toast({ title: 'Node Established', description: 'Welcome to the grid.' });
         router.push('/my-bookings');
     } catch (error: any) {
-        setServerError(error.message || "Registration failed.");
+        setServerError("Registration failed.");
     } finally {
         setIsLoading(false);
     }
   }
 
   return (
-    <div className="container min-h-screen flex items-center justify-center py-24 bg-background/50">
-      <Card className="w-full max-w-md shadow-apple-deep border-black/5 bg-white/80 backdrop-blur-xl rounded-[3rem] overflow-hidden">
-        <CardHeader className="text-center space-y-4 p-10 pb-6">
-          <div className="mx-auto bg-primary/5 p-6 rounded-full w-fit group">
+    <div className="container min-h-[90vh] flex items-center justify-center py-16 bg-background/50">
+      <Card className="w-full max-w-sm shadow-apple-deep border-black/5 bg-white/90 backdrop-blur-xl rounded-[2.5rem] overflow-hidden">
+        <CardHeader className="text-center space-y-3 p-8 pb-4">
+          <div className="mx-auto bg-primary/5 p-4 rounded-full w-fit">
             {otpSent ? (
-                <MailCheck className="h-10 w-10 text-primary animate-bounce" />
+                <MailCheck className="h-8 w-8 text-primary animate-pulse" />
             ) : (
-                <Fingerprint className="h-10 w-10 text-primary group-hover:scale-110 transition-transform duration-500" />
+                <Fingerprint className="h-8 w-8 text-primary" />
             )}
           </div>
-          <div className="space-y-1">
-            <CardTitle className="font-black text-4xl tracking-tighter uppercase text-primary">
+          <div className="space-y-0.5">
+            <CardTitle className="font-black text-2xl tracking-tighter uppercase text-primary">
                 {otpSent ? 'Verify Protocol' : 'Join Expedition'}
             </CardTitle>
-            <CardDescription className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">
-                {otpSent ? `Sequence sent to inbox` : 'Establish Your Himalayan Identity'}
+            <CardDescription className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground">
+                Establish Your Identity
             </CardDescription>
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-8 px-10 pb-10">
+        <CardContent className="space-y-6 px-8 pb-8">
           {!otpSent ? (
             <>
               <Button
                 variant="outline"
-                className="w-full h-14 rounded-2xl text-[10px] font-black tracking-widest border-black/10 flex items-center justify-center gap-3 transition-all hover:bg-muted bg-white"
+                className="w-full h-12 rounded-xl text-[9px] font-black uppercase tracking-widest border-black/5 flex items-center justify-center gap-3 transition-all hover:bg-muted bg-white"
                 onClick={handleGoogleSignup}
                 disabled={isGoogleLoading || isLoading}
               >
-                {isGoogleLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Chrome className="h-5 w-5 text-blue-500" />}
+                {isGoogleLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Chrome className="h-4 w-4 text-blue-500" />}
                 <span>ID SYNC VIA GOOGLE</span>
               </Button>
 
               <div className="relative flex items-center justify-center">
-                <Separator className="absolute w-full opacity-10" />
-                <span className="relative bg-white px-4 text-[9px] font-black uppercase tracking-[0.3em] text-slate-300">Secure Node</span>
+                <Separator className="absolute w-full opacity-5" />
+                <span className="relative bg-white/95 px-3 text-[8px] font-black uppercase tracking-[0.2em] text-slate-300">Secure Node</span>
               </div>
 
               <Form {...form}>
-                <form className="space-y-5">
+                <form className="space-y-4">
                   <FormField control={form.control} name="name" render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest ml-2">Explorer Name</FormLabel>
-                      <FormControl><Input placeholder="Full Legal Name" {...field} className="h-14 rounded-2xl bg-muted/30 border-0 focus-visible:ring-primary font-bold px-5" /></FormControl>
-                      <FormMessage />
+                      <FormLabel className="text-[9px] font-black uppercase tracking-widest ml-1">Legal Name</FormLabel>
+                      <FormControl><Input placeholder="Explorer Name" {...field} className="h-12 rounded-xl bg-muted/40 border-0 focus-visible:ring-primary font-bold px-4 text-xs" /></FormControl>
+                      <FormMessage className="text-[8px]" />
                     </FormItem>
                   )} />
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <FormField control={form.control} name="email" render={({ field }) => (
                         <FormItem>
-                        <FormLabel className="text-[10px] font-black uppercase tracking-widest ml-2">Email Node</FormLabel>
-                        <FormControl><Input type="email" placeholder="node@travel.com" {...field} className="h-14 rounded-2xl bg-muted/30 border-0 focus-visible:ring-primary font-bold px-5" /></FormControl>
-                        <FormMessage />
+                        <FormLabel className="text-[9px] font-black uppercase tracking-widest ml-1">Email</FormLabel>
+                        <FormControl><Input type="email" placeholder="node@travel.com" {...field} className="h-12 rounded-xl bg-muted/40 border-0 focus-visible:ring-primary font-bold px-4 text-xs" /></FormControl>
+                        <FormMessage className="text-[8px]" />
                         </FormItem>
                     )} />
                     <FormField control={form.control} name="mobile" render={({ field }) => (
                         <FormItem>
-                        <FormLabel className="text-[10px] font-black uppercase tracking-widest ml-2">Contact</FormLabel>
-                        <FormControl><Input type="tel" placeholder="10 Digits" {...field} className="h-14 rounded-2xl bg-muted/30 border-0 focus-visible:ring-primary font-bold px-5" /></FormControl>
-                        <FormMessage />
+                        <FormLabel className="text-[9px] font-black uppercase tracking-widest ml-1">Contact</FormLabel>
+                        <FormControl><Input type="tel" placeholder="10 Digits" {...field} className="h-12 rounded-xl bg-muted/40 border-0 focus-visible:ring-primary font-bold px-4 text-xs" /></FormControl>
+                        <FormMessage className="text-[8px]" />
                         </FormItem>
                     )} />
                   </div>
 
                   <FormField control={form.control} name="password" render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest ml-2">Access Key Sequence</FormLabel>
+                      <FormLabel className="text-[9px] font-black uppercase tracking-widest ml-1">Access Key</FormLabel>
                       <div className="relative">
-                        <Input type="password" placeholder="Min 8 characters" {...field} className="h-14 rounded-2xl bg-muted/30 border-0 focus-visible:ring-primary font-bold pl-12" />
-                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/50" />
+                        <Input type="password" placeholder="Min 8 chars" {...field} className="h-12 rounded-xl bg-muted/40 border-0 focus-visible:ring-primary font-bold pl-10 text-xs" />
+                        <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40" />
                       </div>
-                      <FormMessage />
+                      <FormMessage className="text-[8px]" />
                     </FormItem>
                   )} />
 
                   {serverError && (
-                    <div className="p-4 bg-destructive/10 text-destructive text-[10px] font-black uppercase tracking-widest rounded-2xl flex items-center justify-center gap-3 border border-destructive/10">
-                        <AlertCircle className="h-4 w-4 shrink-0" />
+                    <div className="p-3 bg-destructive/10 text-destructive text-[8px] font-black uppercase tracking-widest rounded-xl flex items-center justify-center gap-2 border border-destructive/10">
+                        <AlertCircle className="h-3 w-3 shrink-0" />
                         <span>{serverError}</span>
                     </div>
                   )}
@@ -272,20 +271,19 @@ export function SignupForm() {
                     <Button
                         type="button"
                         onClick={initiateVerification}
-                        className="w-full h-16 rounded-full text-xs font-black uppercase tracking-[0.2em] bg-primary text-white shadow-xl transition-all active:scale-95 group"
+                        className="w-full h-14 rounded-full text-[10px] font-black uppercase tracking-[0.2em] bg-primary text-white shadow-lg transition-all active:scale-95 group"
                         disabled={isLoading || isGoogleLoading}
                     >
-                        {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <ShieldCheck className="mr-2 h-5 w-5" />}
+                        {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShieldCheck className="mr-2 h-4 w-4" />}
                         Initialize Node
                     </Button>
                   ) : (
                     <Button
                         type="button"
                         onClick={handleStandardRegistration}
-                        className="w-full h-16 rounded-full text-xs font-black uppercase tracking-[0.2em] bg-accent text-accent-foreground shadow-xl saffron-glow transition-all active:scale-95"
+                        className="w-full h-14 rounded-full text-[10px] font-black uppercase tracking-[0.2em] bg-accent text-accent-foreground shadow-lg transition-all active:scale-95"
                         disabled={isLoading}
                     >
-                        {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Compass className="mr-2 h-5 w-5" />}
                         JOIN DIRECTLY
                     </Button>
                   )}
@@ -293,40 +291,40 @@ export function SignupForm() {
               </Form>
             </>
           ) : (
-            <div className="space-y-10 animate-in fade-in slide-in-from-bottom-5 duration-700">
-               <div className="space-y-4 text-center">
-                  <label className="text-[11px] font-black uppercase tracking-[0.4em] text-muted-foreground block">Input Protocol Code</label>
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-3 duration-700">
+               <div className="space-y-3 text-center">
+                  <label className="text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground block">Protocol Code</label>
                   <Input 
                     type="text" 
                     maxLength={6} 
                     value={otpCode}
                     onChange={(e) => setOtpCode(e.target.value)}
-                    className="h-24 text-5xl font-black text-center tracking-[0.5em] rounded-3xl bg-muted/20 border-black/5 focus-visible:ring-primary text-primary shadow-inner"
+                    className="h-20 text-4xl font-black text-center tracking-[0.4em] rounded-2xl bg-muted/20 border-black/5 focus-visible:ring-primary text-primary"
                     placeholder="000000"
                   />
-                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Code Expires in 10 minutes</p>
+                  <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Valid for 10 minutes</p>
                </div>
                
-               {serverError && <div className="p-4 bg-destructive/10 text-destructive text-[10px] font-black uppercase tracking-widest rounded-2xl text-center border border-destructive/10">{serverError}</div>}
+               {serverError && <div className="p-3 bg-destructive/10 text-destructive text-[8px] font-black uppercase tracking-widest rounded-xl text-center border border-destructive/10">{serverError}</div>}
                
-               <div className="space-y-4">
+               <div className="space-y-3">
                     <Button
                         onClick={finalizeRegistration}
-                        className="w-full h-16 rounded-full text-xs font-black uppercase tracking-widest bg-accent text-accent-foreground shadow-xl saffron-glow transition-all active:scale-95"
+                        className="w-full h-14 rounded-full text-[10px] font-black uppercase tracking-widest bg-accent text-accent-foreground shadow-lg transition-all active:scale-95"
                         disabled={isVerifying}
                     >
-                        {isVerifying ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Sparkles className="mr-2 h-5 w-5" />}
+                        {isVerifying ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
                         Finalize Identity
                     </Button>
-                    <Button variant="ghost" onClick={() => setOtpSent(false)} className="w-full h-12 text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground hover:text-primary transition-colors" disabled={isVerifying}>
+                    <Button variant="ghost" onClick={() => setOtpSent(false)} className="w-full h-10 text-[8px] font-black uppercase tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors" disabled={isVerifying}>
                         Modify Registry Details
                     </Button>
                </div>
             </div>
           )}
         </CardContent>
-        <CardFooter className="justify-center border-t border-black/5 bg-muted/10 p-8">
-          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Known Explorer? <Link href="/login" className="font-black text-primary hover:text-accent transition-colors">Sign In</Link></p>
+        <CardFooter className="justify-center border-t border-black/5 bg-muted/5 p-6">
+          <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Known Explorer? <Link href="/login" className="font-black text-primary hover:text-accent transition-colors">Sign In</Link></p>
         </CardFooter>
       </Card>
     </div>

@@ -22,8 +22,7 @@ import { Loader2, Chrome, Mail, Lock, Sparkles, ArrowRight } from 'lucide-react'
 import { Separator } from '@/components/ui/separator';
 
 /**
- * @fileOverview Luxury Login Node for Northern Harrier.
- * Features: High-end typography, glassmorphism, and hybrid auth sync.
+ * @fileOverview Compact Luxury Login Node.
  */
 
 export function LoginForm() {
@@ -108,46 +107,46 @@ export function LoginForm() {
       const redirect = searchParams.get('redirect') || '/my-bookings';
       router.push(redirect);
     } catch (err: any) {
-        setError('Invalid credentials node. Please verify email and key.');
+        setError('Invalid credentials node.');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="container min-h-[90vh] flex items-center justify-center py-20 bg-background/50">
-      <Card className="w-full max-w-md rounded-[3rem] shadow-apple-deep border-black/5 overflow-hidden bg-white/80 backdrop-blur-xl">
-        <CardHeader className="text-center p-10 pb-6 space-y-4">
-          <div className="mx-auto bg-primary/5 p-6 rounded-full w-fit group">
-            <Sparkles className="h-10 w-10 text-primary group-hover:rotate-12 transition-transform duration-500" />
+    <div className="container min-h-[85vh] flex items-center justify-center py-12 bg-background/50">
+      <Card className="w-full max-w-sm rounded-[2.5rem] shadow-apple-deep border-black/5 overflow-hidden bg-white/90 backdrop-blur-xl">
+        <CardHeader className="text-center p-8 pb-4 space-y-3">
+          <div className="mx-auto bg-primary/5 p-4 rounded-full w-fit">
+            <Sparkles className="h-8 w-8 text-primary" />
           </div>
-          <div className="space-y-1">
-            <CardTitle className="text-4xl font-black tracking-tighter text-primary uppercase">Welcome Back</CardTitle>
-            <CardDescription className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Continue Your Himalayan Journey</CardDescription>
+          <div className="space-y-0.5">
+            <CardTitle className="text-2xl font-black tracking-tighter text-primary uppercase">Welcome Back</CardTitle>
+            <CardDescription className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground">Continue Your Journey</CardDescription>
           </div>
         </CardHeader>
 
-        <CardContent className="px-10 pb-10 space-y-8">
+        <CardContent className="px-8 pb-8 space-y-6">
           <Button
             variant="outline"
-            className="w-full h-14 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all hover:bg-muted active:scale-95 border-black/10 flex items-center justify-center gap-3 bg-white"
+            className="w-full h-12 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all hover:bg-muted border-black/5 flex items-center justify-center gap-3 bg-white"
             onClick={handleGoogleLogin}
             disabled={isGoogleLoading || isLoading}
           >
-            {isGoogleLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Chrome className="h-5 w-5 text-blue-500" />}
+            {isGoogleLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Chrome className="h-4 w-4 text-blue-500" />}
             <span>Sync via Google Node</span>
           </Button>
 
           <div className="relative flex items-center justify-center">
-            <Separator className="absolute w-full opacity-10" />
-            <span className="relative bg-white px-4 text-[9px] font-black uppercase tracking-[0.3em] text-slate-300">
+            <Separator className="absolute w-full opacity-5" />
+            <span className="relative bg-white/95 px-3 text-[8px] font-black uppercase tracking-[0.2em] text-slate-300">
               Identity Protocol
             </span>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Email Node</Label>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-1.5">
+              <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground ml-1">Email Node</Label>
               <div className="relative">
                 <Input
                   type="email"
@@ -155,51 +154,51 @@ export function LoginForm() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="h-14 rounded-2xl bg-muted/30 border-0 focus-visible:ring-primary font-bold px-5 pl-12"
+                  className="h-12 rounded-xl bg-muted/40 border-0 focus-visible:ring-primary font-bold px-4 pl-10 text-xs"
                 />
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/50" />
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40" />
               </div>
             </div>
 
-            <div className="space-y-2">
-              <div className="flex items-center justify-between mx-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Access Key</Label>
-                <Link href="/forgot-password" opacity-50 className="text-[9px] font-black text-primary hover:text-accent uppercase tracking-widest transition-colors">
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between mx-1">
+                <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Access Key</Label>
+                <Link href="/forgot-password" opacity-50 className="text-[8px] font-black text-primary hover:text-accent uppercase tracking-widest transition-colors">
                   Lost Key?
                 </Link>
               </div>
               <div className="relative">
                 <Input
                     type="password"
-                    placeholder="Enter Secure Sequence"
+                    placeholder="Security Sequence"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="h-14 rounded-2xl bg-muted/30 border-0 focus-visible:ring-primary font-bold pl-12"
+                    className="h-12 rounded-xl bg-muted/40 border-0 focus-visible:ring-primary font-bold pl-10 text-xs"
                 />
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/50" />
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40" />
               </div>
             </div>
 
             {error && (
-                <div className="p-4 bg-destructive/10 text-destructive text-[10px] font-black uppercase tracking-widest rounded-2xl text-center border border-destructive/10 animate-in fade-in zoom-in-95">
+                <div className="p-3 bg-destructive/10 text-destructive text-[8px] font-black uppercase tracking-widest rounded-xl text-center border border-destructive/10">
                     {error}
                 </div>
             )}
 
             <Button
               type="submit"
-              className="w-full h-16 rounded-full text-xs font-black uppercase tracking-widest bg-primary text-white shadow-xl shadow-primary/20 transition-all active:scale-95 group"
+              className="w-full h-14 rounded-full text-[10px] font-black uppercase tracking-widest bg-primary text-white shadow-lg transition-all active:scale-95 group"
               disabled={isLoading || isGoogleLoading}
             >
-              {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : 'Enter Himalayan Hub'}
-              <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+              {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Enter Hub'}
+              <ArrowRight className="ml-2 h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
             </Button>
           </form>
         </CardContent>
 
-        <CardFooter className="justify-center border-t border-black/5 bg-muted/10 p-8">
-          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+        <CardFooter className="justify-center border-t border-black/5 bg-muted/5 p-6">
+          <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
             New Explorer? <Link href="/signup" className="font-black text-primary hover:text-accent transition-colors">Create Node</Link>
           </p>
         </CardFooter>
