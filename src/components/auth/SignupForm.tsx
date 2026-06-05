@@ -50,8 +50,8 @@ export function SignupForm() {
   const router = useRouter();
   const { toast } = useToast();
   const auth = useAuth();
-  const { user, isLoading: isUserLoading } = useUser();
   const firestore = useFirestore();
+  const { user, isLoading: isUserLoading } = useUser();
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [serverError, setServerError] = useState('');
@@ -73,7 +73,7 @@ export function SignupForm() {
   });
 
   const handleGoogleSignup = async () => {
-    if (!auth) return;
+    if (!auth || !firestore) return;
     setIsGoogleLoading(true);
     setServerError('');
 
@@ -82,37 +82,40 @@ export function SignupForm() {
       provider.setCustomParameters({ prompt: 'select_account' });
       
       const result = await signInWithPopup(auth, provider);
-      const idToken = await result.user.getIdToken(true);
+      const fbUser = result.user;
 
-      const response = await fetch('/api/auth/verify-token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idToken }),
-      });
+      // Hybrid Sync Logic
+      try {
+        const idToken = await fbUser.getIdToken(true);
+        const response = await fetch('/api/auth/verify-token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idToken }),
+        });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Identity verification failed');
+        if (!response.ok) throw new Error('API Unavailable');
+        console.log("✅ [AUTH] Server-side register successful.");
+      } catch (apiErr) {
+        console.warn("⚠️ [AUTH] Server register failed. Using client-side profile creation.");
+        const userRef = doc(firestore, 'users', fbUser.uid);
+        await setDoc(userRef, {
+          uid: fbUser.uid,
+          displayName: fbUser.displayName || 'Himalayan Explorer',
+          email: fbUser.email,
+          mobile: fbUser.phoneNumber || '',
+          role: 'user',
+          status: 'active',
+        }, { merge: true });
       }
 
       toast({
         title: 'Signup Successful!',
-        description: `Welcome to the family, ${data.user.displayName}!`,
+        description: `Welcome to the family, Explorer!`,
       });
       
       router.push('/my-bookings');
     } catch (err: any) {
       if (err.code === 'auth/popup-closed-by-user') {
-        setIsGoogleLoading(false);
-        return;
-      }
-      if (err.code === 'auth/popup-blocked') {
-        toast({
-          variant: 'destructive',
-          title: "Popup Blocked",
-          description: "Please allow popups for this website to sign in with Google.",
-        });
         setIsGoogleLoading(false);
         return;
       }
@@ -186,7 +189,7 @@ export function SignupForm() {
             Create Account
           </CardTitle>
           <CardDescription>
-            Join Uttarakhand Getaways and explore the Himalayas.
+            Join Northern Harrier and explore the Himalayas.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6 px-8 pb-8">

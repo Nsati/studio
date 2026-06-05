@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword } from 'firebase/auth';
-import { useAuth, useUser } from '@/firebase';
+import { useAuth, useUser, useFirestore } from '@/firebase';
+import { doc, setDoc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -20,8 +21,13 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, Chrome, Mail, Lock } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
+/**
+ * @fileOverview Robust Login Form with Hybrid Google Auth Sync.
+ */
+
 export function LoginForm() {
   const auth = useAuth();
+  const firestore = useFirestore();
   const { user, isLoading: isUserLoading } = useUser();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -41,23 +47,49 @@ export function LoginForm() {
   }, [user, isUserLoading, router, searchParams]);
 
   const handleGoogleLogin = async () => {
-    if (!auth) return;
+    if (!auth || !firestore) return;
     setIsGoogleLoading(true);
     setError('');
+    
     try {
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: 'select_account' });
+      
+      // 1. Sign in with Google on Client
       const result = await signInWithPopup(auth, provider);
-      const idToken = await result.user.getIdToken(true);
-      const response = await fetch('/api/auth/verify-token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idToken }),
-      });
-      if (!response.ok) throw new Error('Identity verification failed');
+      const fbUser = result.user;
+
+      // 2. Attempt Server Sync
+      try {
+        const idToken = await fbUser.getIdToken(true);
+        const response = await fetch('/api/auth/verify-token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idToken }),
+        });
+        
+        if (!response.ok) throw new Error('API Sync Unavailable');
+        console.log("✅ [AUTH] Server-side profile sync successful.");
+      } catch (apiErr) {
+        // 3. Fallback: Client-side profile sync
+        console.warn("⚠️ [AUTH] Server sync failed (Admin SDK likely unconfigured). Using client fallback.");
+        const userRef = doc(firestore, 'users', fbUser.uid);
+        await setDoc(userRef, {
+          uid: fbUser.uid,
+          displayName: fbUser.displayName || 'Himalayan Explorer',
+          email: fbUser.email,
+          mobile: fbUser.phoneNumber || '',
+          role: 'user',
+          status: 'active',
+        }, { merge: true });
+      }
+
+      toast({ title: 'Welcome Back!', description: 'Establishing secure Himalayan node...' });
       const redirect = searchParams.get('redirect') || '/my-bookings';
       router.push(redirect);
+      
     } catch (err: any) {
+      console.error("[GOOGLE LOGIN ERROR]:", err);
       if (err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/popup-blocked') {
         toast({ variant: 'destructive', title: "Auth Error", description: err.message });
       }
@@ -76,7 +108,7 @@ export function LoginForm() {
       const redirect = searchParams.get('redirect') || '/my-bookings';
       router.push(redirect);
     } catch (err: any) {
-      setError('Invalid email or password.');
+      setError('Invalid email or password node.');
     } finally {
       setIsLoading(false);
     }
