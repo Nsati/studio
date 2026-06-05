@@ -3,7 +3,7 @@ import nodemailer from 'nodemailer';
 
 /**
  * @fileOverview Hardened SMTP Email Service.
- * Delivers dynamic HTML content with PDF attachments using provided Gmail credentials.
+ * Delivers dynamic HTML content with PDF attachments or OTP codes using Gmail.
  */
 
 export interface MailOptions {
@@ -14,17 +14,16 @@ export interface MailOptions {
     pdfBuffer: Buffer;
 }
 
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER || 'mistrikumar42@gmail.com',
+        pass: process.env.EMAIL_PASS || 'Msdhoni@123'
+    }
+});
+
 export const sendInvoiceEmail = async (options: MailOptions) => {
     const { to, userName, bookingId, amount, pdfBuffer } = options;
-
-    // Use credentials provided by user
-    const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-            user: process.env.EMAIL_USER || 'mistrikumar42@gmail.com',
-            pass: process.env.EMAIL_PASS || 'Msdhoni@123'
-        }
-    });
 
     const mailOptions = {
         from: `"Northern Harrier" <${process.env.EMAIL_USER || 'mistrikumar42@gmail.com'}>`,
@@ -71,6 +70,39 @@ export const sendInvoiceEmail = async (options: MailOptions) => {
         return true;
     } catch (error) {
         console.error('❌ [SMTP ERROR]:', error);
+        throw error;
+    }
+};
+
+export const sendOTPEmail = async (email: string, otp: string, name: string) => {
+    const mailOptions = {
+        from: `"Northern Harrier Auth" <${process.env.EMAIL_USER || 'mistrikumar42@gmail.com'}>`,
+        to: email,
+        subject: `${otp} is your Northern Harrier Verification Code`,
+        html: `
+            <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto; border: 1px solid #eee; border-radius: 12px; padding: 30px;">
+                <h1 style="color: #1B4D2E; text-align: center; letter-spacing: 2px;">NORTHERN HARRIER</h1>
+                <p style="font-size: 16px; color: #333;">Namaste ${name},</p>
+                <p style="font-size: 14px; color: #666; line-height: 1.5;">To complete your registration and establish your secure Himalayan node, please use the verification code below:</p>
+                
+                <div style="background-color: #f0f6ff; padding: 20px; border-radius: 8px; text-align: center; margin: 30px 0;">
+                    <span style="font-size: 32px; font-weight: 900; letter-spacing: 10px; color: #1B4D2E;">${otp}</span>
+                </div>
+                
+                <p style="font-size: 12px; color: #999; text-align: center;">This code will expire in 10 minutes. If you did not request this, please ignore this email.</p>
+                
+                <hr style="border: none; border-top: 1px solid #eee; margin-top: 30px;">
+                <p style="font-size: 10px; color: #bbb; text-align: center;">Northern Harrier Expedition Hub • Dehradun, UK</p>
+            </div>
+        `
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log(`✅ [OTP SENT] Verification code dispatched to ${email}`);
+        return true;
+    } catch (error) {
+        console.error('❌ [SMTP OTP ERROR]:', error);
         throw error;
     }
 };
