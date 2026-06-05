@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useUser, useAuth } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { useRouter, usePathname } from 'next/navigation';
-import { User, LogOut, LayoutDashboard, Book, Menu, ChevronDown, Phone, Mountain, Sparkles } from 'lucide-react';
+import { User, LogOut, LayoutDashboard, Book, Menu, ChevronDown, Phone, Mountain, Sparkles, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -30,7 +30,7 @@ const navLinks = [
   { href: '/tour-packages', label: 'Packages' },
   { href: '/blogs', label: 'Journal' },
   { href: '/vibe-match', label: 'Vibe Match' },
-  { href: '/contact', label: 'Support' },
+  { href: '/contact', label: 'Contact' },
 ];
 
 function UserNav({ isScrolled }: { isScrolled: boolean }) {

@@ -13,7 +13,7 @@ const footerLinks = {
   ],
   'Quick Links': [
     { label: 'Tour Packages', href: '/tour-packages' },
-    { label: 'About Reviews', href: '/contact' },
+    { label: 'Contact Liaison', href: '/contact' },
     { label: 'Travel Blog', href: '/blogs' },
     { label: 'Vibe Match™', href: '/vibe-match' },
   ],
@@ -85,7 +85,7 @@ export default function Footer() {
                   <Phone className="h-5 w-5 text-accent mt-1" />
                   <div>
                     <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Call Helpline</p>
-                    <p className="font-bold">+91-XXXXXXXXXX</p>
+                    <p className="font-bold">+91-6399902725</p>
                   </div>
                </div>
                <div className="flex items-start gap-4">
