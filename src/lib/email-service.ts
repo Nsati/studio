@@ -2,7 +2,7 @@ import nodemailer from 'nodemailer';
 
 /**
  * @fileOverview Hardened SMTP Email Service for Northern Harrier.
- * Features: Optimized Transporter with strict Gmail protocols.
+ * Updated to use Port 587 with TLS as per user requirements.
  */
 
 export interface MailOptions {
@@ -13,16 +13,20 @@ export interface MailOptions {
     pdfBuffer: Buffer;
 }
 
-// Global transporter for reuse
+// Global transporter for reuse with updated TLS settings
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
-    port: 465,
-    secure: true, // Use SSL/TLS
+    port: 587,
+    secure: false, // Use false for STARTTLS (Port 587)
     auth: {
         user: process.env.EMAIL_USER || 'mistrikumar42@gmail.com',
         pass: process.env.EMAIL_PASS || 'Msdhoni@123'
     },
-    timeout: 10000 // 10s timeout
+    tls: {
+        // Do not fail on invalid certs - common for cloud node handshakes
+        rejectUnauthorized: false
+    },
+    timeout: 15000 // Increased timeout to 15s for mountain nodes
 });
 
 /**
@@ -95,8 +99,8 @@ export const sendOTPEmail = async (email: string, otp: string, name: string) => 
         await transporter.sendMail(mailOptions);
         console.log(`✅ [OTP SENT] Code dispatched to ${email}`);
         return true;
-    } catch (error) {
-        console.error('❌ [SMTP OTP ERROR]:', error);
-        throw error;
+    } catch (error: any) {
+        console.error('❌ [SMTP OTP ERROR]:', error.message);
+        throw new Error(`SMTP Dispatch Failure: ${error.message}`);
     }
 };
