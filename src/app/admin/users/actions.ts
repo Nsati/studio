@@ -7,8 +7,7 @@ import type { UserProfile } from '@/lib/types';
 import { UpdateUserSchema, type UpdateUserInput } from '../schemas';
 
 /**
- * @fileOverview Hardened User Management Actions for Tripzy.
- * Resolved COLLECTION_GROUP index error by using direct sub-collection access.
+ * @fileOverview Hardened User Management Actions for Northern Harrier.
  */
 
 type ActionResponse = {
@@ -23,7 +22,6 @@ interface UserDetailsForAdmin extends UserProfile {
 
 /**
  * Fetches user details and their associated bookings.
- * FIXED: Replaced collectionGroup query with direct sub-collection access to avoid index errors.
  */
 export async function getUserDetailsForAdmin(uid: string): Promise<UserDetailsForAdmin> {
     const { adminDb, error: adminError } = getFirebaseAdmin();
@@ -33,8 +31,6 @@ export async function getUserDetailsForAdmin(uid: string): Promise<UserDetailsFo
 
     try {
         const userRef = adminDb.doc(`users/${uid}`);
-        // Instead of searching globally (collectionGroup), we query the specific user's sub-collection
-        // This avoids the need for a COLLECTION_GROUP_ASC index on 'userId'.
         const bookingsQuery = adminDb.collection(`users/${uid}/bookings`);
 
         const [userDoc, bookingsSnapshot] = await Promise.all([
@@ -43,7 +39,7 @@ export async function getUserDetailsForAdmin(uid: string): Promise<UserDetailsFo
         ]);
 
         if (!userDoc.exists) {
-            throw new Error("User profile node missing in Tripzy cloud.");
+            throw new Error("User profile node missing in cloud.");
         }
 
         const userProfileData = userDoc.data() as UserProfile;
@@ -64,11 +60,14 @@ export async function getUserDetailsForAdmin(uid: string): Promise<UserDetailsFo
             totalBookings: bookingsCount,
         };
     } catch (e: any) {
-        console.error("[ADMIN USER ACTION] Production Fetch Failure:", e.message);
+        console.error("[ADMIN USER ACTION] Fetch Failure:", e.message);
         throw e;
     }
 }
 
+/**
+ * Updates a user's profile details.
+ */
 export async function updateUserByAdmin(uid: string, data: UpdateUserInput): Promise<ActionResponse> {
     const { adminDb, error: adminError } = getFirebaseAdmin();
     if (adminError || !adminDb) {
@@ -87,9 +86,36 @@ export async function updateUserByAdmin(uid: string, data: UpdateUserInput): Pro
         revalidatePath('/admin/users');
         revalidatePath(`/admin/users/${uid}/edit`);
 
-        return { success: true, message: 'Tripzy Explorer profile synchronized successfully.' };
+        return { success: true, message: 'Explorer profile synchronized successfully.' };
     } catch (e: any) {
         console.error("Failed to update user profile:", e);
-        return { success: false, message: e.message || 'An unexpected error occurred during record sync.' };
+        return { success: false, message: e.message || 'Update failed.' };
+    }
+}
+
+/**
+ * Permanently purges a user from both Firebase Auth and Firestore.
+ */
+export async function deleteUserByAdmin(uid: string): Promise<ActionResponse> {
+    const { adminDb, adminAuth, error: adminError } = getFirebaseAdmin();
+    
+    if (adminError || !adminDb || !adminAuth) {
+        return { success: false, message: adminError || "Admin SDK not initialized" };
+    }
+
+    try {
+        // 1. Delete from Firebase Auth
+        await adminAuth.deleteUser(uid);
+        
+        // 2. Delete Firestore Profile Node
+        await adminDb.doc(`users/${uid}`).delete();
+
+        // 3. Revalidate List
+        revalidatePath('/admin/users');
+        
+        return { success: true, message: 'Explorer node and authentication records purged from the cloud.' };
+    } catch (e: any) {
+        console.error("[ADMIN PURGE ERROR]:", e.message);
+        return { success: false, message: e.message || 'Cloud synchronization failure during purge.' };
     }
 }
