@@ -2,7 +2,7 @@
 import nodemailer from 'nodemailer';
 
 /**
- * @fileOverview Hardened SMTP Email Service.
+ * @fileOverview Hardened SMTP Email Service for Northern Harrier.
  * Delivers dynamic HTML content with PDF attachments or OTP codes using Gmail.
  */
 
@@ -22,6 +22,9 @@ const transporter = nodemailer.createTransport({
     }
 });
 
+/**
+ * Sends a booking invoice with a PDF attachment.
+ */
 export const sendInvoiceEmail = async (options: MailOptions) => {
     const { to, userName, bookingId, amount, pdfBuffer } = options;
 
@@ -74,32 +77,39 @@ export const sendInvoiceEmail = async (options: MailOptions) => {
     }
 };
 
+/**
+ * Sends a 6-digit OTP code for user registration.
+ */
 export const sendOTPEmail = async (email: string, otp: string, name: string) => {
     const mailOptions = {
         from: `"Northern Harrier Auth" <${process.env.EMAIL_USER || 'mistrikumar42@gmail.com'}>`,
         to: email,
         subject: `${otp} is your Northern Harrier Verification Code`,
         html: `
-            <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto; border: 1px solid #eee; border-radius: 12px; padding: 30px;">
-                <h1 style="color: #1B4D2E; text-align: center; letter-spacing: 2px;">NORTHERN HARRIER</h1>
-                <p style="font-size: 16px; color: #333;">Namaste ${name},</p>
-                <p style="font-size: 14px; color: #666; line-height: 1.5;">To complete your registration and establish your secure Himalayan node, please use the verification code below:</p>
-                
-                <div style="background-color: #f0f6ff; padding: 20px; border-radius: 8px; text-align: center; margin: 30px 0;">
-                    <span style="font-size: 32px; font-weight: 900; letter-spacing: 10px; color: #1B4D2E;">${otp}</span>
+            <div style="font-family: 'Segoe UI', sans-serif; max-width: 500px; margin: 0 auto; border: 1px solid #eee; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
+                <div style="background-color: #1B4D2E; padding: 30px; text-align: center;">
+                    <h1 style="color: white; margin: 0; letter-spacing: 4px; font-size: 20px; font-weight: 900;">NORTHERN HARRIER</h1>
                 </div>
-                
-                <p style="font-size: 12px; color: #999; text-align: center;">This code will expire in 10 minutes. If you did not request this, please ignore this email.</p>
-                
-                <hr style="border: none; border-top: 1px solid #eee; margin-top: 30px;">
-                <p style="font-size: 10px; color: #bbb; text-align: center;">Northern Harrier Expedition Hub • Dehradun, UK</p>
+                <div style="padding: 40px; text-align: left; background-color: white;">
+                    <h2 style="color: #1B4D2E; font-size: 22px;">Namaste ${name},</h2>
+                    <p style="font-size: 15px; color: #64748b; line-height: 1.6;">To establish your secure Himalayan node and complete registration, please use the 6-digit verification code below:</p>
+                    
+                    <div style="background-color: #f8fafc; border: 1px dashed #cbd5e1; padding: 25px; border-radius: 12px; text-align: center; margin: 30px 0;">
+                        <span style="font-size: 42px; font-weight: 900; letter-spacing: 12px; color: #1B4D2E; font-family: monospace;">${otp}</span>
+                    </div>
+                    
+                    <p style="font-size: 12px; color: #94a3b8; text-align: center;">This protocol code will expire in <strong>10 minutes</strong>. If you did not initiate this request, please ignore this email.</p>
+                </div>
+                <div style="background-color: #f1f5f9; padding: 20px; text-align: center;">
+                    <p style="font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin: 0;">Expedition Hub • Dehradun, Uttarakhand</p>
+                </div>
             </div>
         `
     };
 
     try {
         await transporter.sendMail(mailOptions);
-        console.log(`✅ [OTP SENT] Verification code dispatched to ${email}`);
+        console.log(`✅ [OTP SENT] Code dispatched to ${email}`);
         return true;
     } catch (error) {
         console.error('❌ [SMTP OTP ERROR]:', error);

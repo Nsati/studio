@@ -28,7 +28,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Chrome, UserPlus, ShieldCheck, MailCheck } from 'lucide-react';
+import { Loader2, Chrome, UserPlus, ShieldCheck, MailCheck, Lock, Smartphone } from 'lucide-react';
 import { useAuth, useUser, useFirestore } from '@/firebase';
 import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
@@ -36,16 +36,21 @@ import type { UserProfile } from '@/lib/types';
 import { Separator } from '@/components/ui/separator';
 import { sendSignupOTPAction, verifyOTPAction } from '@/app/auth/actions';
 
+/**
+ * @fileOverview High-Security Two-Step Registration Form.
+ * Features: SMTP OTP Verification and Hybrid Identity Sync.
+ */
+
 const formSchema = z.object({
-  name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
-  email: z.string().email({ message: 'Please enter a valid email address.' }),
+  name: z.string().min(2, { message: 'Legal name must be at least 2 characters.' }),
+  email: z.string().email({ message: 'Valid email node required.' }),
   mobile: z
     .string()
-    .length(10, { message: 'Mobile number must be 10 digits.' })
-    .regex(/^\d{10}$/, { message: 'Please enter a valid 10-digit mobile number.' }),
+    .length(10, { message: 'Mobile node must be exactly 10 digits.' })
+    .regex(/^\d{10}$/, { message: 'Numeric characters only.' }),
   password: z
     .string()
-    .min(8, { message: 'Password must be at least 8 characters.' })
+    .min(8, { message: 'Key must be at least 8 characters long.' })
 });
 
 export function SignupForm() {
@@ -59,9 +64,9 @@ export function SignupForm() {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [serverError, setServerError] = useState('');
   
-  // OTP States
+  // Protocol Verification States
   const [otpSent, setOtpSent] = useState(false);
-  const [otp, setOtp] = useState('');
+  const [otpCode, setOtpCode] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
 
   useEffect(() => {
@@ -92,73 +97,62 @@ export function SignupForm() {
       const result = await signInWithPopup(auth, provider);
       const fbUser = result.user;
 
-      try {
-        const idToken = await fbUser.getIdToken(true);
-        const response = await fetch('/api/auth/verify-token', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ idToken }),
-        });
+      // Identity Sync Node
+      const userRef = doc(firestore, 'users', fbUser.uid);
+      await setDoc(userRef, {
+        uid: fbUser.uid,
+        displayName: fbUser.displayName || 'Himalayan Explorer',
+        email: fbUser.email,
+        mobile: fbUser.phoneNumber || '',
+        role: 'user',
+        status: 'active',
+      }, { merge: true });
 
-        if (!response.ok) throw new Error('API Unavailable');
-      } catch (apiErr) {
-        const userRef = doc(firestore, 'users', fbUser.uid);
-        await setDoc(userRef, {
-          uid: fbUser.uid,
-          displayName: fbUser.displayName || 'Himalayan Explorer',
-          email: fbUser.email,
-          mobile: fbUser.phoneNumber || '',
-          role: 'user',
-          status: 'active',
-        }, { merge: true });
-      }
-
-      toast({ title: 'Signup Successful!', description: `Welcome to the family, Explorer!` });
+      toast({ title: 'Gateway Synchronized', description: 'Welcome to Northern Harrier.' });
       router.push('/my-bookings');
     } catch (err: any) {
       if (err.code !== 'auth/popup-closed-by-user') {
-        setServerError(err.message || "Signup failed.");
+        setServerError(err.message || "Identity link failed.");
       }
     } finally {
       setIsGoogleLoading(false);
     }
   };
 
-  const handleSendOTP = async () => {
-    const values = form.getValues();
+  const initiateVerification = async () => {
     const isValid = await form.trigger();
-    
     if (!isValid) return;
 
     setIsLoading(true);
     setServerError('');
 
+    const values = form.getValues();
     const res = await sendSignupOTPAction(values.email, values.name);
     
     if (res.success) {
       setOtpSent(true);
-      toast({ title: 'OTP Sent!', description: res.message });
+      toast({ title: 'Protocol Initialized', description: res.message });
     } else {
       setServerError(res.message);
     }
     setIsLoading(false);
   };
 
-  const handleVerifyAndSignup = async () => {
-    if (otp.length !== 6) {
-        setServerError("Please enter a valid 6-digit code.");
+  const finalizeRegistration = async () => {
+    if (otpCode.length !== 6) {
+        setServerError("Invalid code length. 6 digits required.");
         return;
     }
 
     setIsVerifying(true);
     setServerError('');
 
-    const verifyRes = await verifyOTPAction(form.getValues().email, otp);
+    const values = form.getValues();
+    const verifyRes = await verifyOTPAction(values.email, otpCode);
 
     if (verifyRes.success) {
-        // 2. Final Firebase Account Creation
-        const values = form.getValues();
         try {
+            // Establish Firebase Auth Identity
             const userCredential = await createUserWithEmailAndPassword(auth!, values.email, values.password);
             const fbUser = userCredential.user;
 
@@ -173,21 +167,24 @@ export function SignupForm() {
 
             await setDoc(doc(firestore!, 'users', fbUser.uid), newUserProfile);
             
-            toast({ title: 'Identity Verified!', description: 'Welcome to Northern Harrier family.' });
+            toast({ title: 'Verification Success', description: 'Explorer identity established.' });
             router.push('/my-bookings');
         } catch (error: any) {
-            setServerError(error.message);
+            setServerError(error.message || "Auth establishment failed.");
         }
     } else {
-        setServerError(verifyRes.message || "Invalid OTP.");
+        setServerError(verifyRes.message || "Incorrect verification sequence.");
     }
     setIsVerifying(false);
   };
 
   if (isUserLoading) {
     return (
-      <div className="container flex min-h-[80vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="container min-h-[80vh] flex items-center justify-center">
+        <div className="text-center space-y-4">
+            <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto" />
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">Syncing Satellites</p>
+        </div>
       </div>
     );
   }
@@ -199,11 +196,11 @@ export function SignupForm() {
           <div className="mx-auto bg-primary/10 p-5 rounded-full w-fit">
             {otpSent ? <MailCheck className="h-8 w-8 text-primary" /> : <UserPlus className="h-8 w-8 text-primary" />}
           </div>
-          <CardTitle className="font-black text-4xl tracking-tight text-[#1a1a1a]">
-            {otpSent ? 'Verify Identity' : 'Create Account'}
+          <CardTitle className="font-black text-4xl tracking-tighter text-[#1a1a1a]">
+            {otpSent ? 'Verify Protocol' : 'Join Expedition'}
           </CardTitle>
           <CardDescription className="text-base font-medium">
-            {otpSent ? `Enter the code sent to ${form.getValues().email}` : 'Join the Northern Harrier expedition today.'}
+            {otpSent ? `Sync code sent to ${form.getValues().email}` : 'Establish your Himalayan identity node.'}
           </CardDescription>
         </CardHeader>
 
@@ -212,18 +209,18 @@ export function SignupForm() {
             <>
               <Button
                 variant="outline"
-                className="w-full h-14 rounded-full text-base font-bold border-black/10 flex items-center justify-center gap-3 transition-all hover:bg-muted active:scale-95"
+                className="w-full h-14 rounded-full text-[11px] font-black tracking-widest border-black/10 flex items-center justify-center gap-3 transition-all hover:bg-muted active:scale-95"
                 onClick={handleGoogleSignup}
                 disabled={isGoogleLoading || isLoading}
               >
-                {isGoogleLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Chrome className="h-5 w-5 text-blue-500" />}
-                <span>Continue with Google</span>
+                {isGoogleLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Chrome className="h-4 w-4 text-blue-500" />}
+                <span>IDENTITY SYNC VIA GOOGLE</span>
               </Button>
 
               <div className="relative flex items-center justify-center">
-                <Separator className="absolute w-full" />
+                <Separator className="absolute w-full opacity-10" />
                 <span className="relative bg-white px-4 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
-                  Or use secure email
+                  Secure Protocol
                 </span>
               </div>
 
@@ -231,30 +228,35 @@ export function SignupForm() {
                 <form className="space-y-5">
                   <FormField control={form.control} name="name" render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Full Legal Name</FormLabel>
-                      <FormControl><Input placeholder="Ankit Sharma" {...field} className="h-14 rounded-2xl bg-muted/50 border-0 focus-visible:ring-primary font-bold px-5" /></FormControl>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Legal Name</FormLabel>
+                      <FormControl><Input placeholder="Explorer Name" {...field} className="h-14 rounded-2xl bg-muted/50 border-0 focus-visible:ring-primary font-bold px-5" /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
                   <FormField control={form.control} name="email" render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Secure Email Node</FormLabel>
-                      <FormControl><Input type="email" placeholder="ankit@example.com" {...field} className="h-14 rounded-2xl bg-muted/50 border-0 focus-visible:ring-primary font-bold px-5" /></FormControl>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Email Node</FormLabel>
+                      <FormControl><Input type="email" placeholder="explorer@node.com" {...field} className="h-14 rounded-2xl bg-muted/50 border-0 focus-visible:ring-primary font-bold px-5" /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
                    <FormField control={form.control} name="mobile" render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Contact Node</FormLabel>
-                      <FormControl><Input type="tel" placeholder="9876543210" {...field} className="h-14 rounded-2xl bg-muted/50 border-0 focus-visible:ring-primary font-bold px-5" /></FormControl>
+                      <div className="relative">
+                        <Input type="tel" placeholder="Mobile Number" {...field} className="h-14 rounded-2xl bg-muted/50 border-0 focus-visible:ring-primary font-bold pl-12" />
+                        <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )} />
                   <FormField control={form.control} name="password" render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Create Password</FormLabel>
-                      <FormControl><Input type="password" {...field} className="h-14 rounded-2xl bg-muted/50 border-0 focus-visible:ring-primary font-bold px-5" /></FormControl>
-                      <FormDescription className="text-[9px] font-bold uppercase tracking-widest ml-1 opacity-50">Minimum 8 characters required.</FormDescription>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Key Sequence</FormLabel>
+                      <div className="relative">
+                        <Input type="password" placeholder="Min 8 characters" {...field} className="h-14 rounded-2xl bg-muted/50 border-0 focus-visible:ring-primary font-bold pl-12" />
+                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )} />
@@ -263,8 +265,8 @@ export function SignupForm() {
 
                   <Button
                     type="button"
-                    onClick={handleSendOTP}
-                    className="w-full h-14 rounded-full text-lg font-black bg-primary text-white shadow-xl shadow-primary/20 transition-all active:scale-95"
+                    onClick={initiateVerification}
+                    className="w-full h-16 rounded-full text-sm font-black bg-primary text-white shadow-xl shadow-primary/20 transition-all active:scale-95"
                     disabled={isLoading || isGoogleLoading}
                   >
                     {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <ShieldCheck className="mr-2 h-5 w-5" />}
@@ -276,34 +278,35 @@ export function SignupForm() {
           ) : (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-5 duration-500">
                <div className="space-y-4">
-                  <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-center block text-muted-foreground">Enter 6-Digit Code</Label>
+                  <label className="text-[10px] font-black uppercase tracking-[0.3em] text-center block text-muted-foreground">Input 6-Digit Protocol Code</label>
                   <Input 
                     type="text" 
                     maxLength={6} 
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
-                    className="h-20 text-4xl font-black text-center tracking-[0.5em] rounded-3xl bg-muted/50 border-0 focus-visible:ring-primary"
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value)}
+                    className="h-24 text-5xl font-black text-center tracking-[0.5em] rounded-3xl bg-muted/50 border-0 focus-visible:ring-primary text-primary"
                     placeholder="000000"
                   />
                </div>
 
                {serverError && <div className="p-4 bg-destructive/10 text-destructive text-[10px] font-black uppercase tracking-widest rounded-2xl text-center">{serverError}</div>}
 
-               <div className="space-y-3">
+               <div className="space-y-4">
                     <Button
-                        onClick={handleVerifyAndSignup}
-                        className="w-full h-16 rounded-full text-lg font-black bg-accent text-accent-foreground shadow-xl saffron-glow transition-all active:scale-95"
+                        onClick={finalizeRegistration}
+                        className="w-full h-16 rounded-full text-sm font-black bg-accent text-accent-foreground shadow-xl saffron-glow transition-all active:scale-95"
                         disabled={isVerifying}
                     >
                         {isVerifying ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <ShieldCheck className="mr-2 h-5 w-5" />}
-                        SYNC IDENTITY & JOIN
+                        FINALIZE IDENTITY
                     </Button>
                     <Button
                         variant="ghost"
                         onClick={() => setOtpSent(false)}
-                        className="w-full h-12 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary"
+                        className="w-full h-12 text-[9px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary"
+                        disabled={isVerifying}
                     >
-                        Change Registration Details
+                        Modify Node Details
                     </Button>
                </div>
             </div>
@@ -312,7 +315,7 @@ export function SignupForm() {
 
         <CardFooter className="justify-center border-t border-black/5 bg-muted/20 p-8">
           <p className="text-sm font-medium text-muted-foreground">
-            Existing Explorer? <Link href="/login" className="font-black text-primary hover:underline">Sign In Protocol</Link>
+            Known Explorer? <Link href="/login" className="font-black text-primary hover:underline">Sign In Protocol</Link>
           </p>
         </CardFooter>
       </Card>
