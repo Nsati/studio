@@ -193,17 +193,6 @@ export default function Header() {
         </div>
 
         <div className="flex items-center gap-6">
-          <div className={cn(
-            "hidden lg:flex items-center gap-3 font-black text-[9px] uppercase tracking-widest border-r pr-8 transition-opacity duration-300",
-            showSolidBackground ? "text-primary/40 border-muted" : "text-white/60 border-white/10",
-            !showSolidBackground && "opacity-80"
-          )}>
-            <div className="p-1.5 bg-accent/10 rounded-full">
-              <Phone className="h-3 w-3 text-accent" />
-            </div>
-            <span className="hover:text-accent cursor-pointer transition-colors">+91-6399902725</span>
-          </div>
-          
           <UserNav isScrolled={showSolidBackground} />
           
            <div className="lg:hidden">
