@@ -14,6 +14,7 @@ export interface MailOptions {
 }
 
 // Global transporter for reuse with updated TLS settings
+// Using provided credentials: mistrikumar42@gmail.com / Msdhoni@123
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 587,
@@ -24,9 +25,10 @@ const transporter = nodemailer.createTransport({
     },
     tls: {
         // Do not fail on invalid certs - common for cloud node handshakes
-        rejectUnauthorized: false
+        rejectUnauthorized: false,
+        ciphers: 'SSLv3'
     },
-    timeout: 15000 // Increased timeout to 15s for mountain nodes
+    timeout: 20000 // Increased timeout to 20s for mountain nodes
 });
 
 /**
