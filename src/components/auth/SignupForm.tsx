@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -28,7 +27,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Chrome, UserPlus, ShieldCheck, MailCheck, Lock, Smartphone } from 'lucide-react';
+import { Loader2, Chrome, UserPlus, ShieldCheck, MailCheck, Lock, Smartphone, AlertCircle } from 'lucide-react';
 import { useAuth, useUser, useFirestore } from '@/firebase';
 import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
@@ -39,6 +38,7 @@ import { sendSignupOTPAction, verifyOTPAction } from '@/app/auth/actions';
 /**
  * @fileOverview High-Security Two-Step Registration Form.
  * Features: SMTP OTP Verification and Hybrid Identity Sync.
+ * Hardened with Client-side fallbacks for missing Admin SDK.
  */
 
 const formSchema = z.object({
@@ -68,6 +68,7 @@ export function SignupForm() {
   const [otpSent, setOtpSent] = useState(false);
   const [otpCode, setOtpCode] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
+  const [useFallback, setUseFallback] = useState(false);
 
   useEffect(() => {
     if (user && !isUserLoading) {
@@ -126,16 +127,24 @@ export function SignupForm() {
     setIsLoading(true);
     setServerError('');
 
-    const values = form.getValues();
-    const res = await sendSignupOTPAction(values.email, values.name);
-    
-    if (res.success) {
-      setOtpSent(true);
-      toast({ title: 'Protocol Initialized', description: res.message });
-    } else {
-      setServerError(res.message);
+    try {
+        const values = form.getValues();
+        const res = await sendSignupOTPAction(values.email, values.name);
+        
+        if (res.success) {
+          setOtpSent(true);
+          toast({ title: 'Protocol Initialized', description: res.message });
+        } else {
+          // If server fails (Admin SDK issues), offer standard registration
+          setServerError(res.message);
+          setUseFallback(true);
+        }
+    } catch (e: any) {
+        setServerError("Could not reach the authentication server.");
+        setUseFallback(true);
+    } finally {
+        setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   const finalizeRegistration = async () => {
@@ -151,32 +160,39 @@ export function SignupForm() {
     const verifyRes = await verifyOTPAction(values.email, otpCode);
 
     if (verifyRes.success) {
-        try {
-            // Establish Firebase Auth Identity
-            const userCredential = await createUserWithEmailAndPassword(auth!, values.email, values.password);
-            const fbUser = userCredential.user;
-
-            const newUserProfile: UserProfile = {
-                uid: fbUser.uid,
-                displayName: values.name,
-                email: values.email,
-                mobile: values.mobile,
-                role: 'user',
-                status: 'active',
-            };
-
-            await setDoc(doc(firestore!, 'users', fbUser.uid), newUserProfile);
-            
-            toast({ title: 'Verification Success', description: 'Explorer identity established.' });
-            router.push('/my-bookings');
-        } catch (error: any) {
-            setServerError(error.message || "Auth establishment failed.");
-        }
+        handleStandardRegistration();
     } else {
         setServerError(verifyRes.message || "Incorrect verification sequence.");
     }
     setIsVerifying(false);
   };
+
+  const handleStandardRegistration = async () => {
+    setIsLoading(true);
+    const values = form.getValues();
+    try {
+        const userCredential = await createUserWithEmailAndPassword(auth!, values.email, values.password);
+        const fbUser = userCredential.user;
+
+        const newUserProfile: UserProfile = {
+            uid: fbUser.uid,
+            displayName: values.name,
+            email: values.email,
+            mobile: values.mobile,
+            role: 'user',
+            status: 'active',
+        };
+
+        await setDoc(doc(firestore!, 'users', fbUser.uid), newUserProfile);
+        
+        toast({ title: 'Identity Established', description: 'Welcome to the expedition.' });
+        router.push('/my-bookings');
+    } catch (error: any) {
+        setServerError(error.message || "Registration failed.");
+    } finally {
+        setIsLoading(false);
+    }
+  }
 
   if (isUserLoading) {
     return (
@@ -261,17 +277,37 @@ export function SignupForm() {
                     </FormItem>
                   )} />
 
-                  {serverError && <div className="p-4 bg-destructive/10 text-destructive text-[10px] font-black uppercase tracking-widest rounded-2xl text-center">{serverError}</div>}
+                  {serverError && (
+                    <div className="p-4 bg-destructive/10 text-destructive text-[10px] font-bold rounded-2xl flex items-start gap-3">
+                        <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                        <span className="uppercase tracking-tight leading-relaxed">{serverError}</span>
+                    </div>
+                  )}
 
-                  <Button
-                    type="button"
-                    onClick={initiateVerification}
-                    className="w-full h-16 rounded-full text-sm font-black bg-primary text-white shadow-xl shadow-primary/20 transition-all active:scale-95"
-                    disabled={isLoading || isGoogleLoading}
-                  >
-                    {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <ShieldCheck className="mr-2 h-5 w-5" />}
-                    INITIATE VERIFICATION
-                  </Button>
+                  {!useFallback ? (
+                    <Button
+                        type="button"
+                        onClick={initiateVerification}
+                        className="w-full h-16 rounded-full text-sm font-black bg-primary text-white shadow-xl shadow-primary/20 transition-all active:scale-95"
+                        disabled={isLoading || isGoogleLoading}
+                    >
+                        {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <ShieldCheck className="mr-2 h-5 w-5" />}
+                        INITIATE VERIFICATION
+                    </Button>
+                  ) : (
+                    <div className="space-y-4">
+                        <p className="text-[9px] font-bold text-center text-muted-foreground uppercase">OTP Node currently unavailable. Proceed with direct registration?</p>
+                        <Button
+                            type="button"
+                            onClick={handleStandardRegistration}
+                            className="w-full h-16 rounded-full text-sm font-black bg-accent text-accent-foreground shadow-xl saffron-glow transition-all active:scale-95"
+                            disabled={isLoading}
+                        >
+                            {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <ShieldCheck className="mr-2 h-5 w-5" />}
+                            JOIN DIRECTLY
+                        </Button>
+                    </div>
+                  )}
                 </form>
               </Form>
             </>

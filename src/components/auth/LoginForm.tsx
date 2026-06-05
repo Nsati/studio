@@ -23,6 +23,7 @@ import { Separator } from '@/components/ui/separator';
 
 /**
  * @fileOverview Robust Login Form with Hybrid Google Auth Sync.
+ * Optimized for resilience when server-side Admin SDK is not configured.
  */
 
 export function LoginForm() {
@@ -60,6 +61,7 @@ export function LoginForm() {
       const fbUser = result.user;
 
       // 2. Attempt Server Sync
+      let serverSynced = false;
       try {
         const idToken = await fbUser.getIdToken(true);
         const response = await fetch('/api/auth/verify-token', {
@@ -68,11 +70,17 @@ export function LoginForm() {
           body: JSON.stringify({ idToken }),
         });
         
-        if (!response.ok) throw new Error('API Sync Unavailable');
-        console.log("✅ [AUTH] Server-side profile sync successful.");
+        if (response.ok) {
+            serverSynced = true;
+            console.log("✅ [AUTH] Server-side profile sync successful.");
+        }
       } catch (apiErr) {
-        // 3. Fallback: Client-side profile sync
-        console.warn("⚠️ [AUTH] Server sync failed (Admin SDK likely unconfigured). Using client fallback.");
+        console.warn("⚠️ [AUTH] Server sync unavailable.");
+      }
+
+      // 3. Mandatory Client-side Fallback (Ensures profile exists even if server-sync fails)
+      if (!serverSynced) {
+        console.log("🛠️ [AUTH] Triggering client-side profile reinforcement.");
         const userRef = doc(firestore, 'users', fbUser.uid);
         await setDoc(userRef, {
           uid: fbUser.uid,
@@ -105,10 +113,12 @@ export function LoginForm() {
     setError('');
     try {
       await signInWithEmailAndPassword(auth, email, password);
+      toast({ title: 'Sign-in Success', description: 'Navigating to expedition hub.' });
       const redirect = searchParams.get('redirect') || '/my-bookings';
       router.push(redirect);
     } catch (err: any) {
-      setError('Invalid email or password node.');
+        console.error("[LOGIN ERROR]:", err.message);
+        setError('Invalid credentials node. Please verify email and key.');
     } finally {
       setIsLoading(false);
     }

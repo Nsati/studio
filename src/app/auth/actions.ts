@@ -1,4 +1,3 @@
-
 'use server';
 
 import { getFirebaseAdmin } from '@/firebase/admin';
@@ -6,6 +5,7 @@ import { sendOTPEmail } from '@/lib/email-service';
 
 /**
  * @fileOverview Authentication Server Actions for OTP Protocol.
+ * Hardened to handle missing Admin SDK secrets gracefully.
  */
 
 /**
@@ -13,21 +13,29 @@ import { sendOTPEmail } from '@/lib/email-service';
  */
 export async function sendSignupOTPAction(email: string, name: string) {
     const { adminDb, error } = getFirebaseAdmin();
-    if (error || !adminDb) return { success: false, message: "Himalayan Cloud Link disconnected." };
+    
+    // 1. Check if Admin SDK is fully configured
+    if (error || !adminDb) {
+        console.warn("[AUTH ACTION] Admin SDK link failed. Environment variables likely missing.");
+        return { 
+            success: false, 
+            message: "Himalayan Cloud Link (Admin SDK) is not fully configured in environment variables. Standard registration mode enabled." 
+        };
+    }
 
     try {
-        // 1. Generate 6-digit Protocol Code
+        // 2. Generate 6-digit Protocol Code
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         const expiresAt = Date.now() + 10 * 60 * 1000; // 10 mins expiry node
 
-        // 2. Secure Temporary Node Storage
+        // 3. Secure Temporary Node Storage
         await adminDb.collection('temp_otps').doc(email).set({
             otp,
             expiresAt,
             createdAt: new Date().toISOString()
         });
 
-        // 3. Dispatch via SMTP Service (mistrikumar42@gmail.com)
+        // 4. Dispatch via SMTP Service
         await sendOTPEmail(email, otp, name);
 
         return { 
@@ -36,7 +44,10 @@ export async function sendSignupOTPAction(email: string, name: string) {
         };
     } catch (e: any) {
         console.error("[OTP ACTION ERROR]:", e.message);
-        return { success: false, message: "Node failure: Could not dispatch OTP. Check email connectivity." };
+        return { 
+            success: false, 
+            message: "Node failure: Could not dispatch OTP. Check SMTP/Firebase configuration." 
+        };
     }
 }
 
@@ -45,7 +56,7 @@ export async function sendSignupOTPAction(email: string, name: string) {
  */
 export async function verifyOTPAction(email: string, userOtp: string) {
     const { adminDb, error } = getFirebaseAdmin();
-    if (error || !adminDb) return { success: false, message: "System node offline." };
+    if (error || !adminDb) return { success: false, message: "System node offline. Use Standard Mode." };
 
     try {
         const otpDoc = await adminDb.collection('temp_otps').doc(email).get();
