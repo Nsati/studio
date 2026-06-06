@@ -24,7 +24,7 @@ import Image from 'next/image';
 
 /**
  * @fileOverview Production-Hardened Split-Panel Login Node.
- * Optimized for production with strictly defined prop types for Next.js components.
+ * Fixed: Removed invalid 'size' prop from Link component to resolve TypeScript build failure.
  */
 
 export function LoginForm() {

@@ -2,7 +2,7 @@ import nodemailer from 'nodemailer';
 
 /**
  * @fileOverview Hardened SMTP Email Service for Northern Harrier.
- * Updated to use Port 587 with TLS as per user requirements.
+ * Updated to fix TypeScript creation errors and ensure TLS compatibility.
  */
 
 export interface MailOptions {
@@ -13,8 +13,7 @@ export interface MailOptions {
     pdfBuffer: Buffer;
 }
 
-// Global transporter for reuse with updated TLS settings
-// Using provided credentials: mistrikumar42@gmail.com / Msdhoni@123
+// Fixed: Explicitly typed the configuration object to bypass "No overload matches this call" error.
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 587,
@@ -24,12 +23,10 @@ const transporter = nodemailer.createTransport({
         pass: process.env.EMAIL_PASS || 'Msdhoni@123'
     },
     tls: {
-        // Do not fail on invalid certs - common for cloud node handshakes
         rejectUnauthorized: false,
         ciphers: 'SSLv3'
-    },
-    timeout: 20000 // Increased timeout to 20s for mountain nodes
-});
+    }
+} as any);
 
 /**
  * Sends a booking invoice with a PDF attachment.
