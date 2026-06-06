@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import Loading from './loading';
 import { WriteReviewForm } from '@/components/hotel/WriteReviewForm';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 export default function HotelPage() {
   const params = useParams();
@@ -38,10 +39,6 @@ export default function HotelPage() {
   }, [firestore, slug]);
 
   const { data: rooms, isLoading: isLoadingRooms } = useCollection<Room>(roomsQuery);
-
-  const scrollToAvailability = () => {
-    document.getElementById('availability')?.scrollIntoView({ behavior: 'smooth' });
-  };
 
   if (isLoading || isLoadingRooms) {
     return <Loading />;
@@ -99,7 +96,7 @@ export default function HotelPage() {
                 </div>
 
                 {/* Cinematic Gallery */}
-                <div className="grid grid-cols-4 gap-3 h-[500px] rounded-[3rem] overflow-hidden shadow-apple-deep">
+                <div className="grid grid-cols-4 gap-3 h-[500px] rounded-[3rem] overflow-hidden shadow-apple-deep relative">
                     <div className="col-span-2 row-span-2 relative group overflow-hidden">
                         <Image src={getImageUrl(images[0])} alt="Hero" fill className="object-cover transition-transform duration-1000 group-hover:scale-110" priority />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
