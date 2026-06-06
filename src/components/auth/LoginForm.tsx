@@ -24,7 +24,7 @@ import Image from 'next/image';
 
 /**
  * @fileOverview Production-Hardened Split-Panel Login Node.
- * Fixed: Removed invalid 'size' prop from Link component to resolve TypeScript build failure.
+ * Redesigned for a more compact and balanced proportional layout.
  */
 
 export function LoginForm() {
@@ -97,13 +97,13 @@ export function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-[url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=1920')] bg-cover bg-center p-4 md:p-10">
-      <div className="absolute inset-0 bg-white/20 backdrop-blur-sm" />
+    <div className="min-h-screen w-full flex items-center justify-center bg-[url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=1920')] bg-cover bg-center p-4">
+      <div className="absolute inset-0 bg-white/30 backdrop-blur-sm" />
       
-      <div className="relative z-10 w-full max-w-5xl bg-white rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col md:flex-row min-h-[650px]">
+      <div className="relative z-10 w-full max-w-4xl bg-white rounded-[2rem] shadow-2xl overflow-hidden flex flex-col md:flex-row min-h-[550px]">
         
-        {/* Left Side: Visual Expedition */}
-        <div className="md:w-5/12 relative hidden md:block overflow-hidden">
+        {/* Left Side: Visual Expedition (Compact) */}
+        <div className="md:w-[38%] relative hidden md:block overflow-hidden">
             <Image 
                 src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&q=80&w=1200" 
                 alt="Expedition" 
@@ -113,57 +113,53 @@ export function LoginForm() {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-primary/95 via-primary/40 to-transparent" />
             
-            <div className="absolute inset-0 p-12 flex flex-col justify-between text-white">
-                <div className="h-12 w-12 bg-white rounded-full flex items-center justify-center">
-                    <Mountain className="h-6 w-6 text-primary" />
+            <div className="absolute inset-0 p-10 flex flex-col justify-between text-white">
+                <div className="h-10 w-10 bg-white rounded-xl flex items-center justify-center">
+                    <Mountain className="h-5 w-5 text-primary" />
                 </div>
                 
-                <div className="space-y-6">
-                    <h2 className="text-4xl font-black tracking-tight leading-tight">
-                        Explore the Himalayas like never before.
+                <div className="space-y-4">
+                    <h2 className="text-3xl font-black tracking-tight leading-tight uppercase">
+                        Explore the <br/>Himalayas.
                     </h2>
-                    <p className="text-sm font-medium opacity-80 leading-relaxed max-w-xs">
-                        Curated journeys, real experiences and unforgettable memories.
+                    <p className="text-xs font-medium opacity-80 leading-relaxed max-w-[200px]">
+                        Curated journeys and unforgettable mountain memories.
                     </p>
                     
-                    <div className="pt-10 flex items-center gap-8">
-                        <div className="text-center space-y-2">
-                            <Mountain className="h-5 w-5 mx-auto opacity-70" />
-                            <p className="text-[8px] font-black uppercase tracking-widest leading-none">Handpicked<br/>Destinations</p>
+                    <div className="pt-6 flex flex-col gap-4">
+                        <div className="flex items-center gap-3">
+                            <Mountain className="h-4 w-4 opacity-70" />
+                            <p className="text-[7px] font-black uppercase tracking-widest">Handpicked Nodes</p>
                         </div>
-                        <div className="text-center space-y-2">
-                            <Star className="h-5 w-5 mx-auto opacity-70" />
-                            <p className="text-[8px] font-black uppercase tracking-widest leading-none">Expert Curated<br/>Packages</p>
-                        </div>
-                        <div className="text-center space-y-2">
-                            <Heart className="h-5 w-5 mx-auto opacity-70" />
-                            <p className="text-[8px] font-black uppercase tracking-widest leading-none">Authentic<br/>Experiences</p>
+                        <div className="flex items-center gap-3">
+                            <Star className="h-4 w-4 opacity-70" />
+                            <p className="text-[7px] font-black uppercase tracking-widest">Expert Packages</p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        {/* Right Side: Elite Form Node */}
-        <div className="flex-1 p-8 md:p-16 flex flex-col items-center justify-center bg-white">
-            <div className="w-full max-w-md space-y-8">
-                <div className="text-center space-y-3">
-                    <div className="h-14 w-14 rounded-full bg-primary/5 flex items-center justify-center mx-auto border border-primary/10">
-                        <Mail className="h-6 w-6 text-primary" />
+        {/* Right Side: Elite Form Node (Focused) */}
+        <div className="flex-1 p-8 md:p-12 flex flex-col items-center justify-center bg-white">
+            <div className="w-full max-w-sm space-y-6">
+                <div className="text-center space-y-2">
+                    <div className="h-12 w-12 rounded-full bg-primary/5 flex items-center justify-center mx-auto border border-primary/10 mb-2">
+                        <Mail className="h-5 w-5 text-primary" />
                     </div>
                     <div className="space-y-1">
-                        <h1 className="text-3xl font-black tracking-tight text-slate-900">Welcome back!</h1>
-                        <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Continue your Himalayan journey</p>
+                        <h1 className="text-2xl font-black tracking-tight text-slate-900">Welcome Back</h1>
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Continue your Himalayan journey</p>
                     </div>
                 </div>
 
                 <Button 
                     variant="outline" 
-                    className="w-full h-14 rounded-full font-bold text-sm border-slate-200 hover:bg-slate-50 gap-3 shadow-sm transition-all"
+                    className="w-full h-12 rounded-full font-bold text-xs border-slate-200 hover:bg-slate-50 gap-3 shadow-sm transition-all"
                     onClick={handleGoogleLogin}
                     disabled={isGoogleLoading || isLoading}
                 >
-                    <svg className="h-5 w-5" viewBox="0 0 24 24">
+                    <svg className="h-4 w-4" viewBox="0 0 24 24">
                         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
                         <path d="M12 23c2.97 0 5.48-.98 7.31-2.64l-3.57-2.77c-1 .67-2.28 1.07-3.74 1.07-2.88 0-5.32-1.92-6.19-4.51H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
                         <path d="M5.81 14.15c-.22-.67-.35-1.39-.35-2.15s.13-1.48.35-2.15V7.01H2.18C1.4 8.61 1 10.39 1 12s.4 3.39 1.18 4.99l3.63-2.84z" fill="#FBBC05"/>
@@ -172,16 +168,16 @@ export function LoginForm() {
                     Continue with Google
                 </Button>
 
-                <div className="flex items-center gap-4 py-2">
+                <div className="flex items-center gap-4">
                     <div className="h-px flex-1 bg-slate-100" />
-                    <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">OR SECURE LOGIN</span>
+                    <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest">OR</span>
                     <div className="h-px flex-1 bg-slate-100" />
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="space-y-4">
-                        <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase text-slate-400 ml-1 tracking-widest">Email Address</Label>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="space-y-3">
+                        <div className="space-y-1.5">
+                            <Label className="text-[9px] font-black uppercase text-slate-400 ml-1 tracking-widest">Email Node</Label>
                             <div className="relative">
                                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                                 <Input 
@@ -189,14 +185,14 @@ export function LoginForm() {
                                     placeholder="nsati09@gmail.com" 
                                     value={email}
                                     onChange={e => setEmail(e.target.value)}
-                                    className="h-14 rounded-full pl-12 bg-slate-50 border-0 focus-visible:ring-primary font-bold text-sm" 
+                                    className="h-12 rounded-full pl-12 bg-slate-50 border-0 focus-visible:ring-primary font-bold text-xs" 
                                 />
                             </div>
                         </div>
-                        <div className="space-y-2">
+                        <div className="space-y-1.5">
                             <div className="flex justify-between items-center px-1">
-                                <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Password</Label>
-                                <Link href="/forgot-password" className="text-[10px] font-black text-primary hover:underline">Forgot Password?</Link>
+                                <Label className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Access Key</Label>
+                                <Link href="/forgot-password" className="text-[9px] font-black text-primary hover:underline">Forgot?</Link>
                             </div>
                             <div className="relative">
                                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -205,19 +201,19 @@ export function LoginForm() {
                                     placeholder="••••••••••" 
                                     value={password}
                                     onChange={e => setPassword(e.target.value)}
-                                    className="h-14 rounded-full pl-12 bg-slate-50 border-0 focus-visible:ring-primary font-bold text-sm" 
+                                    className="h-12 rounded-full pl-12 bg-slate-50 border-0 focus-visible:ring-primary font-bold text-xs" 
                                 />
                             </div>
                         </div>
                     </div>
 
-                    <div className="flex items-center space-x-2">
-                        <Checkbox id="remember" className="rounded-md border-slate-300" />
-                        <label htmlFor="remember" className="text-xs font-bold text-slate-500 cursor-pointer">Remember me</label>
+                    <div className="flex items-center space-x-2 px-1">
+                        <Checkbox id="remember" className="rounded-md border-slate-300 h-3.5 w-3.5" />
+                        <label htmlFor="remember" className="text-[10px] font-bold text-slate-500 cursor-pointer">Remember node</label>
                     </div>
 
                     {error && (
-                        <div className="p-3 bg-red-50 text-red-600 text-xs font-bold rounded-xl text-center border border-red-100">
+                        <div className="p-3 bg-red-50 text-red-600 text-[10px] font-bold rounded-xl text-center border border-red-100">
                             {error}
                         </div>
                     )}
@@ -225,16 +221,16 @@ export function LoginForm() {
                     <Button 
                         type="submit" 
                         disabled={isLoading || isGoogleLoading}
-                        className="w-full h-14 rounded-full bg-primary text-white font-black text-base shadow-xl hover:bg-slate-900 transition-all active:scale-95 group"
+                        className="w-full h-12 rounded-full bg-primary text-white font-black text-sm shadow-xl hover:bg-slate-900 transition-all active:scale-95 group"
                     >
-                        {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Sign In'}
-                        <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                        {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Sync Profile'}
+                        <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                     </Button>
                 </form>
 
-                <div className="text-center">
-                    <p className="text-sm font-bold text-slate-400">
-                        New here? <Link href="/signup" className="text-primary font-black hover:underline">Create an Account</Link>
+                <div className="text-center pt-2">
+                    <p className="text-xs font-bold text-slate-400">
+                        New explorer? <Link href="/signup" className="text-primary font-black hover:underline">Register Hub</Link>
                     </p>
                 </div>
             </div>
