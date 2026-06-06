@@ -3,7 +3,7 @@
 import { notFound, useParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Star, MapPin, Share2, Heart, ShieldAlert, Signal, Info, Check, IndianRupee, Car, CloudSun, CreditCard } from 'lucide-react';
+import { Star, MapPin, Share2, Heart, ShieldAlert, Signal, IndianRupee, Car, CloudSun, CreditCard, ChevronRight } from 'lucide-react';
 import React from 'react';
 
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -60,169 +60,144 @@ export default function HotelPage() {
   const images = hotel.images && hotel.images.length > 0 ? hotel.images : ['hero'];
 
   return (
-    <div className="min-h-screen bg-white pb-32">
-      {/* Sub-Header */}
-      <div className="bg-[#f5f5f5] py-3 border-b border-black/5">
-        <div className="container mx-auto px-4 text-[12px] text-[#006ce4] flex items-center gap-2 font-bold">
-            <Link href="/" className="hover:underline">Home</Link> &gt; 
-            <span className="hover:underline cursor-pointer">Uttarakhand</span> &gt; 
-            <span className="hover:underline cursor-pointer">{hotel.city}</span> &gt; 
-            <span className="text-muted-foreground">{hotel.name}</span>
+    <div className="min-h-screen bg-white pb-32 selection:bg-accent selection:text-white">
+      {/* Dynamic Sub-Header */}
+      <div className="bg-muted/30 py-4 border-b border-black/5 sticky top-16 z-40 backdrop-blur-md">
+        <div className="container mx-auto px-4 flex justify-between items-center">
+            <div className="text-[10px] text-primary flex items-center gap-3 font-black uppercase tracking-widest">
+                <Link href="/" className="hover:text-accent transition-colors">Home</Link> 
+                <ChevronRight className="h-3 w-3 opacity-30" />
+                <span className="opacity-50">{hotel.city}</span>
+                <ChevronRight className="h-3 w-3 opacity-30" />
+                <span className="text-accent">{hotel.name}</span>
+            </div>
+            <div className="flex gap-4">
+                <button className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest hover:text-accent transition-colors"><Share2 className="h-4 w-4" /> Share</button>
+                <button className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest hover:text-red-500 transition-colors"><Heart className="h-4 w-4" /> Save</button>
+            </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 pt-6">
-        <div className="flex flex-col lg:flex-row gap-8">
-            <div className="flex-1 space-y-6">
-                <div className="flex flex-col md:flex-row justify-between items-start gap-4">
-                    <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                            <Badge className="bg-[#febb02] text-black rounded-none border-0 text-[10px] font-black px-1.5 py-0.5">SMART VERIFIED</Badge>
-                            <div className="flex gap-0.5">
-                                {[...Array(Math.floor(hotel.rating))].map((_, i) => (
-                                    <Star key={i} className="h-3 w-3 fill-[#febb02] text-[#febb02]" />
-                                ))}
-                            </div>
+      <div className="container mx-auto px-4 pt-10">
+        <div className="flex flex-col lg:flex-row gap-12">
+            <div className="flex-1 space-y-10">
+                <div className="space-y-6">
+                    <div className="flex flex-wrap items-center gap-3">
+                        <Badge className="bg-accent text-accent-foreground rounded-full border-0 text-[9px] font-black px-4 py-1 tracking-widest shadow-lg saffron-glow">SMART VERIFIED</Badge>
+                        <div className="flex gap-0.5">
+                            {[...Array(5)].map((_, i) => (
+                                <Star key={i} className={cn("h-3.5 w-3.5", i < Math.floor(hotel.rating) ? "fill-amber-400 text-amber-400" : "fill-slate-200 text-slate-200")} />
+                            ))}
                         </div>
-                        <h1 className="text-3xl font-black tracking-tighter text-[#1a1a1a]">{hotel.name}</h1>
-                        <div className="flex items-center gap-2 text-sm text-[#006ce4] font-medium underline-offset-2 hover:underline cursor-pointer">
-                            <MapPin className="h-4 w-4 text-[#003580]" />
-                            <span>{hotel.address || `${hotel.city}, Uttarakhand`} — Show local highlights</span>
-                        </div>
+                        <span className="text-[10px] font-bold text-slate-400">{hotel.rating} / 5 Rating</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="icon" className="text-[#006ce4] hover:bg-[#006ce4]/10"><Heart className="h-6 w-6" /></Button>
-                        <Button variant="ghost" size="icon" className="text-[#006ce4] hover:bg-[#006ce4]/10"><Share2 className="h-6 w-6" /></Button>
-                        <Button onClick={scrollToAvailability} className="bg-[#006ce4] hover:bg-[#005bb8] rounded-none font-bold px-8 h-11 text-base">Reserve Now</Button>
+                    <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-slate-900 leading-none uppercase font-heading">{hotel.name}</h1>
+                    <div className="flex items-center gap-3 text-sm text-primary font-black tracking-wide border-l-4 border-accent pl-6">
+                        <MapPin className="h-5 w-5 text-accent" />
+                        <span>{hotel.address || `${hotel.city}, Uttarakhand`}</span>
                     </div>
                 </div>
 
-                {/* Gallery */}
-                <div className="grid grid-cols-4 gap-2 h-[480px]">
+                {/* Cinematic Gallery */}
+                <div className="grid grid-cols-4 gap-3 h-[500px] rounded-[3rem] overflow-hidden shadow-apple-deep">
                     <div className="col-span-2 row-span-2 relative group overflow-hidden">
-                        <Image src={getImageUrl(images[0])} alt="Main" fill className="object-cover" />
+                        <Image src={getImageUrl(images[0])} alt="Hero" fill className="object-cover transition-transform duration-1000 group-hover:scale-110" priority />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
                     {images.slice(1, 5).map((img, i) => (
                         <div key={i} className="relative group overflow-hidden">
-                            <Image src={getImageUrl(img)} alt={`Gallery ${i}`} fill className="object-cover" />
+                            <Image src={getImageUrl(img)} alt={`Gallery ${i}`} fill className="object-cover transition-transform duration-1000 group-hover:scale-110" />
                         </div>
                     ))}
+                    {images.length > 5 && (
+                        <div className="absolute bottom-10 right-10 z-10">
+                            <Button variant="secondary" className="rounded-full font-black text-[10px] tracking-widest shadow-2xl px-8 h-12">VIEW ALL {images.length} PHOTOS</Button>
+                        </div>
+                    )}
                 </div>
 
-                {/* Local Intel & Insights */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div className="lg:col-span-2 space-y-8">
-                        <div className="p-6 bg-[#f0f6ff] border border-black/5 rounded-sm">
-                            <h3 className="text-lg font-black uppercase tracking-widest text-[#003580] mb-4 flex items-center gap-2">
-                                <ShieldAlert className="h-5 w-5" /> Smart Insights
+                {/* Intelligence & Details */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+                    <div className="lg:col-span-2 space-y-12">
+                        <div className="p-10 bg-primary/5 border border-black/5 rounded-[2.5rem] relative overflow-hidden">
+                            <div className="absolute -right-10 -top-10 h-40 w-40 bg-accent/10 rounded-full blur-3xl" />
+                            <h3 className="text-sm font-black uppercase tracking-[0.3em] text-primary mb-8 flex items-center gap-3">
+                                <ShieldAlert className="h-5 w-5 text-accent" /> Smart Himalayan Insights
                             </h3>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                <div className="space-y-1">
-                                    <p className="text-[10px] font-black text-muted-foreground uppercase">Mountain Safety</p>
-                                    <p className="font-bold text-sm">Landslide Risk: <span className={hotel.landslideRisk === 'Low' ? 'text-green-600' : hotel.landslideRisk === 'High' ? 'text-red-600' : 'text-amber-600'}>{hotel.landslideRisk}</span></p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-10">
+                                <div className="space-y-2">
+                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Terrain Risk Node</p>
+                                    <p className="font-bold text-base flex items-center gap-2">
+                                        Landslide Risk: <span className={cn("px-3 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest", hotel.landslideRisk === 'Low' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700')}>{hotel.landslideRisk}</span>
+                                    </p>
                                 </div>
-                                <div className="space-y-1">
-                                    <p className="text-[10px] font-black text-muted-foreground uppercase">Road Access</p>
-                                    <p className="font-bold text-sm">Condition: {hotel.roadCondition || 'Good for All Cars'}</p>
+                                <div className="space-y-2">
+                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Access Protocol</p>
+                                    <p className="font-bold text-base">{hotel.roadCondition || 'Good for All Vehicles'}</p>
                                 </div>
-                                <div className="space-y-1">
-                                    <p className="text-[10px] font-black text-muted-foreground uppercase">Room Tip</p>
-                                    <p className="font-bold text-sm">{hotel.balconyWorthIt ? 'Balcony view is highly recommended' : 'Standard rooms are quietest'}</p>
+                                <div className="space-y-2">
+                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Expedition Strategy</p>
+                                    <p className="font-bold text-base">{hotel.balconyWorthIt ? 'Strategic Balcony Access Rec.' : 'Interior Nodes are Quiter'}</p>
                                 </div>
-                                <div className="space-y-1">
-                                    <p className="text-[10px] font-black text-muted-foreground uppercase">Power Status</p>
-                                    <p className="font-bold text-sm">{hotel.hasPowerBackup ? 'Full Power Backup Available' : 'Limited Backup'}</p>
+                                <div className="space-y-2">
+                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Energy Grid</p>
+                                    <p className="font-bold text-base">{hotel.hasPowerBackup ? 'Full Solar/Backup Node Active' : 'Limited Grid Only'}</p>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="space-y-4">
-                            <h3 className="text-xl font-bold">Local Tips & Intel</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="flex gap-3 p-4 border rounded-sm">
-                                    <IndianRupee className="h-5 w-5 text-muted-foreground" />
+                        <div className="space-y-8">
+                            <h3 className="text-2xl font-black tracking-tight uppercase font-heading">Local Logistics Nodes</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="flex gap-4 p-6 border border-black/5 bg-white rounded-3xl shadow-sm hover:shadow-md transition-shadow">
+                                    <div className="h-10 w-10 bg-muted rounded-xl flex items-center justify-center text-primary"><IndianRupee className="h-5 w-5" /></div>
                                     <div className="space-y-1">
-                                        <p className="text-xs font-black uppercase text-muted-foreground">Nearest ATM</p>
-                                        <p className="text-sm font-bold">{hotel.nearestAtmKm || 2} km distance</p>
+                                        <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Financial Node</p>
+                                        <p className="text-sm font-bold">Nearest ATM: {hotel.nearestAtmKm || 2} km</p>
                                     </div>
                                 </div>
-                                <div className="flex gap-3 p-4 border rounded-sm">
-                                    <Car className="h-5 w-5 text-muted-foreground" />
+                                <div className="flex gap-4 p-6 border border-black/5 bg-white rounded-3xl shadow-sm hover:shadow-md transition-shadow">
+                                    <div className="h-10 w-10 bg-muted rounded-xl flex items-center justify-center text-primary"><Signal className="h-5 w-5" /></div>
                                     <div className="space-y-1">
-                                        <p className="text-xs font-black uppercase text-muted-foreground">Cab to Center</p>
-                                        <p className="text-sm font-bold">Approx. ₹{hotel.cabFareToCenter || 300}</p>
-                                    </div>
-                                </div>
-                                <div className="flex gap-3 p-4 border rounded-sm">
-                                    <Signal className="h-5 w-5 text-muted-foreground" />
-                                    <div className="space-y-1">
-                                        <p className="text-xs font-black uppercase text-muted-foreground">Network Status</p>
-                                        <div className="flex gap-2 text-[10px] font-bold">
+                                        <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Communications</p>
+                                        <div className="flex gap-3 text-[10px] font-black uppercase">
                                             <span className={hotel.networkJio ? 'text-green-600' : 'text-red-600'}>JIO: {hotel.networkJio ? 'OK' : 'FAIL'}</span>
                                             <span className={hotel.networkAirtel ? 'text-green-600' : 'text-red-600'}>AIRTEL: {hotel.networkAirtel ? 'OK' : 'FAIL'}</span>
                                         </div>
                                     </div>
                                 </div>
-                                <div className="flex gap-3 p-4 border rounded-sm">
-                                    <CloudSun className="h-5 w-5 text-muted-foreground" />
-                                    <div className="space-y-1">
-                                        <p className="text-xs font-black uppercase text-muted-foreground">Weather Alert</p>
-                                        <p className="text-sm font-bold text-green-700 italic">Verified Live: Clear Skies</p>
-                                    </div>
-                                </div>
                             </div>
                         </div>
 
-                        <Separator />
+                        <Separator className="opacity-10" />
                         
-                        <div className="space-y-4">
-                            <h3 className="text-xl font-bold">Most popular facilities</h3>
-                            <div className="flex flex-wrap gap-x-8 gap-y-4">
+                        <div className="space-y-8">
+                            <h3 className="text-2xl font-black tracking-tight uppercase font-heading">Elite Facilities Grid</h3>
+                            <div className="flex flex-wrap gap-x-12 gap-y-6">
                                 {hotel.amenities.map(a => (
-                                    <div key={a} className="flex items-center gap-2 text-sm text-green-700 font-bold">
-                                        <AmenityIcon amenity={a} className="h-5 w-5" />
-                                        <span className="capitalize">{a.replace('-', ' ')}</span>
+                                    <div key={a} className="flex items-center gap-4 text-xs font-black uppercase tracking-widest text-primary/80 group cursor-default">
+                                        <div className="h-10 w-10 bg-primary/5 rounded-2xl flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
+                                            <AmenityIcon amenity={a} className="h-5 w-5" />
+                                        </div>
+                                        <span className="border-b-2 border-transparent group-hover:border-accent transition-all">{a.replace('-', ' ')}</span>
                                     </div>
                                 ))}
                             </div>
                         </div>
                     </div>
 
-                    {/* Right Summary Sidebar */}
-                    <div className="space-y-4">
-                        <div className="bg-[#f0f6ff] p-6 rounded-md border border-black/5 space-y-4">
-                            <h4 className="font-black text-sm text-[#1a1a1a] uppercase tracking-widest">Property highlights</h4>
-                            <div className="space-y-3">
-                                <div className="flex gap-2 text-[13px]">
-                                    <MapPin className="h-4 w-4 text-green-700 shrink-0" />
-                                    <span className="font-bold">Top Location: {hotel.mountainSafetyScore > 80 ? 'Safe Access' : 'Mountain Views'}</span>
-                                </div>
-                                <div className="flex gap-2 text-[13px]">
-                                    <Check className="h-4 w-4 text-green-700 shrink-0" />
-                                    <span className="font-bold">Hassle-free parking onsite</span>
-                                </div>
-                                <div className="flex gap-2 text-[13px]">
-                                    <CreditCard className="h-4 w-4 text-green-700 shrink-0" />
-                                    <span className="font-bold">Accepts UPI & Major Cards</span>
-                                </div>
-                            </div>
-                            <Button onClick={scrollToAvailability} className="w-full bg-[#006ce4] hover:bg-[#005bb8] rounded-none font-bold py-6">Check Availability</Button>
-                        </div>
+                    {/* Right Booking Sidebar */}
+                    <div className="relative">
+                        <section id="availability">
+                            <RoomBookingCard hotel={hotel as any} rooms={rooms || []} isLoadingRooms={isLoadingRooms} />
+                        </section>
                     </div>
                 </div>
 
-                <Separator className="my-8" />
-
-                <section id="availability">
-                    <div className="flex items-center gap-2 mb-6">
-                        <div className="bg-primary h-8 w-1 rounded-full" />
-                        <h2 className="text-2xl font-black text-[#1a1a1a] tracking-tight">Select Your Stay</h2>
-                    </div>
-                    <RoomBookingCard hotel={hotel as any} rooms={rooms || []} isLoadingRooms={isLoadingRooms} />
-                </section>
+                <Separator className="my-12 opacity-10" />
 
                 {user && !user.isAnonymous && (
-                    <section className="pt-12">
+                    <section className="pt-10 pb-20">
                         <WriteReviewForm hotelId={slug} userId={user.uid} userHasReviewed={false} />
                     </section>
                 )}
