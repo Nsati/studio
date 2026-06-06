@@ -1,11 +1,10 @@
-
 'use client';
 import { useFirestore, useCollection, useMemoFirebase, type WithId } from '@/firebase';
 import Link from 'next/link';
 import { collection } from 'firebase/firestore';
 import type { TourPackage } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PlusCircle, Calendar, Package, Trash2, Edit2, Loader2 } from 'lucide-react';
 import { BulkUploadTourPackagesDialog } from '@/components/admin/BulkUploadTourPackagesDialog';
@@ -26,8 +25,8 @@ import { useState } from 'react';
 
 function PackageGridSkeleton() {
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {Array.from({ length: 8 }).map((_, i) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+            {Array.from({ length: 10 }).map((_, i) => (
                 <Card key={i} className="rounded-none border-black/5">
                     <Skeleton className="h-40 w-full rounded-none" />
                     <CardHeader>
@@ -82,7 +81,7 @@ function TourPackageAdminCard({ tourPackage }: { tourPackage: WithId<TourPackage
 
     return (
         <Card className="rounded-none border border-black/5 shadow-sm group hover:shadow-md transition-all bg-white overflow-hidden flex flex-col h-full">
-            <div className="relative h-48 w-full overflow-hidden bg-muted">
+            <div className="relative h-40 w-full overflow-hidden bg-muted">
                 <img
                     src={getImageUrl(tourPackage.image)}
                     alt={tourPackage.title}
@@ -91,13 +90,13 @@ function TourPackageAdminCard({ tourPackage }: { tourPackage: WithId<TourPackage
                         (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=800';
                     }}
                 />
-                <div className="absolute top-3 left-3 bg-black/80 px-2 py-1 text-white text-[9px] font-black uppercase tracking-widest">
+                <div className="absolute top-2 left-2 bg-black/80 px-2 py-1 text-white text-[8px] font-black uppercase tracking-widest">
                     {tourPackage.duration}
                 </div>
-                <div className="absolute top-3 right-3 flex gap-1">
+                <div className="absolute top-2 right-2 flex gap-1">
                     <AlertDialog>
                         <AlertDialogTrigger asChild>
-                            <Button size="icon" variant="destructive" className="h-8 w-8 rounded-none bg-red-600/90 hover:bg-red-600" disabled={isDeleting}>
+                            <Button size="icon" variant="destructive" className="h-7 w-7 rounded-none bg-red-600/90 hover:bg-red-600" disabled={isDeleting}>
                                 {isDeleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
                             </Button>
                         </AlertDialogTrigger>
@@ -116,21 +115,21 @@ function TourPackageAdminCard({ tourPackage }: { tourPackage: WithId<TourPackage
                     </AlertDialog>
                 </div>
             </div>
-            <CardHeader className="p-5 space-y-2 flex-grow">
-                <CardTitle className="line-clamp-2 leading-snug text-lg font-black tracking-tight text-[#1a1a1a]">
+            <CardHeader className="p-4 space-y-2 flex-grow">
+                <CardTitle className="line-clamp-2 leading-snug text-base font-black tracking-tight text-[#1a1a1a]">
                     {tourPackage.title}
                 </CardTitle>
-                <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase text-muted-foreground truncate">
+                <div className="flex items-center gap-1.5 text-[9px] font-bold uppercase text-muted-foreground truncate">
                     <Calendar className="h-3 w-3 text-[#003580]" /> {tourPackage.destinations?.join(' • ')}
                 </div>
             </CardHeader>
-            <CardFooter className="p-5 pt-0 flex justify-between items-center border-t border-black/[0.03] mt-auto bg-slate-50/50">
+            <CardFooter className="p-4 pt-0 flex justify-between items-center border-t border-black/[0.03] mt-auto bg-slate-50/50">
                 <div className="flex flex-col">
-                    <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Starts from</span>
-                    <span className="text-sm font-black text-[#1a1a1a]">₹{tourPackage.totalCost?.toLocaleString('en-IN')}</span>
+                    <span className="text-[7px] font-black text-muted-foreground uppercase tracking-widest">Starts from</span>
+                    <span className="text-xs font-black text-[#1a1a1a]">₹{tourPackage.totalCost?.toLocaleString('en-IN')}</span>
                 </div>
-                <Button variant="outline" size="sm" asChild className="rounded-none h-8 px-5 text-[10px] font-black uppercase border-black/10 hover:bg-muted transition-colors bg-white">
-                    <Link href={`/admin/tour-packages/${tourPackage.id}/edit`}><Edit2 className="mr-2 h-3 w-3" /> Edit</Link>
+                <Button variant="outline" size="sm" asChild className="rounded-none h-7 px-3 text-[9px] font-black uppercase border-black/10 hover:bg-muted transition-colors bg-white">
+                    <Link href={`/admin/tour-packages/${tourPackage.id}/edit`}><Edit2 className="mr-1.5 h-3 w-3" /> Edit</Link>
                 </Button>
             </CardFooter>
         </Card>
@@ -171,7 +170,7 @@ export default function TourPackagesAdminPage() {
             </div>
             
             {isLoading ? <PackageGridSkeleton /> : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
                     {allPackages?.map(pkg => (
                         <TourPackageAdminCard key={pkg.id} tourPackage={pkg} />
                     ))}

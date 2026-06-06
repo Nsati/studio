@@ -136,9 +136,9 @@ export default function AdminLayout({
         </div>
       </aside>
 
-      {/* Main Content Area */}
+      {/* Main Content Area - Increased max-width for better dashboard experience */}
       <main className="flex-1 p-6 md:p-12 mt-16 md:mt-0">
-        <div className="max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-2 duration-700">
+        <div className="max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-2 duration-700">
             {children}
         </div>
       </main>
