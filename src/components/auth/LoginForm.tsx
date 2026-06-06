@@ -23,8 +23,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import Image from 'next/image';
 
 /**
- * @fileOverview Cinematic Split-Panel Login Node.
- * Hardened for production: Removed invalid 'size' prop from Next.js Link.
+ * @fileOverview Production-Hardened Split-Panel Login Node.
+ * Optimized for production with strictly defined prop types for Next.js components.
  */
 
 export function LoginForm() {
@@ -58,6 +58,7 @@ export function LoginForm() {
       const result = await signInWithPopup(auth, provider);
       const fbUser = result.user;
 
+      // Ensure user profile exists
       const userRef = doc(firestore, 'users', fbUser.uid);
       await setDoc(userRef, {
         uid: fbUser.uid,
@@ -72,7 +73,7 @@ export function LoginForm() {
       router.push(searchParams.get('redirect') || '/my-bookings');
     } catch (err: any) {
       if (err.code !== 'auth/popup-closed-by-user') {
-        toast({ variant: 'destructive', title: "Identity Link Denied", description: err.message });
+        toast({ variant: 'destructive', title: "Identity Link Denied", description: "Could not link your Google account. Please try again." });
       }
     } finally {
       setIsGoogleLoading(false);
@@ -89,7 +90,7 @@ export function LoginForm() {
       toast({ title: 'Sync Successful', description: 'Navigating to expedition hub.' });
       router.push(searchParams.get('redirect') || '/my-bookings');
     } catch (err: any) {
-        setError('Invalid credentials node.');
+        setError('Invalid credentials node. Please check your email and password.');
     } finally {
       setIsLoading(false);
     }
@@ -99,7 +100,7 @@ export function LoginForm() {
     <div className="min-h-screen w-full flex items-center justify-center bg-[url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=1920')] bg-cover bg-center p-4 md:p-10">
       <div className="absolute inset-0 bg-white/20 backdrop-blur-sm" />
       
-      <div className="relative z-10 w-full max-w-5xl bg-white rounded-[2.5rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.25)] overflow-hidden flex flex-col md:flex-row min-h-[650px]">
+      <div className="relative z-10 w-full max-w-5xl bg-white rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col md:flex-row min-h-[650px]">
         
         {/* Left Side: Visual Expedition */}
         <div className="md:w-5/12 relative hidden md:block overflow-hidden">

@@ -17,6 +17,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { 
   Loader2, 
@@ -24,24 +25,20 @@ import {
   Mountain, 
   Star, 
   Heart, 
-  UserPlus,
   Mail,
   Lock,
-  Smartphone,
   Fingerprint,
-  Sparkles,
   MailCheck
 } from 'lucide-react';
 import { useAuth, useUser, useFirestore } from '@/firebase';
 import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
-import type { UserProfile } from '@/lib/types';
 import Image from 'next/image';
 import { sendSignupOTPAction, verifyOTPAction } from '@/app/auth/actions';
 
 /**
- * @fileOverview Cinematic Split-Panel Signup Node.
- * Optimized for production with clean TypeScript logic.
+ * @fileOverview Production-Hardened Split-Panel Signup Node.
+ * Fixed: Added missing Label import to resolve compilation failure.
  */
 
 const formSchema = z.object({
@@ -69,7 +66,6 @@ export function SignupForm() {
   const [otpSent, setOtpSent] = useState(false);
   const [otpCode, setOtpCode] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
-  const [useFallback, setUseFallback] = useState(false);
 
   useEffect(() => {
     if (user && !isUserLoading) {
@@ -117,25 +113,32 @@ export function SignupForm() {
           toast({ title: 'Code Dispatched', description: res.message });
         } else {
           setServerError(res.message);
-          setUseFallback(true);
         }
-    } catch (e: any) { setServerError("Auth node offline."); setUseFallback(true); }
-    finally { setIsLoading(false); }
+    } catch (e: any) { 
+        setServerError("Verification node currently under maintenance. Please try again soon."); 
+    } finally { setIsLoading(false); }
   };
 
   const finalizeRegistration = async () => {
     if (otpCode.length !== 6) { setServerError("6 digits required."); return; }
     setIsVerifying(true);
     const values = form.getValues();
-    const verifyRes = await verifyOTPAction(values.email, otpCode);
-    if (verifyRes.success) { handleStandardRegistration(); }
-    else { setServerError(verifyRes.message || "Incorrect sequence."); }
-    setIsVerifying(false);
+    try {
+        const verifyRes = await verifyOTPAction(values.email, otpCode);
+        if (verifyRes.success) { 
+            await handleStandardRegistration(); 
+        } else { 
+            setServerError(verifyRes.message || "Incorrect verification sequence."); 
+        }
+    } catch (e) {
+        setServerError("Critical error during identity finalization.");
+    } finally {
+        setIsVerifying(false);
+    }
   };
 
   const handleStandardRegistration = async () => {
     if (!auth || !firestore) return;
-    setIsLoading(true);
     const values = form.getValues();
     try {
         const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
@@ -148,11 +151,12 @@ export function SignupForm() {
             role: 'user',
             status: 'active',
         });
-        toast({ title: 'Node Established', description: 'Welcome to the grid.' });
+        toast({ title: 'Node Established', description: 'Welcome to Northern Harrier.' });
         router.push('/my-bookings');
-    } catch (error: any) { setServerError("Registration failed."); }
-    finally { setIsLoading(false); }
-  }
+    } catch (error: any) { 
+        setServerError("Registration protocol failed. Please contact support."); 
+    }
+  };
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-[url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=1920')] bg-cover bg-center p-4 md:p-10">
