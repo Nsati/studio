@@ -41,6 +41,7 @@ import { sendSignupOTPAction, verifyOTPAction } from '@/app/auth/actions';
 
 /**
  * @fileOverview Cinematic Split-Panel Signup Node.
+ * Optimized for production with clean TypeScript logic.
  */
 
 const formSchema = z.object({

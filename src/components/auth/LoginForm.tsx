@@ -24,7 +24,7 @@ import Image from 'next/image';
 
 /**
  * @fileOverview Cinematic Split-Panel Login Node.
- * Precisely matches the requested reference design.
+ * Hardened for production: Removed invalid 'size' prop from Next.js Link.
  */
 
 export function LoginForm() {
@@ -195,7 +195,7 @@ export function LoginForm() {
                         <div className="space-y-2">
                             <div className="flex justify-between items-center px-1">
                                 <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Password</Label>
-                                <Link href="/forgot-password" size="sm" className="text-[10px] font-black text-primary hover:underline">Forgot Password?</Link>
+                                <Link href="/forgot-password" className="text-[10px] font-black text-primary hover:underline">Forgot Password?</Link>
                             </div>
                             <div className="relative">
                                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
