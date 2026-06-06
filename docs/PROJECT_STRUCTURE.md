@@ -42,18 +42,6 @@ Handles all communication with Google Firebase.
 - `provider.tsx`: React Context for sharing Auth and Firestore states.
 - `hooks.ts`: Custom hooks like `useUser`, `useDoc`, and `useCollection`.
 
-### `src/lib` (The Utility Belt)
-Core services and helper functions.
-- `pdf-service.ts`: Generates professional billing invoices.
-- `email-service.ts`: Hardened SMTP node for OTP and Bill dispatch.
-- `types.ts`: Master TypeScript interfaces for the entire project.
-- `utils.ts`: Tailwind class merging and common helpers.
-
-### `src/ai` (Artificial Intelligence)
-Genkit configuration and flow definitions.
-- **/flows:** Logic for Vibe Matching and Review Summarization.
-- `genkit.ts`: Central AI initialization.
-
 ---
 
 ## 🔐 3. Core Logic Flows
@@ -82,5 +70,27 @@ Genkit configuration and flow definitions.
 
 ---
 
-*Documentation Version: 1.1.0*  
+## 🛠️ 5. Implementation Logic (Kaise Banaya?)
+
+### I. The UI Strategy (Cinematic Experience)
+- Humne **Tailwind CSS** aur **Framer Motion** ka use kiya hai "Cinematic Transitions" ke liye. Har animation `initial`, `animate`, aur `whileInView` properties se control hoti hai.
+- **Shadcn UI** ke components ko customize karke "Himalayan Snow" aur "Forest Green" theme di gayi hai.
+
+### II. Secure Transaction Node
+- **Logic:** Payment verify hone ke baad system **Firestore Transactions** (`adminDb.runTransaction`) ka use karta hai.
+- **Why?** Taaki agar do log ek hi room book karein, to system double-booking allow na kare. Inventory update hone ke baad hi booking confirm hoti hai.
+
+### III. AI Travel Curator
+- Humne **Genkit Flows** ka use kiya hai. Gemini 2.5 Flash ko specific "System Instructions" di gayi hain ki wo sirf Uttarakhand ki locations suggest kare.
+- JSON schemas define kiye hain taaki AI output humesha valid ho aur frontend par crash na ho.
+
+### IV. SMTP Node Reliability
+- System **Port 587** aur **TLS** use karta hai. Maine Gmail ki security bypass karne ke liye `rejectUnauthorized: false` logic add kiya hai taaki cloud servers se handshake fail na ho.
+
+### V. Bulk Inventory Logic
+- Admin panel mein **PapaParse** use kiya gaya hai CSV files ko read karne ke liye. System batch-writing logic use karta hai taaki 100-200 hotels ek saath cloud mein sync ho sakein.
+
+---
+
+*Documentation Version: 1.2.0*  
 *Project: Northern Harrier - Himalayan Expeditions*
